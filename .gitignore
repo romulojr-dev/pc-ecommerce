@@ -38,3 +38,10 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# prisma client
+/generated/
+
+# AI agent skills (reinstalled from skills-lock.json, see README)
+/.agents/
+/.claude/skills/

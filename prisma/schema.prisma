@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  sortOrder Int        @default(0)
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  products  Product[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([parentId])
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  logoUrl   String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  name           String
+  slug           String         @unique
+  sku            String         @unique
+  description    String?
+  price          Int // in centavos: ₱12,999.00 = 1299900
+  salePrice      Int? // in centavos
+  stock          Int            @default(0)
+  lowStockAt     Int            @default(5)
+  specs          Json // validated by the category's Zod schema (story 3)
+  weightGrams    Int
+  warrantyMonths Int            @default(12)
+  status         ProductStatus  @default(DRAFT)
+  categoryId     String
+  category       Category       @relation(fields: [categoryId], references: [id])
+  brandId        String
+  brand          Brand          @relation(fields: [brandId], references: [id])
+  images         ProductImage[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([brandId])
+  // jsonb_path_ops: spec filters are equality/containment (@>); smaller and faster than jsonb_ops for that
+  @@index([specs(ops: JsonbPathOps)], type: Gin)
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
