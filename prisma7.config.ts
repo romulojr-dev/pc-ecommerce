@@ -6,7 +6,7 @@ config({ path: ".env.local" });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrations: { path: "prisma/migrations" },
+  migrations: { path: "prisma/migrations", seed: "tsx prisma/seed.ts" },
   // Migrations need the direct (unpooled) connection
   datasource: { url: env("DATABASE_URL_UNPOOLED") },
 });

@@ -16,6 +16,7 @@ Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
 - `pnpm db:migrate` — create and apply a migration on the local (Neon dev branch) database (`prisma migrate dev`)
 - `pnpm db:deploy` — apply pending migrations (`prisma migrate deploy`); runs before `pnpm build` on Vercel via [vercel.json](vercel.json)
 - `pnpm db:generate` — regenerate the Prisma client (also runs on `postinstall`)
+- `pnpm db:seed` — validate and upsert the catalog fixture parts into the local (Neon dev branch) database; keeps stock, price and status of existing products. `pnpm db:seed --reset` truncates the catalog tables first (refused when `NODE_ENV=production`). Dev database only; never part of a build
 
 There is no test runner configured yet.
 
@@ -30,6 +31,7 @@ There is no test runner configured yet.
 - Path aliases: `@/components`, `@/lib`, `@/hooks`, `@/components/ui`. Use `cn()` from `@/lib/utils` for class merging.
 - Database: Neon Postgres via Prisma 7 with `@prisma/adapter-pg`. Schema in [prisma/schema.prisma](prisma/schema.prisma), config in [prisma7.config.ts](prisma7.config.ts), client generated to `generated/prisma` (gitignored). The app uses the pooled `DATABASE_URL`; migrations use `DATABASE_URL_UNPOOLED`. Prices are integer centavos. Local env lives in `.env.local`, never `.env`.
 - Import the Prisma client as `db` from `@/lib/db` and env vars as `env` from `@/lib/env` (validated with `@t3-oss/env-nextjs` + Zod at startup). Never read `process.env` directly in app code; add new variables to the schema in [lib/env.ts](lib/env.ts) and to `.env.example`.
+- Product specs are JSONB (`Product.specs`), shaped by Zod schemas in [lib/specs/](lib/specs/), one file per builder category, linked to `Category` rows by slug through `builderCategories` in `lib/specs/registry.ts` ([ADR 0001](docs/adr/0001-store-specs-as-jsonb.md), [ADR 0002](docs/adr/0002-spec-schemas-in-code.md)). Validate every specs write with `validateSpecs()`; type reads with `Specs<C>`. Spec field names carry their unit (`tdpW`, `lengthMm`, `capacityGb`) and hold integers in base units. `lib/specs` must not import server-only code (the builder runs it in the browser). Seed data lives in `prisma/seed/data/` (entry point `prisma/seed.ts`).
 - Root layout ([app/layout.tsx](app/layout.tsx)) wraps everything in `ThemeProvider` (next-themes) and loads Geist / Geist Mono as `--font-sans` / `--font-mono`.
 - Current state is early scaffolding: `app/page.tsx` is still the template page; `app/login`, `app/signup` and `app/sidebar` are shadcn block pages (login/signup forms, sidebar shell) built from `components/login-form.tsx`, `signup-form.tsx` and `app-sidebar.tsx` / `nav-*.tsx` / `team-switcher.tsx`, which still contain shadcn sample data (Acme teams, placeholder user) to be replaced with real data.
 

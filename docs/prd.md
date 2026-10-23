@@ -2,7 +2,7 @@
 
 Oct 19, 2026 · Romulo Ramos
 
-**Version 1.0 — baseline for development.** Updated 22 October 2026. Changes after this point go through the change rules in *Development approach*.
+**Version 1.0 — baseline for development.** Updated 23 October 2026. Changes after this point go through the change rules in *Development approach*.
 
 ## Overview
 
@@ -138,7 +138,7 @@ Errors block "Add build to cart"; warnings allow it after the shopper acknowledg
 | Radiator fit | AIO ↔ Case | Radiator size in case's supported radiator list | Warning |
 | PSU wattage | All ↔ PSU | Sum of part TDP/TBP × 1.3 headroom ≤ PSU wattage | Error if over 100%, warning above 80% |
 | PSU form factor | PSU ↔ Case | ATX / SFX supported | Error |
-| M.2 slots | Storage ↔ Motherboard | NVMe drives ≤ board M.2 slots | Warning |
+| M.2 slots | Storage ↔ Motherboard | M.2 drives (NVMe or SATA) ≤ board M.2 slots | Warning |
 | Integrated graphics | CPU, no GPU | Warn if CPU has no iGPU and no GPU selected | Warning |
 | BIOS update | CPU ↔ Motherboard chipset | Flag combos that may need a BIOS update (data-driven flag) | Warning |
 
@@ -180,7 +180,7 @@ A protected `/admin` area, built with the same shadcn/ui components, lets the sh
 
 - **AD-1 Dashboard:** today's and 30-day sales, order count, average order value, low-stock list, recent orders.
 - **AD-2 Products:** create/edit with category-specific spec fields (required fields enforced for builder rules), images upload, SEO title/description, publish/draft toggle.
-- **AD-3 Categories & spec schemas:** define each category's spec fields (name, type, unit, filterable?, used by builder?).
+- **AD-3 Categories:** name, slug, parent, sort order. Each category's spec fields (name, type, unit, filterable?, used by builder?) are defined in code, because the builder rules read them by name; adding or changing a field is a code change ([ADR 0002](adr/0002-spec-schemas-in-code.md)).
 - **AD-4 Brands:** name, logo.
 - **AD-5 Inventory:** stock quantity, low-stock threshold, stock adjustments with reason (received, damaged, correction) logged.
 - **AD-6 Orders:** list with filters by status/payment method; order detail; status transitions; add courier + tracking number; cancel / refund; print packing slip.
@@ -264,7 +264,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | --- | --- |
 | `User` | id, email, name, passwordHash, role (customer / staff / owner), createdAt |
 | `Address` | userId, fullName, phone, region, province, city, barangay, street, zip, isDefault |
-| `Category` | id, name, slug, parentId, specSchema (JSON: fields, types, units, filterable, builderKey) |
+| `Category` | id, name, slug, parentId, sortOrder (spec fields are defined in code as Zod schemas per category, not stored here; see [ADR 0002](adr/0002-spec-schemas-in-code.md)) |
 | `Brand` | id, name, slug, logoUrl |
 | `Product` | id, categoryId, brandId, name, slug, sku, price, salePrice, stock, lowStockAt, specs (JSONB), weightGrams, warrantyMonths, status (draft / active) |
 | `ProductImage` | productId, url, alt, sortOrder |
@@ -289,7 +289,7 @@ The MVP is built incrementally in vertical slices, one user story at a time, usi
 
 | Document | Answers | Where it lives |
 | --- | --- | --- |
-| This PRD | What product, for whom, which features when | Claude doc, exported copy in `docs/prd.md` |
+| This PRD | What product, for whom, which features when | `docs/prd.md` |
 | Constitution | Engineering rules all code must follow | `CLAUDE.md` (or `.specify/memory/constitution.md` if Spec Kit is used, referenced from `CLAUDE.md`) |
 | Feature spec → plan → tasks | Exact behavior of one story and how it is built | `docs/specs/NNN-feature-name/` |
 | Architecture decision records | Why a technical choice was made | `docs/adr/NNNN-title.md` |
