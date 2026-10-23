@@ -13,6 +13,9 @@ Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
 - `pnpm lint` — ESLint (flat config, `eslint.config.mjs`)
 - `pnpm typecheck` — `tsc --noEmit`
 - `pnpm format` — Prettier on all `ts`/`tsx`
+- `pnpm db:migrate` — create and apply a migration on the local (Neon dev branch) database (`prisma migrate dev`)
+- `pnpm db:deploy` — apply pending migrations (`prisma migrate deploy`); runs before `pnpm build` on Vercel via [vercel.json](vercel.json)
+- `pnpm db:generate` — regenerate the Prisma client (also runs on `postinstall`)
 
 There is no test runner configured yet.
 
