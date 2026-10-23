@@ -47,7 +47,7 @@ model Product {
   salePrice      Int? // in centavos
   stock          Int            @default(0)
   lowStockAt     Int            @default(5)
-  specs          Json // validated by the category's Zod schema (story 3)
+  specs          Json // shape defined and validated by lib/specs (docs/adr/0002)
   weightGrams    Int
   warrantyMonths Int            @default(12)
   status         ProductStatus  @default(DRAFT)
