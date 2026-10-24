@@ -48,13 +48,15 @@ async function main(): Promise<number> {
     return 1
   }
 
-  if (reset) {
-    if (process.env.NODE_ENV === "production") {
-      console.error("Refusing --reset: NODE_ENV is production.")
-      return 1
-    }
-    console.log(`Resetting catalog on ${new URL(env.DATABASE_URL).host}`)
+  if (reset && process.env.NODE_ENV === "production") {
+    console.error("Refusing --reset: NODE_ENV is production.")
+    return 1
   }
+
+  // Name the target before writing, so a one-off production seed can be
+  // checked against the expected host (spec 004, "Seeding production")
+  const host = new URL(env.DATABASE_URL).host
+  console.log(reset ? `Resetting catalog on ${host}` : `Seeding ${host}`)
 
   const counts = await writeSeed(db, validation.files, { reset })
   const kept = counts.updated > 0 ? "; stock, price and status kept" : ""
