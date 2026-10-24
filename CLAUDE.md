@@ -15,7 +15,7 @@ Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
 - `pnpm format` — Prettier on all `ts`/`tsx`
 - `pnpm db:migrate` — create and apply a migration on the local (Neon dev branch) database (`prisma migrate dev`)
 - `pnpm db:deploy` — apply pending migrations (`prisma migrate deploy`); runs before `pnpm build` on Vercel via [vercel.json](vercel.json)
-- `pnpm db:generate` — regenerate the Prisma client (also runs on `postinstall`)
+- `pnpm db:generate` — regenerate the Prisma client (also runs on `postinstall` and at the start of `pnpm build`, since Vercel may restore cached dependencies without running `postinstall`)
 - `pnpm db:seed` — validate and upsert the catalog fixture parts into the local (Neon dev branch) database; keeps stock, price and status of existing products. `pnpm db:seed --reset` truncates the catalog tables first (refused when `NODE_ENV=production`). Prints the target host before writing. Runs on the dev database, in CI (before E2E), and once by hand on production (see [spec 004](docs/specs/004-product-list/spec.md), "Seeding production"); never part of a build or deploy
 
 - `pnpm test` / `pnpm test:watch` — Vitest unit tests, once / in watch mode. Pure: no database or env vars needed
