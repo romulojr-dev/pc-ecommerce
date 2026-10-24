@@ -1,0 +1,89 @@
+# Lint, type check, migrate, test and build every pull request and every
+# push to main (spec 003). Branch protection on main requires the `ci` job.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same branch or PR cancels the run in progress
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Throwaway database for `prisma migrate deploy`; lives only for the job
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pcsilicon
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # No secrets: everything points at the service container. There is no
+    # pooler in CI, so both URLs are the same.
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pcsilicon
+      DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/pcsilicon
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Version comes from `packageManager` in package.json
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # Also runs `prisma generate` (postinstall)
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Apply migrations
+        run: pnpm db:deploy
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Serves the build above with `pnpm start` (CI is set by GitHub)
+      - name: E2E tests
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
