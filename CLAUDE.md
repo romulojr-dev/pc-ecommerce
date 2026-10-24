@@ -18,7 +18,10 @@ Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
 - `pnpm db:generate` — regenerate the Prisma client (also runs on `postinstall`)
 - `pnpm db:seed` — validate and upsert the catalog fixture parts into the local (Neon dev branch) database; keeps stock, price and status of existing products. `pnpm db:seed --reset` truncates the catalog tables first (refused when `NODE_ENV=production`). Dev database only; never part of a build
 
-There is no test runner configured yet.
+- `pnpm test` / `pnpm test:watch` — Vitest unit tests, once / in watch mode. Pure: no database or env vars needed
+- `pnpm test:e2e` — Playwright E2E tests (Chromium only); starts `pnpm dev`, or reuses a running dev server. With `CI` set it serves the production build with `pnpm start`, so run `pnpm build` first. One-time setup: `pnpm exec playwright install chromium`
+
+Unit tests are `*.test.ts`, colocated with the code they test (e.g. [prisma/seed/validate.test.ts](prisma/seed/validate.test.ts)). E2E tests are `e2e/*.spec.ts`; use role-based locators. CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs install, lint, typecheck, `db:deploy` against a throwaway Postgres, unit tests, build and E2E on every PR and push to `main`; branch protection requires its `ci` job.
 
 ## Project
 
