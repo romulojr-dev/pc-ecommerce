@@ -10,7 +10,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify: `pnpm test` with `.env.local` moved aside; `pnpm typecheck`; the page still renders and sort/pagination keep working.
 - [x] **T4. Filter queries.** `lib/listing-filters/server.ts`, filtered `getCategoryProducts` with effective-price sort, `getFilterOptions`; integration tests for every case in the spec, including the in-stock/`getStockStatus` agreement.
   - Verify: `pnpm test:db`.
-- [ ] **T5. Sale price on the card.** `salePrice` in the card select/data and `ProductCard`; `cardPrices` in `e2e/category-page.spec.ts` skips struck prices.
+- [x] **T5. Sale price on the card.** `salePrice` in the card select/data and `ProductCard`; `cardPrices` in `e2e/category-page.spec.ts` skips struck prices.
   - Verify: a sale product (Core Ultra 5 245K) in `pnpm dev`; `pnpm test:e2e` for the category-page spec.
 - [ ] **T6. Sidebar and page wiring.** shadcn `checkbox`; `ListingShell`, `ListingFilters`; page wiring (options, normalization redirect, grid columns); brand, in-stock and price apply as in the spec.
   - Verify in `pnpm dev`: URLs update, results change, focus stays on a toggled checkbox, Enter applies a price, invalid price shows its error, bad URLs redirect.

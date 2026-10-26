@@ -5,12 +5,15 @@ import { expect, type Page, test } from "@playwright/test"
 // fixture edits don't break it. CPU and GPU have two pages; paging itself is
 // covered by the unit tests (lib/listing-params.test.ts).
 
-// Peso prices on the page's cards, as numbers: "₱36,995.00" -> 36995
+// Peso prices on the page's cards, as numbers: "₱36,995.00" -> 36995. The
+// price the shopper pays: a struck-through list price sits in a paragraph that
+// starts with "Was", so the anchored pattern skips it.
 async function cardPrices(page: Page): Promise<number[]> {
   const texts = await page
     .getByRole("main")
     .getByRole("article")
-    .getByText(/^₱[\d,]+\.\d{2}$/)
+    .locator("p")
+    .filter({ hasText: /^₱[\d,]+\.\d{2}$/ })
     .allTextContents()
   return texts.map((text) => Number(text.replace(/[₱,]/g, "")))
 }

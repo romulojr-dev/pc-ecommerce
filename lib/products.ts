@@ -22,7 +22,9 @@ export type ProductCardData = {
   slug: string
   categorySlug: string
   brand: string
+  // Centavos; salePrice is what the shopper pays when it is set
   price: number
+  salePrice: number | null
   stock: number
   lowStockAt: number
   // "YYYY-MM-DD" while on pre-order, else null (lib/stock.ts)
@@ -37,6 +39,7 @@ export const productCardSelect = {
   name: true,
   slug: true,
   price: true,
+  salePrice: true,
   stock: true,
   lowStockAt: true,
   preorderShipsOn: true,
@@ -60,6 +63,7 @@ export function toProductCardData(row: ProductCardRow): ProductCardData {
     categorySlug: row.category.slug,
     brand: row.brand.name,
     price: row.price,
+    salePrice: row.salePrice,
     stock: row.stock,
     lowStockAt: row.lowStockAt,
     preorderShipsOn: toDateString(row.preorderShipsOn),
