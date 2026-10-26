@@ -20,3 +20,17 @@ export const getMenuCategories = unstable_cache(
   ["menu-categories"],
   { tags: [CATEGORIES_TAG], revalidate: 3600 }
 )
+
+export type CategorySummary = { id: string; name: string; slug: string }
+
+// One category for its listing page and metadata, or null for an unknown slug.
+// The slug argument is part of the cache key.
+export const getCategoryBySlug = unstable_cache(
+  async (slug: string): Promise<CategorySummary | null> =>
+    db.category.findUnique({
+      where: { slug },
+      select: { id: true, name: true, slug: true },
+    }),
+  ["category-by-slug"],
+  { tags: [CATEGORIES_TAG], revalidate: 3600 }
+)

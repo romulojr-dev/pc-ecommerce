@@ -3,6 +3,11 @@ export function categoryHref(slug: string) {
   return `/${slug}`
 }
 
+// Product pages live under their category: /cpu/amd-ryzen-5-7600
+export function productHref(categorySlug: string, productSlug: string) {
+  return `${categoryHref(categorySlug)}/${productSlug}`
+}
+
 // True on the category's page and on its products' pages (/cpu, /cpu/…)
 export function isCurrentCategory(pathname: string, slug: string) {
   return pathname.split("/")[1] === slug

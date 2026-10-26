@@ -11,11 +11,11 @@ export const RESERVED_SLUGS = [
   "search",
   "api",
   // Current routes
-  "products",
   "login",
   "signup",
   "sidebar",
   // Likely routes, reserved early
+  "products",
   "build",
   "builds",
   "orders",
