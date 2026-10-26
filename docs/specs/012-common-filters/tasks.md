@@ -16,7 +16,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify in `pnpm dev`: URLs update, results change, focus stays on a toggled checkbox, Enter applies a price, invalid price shows its error, bad URLs redirect.
 - [x] **T7. Chips, clear all, no-match state.** `ActiveFilters`, no-match message with "Clear all filters", `role="status"` on the count, metadata (`noindex`, canonical).
   - Verify in `pnpm dev`: remove one chip, Clear all keeps sort; `/cpu?minPrice=9999999`; page source shows `noindex`.
-- [ ] **T8. E2E.** `e2e/category-filters.spec.ts` with the scenarios in the spec.
+- [x] **T8. E2E.** `e2e/category-filters.spec.ts` with the scenarios in the spec.
   - Verify: `pnpm test:e2e`, all specs.
 - [ ] **T9. Docs.** CLAUDE.md (listing URL state, filter structure, effective price, `test:db`, `TEST_DATABASE_URL`), README, tick the spec's acceptance criteria and set its status.
 - [ ] **T10. Build and wrap-up.** `pnpm build`, `pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm test:e2e`; browser check (themes, 1280/1024 px, keyboard, axe); push and open the PR.
