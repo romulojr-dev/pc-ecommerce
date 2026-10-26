@@ -221,3 +221,22 @@ test("the sidebar works by keyboard", async ({ page }) => {
   await page.keyboard.press("Enter")
   await expect(page).toHaveURL("/cpu?brand=intel&minPrice=5000&maxPrice=20000")
 })
+
+// Base UI links a checkbox to its label only after hydration, so the markup
+// the server sends must name them itself (axe: aria-toggle-field-name)
+test("the checkboxes are named in the server-rendered HTML", async ({
+  request,
+}) => {
+  const response = await request.get("/cpu")
+  const html = await response.text()
+
+  const checkboxes = html.match(/<span[^>]*role="checkbox"[^>]*>/g) ?? []
+  // AMD, Intel and In stock only
+  expect(checkboxes.length).toBeGreaterThanOrEqual(3)
+  for (const tag of checkboxes) {
+    const labelledBy = /aria-labelledby="([^"]+)"/.exec(tag)?.[1]
+    expect(labelledBy, tag).toBeTruthy()
+    // ...and the label it points at is in the HTML
+    expect(html).toContain(`id="${labelledBy}"`)
+  }
+})

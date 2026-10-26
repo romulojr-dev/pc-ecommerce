@@ -121,10 +121,19 @@ function CheckboxField({
   onCheckedChange: (checked: boolean) => void
 }) {
   const id = useId()
+  const labelId = `${id}-label`
   return (
     <Field orientation="horizontal">
-      <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} />
-      <FieldLabel htmlFor={id} className="font-normal">
+      {/* Base UI only links the label to the checkbox once the page has
+          hydrated, and `htmlFor` points at its hidden input; the explicit
+          aria-labelledby names the checkbox in the server-rendered HTML too */}
+      <Checkbox
+        id={id}
+        aria-labelledby={labelId}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+      />
+      <FieldLabel id={labelId} htmlFor={id} className="font-normal">
         {label}
       </FieldLabel>
     </Field>
