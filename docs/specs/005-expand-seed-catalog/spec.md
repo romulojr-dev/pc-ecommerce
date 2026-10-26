@@ -90,7 +90,7 @@ Expected result: the 23 existing products are updated (stock, price and status k
 - Pre-order status and its schema field (comes with the product page story).
 - Showing sale prices or % off (product page and category page stories). This story only seeds `salePrice`.
 - Pagination, filters and category pages themselves (Catalog epic).
-- The PRD's 150-part target (Success metrics). This story reaches about 60.
+- The PRD's 150-part target (Success metrics). This story reaches about 60; [spec 011](../011-seed-150/spec.md) reaches 150.
 - Non-builder categories (case fans, monitors, peripherals, networking, prebuilts).
 - Reserving brand or product slugs (they aren't top-level routes).
 

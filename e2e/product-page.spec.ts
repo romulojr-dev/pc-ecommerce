@@ -16,19 +16,20 @@ test("the menu leads through a category to a product page", async ({
   await page.getByRole("menuitem", { name: "CPU", exact: true }).click()
   await expect(page).toHaveURL("/cpu")
 
-  await page
-    .getByRole("link", { name: "AMD Ryzen 5 7600", exact: true })
-    .click()
+  // The first product in the list: the catalog grows, this test shouldn't care
+  const first = page.getByRole("article").first().getByRole("link")
+  const name = (await first.innerText()).trim()
+  await first.click()
 
-  await expect(page).toHaveURL("/cpu/amd-ryzen-5-7600")
-  await expect(page).toHaveTitle("AMD Ryzen 5 7600 | PC Silicon")
+  await expect(page).toHaveURL(/^http:\/\/[^/]+\/cpu\/[a-z0-9-]+$/)
+  await expect(page).toHaveTitle(`${name} | PC Silicon`)
   await expect(
-    page.getByRole("heading", { level: 1, name: "AMD Ryzen 5 7600" })
+    page.getByRole("heading", { level: 1, name, exact: true })
   ).toBeVisible()
   await expect(page.getByRole("main")).toContainText(/₱[\d,]+\.\d{2}/)
 
   const specs = page.getByRole("table", { name: "Specifications" })
-  await expect(specs.getByRole("row", { name: "Socket AM5" })).toBeVisible()
+  await expect(specs.getByRole("row", { name: /^Socket / })).toBeVisible()
 
   // shadcn gives the current page role="link" too, so pick the real link
   await expect(

@@ -2,8 +2,8 @@ import { expect, type Page, test } from "@playwright/test"
 
 // Category listing (docs/specs/008-category-listing). Needs a seeded database
 // (CI seeds after migrating). Checks behaviour, not exact prices or stock, so
-// fixture edits don't break it. No seeded category has more than one page, so
-// paging is covered by the unit tests (lib/listing-params.test.ts).
+// fixture edits don't break it. CPU and GPU have two pages; paging itself is
+// covered by the unit tests (lib/listing-params.test.ts).
 
 // Peso prices on the page's cards, as numbers: "₱36,995.00" -> 36995
 async function cardPrices(page: Page): Promise<number[]> {
@@ -32,19 +32,20 @@ test("the category menu leads to a category's product cards", async ({
     page.getByRole("heading", { level: 1, name: "CPU" })
   ).toBeVisible()
 
-  const card = page.getByRole("article").filter({
-    has: page.getByRole("heading", { name: "AMD Ryzen 5 7600", exact: true }),
-  })
-  await expect(card).toContainText("AMD")
+  // Whichever product comes first: the catalog grows, this test shouldn't care
+  const card = page.getByRole("article").first()
+  const name = (await card.getByRole("heading").innerText()).trim()
+  await expect(card).toContainText(/AMD|Intel/)
   await expect(card).toContainText(/₱[\d,]+\.\d{2}/)
-  await expect(card).toContainText(/In stock|Low stock|Out of stock/)
-  await expect(
-    card.getByRole("link", { name: "AMD Ryzen 5 7600" })
-  ).toHaveAttribute("href", "/cpu/amd-ryzen-5-7600")
+  await expect(card).toContainText(/In stock|Low stock|Out of stock|Pre-order/)
+  await expect(card.getByRole("link", { name, exact: true })).toHaveAttribute(
+    "href",
+    /^\/cpu\/[a-z0-9-]+$/
+  )
 
   // The image has the product's alt text and actually loads. Images below the
   // first row load lazily, so scroll the card into view first.
-  const image = card.getByRole("img", { name: "AMD Ryzen 5 7600" })
+  const image = card.getByRole("img", { name })
   await image.scrollIntoViewIfNeeded()
   await expect
     .poll(() =>
@@ -98,9 +99,9 @@ test("invalid and out-of-range parameters fall back to the canonical URL", async
   await page.goto("/cpu?sort=bogus&page=abc")
   await expect(page).toHaveURL("/cpu")
 
-  // Past the last page goes to the last page, which is page 1 here
+  // Past the last page goes to the last page: 26 CPUs, 24 per page
   await page.goto("/cpu?page=99")
-  await expect(page).toHaveURL("/cpu")
+  await expect(page).toHaveURL("/cpu?page=2")
 })
 
 test("the grid/list choice is remembered", async ({ page }) => {
