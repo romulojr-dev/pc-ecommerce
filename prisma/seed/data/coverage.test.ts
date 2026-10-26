@@ -1,0 +1,89 @@
+import { assert, describe, expect, test } from "vitest"
+
+import { getStockStatus } from "@/lib/stock"
+
+import { validateSeed } from "../validate"
+import { seedFiles } from "."
+
+// Catalog minimums from docs/specs/005-expand-seed-catalog/spec.md
+// ("Coverage"). Runs on validated parts, so defaults (lowStockAt) are filled.
+const validation = validateSeed(seedFiles)
+if (!validation.ok) assert.fail("seed data is invalid; see validate.test.ts")
+const files = validation.files
+const parts = files.flatMap((file) => file.parts)
+
+// Spec 001's fixture set: its compatible builds and incompatible pairs
+// depend on these parts
+const FIXTURE_SKUS = [
+  "100-100001015BOX",
+  "100-100001084WOF",
+  "BX8071514400F",
+  "90MB1BP0-M0AAY0",
+  "B650I LIGHTNING WIFI",
+  "PRO B760M-A WIFI DDR4",
+  "CMK32GX5M2B6000C30",
+  "KF432C16BBK2/16",
+  "MZ-V9P1T0BW",
+  "WDS200T2X0E",
+  "CT1000MX500SSD1",
+  "DUAL-RTX4060-O8G",
+  "GV-N5070WF3OC-12GD",
+  "ROG-ASTRAL-RTX5090-O32G-GAMING",
+  "LAN216X",
+  "MCB-Q300L-KANN-S00",
+  "FD-C-RID1N-11",
+  "MPE-5501-ACAAB",
+  "CP-9020263-NA",
+  "CP-9020186-NA",
+  "PA120 SE",
+  "NH-L9a-AM5",
+  "ACFRE00136A",
+]
+
+describe("catalog coverage", () => {
+  test("has 55–65 parts", () => {
+    expect(parts.length).toBeGreaterThanOrEqual(55)
+    expect(parts.length).toBeLessThanOrEqual(65)
+  })
+
+  test.each(files)("$category has at least 6 parts", ({ parts }) => {
+    expect(parts.length).toBeGreaterThanOrEqual(6)
+  })
+
+  test.each(files)(
+    "$category has at least 3 brands (2 for cpu)",
+    ({ category, parts }) => {
+      const brands = new Set(parts.map((part) => part.brandSlug))
+      expect(brands.size).toBeGreaterThanOrEqual(category === "cpu" ? 2 : 3)
+    }
+  )
+
+  test("has at least 3 out-of-stock and 5 low-stock parts", () => {
+    const statuses = parts.map(getStockStatus)
+    expect(
+      statuses.filter((status) => status === "out-of-stock").length
+    ).toBeGreaterThanOrEqual(3)
+    expect(
+      statuses.filter((status) => status === "low-stock").length
+    ).toBeGreaterThanOrEqual(5)
+  })
+
+  test("has 4–8 parts on sale", () => {
+    const onSale = parts.filter((part) => part.salePrice !== undefined)
+    expect(onSale.length).toBeGreaterThanOrEqual(4)
+    expect(onSale.length).toBeLessThanOrEqual(8)
+  })
+
+  test("has a PSU of at least 1000 W", () => {
+    const psus = files.find((file) => file.category === "psu")!.parts
+    const wattages = psus.map(
+      (part) => (part.specs as { wattageW: number }).wattageW
+    )
+    expect(Math.max(...wattages)).toBeGreaterThanOrEqual(1000)
+  })
+
+  test("keeps every spec 001 fixture part", () => {
+    const skus = new Set(parts.map((part) => part.sku))
+    expect(FIXTURE_SKUS.filter((sku) => !skus.has(sku))).toEqual([])
+  })
+})

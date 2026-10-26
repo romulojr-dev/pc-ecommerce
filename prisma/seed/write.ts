@@ -87,8 +87,8 @@ export function writeSeed(
         updated: parts.length - newParts.length,
       }
     },
-    // Prisma's default is 5 s; ~50 sequential writes to a remote database
-    // can take longer
+    // Prisma's default is 5 s; ~100 sequential writes to a remote database
+    // can take longer (60 parts took under 30 s against Neon)
     { maxWait: 10_000, timeout: 60_000 }
   )
 }

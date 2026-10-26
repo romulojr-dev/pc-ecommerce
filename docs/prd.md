@@ -381,7 +381,7 @@ After the MVP ships, Phase 2 items are planned as their own backlog, prioritized
 None of these block starting; resolve them during Sprint 1 and record the answers here.
 
 - [ ] Logo and brand colors for PC Silicon?
-- [ ] Which brands and how many SKUs per category for the seed catalog?
+- [x] Which brands and how many SKUs per category for the seed catalog? For the MVP seed: about 60 real parts, at least 6 per builder category, at least 3 brands per category (AMD and Intel for CPUs), across budget, mid and high tiers ([spec 005](specs/005-expand-seed-catalog/spec.md)). The 150-part target in Success metrics still stands.
 - [ ] Show prices VAT-inclusive only, or also show VAT breakdown on the invoice?
 - [ ] Do we need Filipino (Tagalog) language support, or English only?
 - [ ] Is a "request a quote" flow for bulk / office orders worth adding?

@@ -6,10 +6,11 @@ import { fileURLToPath } from "node:url"
 
 import { db } from "@/lib/db"
 import { env } from "@/lib/env"
+import { builderCategories } from "@/lib/specs"
 
 import { seedFiles } from "./seed/data"
 import { formatErrors } from "./seed/format-errors"
-import { validateSeed } from "./seed/validate"
+import { findReservedCategorySlugs, validateSeed } from "./seed/validate"
 import { SeedWriteError, writeSeed } from "./seed/write"
 
 // pnpm db:seed [--reset]: loads the catalog fixture set into the dev
@@ -37,6 +38,13 @@ async function main(): Promise<number> {
         .map(({ file }) => `  ${file}`)
         .join("\n")}`
     )
+    return 1
+  }
+
+  // Category rows come from the registry, so its slugs are checked here
+  const reserved = findReservedCategorySlugs(Object.keys(builderCategories))
+  if (reserved.length > 0) {
+    console.error(`${reserved.join("\n")}\nNothing was written.`)
     return 1
   }
 
