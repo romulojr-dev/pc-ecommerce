@@ -1,0 +1,15 @@
+# Text files use LF everywhere, in the repo and in the working tree, whatever
+# core.autocrlf is set to (Git for Windows defaults it to true). Matches
+# Prettier's "endOfLine": "lf".
+* text=auto eol=lf
+
+# Binary: never convert or diff as text
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.gif binary
+*.woff binary
+*.woff2 binary
