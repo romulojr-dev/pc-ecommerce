@@ -5,8 +5,8 @@ import type { ValidPart, ValidSeedFile } from "./validate"
 
 // What a re-seed refreshes on a product that already exists (spec.md, "Which
 // product fields the seed writes"). Everything else (price, salePrice,
-// stock, lowStockAt, status, slug) is set on create only, because once the
-// store runs, orders and the admin panel own those values.
+// stock, lowStockAt, status, preorderShipsOn, slug) is set on create only,
+// because once the store runs, orders and the admin panel own those values.
 const CATALOG_FIELDS = [
   "name",
   "description",
@@ -15,6 +15,7 @@ const CATALOG_FIELDS = [
   "brandId",
   "weightGrams",
   "warrantyMonths",
+  "boxContents",
 ] as const
 
 export type SeedCounts = {
@@ -183,6 +184,12 @@ function productData(part: ValidPart, categoryId: string, brandId: string) {
     specs: part.specs as Prisma.InputJsonValue,
     weightGrams: part.weightGrams,
     warrantyMonths: part.warrantyMonths,
+    boxContents: part.boxContents ?? [],
+    // "2027-01-15" parses as UTC midnight, which a date column stores as
+    // that day
+    preorderShipsOn: part.preorderShipsOn
+      ? new Date(part.preorderShipsOn)
+      : null,
     status: part.status,
     categoryId,
     brandId,

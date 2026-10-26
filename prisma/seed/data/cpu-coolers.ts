@@ -14,6 +14,11 @@ export const cpuCoolers = [
     stock: 20,
     weightGrams: 1300,
     warrantyMonths: 36,
+    boxContents: [
+      "CPU cooler with 2× 120 mm fans",
+      "Intel and AMD mounting kit",
+      "Thermal paste",
+    ],
     sourceUrl: "https://www.thermalright.com/product/peerless-assassin-120-se/",
     specs: {
       type: "AIR",
@@ -92,6 +97,14 @@ export const cpuCoolers = [
     stock: 5, // low stock
     weightGrams: 2200,
     warrantyMonths: 72,
+    boxContents: [
+      "CPU cooler with 2× 140 mm fans",
+      "SecuFirm2+ mounting kit",
+      "NT-H2 thermal paste",
+      "Low-noise adapters",
+      "Screwdriver",
+      "Case badge",
+    ],
     sourceUrl: "https://www.noctua.at/en/products/nh-d15-g2/specifications",
     // Several images, for the product gallery (spec 006)
     images: [

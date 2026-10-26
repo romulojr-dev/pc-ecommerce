@@ -14,6 +14,12 @@ export const cpus = [
     stock: 12,
     weightGrams: 450, // boxed with Wraith Stealth cooler
     warrantyMonths: 36,
+    boxContents: [
+      "Processor",
+      "AMD Wraith Stealth cooler",
+      "Case badge",
+      "Quick installation guide",
+    ],
     sourceUrl:
       "https://www.amd.com/en/products/processors/desktops/ryzen/7000-series/amd-ryzen-5-7600.html",
     // Several images, for the product gallery (spec 006)
@@ -41,6 +47,7 @@ export const cpus = [
     stock: 4, // at or below lowStockAt, for "Low stock" states
     weightGrams: 200, // no cooler in the box
     warrantyMonths: 36,
+    boxContents: ["Processor", "Case badge", "Quick installation guide"],
     sourceUrl:
       "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9800x3d.html",
     specs: {
@@ -62,6 +69,7 @@ export const cpus = [
     stock: 20,
     weightGrams: 450, // boxed with Laminar RM1 cooler
     warrantyMonths: 36,
+    boxContents: ["Processor", "Intel Laminar RM1 cooler", "Case badge"],
     sourceUrl:
       "https://www.intel.com/content/www/us/en/products/sku/236777/intel-core-i5-processor-14400f-20m-cache-up-to-4-70-ghz/specifications.html",
     specs: {
@@ -83,6 +91,12 @@ export const cpus = [
     stock: 15,
     weightGrams: 450, // boxed with Wraith Stealth cooler
     warrantyMonths: 36,
+    boxContents: [
+      "Processor",
+      "AMD Wraith Stealth cooler",
+      "Case badge",
+      "Quick installation guide",
+    ],
     sourceUrl:
       "https://www.amd.com/en/products/processors/desktops/ryzen/5000-series/amd-ryzen-5-5600.html",
     specs: {
@@ -104,6 +118,7 @@ export const cpus = [
     stock: 18,
     weightGrams: 450, // boxed with Laminar RM1 cooler
     warrantyMonths: 36,
+    boxContents: ["Processor", "Intel Laminar RM1 cooler", "Case badge"],
     sourceUrl:
       "https://www.intel.com/content/www/us/en/products/sku/236786/intel-core-i3-processor-14100f-12m-cache-up-to-4-70-ghz/specifications.html",
     specs: {
@@ -126,6 +141,7 @@ export const cpus = [
     stock: 9,
     weightGrams: 200, // no cooler in the box
     warrantyMonths: 36,
+    boxContents: ["Processor", "Case badge"],
     sourceUrl:
       "https://www.intel.com/content/www/us/en/products/sku/241067/intel-core-ultra-5-processor-245k-24m-cache-up-to-5-20-ghz/specifications.html",
     specs: {
@@ -147,6 +163,8 @@ export const cpus = [
     stock: 6,
     weightGrams: 200, // no cooler in the box
     warrantyMonths: 36,
+    boxContents: ["Processor", "Case badge"],
+    preorderShipsOn: "2027-02-01", // pre-order, for "Pre-order" states
     sourceUrl:
       "https://www.intel.com/content/www/us/en/products/sku/241063/intel-core-ultra-7-processor-265k-30m-cache-up-to-5-50-ghz/specifications.html",
     specs: {
@@ -168,6 +186,7 @@ export const cpus = [
     stock: 3, // low stock
     weightGrams: 200, // no cooler in the box
     warrantyMonths: 36,
+    boxContents: ["Processor", "Case badge", "Quick installation guide"],
     sourceUrl:
       "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-9-9950x.html",
     specs: {

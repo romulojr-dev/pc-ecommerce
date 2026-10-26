@@ -30,6 +30,11 @@ const productFields = {
   lowStockAt: nonNegativeInt().default(5),
   weightGrams: positiveInt(),
   warrantyMonths: nonNegativeInt().default(12),
+  // What ships in the retail box, one line per item
+  boxContents: z.array(text()).optional(),
+  // Expected ship date ("2027-01-15") while on pre-order. Set on create only
+  // (write.ts): once the store runs, the admin opens and ends pre-orders.
+  preorderShipsOn: z.iso.date().optional(),
   status: z.enum(ProductStatus).default("ACTIVE"),
   description: text().optional(),
   // Defaults to slugify(name). Set it only to override the generated one.

@@ -161,3 +161,42 @@ describe("images", () => {
     })
   })
 })
+
+describe("box contents and pre-order", () => {
+  const { file, parts } = seedFiles.find(({ category }) => category === "cpu")!
+  const base = parts[0] as RawPart
+
+  function validatePart(fields: Record<string, unknown>) {
+    const part = { ...structuredClone(base), ...fields }
+    return validateSeed([{ file, category: "cpu", parts: [part] }])
+  }
+
+  test("accepts a ship date and box contents", () => {
+    const result = validatePart({
+      preorderShipsOn: "2027-01-15",
+      boxContents: ["Processor", "Case badge"],
+    })
+    assert(result.ok)
+    expect(result.files[0].parts[0]).toMatchObject({
+      preorderShipsOn: "2027-01-15",
+      boxContents: ["Processor", "Case badge"],
+    })
+  })
+
+  test.each(["2027-13-01", "15/01/2027", "2027-01-15T00:00:00Z"])(
+    "rejects the ship date %s",
+    (preorderShipsOn) => {
+      expect(validatePart({ preorderShipsOn })).toMatchObject({
+        ok: false,
+        errors: [{ path: ["preorderShipsOn"] }],
+      })
+    }
+  )
+
+  test("rejects an empty box contents item", () => {
+    expect(validatePart({ boxContents: ["Processor", " "] })).toMatchObject({
+      ok: false,
+      errors: [{ path: ["boxContents", 1] }],
+    })
+  })
+})

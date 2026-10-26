@@ -22,6 +22,8 @@ type ListingResultsProps = {
   products: ProductCardData[]
   // From the view cookie, so the first render already has the right layout
   initialView: ListingView
+  // Today in Manila, from the server, so cards show pre-orders consistently
+  today: string
   // Server-rendered toolbar parts: the count line (left) and controls shown
   // before the toggle (the sort, later filters)
   summary: React.ReactNode
@@ -33,6 +35,7 @@ type ListingResultsProps = {
 export function ListingResults({
   products,
   initialView,
+  today,
   summary,
   controls,
 }: ListingResultsProps) {
@@ -83,6 +86,7 @@ export function ListingResults({
             <ProductCard
               product={product}
               layout={view}
+              today={today}
               sizes={
                 view === "grid" ? "(min-width: 1280px) 272px, 30vw" : "96px"
               }

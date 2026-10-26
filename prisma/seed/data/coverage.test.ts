@@ -63,14 +63,23 @@ describe("catalog coverage", () => {
     }
   )
 
-  test("has at least 3 out-of-stock and 5 low-stock parts", () => {
-    const statuses = parts.map(getStockStatus)
+  test("has at least 3 out-of-stock, 5 low-stock and 2 pre-order parts", () => {
+    // A fixed day before the seeded ship dates, so the test doesn't age
+    const statuses = parts.map((part) =>
+      getStockStatus(
+        { ...part, preorderShipsOn: part.preorderShipsOn ?? null },
+        "2026-10-26"
+      )
+    )
     expect(
       statuses.filter((status) => status === "out-of-stock").length
     ).toBeGreaterThanOrEqual(3)
     expect(
       statuses.filter((status) => status === "low-stock").length
     ).toBeGreaterThanOrEqual(5)
+    expect(
+      statuses.filter((status) => status === "pre-order").length
+    ).toBeGreaterThanOrEqual(2)
   })
 
   test("has 4–8 parts on sale", () => {
