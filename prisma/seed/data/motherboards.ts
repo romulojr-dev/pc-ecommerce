@@ -194,4 +194,305 @@ export const motherboards = [
       hasWifi: true,
     },
   },
+  {
+    sku: "MAG B550 TOMAHAWK",
+    name: "MSI MAG B550 Tomahawk",
+    brand: "MSI",
+    price: 999500, // mid
+    stock: 11,
+    weightGrams: 1500,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "SATA 6G cables",
+      "M.2 screws",
+      "Quick installation guide",
+    ],
+    sourceUrl:
+      "https://www.msi.com/Motherboard/MAG-B550-TOMAHAWK/Specification",
+    specs: {
+      socket: "AM4",
+      chipset: "B550",
+      // Launched Jun 2020 for Ryzen 3000 (no zen-2 in the enum); Ryzen 5000
+      // (zen-3) is on MSI's CPU support list
+      nativeCpuGenerations: ["zen-3"],
+      formFactor: "ATX",
+      memoryType: "DDR4",
+      memorySlots: 4,
+      maxMemoryGb: 128,
+      m2Slots: 2,
+      hasWifi: false,
+    },
+  },
+  {
+    sku: "X570 AORUS ELITE",
+    name: "Gigabyte X570 AORUS ELITE",
+    brand: "Gigabyte",
+    price: 1149500, // mid
+    stock: 3, // low stock
+    weightGrams: 1600,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "SATA cables",
+      "G Connector",
+      "Quick installation guide",
+    ],
+    sourceUrl:
+      "https://www.gigabyte.com/Motherboard/X570-AORUS-ELITE-rev-10/sp",
+    specs: {
+      socket: "AM4",
+      chipset: "X570",
+      // Launched Jul 2019 for Ryzen 3000 (no zen-2 in the enum); Ryzen 5000
+      // (zen-3) arrived with BIOS F30, Sep 2020
+      nativeCpuGenerations: ["zen-3"],
+      formFactor: "ATX",
+      memoryType: "DDR4",
+      memorySlots: 4,
+      maxMemoryGb: 128,
+      m2Slots: 2,
+      hasWifi: false, // the Wi-Fi version is the X570 AORUS ELITE WIFI
+    },
+  },
+  {
+    sku: "A620M-HDV/M.2",
+    name: "ASRock A620M-HDV/M.2",
+    brand: "ASRock",
+    price: 499500, // budget
+    salePrice: 449500,
+    stock: 18,
+    weightGrams: 900,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "I/O shield",
+      "SATA data cables",
+      "M.2 screws",
+      "User manual",
+    ],
+    sourceUrl: "https://www.asrock.com/mb/AMD/A620M-HDVM.2/index.asp",
+    specs: {
+      socket: "AM5",
+      chipset: "A620",
+      // Launch BIOS supports Ryzen 7000 only
+      nativeCpuGenerations: ["zen-4"],
+      formFactor: "MICRO_ATX",
+      memoryType: "DDR5",
+      memorySlots: 2,
+      maxMemoryGb: 128,
+      m2Slots: 2, // plus a Key E slot for an optional Wi-Fi module
+      hasWifi: false, // Wi-Fi module not included
+    },
+  },
+  {
+    sku: "B650 AORUS ELITE AX",
+    name: "Gigabyte B650 AORUS ELITE AX",
+    brand: "Gigabyte",
+    price: 1299500, // mid
+    stock: 9,
+    weightGrams: 1700,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "SATA cables",
+      "G Connector",
+      "AORUS antenna",
+      "Quick installation guide",
+    ],
+    sourceUrl:
+      "https://www.gigabyte.com/Motherboard/B650-AORUS-ELITE-AX-rev-10-11/sp",
+    specs: {
+      socket: "AM5",
+      chipset: "B650",
+      // Launched Oct 2022; Ryzen 9000 (zen-5) arrived Aug 2024
+      nativeCpuGenerations: ["zen-4"],
+      formFactor: "ATX",
+      memoryType: "DDR5",
+      memorySlots: 4,
+      maxMemoryGb: 256,
+      m2Slots: 3,
+      hasWifi: true,
+    },
+  },
+  {
+    sku: "TUF GAMING B850-PLUS WIFI",
+    name: "ASUS TUF Gaming B850-PLUS WiFi",
+    brand: "ASUS",
+    price: 1549500, // high
+    stock: 7,
+    weightGrams: 1700,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "2 x SATA 6Gb/s cables",
+      "ASUS WiFi Q-Antenna",
+      "TUF GAMING sticker",
+      "2 x M.2 rubber packages",
+      "Quick start guide",
+    ],
+    sourceUrl:
+      "https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-b850-plus-wifi/techspec/",
+    specs: {
+      socket: "AM5",
+      chipset: "B850",
+      // Launched Jan 2025 with Ryzen 9000 and 7000 support
+      nativeCpuGenerations: ["zen-4", "zen-5"],
+      formFactor: "ATX",
+      memoryType: "DDR5",
+      memorySlots: 4,
+      maxMemoryGb: 256,
+      m2Slots: 3,
+      hasWifi: true,
+    },
+  },
+  {
+    sku: "H610M-HDV/M.2 R2.0",
+    name: "ASRock H610M-HDV/M.2 R2.0",
+    brand: "ASRock",
+    price: 399500, // budget
+    stock: 22,
+    weightGrams: 800,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "I/O shield",
+      "SATA data cable",
+      "M.2 screw",
+      "Quick installation guide",
+    ],
+    sourceUrl: "https://www.asrock.com/mb/Intel/H610M-HDVM.2%20R2.0/index.asp",
+    specs: {
+      socket: "LGA1700",
+      chipset: "H610",
+      // Launched Apr 2022, before 13th gen (raptor-lake, Oct 2022) and 14th
+      nativeCpuGenerations: ["alder-lake"],
+      formFactor: "MICRO_ATX",
+      memoryType: "DDR4",
+      memorySlots: 2,
+      maxMemoryGb: 64,
+      m2Slots: 1,
+      hasWifi: false,
+    },
+  },
+  {
+    sku: "MAG B760 TOMAHAWK WIFI",
+    name: "MSI MAG B760 Tomahawk WiFi",
+    brand: "MSI",
+    price: 1099500, // mid
+    stock: 13,
+    weightGrams: 1600,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "SATA 6G cables",
+      "Wi-Fi antenna",
+      "M.2 screws",
+      "Quick installation guide",
+    ],
+    sourceUrl:
+      "https://www.msi.com/Motherboard/MAG-B760-TOMAHAWK-WIFI/Specification",
+    specs: {
+      socket: "LGA1700",
+      chipset: "B760",
+      // Launched Jan 2023, before 14th gen (raptor-lake-refresh, Oct 2023)
+      nativeCpuGenerations: ["alder-lake", "raptor-lake"],
+      formFactor: "ATX",
+      memoryType: "DDR5",
+      memorySlots: 4,
+      maxMemoryGb: 256,
+      m2Slots: 3, // plus a Key E slot for the Wi-Fi module
+      hasWifi: true,
+    },
+  },
+  {
+    sku: "Z790 AORUS ELITE AX",
+    name: "Gigabyte Z790 AORUS ELITE AX",
+    brand: "Gigabyte",
+    price: 1649500, // high
+    stock: 6,
+    weightGrams: 1900,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "SATA cables",
+      "G Connector",
+      "AORUS antenna",
+      "Quick installation guide",
+    ],
+    sourceUrl:
+      "https://www.gigabyte.com/us/Motherboard/Z790-AORUS-ELITE-AX-rev-1x/sp",
+    specs: {
+      socket: "LGA1700",
+      chipset: "Z790",
+      // Launched Oct 2022 with 13th gen; 14th gen (raptor-lake-refresh) came
+      // in Oct 2023
+      nativeCpuGenerations: ["alder-lake", "raptor-lake"],
+      formFactor: "ATX",
+      memoryType: "DDR5",
+      memorySlots: 4,
+      maxMemoryGb: 256,
+      m2Slots: 4,
+      hasWifi: true,
+    },
+  },
+  {
+    sku: "MAG Z890 TOMAHAWK WIFI",
+    name: "MSI MAG Z890 Tomahawk WiFi",
+    brand: "MSI",
+    price: 2099500, // high
+    stock: 12,
+    preorderShipsOn: "2027-02-12", // pre-order
+    weightGrams: 1800,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "SATA 6G cables",
+      "Wi-Fi antenna",
+      "M.2 screws",
+      "Quick installation guide",
+    ],
+    sourceUrl:
+      "https://www.msi.com/Motherboard/MAG-Z890-TOMAHAWK-WIFI/Specification",
+    specs: {
+      socket: "LGA1851",
+      chipset: "Z890",
+      nativeCpuGenerations: ["arrow-lake"], // the only LGA1851 generation
+      formFactor: "ATX",
+      memoryType: "DDR5",
+      memorySlots: 4,
+      maxMemoryGb: 256,
+      m2Slots: 4, // plus a Key E slot for the Wi-Fi module
+      hasWifi: true,
+    },
+  },
+  {
+    sku: "PRIME B860M-A WIFI",
+    name: "ASUS PRIME B860M-A WiFi",
+    brand: "ASUS",
+    price: 899500, // budget
+    stock: 15,
+    weightGrams: 1300,
+    warrantyMonths: 36,
+    boxContents: [
+      "Motherboard",
+      "2 x SATA 6Gb/s cables",
+      "ASUS WiFi Q-Antenna",
+      "M.2 rubber package",
+      "Screw package for M.2 SSDs",
+      "Quick start guide",
+    ],
+    sourceUrl:
+      "https://www.asus.com/us/motherboards-components/motherboards/prime/prime-b860m-a-wifi/techspec/",
+    specs: {
+      socket: "LGA1851",
+      chipset: "B860",
+      nativeCpuGenerations: ["arrow-lake"], // the only LGA1851 generation
+      formFactor: "MICRO_ATX",
+      memoryType: "DDR5",
+      memorySlots: 4,
+      maxMemoryGb: 256,
+      m2Slots: 2,
+      hasWifi: true,
+    },
+  },
 ] satisfies SeedPart<"motherboard">[]

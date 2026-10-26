@@ -109,9 +109,10 @@ export function writeSeed(
         images: imagesAdded,
       }
     },
-    // Prisma's default is 5 s; ~100 sequential writes to a remote database
-    // can take longer (60 parts took under 30 s against Neon)
-    { maxWait: 10_000, timeout: 60_000 }
+    // Prisma's default is 5 s; ~150 sequential writes to a remote database
+    // can take longer (60 parts took under 30 s against Neon, so 150 may
+    // take about 75 s)
+    { maxWait: 10_000, timeout: 180_000 }
   )
 }
 

@@ -176,4 +176,124 @@ export const psus = [
       modularity: "FULL",
     },
   },
+  {
+    sku: "CP-9020254-NA",
+    name: "Corsair RM1200x SHIFT 1200W",
+    brand: "Corsair",
+    price: 1599500, // high
+    stock: 8,
+    weightGrams: 3000,
+    warrantyMonths: 120,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Cable ties",
+      "Mounting screws",
+    ],
+    sourceUrl:
+      "https://www.corsair.com/us/en/p/psu/cp-9020254-na/rm1200x-shift-80-plus-gold-fully-modular-atx-power-supply-cp-9020254-na",
+    // Lets the RTX 5090 pass PSU wattage with room to spare
+    specs: {
+      formFactor: "ATX",
+      wattageW: 1200,
+      efficiencyRating: "GOLD",
+      modularity: "FULL",
+    },
+  },
+  {
+    sku: "CP-9020245-NA",
+    name: "Corsair SF850L 850W SFX-L",
+    brand: "Corsair",
+    price: 1099500, // high
+    stock: 0, // out of stock
+    weightGrams: 2000,
+    warrantyMonths: 84,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Cable ties",
+    ],
+    sourceUrl:
+      "https://www.corsair.com/us/en/p/psu/cp-9020245-na/sf-l-series-sf850l-fully-modular-low-noise-sfx-power-supply-cp-9020245-na",
+    specs: {
+      formFactor: "SFX_L",
+      wattageW: 850,
+      efficiencyRating: "GOLD",
+      modularity: "FULL",
+    },
+  },
+  {
+    sku: "MAG A750GL PCIE5",
+    name: "MSI MAG A750GL PCIE5 750W",
+    brand: "MSI",
+    price: 549500, // mid
+    salePrice: 499500,
+    stock: 18,
+    weightGrams: 2900,
+    warrantyMonths: 60,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Mounting screws",
+      "User manual",
+    ],
+    sourceUrl:
+      "https://www.msi.com/Power-Supply/MAG-A750GL-PCIE5/Specification",
+    specs: {
+      formFactor: "ATX",
+      wattageW: 750,
+      efficiencyRating: "GOLD",
+      modularity: "FULL",
+    },
+  },
+  {
+    sku: "BN338",
+    name: "be quiet! Straight Power 12 1000W",
+    brand: "be quiet!",
+    price: 1499500, // high
+    stock: 6,
+    weightGrams: 1850,
+    warrantyMonths: 120,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Cable ties",
+      "Mounting screws",
+    ],
+    sourceUrl: "https://www.bequiet.com/en/powersupply/4104",
+    specs: {
+      formFactor: "ATX",
+      wattageW: 1000,
+      efficiencyRating: "PLATINUM",
+      modularity: "FULL",
+    },
+  },
+  {
+    sku: "SSR-750FM",
+    name: "Seasonic FOCUS GM-750 750W",
+    brand: "Seasonic",
+    price: 649500, // mid
+    stock: 13,
+    weightGrams: 1700,
+    warrantyMonths: 84,
+    boxContents: [
+      "Power supply",
+      "Modular cable pack",
+      "AC power cord",
+      "Accessory bag",
+      "User manual",
+    ],
+    sourceUrl:
+      "https://seasonic.com/wp-content/uploads/2024/04/FOCUS-Gold-FM.pdf",
+    specs: {
+      formFactor: "ATX",
+      wattageW: 750,
+      efficiencyRating: "GOLD",
+      modularity: "SEMI",
+    },
+  },
 ] satisfies SeedPart<"psu">[]
