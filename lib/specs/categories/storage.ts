@@ -33,10 +33,11 @@ export const storageSpecs = z
 export type StorageSpecs = z.infer<typeof storageSpecs>
 
 export const storageFields = {
-  interface: {
-    label: "Interface",
+  capacityGb: {
+    label: "Capacity",
+    unit: "GB",
+    largeUnit: { unit: "TB", per: 1000 },
     filterable: true,
-    options: STORAGE_INTERFACE_LABELS,
   },
   formFactor: {
     label: "Form factor",
@@ -44,5 +45,9 @@ export const storageFields = {
     rules: ["m2-slots"],
     options: STORAGE_FORM_FACTOR_LABELS,
   },
-  capacityGb: { label: "Capacity", unit: "GB", filterable: true },
+  interface: {
+    label: "Interface",
+    filterable: true,
+    options: STORAGE_INTERFACE_LABELS,
+  },
 } satisfies FieldMetaMap<typeof storageSpecs>

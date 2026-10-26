@@ -20,12 +20,6 @@ export const psuSpecs = z.strictObject({
 export type PsuSpecs = z.infer<typeof psuSpecs>
 
 export const psuFields = {
-  formFactor: {
-    label: "Form factor",
-    filterable: true,
-    rules: ["psu-form-factor"],
-    options: PSU_FORM_FACTOR_LABELS,
-  },
   wattageW: {
     label: "Wattage",
     unit: "W",
@@ -36,6 +30,12 @@ export const psuFields = {
     label: "Efficiency",
     filterable: true,
     options: EFFICIENCY_RATING_LABELS,
+  },
+  formFactor: {
+    label: "Form factor",
+    filterable: true,
+    rules: ["psu-form-factor"],
+    options: PSU_FORM_FACTOR_LABELS,
   },
   modularity: {
     label: "Modularity",

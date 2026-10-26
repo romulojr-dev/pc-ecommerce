@@ -47,12 +47,22 @@ export type RuleId =
   | "integrated-graphics"
   | "bios-update"
 
+// Sections of the spec table. Only categories with more than 8 fields are
+// grouped (docs/specs/009-spec-table, "Grouping and order rule").
+export type SpecGroup = "Processor" | "Memory" | "Size and connectivity"
+
 // What the UI needs to know about a spec field: filters (FR-5), the spec
-// table (FR-9) and admin forms (AD-2) all read this.
+// table (FR-9) and admin forms (AD-2) all read this. Entry order in a
+// FieldMetaMap is the display order.
 export type FieldMeta = {
   label: string
   // Display unit, e.g. "mm" or "W"; omitted for counts, booleans and enums
   unit?: string
+  // A friendlier unit for values of at least `per` base units, e.g.
+  // { unit: "TB", per: 1000 } shows 2000 GB as "2 TB"
+  largeUnit?: { unit: string; per: number }
+  // Spec table section; all or none of a category's fields have one
+  group?: SpecGroup
   filterable: boolean
   // Compatibility rules that read this field; such fields must be required
   rules?: readonly RuleId[]

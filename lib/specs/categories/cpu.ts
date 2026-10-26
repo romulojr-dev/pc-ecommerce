@@ -69,17 +69,27 @@ export const cpuFields = {
   },
   cores: { label: "Cores", filterable: true },
   threads: { label: "Threads", filterable: false },
-  baseClockMhz: { label: "Base clock", unit: "MHz", filterable: false },
-  boostClockMhz: { label: "Boost clock", unit: "MHz", filterable: true },
-  tdpW: {
-    label: "Max power",
-    unit: "W",
+  baseClockMhz: {
+    label: "Base clock",
+    unit: "MHz",
+    largeUnit: { unit: "GHz", per: 1000 },
+    filterable: false,
+  },
+  boostClockMhz: {
+    label: "Boost clock",
+    unit: "MHz",
+    largeUnit: { unit: "GHz", per: 1000 },
     filterable: true,
-    rules: ["psu-wattage"],
   },
   hasIntegratedGraphics: {
     label: "Integrated graphics",
     filterable: true,
     rules: ["integrated-graphics"],
+  },
+  tdpW: {
+    label: "Max power",
+    unit: "W",
+    filterable: true,
+    rules: ["psu-wattage"],
   },
 } satisfies FieldMetaMap<typeof cpuSpecs>
