@@ -10,8 +10,9 @@ export type PriceFilterValue = { min: number | null; max: number | null }
 // Keeps the centavo value inside Postgres Int (2,147,483,647)
 export const MAX_PRICE_PESOS = 10_000_000
 
-// One bound: whole pesos without leading zeros, up to the cap, else ignored
-function parseBound(value: string | undefined): number | null {
+// One bound: whole pesos without leading zeros, up to the cap, else null
+// (the sidebar's price form validates its fields with it too)
+export function parsePriceBound(value: string | undefined): number | null {
   if (!value || !/^(0|[1-9]\d{0,7})$/.test(value)) return null
   const pesos = Number(value)
   return pesos <= MAX_PRICE_PESOS ? pesos : null
@@ -27,8 +28,8 @@ export const priceFilter = {
   // ignored and the other still applies. A minimum of 0 is no minimum, and
   // bounds in the wrong order are swapped (the range the shopper meant).
   parse(raw) {
-    let min = parseBound(first(raw.minPrice))
-    let max = parseBound(first(raw.maxPrice))
+    let min = parsePriceBound(first(raw.minPrice))
+    let max = parsePriceBound(first(raw.maxPrice))
     if (min === 0) min = null
     if (min !== null && max !== null && min > max) [min, max] = [max, min]
     return min === null && max === null ? null : { min, max }

@@ -3,22 +3,26 @@ import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { connection } from "next/server"
 
+import { ListingFilters } from "@/components/catalog/listing-filters"
 import { ListingPagination } from "@/components/catalog/listing-pagination"
 import { ListingResults } from "@/components/catalog/listing-results"
+import { ListingShell } from "@/components/catalog/listing-shell"
 import { ListingSort } from "@/components/catalog/listing-sort"
 import { Container } from "@/components/layout/container"
 import { getCategoryBySlug } from "@/lib/categories"
+import { activeFilterCount, normalizeFilters } from "@/lib/listing-filters"
 import {
   DEFAULT_SORT,
   isCanonicalQuery,
   listingHref,
+  listingQuery,
   PAGE_SIZE,
   pageCount,
   parseListingParams,
   parseView,
   VIEW_COOKIE,
 } from "@/lib/listing-params"
-import { getCategoryProducts } from "@/lib/products"
+import { getCategoryProducts, getFilterOptions } from "@/lib/products"
 import { siteConfig } from "@/lib/site"
 import { manilaToday } from "@/lib/stock"
 
@@ -62,13 +66,20 @@ export default async function CategoryPage({
   const raw = await searchParams
   const state = parseListingParams(raw)
   const today = manilaToday()
-  const { products, total } = await getCategoryProducts(category.id, state, {
-    today,
-  })
+  const [options, { products, total }] = await Promise.all([
+    getFilterOptions(category.id),
+    getCategoryProducts(category.id, state, { today }),
+  ])
   const count = pageCount(total)
 
-  // One URL per state: past the end goes to the last page, and bad or
-  // spelled-out values go to the canonical URL
+  // One URL per state. A brand that isn't one of the category's goes first
+  // (parsing can't know the options); the products just loaded then match the
+  // cleaned filters too, since an unknown brand adds none. Then past the end
+  // goes to the last page, and bad or spelled-out values to the canonical URL.
+  const filters = normalizeFilters(state.filters, options)
+  if (listingQuery({ ...state, filters }) !== listingQuery(state)) {
+    redirect(listingHref(category.slug, { ...state, filters, page: 1 }))
+  }
   if (state.page > count) {
     redirect(listingHref(category.slug, { ...state, page: count }))
   }
@@ -84,26 +95,46 @@ export default async function CategoryPage({
   return (
     <Container className="py-10">
       <h1 className="text-2xl font-semibold tracking-tight">{category.name}</h1>
-      {total === 0 ? (
+      {total === 0 && activeFilterCount(state.filters) === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
           No products in this category yet.
         </p>
       ) : (
-        <>
-          <ListingResults
-            products={products}
-            initialView={view}
-            today={today}
-            summary={
-              <p className="text-sm text-muted-foreground">
-                Showing {from}–{to} of {total}{" "}
-                {total === 1 ? "product" : "products"}
-              </p>
-            }
-            controls={<ListingSort slug={category.slug} state={state} />}
-          />
-          <ListingPagination slug={category.slug} state={state} count={count} />
-        </>
+        <ListingShell
+          sidebar={
+            <ListingFilters
+              slug={category.slug}
+              state={state}
+              options={options}
+            />
+          }
+        >
+          {total === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No products match your filters.
+            </p>
+          ) : (
+            <>
+              <ListingResults
+                products={products}
+                initialView={view}
+                today={today}
+                summary={
+                  <p className="text-sm text-muted-foreground">
+                    Showing {from}–{to} of {total}{" "}
+                    {total === 1 ? "product" : "products"}
+                  </p>
+                }
+                controls={<ListingSort slug={category.slug} state={state} />}
+              />
+              <ListingPagination
+                slug={category.slug}
+                state={state}
+                count={count}
+              />
+            </>
+          )}
+        </ListingShell>
       )}
     </Container>
   )

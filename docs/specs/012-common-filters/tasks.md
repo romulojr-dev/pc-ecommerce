@@ -12,7 +12,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify: `pnpm test:db`.
 - [x] **T5. Sale price on the card.** `salePrice` in the card select/data and `ProductCard`; `cardPrices` in `e2e/category-page.spec.ts` skips struck prices.
   - Verify: a sale product (Core Ultra 5 245K) in `pnpm dev`; `pnpm test:e2e` for the category-page spec.
-- [ ] **T6. Sidebar and page wiring.** shadcn `checkbox`; `ListingShell`, `ListingFilters`; page wiring (options, normalization redirect, grid columns); brand, in-stock and price apply as in the spec.
+- [x] **T6. Sidebar and page wiring.** shadcn `checkbox`; `ListingShell`, `ListingFilters`; page wiring (options, normalization redirect, grid columns); brand, in-stock and price apply as in the spec.
   - Verify in `pnpm dev`: URLs update, results change, focus stays on a toggled checkbox, Enter applies a price, invalid price shows its error, bad URLs redirect.
 - [ ] **T7. Chips, clear all, no-match state.** `ActiveFilters`, no-match message with "Clear all filters", `role="status"` on the count, metadata (`noindex`, canonical).
   - Verify in `pnpm dev`: remove one chip, Clear all keeps sort; `/cpu?minPrice=9999999`; page source shows `noindex`.
