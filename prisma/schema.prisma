@@ -45,6 +45,11 @@ model Product {
   description     String?
   price           Int // in centavos: ₱12,999.00 = 1299900
   salePrice       Int? // in centavos
+  // What the shopper pays: COALESCE(salePrice, price). Set by a database
+  // trigger on every insert and update (docs/specs/012-common-filters), so
+  // the app never writes it and the default is only a placeholder. Filters
+  // and price sorts use it.
+  effectivePrice  Int            @default(0)
   stock           Int            @default(0)
   lowStockAt      Int            @default(5)
   specs           Json // shape defined and validated by lib/specs (docs/adr/0002)
