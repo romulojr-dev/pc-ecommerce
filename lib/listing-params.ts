@@ -1,8 +1,18 @@
+import {
+  type FilterKey,
+  type FilterValues,
+  parseFilters,
+  serializeFilters,
+  setFilter,
+} from "@/lib/listing-filters"
+import { first } from "@/lib/listing-filters/raw"
+import type { RawSearchParams } from "@/lib/listing-filters/types"
 import { categoryHref } from "@/lib/site"
 
 // URL state of a category listing (docs/specs/008-category-listing). Parse
-// and serialize live here only, so each state has one URL; Sprint 3's filters
-// add their keys to ListingState, parseListingParams and listingQuery.
+// and serialize live here only, so each state has one URL. The filters
+// (docs/specs/012-common-filters) each parse and serialize their own keys in
+// lib/listing-filters; this module puts them together with sort and page.
 
 export const SORTS = ["newest", "price-asc", "price-desc"] as const
 export type ListingSort = (typeof SORTS)[number]
@@ -17,22 +27,20 @@ export const SORT_LABELS: Record<ListingSort, string> = {
 // 6 rows of the 4-column desktop grid
 export const PAGE_SIZE = 24
 
-export type ListingState = { sort: ListingSort; page: number }
-
-// The shape of a page's awaited searchParams
-export type RawSearchParams = Record<string, string | string[] | undefined>
-
-// A repeated key (?page=1&page=2) counts by its first value
-function first(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value
+export type ListingState = {
+  sort: ListingSort
+  page: number
+  filters: FilterValues
 }
+
+export type { RawSearchParams }
 
 function isSort(value: string | undefined): value is ListingSort {
   return SORTS.some((sort) => sort === value)
 }
 
 // Never throws: an unknown sort or a page that isn't a positive integer
-// falls back to the default
+// falls back to the default, and each filter ignores its own bad values
 export function parseListingParams(raw: RawSearchParams): ListingState {
   const sort = first(raw.sort)
   const page = first(raw.page)
@@ -41,13 +49,33 @@ export function parseListingParams(raw: RawSearchParams): ListingState {
   return {
     sort: isSort(sort) ? sort : DEFAULT_SORT,
     page: Number.isSafeInteger(pageNumber) ? pageNumber : 1,
+    filters: parseFilters(raw),
   }
 }
 
-// "sort=price-desc&page=2": defaults omitted, keys in a fixed order, "" when
-// everything is the default
+// The state with one filter changed (null removes it). Always back on page 1:
+// the old page number means nothing for a different set of results.
+export function withFilter<K extends FilterKey>(
+  state: ListingState,
+  key: K,
+  value: FilterValues[K] | null
+): ListingState {
+  return { ...state, filters: setFilter(state.filters, key, value), page: 1 }
+}
+
+// No filters, page 1; the sort stays since it isn't a filter
+export function clearFilters(state: ListingState): ListingState {
+  return { ...state, filters: {}, page: 1 }
+}
+
+// "brand=amd&maxPrice=20000&sort=price-desc&page=2": the filters, then sort
+// and page; defaults omitted, keys in a fixed order, "" when everything is
+// the default
 export function listingQuery(state: ListingState): string {
   const params = new URLSearchParams()
+  for (const [key, value] of serializeFilters(state.filters)) {
+    params.append(key, value)
+  }
   if (state.sort !== DEFAULT_SORT) params.set("sort", state.sort)
   if (state.page !== 1) params.set("page", String(state.page))
   return params.toString()

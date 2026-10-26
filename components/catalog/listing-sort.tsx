@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  type ListingSort as Sort,
+  type ListingState,
   listingHref,
   SORT_LABELS,
   SORTS,
@@ -19,11 +19,12 @@ import {
 
 type ListingSortProps = {
   slug: string
-  sort: Sort
+  state: ListingState
 }
 
-// The listing's sort control. A new sort starts again at page 1.
-export function ListingSort({ slug, sort }: ListingSortProps) {
+// The listing's sort control. A new sort starts again at page 1 and keeps the
+// filters.
+export function ListingSort({ slug, state }: ListingSortProps) {
   const router = useRouter()
   const labelId = useId()
 
@@ -34,9 +35,11 @@ export function ListingSort({ slug, sort }: ListingSortProps) {
       </span>
       <Select
         items={SORT_LABELS}
-        value={sort}
+        value={state.sort}
         onValueChange={(value) => {
-          if (value) router.push(listingHref(slug, { sort: value, page: 1 }))
+          if (value) {
+            router.push(listingHref(slug, { ...state, sort: value, page: 1 }))
+          }
         }}
       >
         <SelectTrigger aria-labelledby={labelId} className="w-48">

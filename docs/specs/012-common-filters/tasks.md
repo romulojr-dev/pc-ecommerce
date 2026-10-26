@@ -6,7 +6,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify: `pnpm db:migrate` on the dev branch; a second `migrate dev` shows no drift; `pnpm db:seed` twice; `UPDATE` of `salePrice` to a value and to `NULL` changes `effectivePrice`. If it fails, stop and report; the spec's fallback applies.
 - [x] **T2. Integration test setup.** `vitest.db.config.ts`, global setup, `test-support/db.ts`, `test:db`, main config excludes `*.db.test.ts`, `docker-compose.yml` with `test:db:up`/`down`/`migrate`, `.env.example`, README, CI (Postgres 18, second database, step). The guard (`test-support/db-guard.ts`) with unit tests. First integration test: the trigger on insert, on setting/clearing `salePrice`, and overriding a value sent for `effectivePrice` (ADR 0004).
   - Verify: `pnpm test:db` and `pnpm test` (which does not touch the database).
-- [ ] **T3. Filter structure and URL state.** `lib/listing-filters/` (types, brand, price, in-stock, index), `listing-params.ts` with `filters`, `ListingSort` takes `state`; unit tests.
+- [x] **T3. Filter structure and URL state.** `lib/listing-filters/` (types, brand, price, in-stock, index), `listing-params.ts` with `filters`, `ListingSort` takes `state`; unit tests.
   - Verify: `pnpm test` with `.env.local` moved aside; `pnpm typecheck`; the page still renders and sort/pagination keep working.
 - [ ] **T4. Filter queries.** `lib/listing-filters/server.ts`, filtered `getCategoryProducts` with effective-price sort, `getBrandOptions`; integration tests for every case in the spec, including the in-stock/`getStockStatus` agreement.
   - Verify: `pnpm test:db`.

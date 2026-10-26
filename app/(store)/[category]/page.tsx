@@ -31,14 +31,18 @@ export async function generateMetadata({
   const category = await getCategoryBySlug(slug)
   if (!category) notFound()
 
-  const { page } = parseListingParams(await searchParams)
+  const { page, filters } = parseListingParams(await searchParams)
 
   return {
     title: page > 1 ? `${category.name} — Page ${page}` : category.name,
     description: `Shop ${category.name} in the Philippines at ${siteConfig.name}. Compare prices and stock, then check compatibility in the PC Builder.`,
     // Sort variants list the same products, so they share the unsorted URL
     alternates: {
-      canonical: listingHref(category.slug, { sort: DEFAULT_SORT, page }),
+      canonical: listingHref(category.slug, {
+        sort: DEFAULT_SORT,
+        page,
+        filters,
+      }),
     },
   }
 }
@@ -93,7 +97,7 @@ export default async function CategoryPage({
                 {total === 1 ? "product" : "products"}
               </p>
             }
-            controls={<ListingSort slug={category.slug} sort={state.sort} />}
+            controls={<ListingSort slug={category.slug} state={state} />}
           />
           <ListingPagination slug={category.slug} state={state} count={count} />
         </>
