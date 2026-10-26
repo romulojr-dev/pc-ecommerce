@@ -79,7 +79,7 @@ type ListingFilter<V> = {
 ## Queries — `lib/products.ts`
 
 - `getCategoryProducts(categoryId, state, { today })`: `where = { categoryId, status: "ACTIVE", AND: activeWhere(state.filters, { today }) }`; sort map uses `effectivePrice` for both price sorts (`newest` unchanged), same tie-breakers.
-- `productCardSelect` gains `salePrice`; `ProductCardData.salePrice: number | null`. `getBrandOptions(categoryId)` wraps `options.brand` with scope `{ categoryId, status: "ACTIVE" }`.
+- `productCardSelect` gains `salePrice`; `ProductCardData.salePrice: number | null`. `getFilterOptions(categoryId)` runs every filter's `options` (today only brand) with scope `{ categoryId, status: "ACTIVE" }`, via `loadFilterOptions` in `server.ts`.
 - Per request, no cache (spec; ADR 0003).
 
 ## Page — `app/(store)/[category]/page.tsx`

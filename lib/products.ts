@@ -2,6 +2,13 @@ import { cache } from "react"
 
 import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
+import type { FilterOptions } from "@/lib/listing-filters"
+import {
+  activeWhere,
+  type FilterContext,
+  type FilterScope,
+  loadFilterOptions,
+} from "@/lib/listing-filters/server"
 import {
   type ListingSort,
   type ListingState,
@@ -71,24 +78,37 @@ const tieBreakers: Prisma.ProductOrderByWithRelationInput[] = [
   { id: "asc" },
 ]
 
+// Price sorts use the price the shopper pays (ADR 0004), like the price filter
 const sortOrderBy: Record<
   ListingSort,
   Prisma.ProductOrderByWithRelationInput[]
 > = {
   newest: [{ createdAt: "desc" }, ...tieBreakers],
-  "price-asc": [{ price: "asc" }, ...tieBreakers],
-  "price-desc": [{ price: "desc" }, ...tieBreakers],
+  "price-asc": [{ effectivePrice: "asc" }, ...tieBreakers],
+  "price-desc": [{ effectivePrice: "desc" }, ...tieBreakers],
 }
 
-// One page of a category's active products, plus how many there are in all.
-// The caller checks the page against pageCount(total).
+// The products a category's listing is about, before any filter
+function categoryScope(categoryId: string) {
+  return { categoryId, status: "ACTIVE" } satisfies FilterScope
+}
+
+// The options of the category's filters (its brands), from its active
+// products, whatever filters are on
+export function getFilterOptions(categoryId: string): Promise<FilterOptions> {
+  return loadFilterOptions(categoryScope(categoryId))
+}
+
+// One page of a category's active products that pass the filters, plus how
+// many there are in all. The caller checks the page against pageCount(total).
 export async function getCategoryProducts(
   categoryId: string,
-  { sort, page }: ListingState
+  { sort, page, filters }: ListingState,
+  context: FilterContext
 ): Promise<{ products: ProductCardData[]; total: number }> {
   const where = {
-    categoryId,
-    status: "ACTIVE",
+    ...categoryScope(categoryId),
+    AND: activeWhere(filters, context),
   } satisfies Prisma.ProductWhereInput
 
   // Not $transaction: inside one, Prisma loads the relations as concurrent

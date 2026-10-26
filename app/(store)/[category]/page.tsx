@@ -61,7 +61,10 @@ export default async function CategoryPage({
 
   const raw = await searchParams
   const state = parseListingParams(raw)
-  const { products, total } = await getCategoryProducts(category.id, state)
+  const today = manilaToday()
+  const { products, total } = await getCategoryProducts(category.id, state, {
+    today,
+  })
   const count = pageCount(total)
 
   // One URL per state: past the end goes to the last page, and bad or
@@ -90,7 +93,7 @@ export default async function CategoryPage({
           <ListingResults
             products={products}
             initialView={view}
-            today={manilaToday()}
+            today={today}
             summary={
               <p className="text-sm text-muted-foreground">
                 Showing {from}–{to} of {total}{" "}

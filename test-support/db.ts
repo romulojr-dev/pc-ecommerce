@@ -34,3 +34,110 @@ export async function createCategoryAndBrand(
 }
 
 export { db }
+
+// "Today" for fixtures with pre-orders; tests pass it to the queries
+export const FIXTURE_TODAY = "2026-10-26"
+
+type FixtureProduct = {
+  name: string
+  brand: string
+  category: "cpu" | "gpu"
+  // Centavos
+  price: number
+  salePrice?: number
+  stock: number
+  preorderShipsOn?: string
+  status?: "ACTIVE" | "DRAFT"
+}
+
+// The known catalog the filter tests run against (docs/specs/012-common-
+// filters, "Fixtures"). Effective prices in pesos: P1 5,000, P2 9,000 (on
+// sale from 12,000), P3 10,000, P4 20,000, P5 15,000. createdAt rises with
+// the number, so "newest" is P5, P4, P3, P2, P1.
+const FIXTURE_PRODUCTS: FixtureProduct[] = [
+  { name: "P1", brand: "Alpha", category: "cpu", price: 500_000, stock: 10 },
+  {
+    name: "P2",
+    brand: "Alpha",
+    category: "cpu",
+    price: 1_200_000,
+    salePrice: 900_000,
+    stock: 3, // low stock: lowStockAt is 5
+  },
+  {
+    name: "P3",
+    brand: "Beta",
+    category: "cpu",
+    price: 1_000_000,
+    stock: 0, // out of stock
+  },
+  {
+    name: "P4",
+    brand: "Beta",
+    category: "cpu",
+    price: 2_000_000,
+    stock: 4,
+    preorderShipsOn: "2027-01-15", // pre-order
+  },
+  {
+    name: "P5",
+    brand: "Beta",
+    category: "cpu",
+    price: 1_500_000,
+    stock: 6,
+    preorderShipsOn: FIXTURE_TODAY, // ships today: the pre-order has ended
+  },
+  {
+    name: "P6",
+    brand: "Gamma",
+    category: "cpu",
+    price: 800_000,
+    stock: 5,
+    status: "DRAFT", // never listed
+  },
+  // Another category, to prove scoping
+  { name: "G1", brand: "Delta", category: "gpu", price: 700_000, stock: 8 },
+]
+
+// Empties the catalog and inserts the fixtures; returns the category ids
+export async function insertFixtures() {
+  await resetCatalog()
+
+  const categories = {
+    cpu: await db.category.create({ data: { name: "CPU", slug: "cpu" } }),
+    gpu: await db.category.create({ data: { name: "GPU", slug: "gpu" } }),
+  }
+  const brands = new Map<string, string>()
+  for (const { brand } of FIXTURE_PRODUCTS) {
+    if (brands.has(brand)) continue
+    const { id } = await db.brand.create({
+      data: { name: brand, slug: brand.toLowerCase() },
+    })
+    brands.set(brand, id)
+  }
+
+  for (const [index, product] of FIXTURE_PRODUCTS.entries()) {
+    await db.product.create({
+      data: {
+        name: product.name,
+        slug: product.name.toLowerCase(),
+        sku: `SKU-${product.name}`,
+        price: product.price,
+        salePrice: product.salePrice,
+        stock: product.stock,
+        lowStockAt: 5,
+        preorderShipsOn: product.preorderShipsOn
+          ? new Date(product.preorderShipsOn)
+          : null,
+        status: product.status ?? "ACTIVE",
+        specs: {},
+        weightGrams: 100,
+        createdAt: new Date(Date.UTC(2026, 9, 1 + index)),
+        categoryId: categories[product.category].id,
+        brandId: brands.get(product.brand)!,
+      },
+    })
+  }
+
+  return { cpuId: categories.cpu.id, gpuId: categories.gpu.id }
+}

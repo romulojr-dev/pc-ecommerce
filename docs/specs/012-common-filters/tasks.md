@@ -8,7 +8,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify: `pnpm test:db` and `pnpm test` (which does not touch the database).
 - [x] **T3. Filter structure and URL state.** `lib/listing-filters/` (types, brand, price, in-stock, index), `listing-params.ts` with `filters`, `ListingSort` takes `state`; unit tests.
   - Verify: `pnpm test` with `.env.local` moved aside; `pnpm typecheck`; the page still renders and sort/pagination keep working.
-- [ ] **T4. Filter queries.** `lib/listing-filters/server.ts`, filtered `getCategoryProducts` with effective-price sort, `getBrandOptions`; integration tests for every case in the spec, including the in-stock/`getStockStatus` agreement.
+- [x] **T4. Filter queries.** `lib/listing-filters/server.ts`, filtered `getCategoryProducts` with effective-price sort, `getFilterOptions`; integration tests for every case in the spec, including the in-stock/`getStockStatus` agreement.
   - Verify: `pnpm test:db`.
 - [ ] **T5. Sale price on the card.** `salePrice` in the card select/data and `ProductCard`; `cardPrices` in `e2e/category-page.spec.ts` skips struck prices.
   - Verify: a sale product (Core Ultra 5 245K) in `pnpm dev`; `pnpm test:e2e` for the category-page spec.
