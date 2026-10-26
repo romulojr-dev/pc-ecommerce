@@ -47,6 +47,12 @@ export const cpuCoolerFields = {
     rules: ["cooler-height", "radiator-fit"],
     options: COOLER_TYPE_LABELS,
   },
+  radiatorSizeMm: {
+    label: "Radiator size",
+    unit: "mm",
+    filterable: true,
+    rules: ["radiator-fit"],
+  },
   supportedSockets: {
     label: "Socket support",
     filterable: true,
@@ -58,11 +64,5 @@ export const cpuCoolerFields = {
     unit: "mm",
     filterable: false,
     rules: ["cooler-height"],
-  },
-  radiatorSizeMm: {
-    label: "Radiator size",
-    unit: "mm",
-    filterable: true,
-    rules: ["radiator-fit"],
   },
 } satisfies FieldMetaMap<typeof cpuCoolerSpecs>

@@ -8,7 +8,13 @@ import { builderCategories, type BuilderCategorySlug } from "./registry"
 
 export { builderCategories, type BuilderCategorySlug }
 export * from "./enums"
-export type { FieldMeta, RuleId } from "./helpers"
+export type { FieldMeta, RuleId, SpecGroup } from "./helpers"
+export {
+  formatSpecValue,
+  getSpecRows,
+  type SpecRow,
+  type SpecRowGroup,
+} from "./format"
 export type { CaseSpecs } from "./categories/case"
 export type { CpuSpecs } from "./categories/cpu"
 export type { CpuCoolerSpecs } from "./categories/cpu-cooler"
