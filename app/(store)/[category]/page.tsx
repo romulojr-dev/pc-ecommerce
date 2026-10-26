@@ -20,6 +20,7 @@ import {
 } from "@/lib/listing-params"
 import { getCategoryProducts } from "@/lib/products"
 import { siteConfig } from "@/lib/site"
+import { manilaToday } from "@/lib/stock"
 
 export async function generateMetadata({
   params,
@@ -85,6 +86,7 @@ export default async function CategoryPage({
           <ListingResults
             products={products}
             initialView={view}
+            today={manilaToday()}
             summary={
               <p className="text-sm text-muted-foreground">
                 Showing {from}–{to} of {total}{" "}

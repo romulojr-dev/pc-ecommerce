@@ -13,6 +13,12 @@ export const psus = [
     stock: 15,
     weightGrams: 2000,
     warrantyMonths: 60,
+    boxContents: [
+      "Power supply",
+      "AC power cord",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl:
       "https://www.coolermaster.com/catalog/power-supplies/mwe-series/mwe-550-bronze-v2/",
     specs: {
@@ -30,6 +36,14 @@ export const psus = [
     stock: 9,
     weightGrams: 2300,
     warrantyMonths: 84,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Cable ties",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl:
       "https://www.corsair.com/us/en/p/psu/cp-9020263-na/rm850e-fully-modular-low-noise-atx-power-supply-cp-9020263-na",
     // Several images, for the product gallery (spec 006)
@@ -49,6 +63,14 @@ export const psus = [
     stock: 5, // at lowStockAt
     weightGrams: 1300,
     warrantyMonths: 84,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "SFX to ATX bracket",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl:
       "https://www.corsair.com/us/en/p/psu/cp-9020186-na/sf-series-sf750-750-watt-80-plus-platinum-certified-high-performance-sfx-psu-cp-9020186-na",
     specs: {
@@ -66,6 +88,12 @@ export const psus = [
     stock: 20,
     weightGrams: 2000,
     warrantyMonths: 60,
+    boxContents: [
+      "Power supply",
+      "AC power cord",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl: "https://www.msi.com/Power-Supply/MAG-A650BN/Specification",
     specs: {
       formFactor: "ATX",
@@ -82,6 +110,14 @@ export const psus = [
     stock: 7,
     weightGrams: 2500,
     warrantyMonths: 120,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Cable ties",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl: "https://seasonic.com/atx3-focus-gx/",
     // Lets the RTX 5090 pass PSU wattage: (88 + 575) × 1.3 = 862 W
     specs: {
@@ -100,6 +136,14 @@ export const psus = [
     stock: 11,
     weightGrams: 2200,
     warrantyMonths: 120,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "Cable ties",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl: "https://www.bequiet.com/en/powersupply/4068",
     specs: {
       formFactor: "ATX",
@@ -116,6 +160,14 @@ export const psus = [
     stock: 4, // low stock
     weightGrams: 1400,
     warrantyMonths: 60,
+    boxContents: [
+      "Power supply",
+      "Modular cables",
+      "AC power cord",
+      "SFX to ATX bracket",
+      "Mounting screws",
+      "User manual",
+    ],
     sourceUrl: "https://lian-li.com/product/sp850/",
     specs: {
       formFactor: "SFX",

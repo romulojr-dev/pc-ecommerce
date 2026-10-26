@@ -38,26 +38,31 @@ model Brand {
 }
 
 model Product {
-  id             String         @id @default(cuid())
-  name           String
-  slug           String         @unique
-  sku            String         @unique
-  description    String?
-  price          Int // in centavos: ₱12,999.00 = 1299900
-  salePrice      Int? // in centavos
-  stock          Int            @default(0)
-  lowStockAt     Int            @default(5)
-  specs          Json // shape defined and validated by lib/specs (docs/adr/0002)
-  weightGrams    Int
-  warrantyMonths Int            @default(12)
-  status         ProductStatus  @default(DRAFT)
-  categoryId     String
-  category       Category       @relation(fields: [categoryId], references: [id])
-  brandId        String
-  brand          Brand          @relation(fields: [brandId], references: [id])
-  images         ProductImage[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  sku             String         @unique
+  description     String?
+  price           Int // in centavos: ₱12,999.00 = 1299900
+  salePrice       Int? // in centavos
+  stock           Int            @default(0)
+  lowStockAt      Int            @default(5)
+  specs           Json // shape defined and validated by lib/specs (docs/adr/0002)
+  weightGrams     Int
+  warrantyMonths  Int            @default(12)
+  // What ships in the retail box, one line per item, in display order
+  boxContents     String[]       @default([])
+  // Expected ship date while on pre-order; null when not a pre-order. A
+  // passed date ends the pre-order (lib/stock.ts, docs/specs/010-product-page).
+  preorderShipsOn DateTime?      @db.Date
+  status          ProductStatus  @default(DRAFT)
+  categoryId      String
+  category        Category       @relation(fields: [categoryId], references: [id])
+  brandId         String
+  brand           Brand          @relation(fields: [brandId], references: [id])
+  images          ProductImage[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@index([categoryId])
   @@index([brandId])

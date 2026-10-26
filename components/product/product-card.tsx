@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 type ProductCardProps = {
   product: ProductCardData
   layout: "grid" | "list"
+  // Today in Manila (manilaToday()), from the server: decides pre-orders
+  today: string
   // The rendered image width, passed to ProductImage
   sizes: string
   // "eager" for cards in the first row, which hold the page's LCP image
@@ -26,13 +28,14 @@ type ProductCardProps = {
 export function ProductCard({
   product,
   layout,
+  today,
   sizes,
   loading,
   headingLevel = 3,
   className,
 }: ProductCardProps) {
   const Heading = `h${headingLevel}` as const
-  const status = getStockStatus(product)
+  const status = getStockStatus(product, today)
 
   return (
     <article
