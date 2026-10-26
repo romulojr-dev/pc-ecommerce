@@ -1,0 +1,27 @@
+# A throwaway Postgres for the database integration tests (`pnpm test:db`),
+# not for the app: `pnpm test:db:up` / `pnpm test:db:down`. The credentials are
+# local-only, so they are fine to commit. The major version matches the Neon
+# project and CI's service container (.github/workflows/ci.yml); change all
+# three together. Port 5433 keeps clear of a Postgres on the default 5432.
+name: pc-silicon
+
+services:
+  postgres-test:
+    image: postgres:18
+    container_name: pc-silicon-test-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pcsilicon_test
+    ports:
+      - "127.0.0.1:5433:5432"
+    # In memory: the data is rebuilt by the migrations on every run, so
+    # nothing needs to outlive the container (the 18 image keeps its data
+    # under /var/lib/postgresql)
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pcsilicon_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15

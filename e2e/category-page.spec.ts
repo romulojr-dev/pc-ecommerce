@@ -1,19 +1,11 @@
-import { expect, type Page, test } from "@playwright/test"
+import { expect, test } from "@playwright/test"
+
+import { cardPrices } from "./listing-helpers"
 
 // Category listing (docs/specs/008-category-listing). Needs a seeded database
 // (CI seeds after migrating). Checks behaviour, not exact prices or stock, so
 // fixture edits don't break it. CPU and GPU have two pages; paging itself is
 // covered by the unit tests (lib/listing-params.test.ts).
-
-// Peso prices on the page's cards, as numbers: "₱36,995.00" -> 36995
-async function cardPrices(page: Page): Promise<number[]> {
-  const texts = await page
-    .getByRole("main")
-    .getByRole("article")
-    .getByText(/^₱[\d,]+\.\d{2}$/)
-    .allTextContents()
-  return texts.map((text) => Number(text.replace(/[₱,]/g, "")))
-}
 
 test("the category menu leads to a category's product cards", async ({
   page,

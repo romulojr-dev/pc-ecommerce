@@ -15,8 +15,8 @@ const toggleItem = cn(
   focusRing
 )
 
-// First row of the 4-column grid: these hold the LCP image
-const EAGER_CARDS = 4
+// First two rows of the 3-column grid: both start above the fold at 1280 x 800
+const EAGER_CARDS = 6
 
 type ListingResultsProps = {
   products: ProductCardData[]
@@ -48,7 +48,7 @@ export function ListingResults({
 
   return (
     <>
-      <div className="mt-6 flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         {summary}
         <div className="flex items-center gap-4">
           {controls}
@@ -77,7 +77,7 @@ export function ListingResults({
         className={cn(
           "mt-6",
           view === "grid"
-            ? "grid grid-cols-3 gap-4 xl:grid-cols-4"
+            ? "grid grid-cols-2 gap-4 lg:grid-cols-3"
             : "flex flex-col gap-3"
         )}
       >
@@ -88,7 +88,9 @@ export function ListingResults({
               layout={view}
               today={today}
               sizes={
-                view === "grid" ? "(min-width: 1280px) 272px, 30vw" : "96px"
+                view === "grid"
+                  ? "(min-width: 1280px) 285px, (min-width: 1024px) 200px, 45vw"
+                  : "96px"
               }
               loading={index < EAGER_CARDS ? "eager" : "lazy"}
               headingLevel={2}

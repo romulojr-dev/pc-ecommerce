@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  clearFilters,
   isCanonicalQuery,
+  type ListingState,
   listingHref,
   listingQuery,
   pageCount,
@@ -9,18 +11,29 @@ import {
   paginationItems,
   parseListingParams,
   parseView,
+  withFilter,
 } from "@/lib/listing-params"
+
+// A state with defaults, plus whatever the test cares about
+function plain(overrides: Partial<ListingState> = {}): ListingState {
+  return { sort: "newest", page: 1, filters: {}, ...overrides }
+}
 
 describe("parseListingParams", () => {
   it("reads valid values", () => {
     expect(parseListingParams({ sort: "price-desc", page: "3" })).toEqual({
       sort: "price-desc",
       page: 3,
+      filters: {},
     })
   })
 
   it("defaults to newest, page 1", () => {
-    expect(parseListingParams({})).toEqual({ sort: "newest", page: 1 })
+    expect(parseListingParams({})).toEqual({
+      sort: "newest",
+      page: 1,
+      filters: {},
+    })
   })
 
   it("falls back on an unknown sort", () => {
@@ -40,49 +53,162 @@ describe("parseListingParams", () => {
         sort: ["price-asc", "price-desc"],
         page: ["2", "5"],
       })
-    ).toEqual({ sort: "price-asc", page: 2 })
+    ).toEqual({ sort: "price-asc", page: 2, filters: {} })
   })
 })
 
 describe("listingQuery and listingHref", () => {
   it("omits defaults", () => {
-    expect(listingQuery({ sort: "newest", page: 1 })).toBe("")
-    expect(listingHref("cpu", { sort: "newest", page: 1 })).toBe("/cpu")
+    expect(listingQuery(plain())).toBe("")
+    expect(listingHref("cpu", plain())).toBe("/cpu")
   })
 
   it("writes keys in a fixed order", () => {
-    expect(listingHref("gpu", { sort: "price-asc", page: 2 })).toBe(
+    expect(listingHref("gpu", plain({ sort: "price-asc", page: 2 }))).toBe(
       "/gpu?sort=price-asc&page=2"
     )
-    expect(listingHref("gpu", { sort: "newest", page: 2 })).toBe("/gpu?page=2")
+    expect(listingHref("gpu", plain({ page: 2 }))).toBe("/gpu?page=2")
   })
 
   it("round-trips with the parser", () => {
-    const state = { sort: "price-desc", page: 4 } as const
+    const state = plain({ sort: "price-desc", page: 4 })
     const query = Object.fromEntries(new URLSearchParams(listingQuery(state)))
     expect(parseListingParams(query)).toEqual(state)
   })
 })
 
+describe("filters in the state", () => {
+  const filtered: ListingState = {
+    sort: "price-desc",
+    page: 2,
+    filters: {
+      brand: ["amd", "intel"],
+      price: { min: 10000, max: 20000 },
+      inStock: true,
+    },
+  }
+  const query =
+    "brand=amd&brand=intel&minPrice=10000&maxPrice=20000&inStock=1&sort=price-desc&page=2"
+
+  it("parses every filter next to sort and page", () => {
+    expect(
+      parseListingParams({
+        brand: ["amd", "intel"],
+        minPrice: "10000",
+        maxPrice: "20000",
+        inStock: "1",
+        sort: "price-desc",
+        page: "2",
+      })
+    ).toEqual(filtered)
+  })
+
+  it("writes the filters first, then sort and page", () => {
+    expect(listingQuery(filtered)).toBe(query)
+    expect(listingHref("cpu", filtered)).toBe(`/cpu?${query}`)
+  })
+
+  it("writes only the active filters", () => {
+    expect(
+      listingQuery(plain({ filters: { price: { min: null, max: 5000 } } }))
+    ).toBe("maxPrice=5000")
+  })
+
+  it("round-trips with the parser (repeated keys as arrays)", () => {
+    const params = new URLSearchParams(query)
+    const raw: Record<string, string | string[]> = {}
+    for (const key of new Set(params.keys())) {
+      const values = params.getAll(key)
+      raw[key] = values.length > 1 ? values : values[0]
+    }
+    expect(parseListingParams(raw)).toEqual(filtered)
+  })
+
+  it("ignores bad filter values and keeps the rest", () => {
+    expect(
+      parseListingParams({
+        brand: "NOT A SLUG",
+        minPrice: "abc",
+        maxPrice: "9000",
+        inStock: "yes",
+        sort: "price-asc",
+      })
+    ).toEqual(
+      plain({
+        sort: "price-asc",
+        filters: { price: { min: null, max: 9000 } },
+      })
+    )
+  })
+
+  it("sets or removes a filter and goes back to page 1", () => {
+    const removed = withFilter(filtered, "inStock", null)
+    expect(removed.page).toBe(1)
+    expect(removed.sort).toBe("price-desc")
+    expect(removed.filters).toEqual({
+      brand: ["amd", "intel"],
+      price: { min: 10000, max: 20000 },
+    })
+    expect(withFilter(plain({ page: 3 }), "brand", ["amd"])).toEqual(
+      plain({ filters: { brand: ["amd"] } })
+    )
+  })
+
+  it("clears every filter, keeping the sort", () => {
+    expect(clearFilters(filtered)).toEqual(plain({ sort: "price-desc" }))
+  })
+})
+
 describe("isCanonicalQuery", () => {
   it("accepts the canonical query", () => {
-    expect(isCanonicalQuery({}, { sort: "newest", page: 1 })).toBe(true)
+    expect(isCanonicalQuery({}, plain())).toBe(true)
     expect(
       isCanonicalQuery(
         { sort: "price-asc", page: "2" },
-        { sort: "price-asc", page: 2 }
+        plain({ sort: "price-asc", page: 2 })
+      )
+    ).toBe(true)
+    expect(
+      isCanonicalQuery(
+        { brand: ["amd", "intel"], maxPrice: "20000", inStock: "1" },
+        plain({
+          filters: {
+            brand: ["amd", "intel"],
+            price: { min: null, max: 20000 },
+            inStock: true,
+          },
+        })
       )
     ).toBe(true)
   })
 
   it("rejects bad values, spelled-out defaults, unknown and repeated keys", () => {
-    const state = { sort: "newest", page: 1 } as const
+    const state = plain()
     expect(isCanonicalQuery({ sort: "bogus" }, state)).toBe(false)
     expect(isCanonicalQuery({ page: "1" }, state)).toBe(false)
     expect(isCanonicalQuery({ sort: "newest" }, state)).toBe(false)
     expect(isCanonicalQuery({ utm_source: "x" }, state)).toBe(false)
+    expect(isCanonicalQuery({ page: ["2", "2"] }, plain({ page: 2 }))).toBe(
+      false
+    )
+  })
+
+  it("rejects bad, repeated, unsorted and spelled-out filter values", () => {
+    const amd = plain({ filters: { brand: ["amd"] } })
+    expect(isCanonicalQuery({ brand: ["amd", "amd"] }, amd)).toBe(false)
+    expect(isCanonicalQuery({ brand: ["amd", "BAD"] }, amd)).toBe(false)
+    expect(isCanonicalQuery({ brand: "amd", inStock: "0" }, amd)).toBe(false)
     expect(
-      isCanonicalQuery({ page: ["2", "2"] }, { sort: "newest", page: 2 })
+      isCanonicalQuery(
+        { brand: ["intel", "amd"] },
+        plain({ filters: { brand: ["amd", "intel"] } })
+      )
+    ).toBe(false)
+    expect(
+      isCanonicalQuery(
+        { minPrice: "20000", maxPrice: "10000" },
+        plain({ filters: { price: { min: 10000, max: 20000 } } })
+      )
     ).toBe(false)
   })
 
@@ -90,7 +216,13 @@ describe("isCanonicalQuery", () => {
     expect(
       isCanonicalQuery(
         { page: "2", sort: "price-asc" },
-        { sort: "price-asc", page: 2 }
+        plain({ sort: "price-asc", page: 2 })
+      )
+    ).toBe(false)
+    expect(
+      isCanonicalQuery(
+        { sort: "price-asc", inStock: "1" },
+        plain({ sort: "price-asc", filters: { inStock: true } })
       )
     ).toBe(false)
   })

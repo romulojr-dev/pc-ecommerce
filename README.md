@@ -25,16 +25,41 @@ import { Button } from "@/components/ui/button";
 ```bash
 pnpm test                              # unit tests (Vitest), no database needed
 pnpm test:watch                        # unit tests in watch mode
+pnpm test:db:up                        # start the test Postgres (Docker)
+pnpm test:db                           # database integration tests; needs TEST_DATABASE_URL
+pnpm test:db:down                      # stop it
 pnpm exec playwright install chromium  # once, before the first E2E run
 pnpm test:e2e                          # E2E tests (Playwright); starts the dev server
 ```
 
-Unit tests are `*.test.ts` next to the code they test. E2E tests live in `e2e/`.
+Unit tests are `*.test.ts` next to the code they test. Integration tests are
+`*.db.test.ts`; they run real queries against Postgres. E2E tests live in `e2e/`.
 
-CI runs on every pull request and every push to `main`
-([.github/workflows/ci.yml](.github/workflows/ci.yml)): install, lint, type
-check, migrations against a throwaway Postgres, unit tests, build, and E2E
-tests against the production build. `main` requires it to pass.
+### Integration test database
+
+The integration tests empty the catalog tables, so they run against a Postgres
+of their own, never the app's database. It runs in Docker
+([docker-compose.yml](docker-compose.yml): Postgres 18 on port 5433, data in
+memory, local-only credentials). With Docker Desktop running, add the
+`TEST_DATABASE_URL` line from `.env.example` to your `.env.local` once, then:
+
+```bash
+pnpm test:db:up      # start it and wait until it is healthy
+pnpm test:db         # apply the migrations, then run the tests
+pnpm test:db:down    # stop and remove it (its data goes with it)
+```
+
+`pnpm test:db:migrate` applies the migrations by hand, for poking at the
+database; `pnpm test:db` does it itself. `pnpm test:db` prints the host and
+database it uses, and refuses to run when `TEST_DATABASE_URL` is missing or on
+the same host as `DATABASE_URL`. (A loopback host such as this one is allowed
+to share a server with the app only when the database name differs, which is
+how CI runs it.)
+
+The image's major version matches the Neon project and CI. Check Neon's with
+`SHOW server_version;` in its SQL editor, or under the project's settings, and
+update `docker-compose.yml` and `.github/workflows/ci.yml` together if it ever
+changes.
 
 ## Cached categories
 

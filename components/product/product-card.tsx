@@ -22,7 +22,9 @@ type ProductCardProps = {
 }
 
 // A product in a listing, search results or related products
-// (docs/specs/008-category-listing). No client hooks or server-only imports,
+// (docs/specs/008-category-listing). On sale, it shows the sale price, the
+// one the filters and price sorts use (docs/specs/012-common-filters), with
+// the list price struck through. No client hooks or server-only imports,
 // so server and client components can both render it. The name is the card's
 // only link; its ::after covers the card, so the whole card is clickable.
 export function ProductCard({
@@ -73,9 +75,23 @@ export function ProductCard({
           layout === "list" && "shrink-0 items-end text-right"
         )}
       >
-        <p className="font-semibold tabular-nums">
-          {formatPeso(product.price)}
-        </p>
+        <div
+          className={cn(
+            "flex flex-wrap items-baseline gap-x-2",
+            layout === "list" && "justify-end"
+          )}
+        >
+          <p className="font-semibold tabular-nums">
+            {formatPeso(product.salePrice ?? product.price)}
+          </p>
+          {product.salePrice !== null && (
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {/* <s> isn't announced by screen readers, so say it */}
+              <span className="sr-only">Was </span>
+              <s>{formatPeso(product.price)}</s>
+            </p>
+          )}
+        </div>
         <p
           className={cn(
             "text-xs",
