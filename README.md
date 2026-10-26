@@ -36,6 +36,25 @@ CI runs on every pull request and every push to `main`
 check, migrations against a throwaway Postgres, unit tests, build, and E2E
 tests against the production build. `main` requires it to pass.
 
+## Cached categories
+
+The header's category menu is cached for up to an hour
+([ADR 0003](docs/adr/0003-cache-shared-data-with-tags.md)). Changes made
+through the app refresh it at once, but `pnpm db:seed` and manual edits in the
+Neon console run outside Next, so the menu can show the old categories for up
+to an hour afterwards.
+
+To check: compare the menu with the database, e.g. in the Neon SQL editor:
+
+```sql
+SELECT name, slug, "sortOrder" FROM "Category"
+WHERE "parentId" IS NULL ORDER BY "sortOrder", name;
+```
+
+If they differ, wait for the hour to pass. In production you can purge the
+Data Cache from the Vercel dashboard (project Settings → Caches) instead.
+Locally, stop `pnpm dev`, delete `.next/cache` and start it again.
+
 ## AI agent skills
 
 The Prisma agent skills used by Claude Code are not committed. `.agents/` holds

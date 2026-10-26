@@ -2,6 +2,7 @@ import Link from "next/link"
 import { CircleUserIcon, ShoppingCartIcon, WrenchIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { CategoryMenu } from "@/components/layout/category-menu"
 import { HeaderSearch } from "@/components/layout/header-search"
 import { Logo } from "@/components/layout/logo"
 import { siteConfig } from "@/lib/site"
@@ -16,7 +17,10 @@ const iconLink = cn(
 function SiteHeader() {
   return (
     <header className="grid h-20 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-6 border-b px-6">
-      <HeaderSearch />
+      <div className="flex items-center gap-3">
+        <CategoryMenu />
+        <HeaderSearch />
+      </div>
 
       <Link
         href="/"

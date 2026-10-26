@@ -1,10 +1,11 @@
-import type { builderCategories } from "@/lib/specs/registry"
-
-type CategorySlug = keyof typeof builderCategories
-
 // Category pages live at /<slug> (PRD clean URLs, e.g. /gpu/rtx-5070-12gb)
-function categoryHref(slug: CategorySlug) {
+export function categoryHref(slug: string) {
   return `/${slug}`
+}
+
+// True on the category's page and on its products' pages (/cpu, /cpu/…)
+export function isCurrentCategory(pathname: string, slug: string) {
+  return pathname.split("/")[1] === slug
 }
 
 export type FooterLink = { label: string; href: string }
