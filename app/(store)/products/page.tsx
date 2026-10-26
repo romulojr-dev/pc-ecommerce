@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { connection } from "next/server"
 
 import { Container } from "@/components/layout/container"
+import { ProductImage } from "@/components/product/product-image"
 import {
   Table,
   TableBody,
@@ -36,6 +37,12 @@ export default async function ProductsPage() {
       lowStockAt: true,
       brand: { select: { name: true } },
       category: { select: { name: true } },
+      // The first image only, for the thumbnail
+      images: {
+        select: { url: true, alt: true },
+        orderBy: { sortOrder: "asc" },
+        take: 1,
+      },
     },
     orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
   })
@@ -50,6 +57,9 @@ export default async function ProductsPage() {
           <TableCaption>Active products in the catalog</TableCaption>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16">
+                <span className="sr-only">Image</span>
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Brand</TableHead>
               <TableHead>Category</TableHead>
@@ -60,6 +70,14 @@ export default async function ProductsPage() {
           <TableBody>
             {products.map((product) => (
               <TableRow key={product.id}>
+                <TableCell>
+                  <ProductImage
+                    image={product.images[0] ?? null}
+                    productName={product.name}
+                    sizes="48px"
+                    className="size-12"
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.brand.name}</TableCell>
                 <TableCell>{product.category.name}</TableCell>

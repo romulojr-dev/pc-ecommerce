@@ -22,6 +22,8 @@ export type SeedCounts = {
   brands: number
   created: number
   updated: number
+  // ProductImage rows added
+  images: number
 }
 
 export class SeedWriteError extends Error {}
@@ -50,13 +52,14 @@ export function writeSeed(
         parts.map(({ part }) => part)
       )
 
-      const existing = new Set(
+      // Existing products by SKU, with how many images each has
+      const existing = new Map(
         (
           await tx.product.findMany({
             where: { sku: { in: parts.map(({ part }) => part.sku) } },
-            select: { sku: true },
+            select: { sku: true, _count: { select: { images: true } } },
           })
-        ).map(({ sku }) => sku)
+        ).map(({ sku, _count }) => [sku, _count.images])
       )
       const newParts = parts.filter(({ part }) => !existing.has(part.sku))
       await checkSlugConflicts(
@@ -64,19 +67,36 @@ export function writeSeed(
         newParts.map(({ part }) => part)
       )
 
+      let imagesAdded = 0
       for (const { part, categoryId } of parts) {
         const data = productData(
           part,
           categoryId,
           brandIds.get(part.brandSlug)!
         )
-        if (existing.has(part.sku)) {
+        // Images are added only to a product that has none: once the admin
+        // panel manages a product's images, a re-seed leaves them alone
+        const images = {
+          create: part.images.map((image, index) => ({
+            ...image,
+            sortOrder: index,
+          })),
+        }
+        const imageCount = existing.get(part.sku)
+        if (imageCount === undefined) {
+          await tx.product.create({ data: { ...data, images } })
+          imagesAdded += part.images.length
+        } else if (imageCount === 0) {
+          await tx.product.update({
+            where: { sku: part.sku },
+            data: { ...pick(data, CATALOG_FIELDS), images },
+          })
+          imagesAdded += part.images.length
+        } else {
           await tx.product.update({
             where: { sku: part.sku },
             data: pick(data, CATALOG_FIELDS),
           })
-        } else {
-          await tx.product.create({ data })
         }
       }
 
@@ -85,6 +105,7 @@ export function writeSeed(
         brands: brandIds.size,
         created: newParts.length,
         updated: parts.length - newParts.length,
+        images: imagesAdded,
       }
     },
     // Prisma's default is 5 s; ~100 sequential writes to a remote database

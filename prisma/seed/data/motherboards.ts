@@ -1,3 +1,5 @@
+import { placeholderUrl } from "@/lib/placeholders"
+
 import type { SeedPart } from "../part-schema"
 
 // nativeCpuGenerations = generations the board's launch BIOS supports. A
@@ -15,6 +17,11 @@ export const motherboards = [
     warrantyMonths: 36,
     sourceUrl:
       "https://rog.asus.com/motherboards/rog-strix/rog-strix-b650-a-gaming-wifi-model/spec/",
+    // Several images, for the product gallery (spec 006)
+    images: [
+      { url: placeholderUrl("motherboard") },
+      { url: placeholderUrl("box") },
+    ],
     specs: {
       socket: "AM5",
       chipset: "B650",
