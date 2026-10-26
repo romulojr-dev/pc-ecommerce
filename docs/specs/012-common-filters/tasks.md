@@ -19,4 +19,4 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
 - [x] **T8. E2E.** `e2e/category-filters.spec.ts` with the scenarios in the spec.
   - Verify: `pnpm test:e2e`, all specs.
 - [x] **T9. Docs.** CLAUDE.md (listing URL state, filter structure, effective price, `test:db`, `TEST_DATABASE_URL`), README, tick the spec's acceptance criteria and set its status.
-- [ ] **T10. Build and wrap-up.** `pnpm build`, `pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm test:e2e`; browser check (themes, 1280/1024 px, keyboard, axe); push and open the PR.
+- [x] **T10. Build and wrap-up.** `pnpm build`, `pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm test:e2e`; browser check (themes, 1280/1024 px, keyboard, axe); push and open the PR.

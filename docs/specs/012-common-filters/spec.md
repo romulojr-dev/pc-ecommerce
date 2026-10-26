@@ -155,7 +155,7 @@ A pre-order isn't in stock yet, and a card labelled "Pre-order" under an "In sto
 - [x] Active filters show as chips with remove links, plus Clear all; "No products match your filters." has a way back.
 - [x] Brand and in-stock apply instantly, price on submit; everything works by keyboard.
 - [x] The filter structure lets a new filter be added with one pure object, one server entry and one sidebar group.
-- [ ] Unit, integration (in CI) and E2E tests pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
+- [x] Unit, integration (in CI) and E2E tests pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
 
 ## Out of scope
 
