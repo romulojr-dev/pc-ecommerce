@@ -26,7 +26,7 @@ Status: **Approved** · Issue: #21 · PRD refs: FR-4 (category listing, grid/lis
 - **Link:** `productHref(categorySlug, slug)` added to `lib/site.ts` (`/cpu/amd-ryzen-5-7600`). It 404s until the product page story, as the menu's links did in spec 007.
 - **Layouts:** grid: image on top, square, `sizes="(min-width: 1280px) 280px, 25vw"`. List: a row with a 96 px image left, name and brand in the middle, price and stock right-aligned.
 - **Data helper:** `productCardSelect` (the Prisma `select`) and `toProductCardData(row)` in `lib/products.ts` (server-only), so search and related products load the same fields.
-- Sale price isn't shown yet (FR-8, product page story); price and sorting use `price`.
+- Sale price isn't shown yet (FR-8, product page story); price and sorting use `price`. *Superseded by [spec 012](../012-common-filters/spec.md): cards show the sale price, and both price sorts use the effective price.*
 
 ## Sort
 

@@ -1,6 +1,6 @@
 # 012 — Common filters: brand, price, in stock
 
-Status: **Draft** · Issue: #35 · PRD refs: FR-5 (price range and "in stock only" on every category; brand), FR-7 (filter state in the URL), NFR Accessibility (WCAG 2.1 AA), Testing strategy (integration tests for queries)
+Status: **Approved** · Issue: #35 · PRD refs: FR-5 (price range and "in stock only" on every category; brand), FR-7 (filter state in the URL), NFR Accessibility (WCAG 2.1 AA), Testing strategy (integration tests for queries)
 
 ## Summary
 
@@ -148,13 +148,13 @@ A pre-order isn't in stock yet, and a card labelled "Pre-order" under an "In sto
 
 ## Acceptance criteria
 
-- [ ] Sidebar with brand (only the category's brands, multi-select), price range and "in stock only".
-- [ ] Price filter and price sort use the effective price; the card shows the sale price.
-- [ ] "In stock only" excludes pre-orders and out-of-stock products.
-- [ ] Filters live in the URL, combine with sort and pagination, reset the page, and invalid values are ignored; min > max is swapped.
-- [ ] Active filters show as chips with remove links, plus Clear all; "No products match your filters." has a way back.
-- [ ] Brand and in-stock apply instantly, price on submit; everything works by keyboard.
-- [ ] The filter structure lets a new filter be added with one pure object, one server entry and one sidebar group.
+- [x] Sidebar with brand (only the category's brands, multi-select), price range and "in stock only".
+- [x] Price filter and price sort use the effective price; the card shows the sale price.
+- [x] "In stock only" excludes pre-orders and out-of-stock products.
+- [x] Filters live in the URL, combine with sort and pagination, reset the page, and invalid values are ignored; min > max is swapped.
+- [x] Active filters show as chips with remove links, plus Clear all; "No products match your filters." has a way back.
+- [x] Brand and in-stock apply instantly, price on submit; everything works by keyboard.
+- [x] The filter structure lets a new filter be added with one pure object, one server entry and one sidebar group.
 - [ ] Unit, integration (in CI) and E2E tests pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
 
 ## Out of scope
