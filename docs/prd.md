@@ -57,7 +57,7 @@ The MVP is a complete buy flow plus the PC Builder; everything else is layered o
 
 | Area | MVP (Phase 1) | Phase 2 | Phase 3 / stretch |
 | --- | --- | --- | --- |
-| Catalog | Categories, product pages, specs, images, stock status | Product compare (up to 4), recently viewed | Price history chart |
+| Catalog | The 8 builder-component categories (CPU, motherboard, memory, GPU, storage, PSU, case, CPU cooler), product pages, specs, images, stock status | Non-builder categories (case fans, monitors, peripherals, networking, prebuilt PCs) with a grouped mega-menu; product compare (up to 4), recently viewed | Price history chart |
 | Search | Keyword search + faceted filters per category | Typo-tolerant search, autocomplete | AI "build me a PC for PHP 40k" assistant |
 | PC Builder | Step-by-step builder, compatibility engine, wattage estimate, save & share build, add build to cart | Prebuilt templates (budget / 1080p / 1440p / workstation) | Community gallery of builds, FPS estimates |
 | Cart & checkout | Cart, guest + account checkout, delivery (fee by region) or free store pickup, vouchers | Abandoned-cart email | Loyalty points |
@@ -74,7 +74,7 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 ### Home and navigation
 
-- **FR-1** Mega-menu of categories: CPU, Motherboard, Memory, Graphics Card, Storage, Power Supply, Case, CPU Cooler, Case Fans, Monitor, Peripherals (keyboard, mouse, headset), Networking, Prebuilt PCs.
+- **FR-1** Category menu in the header. MVP: the 8 builder-component categories (CPU, Motherboard, Memory, Graphics Card, Storage, Power Supply, Case, CPU Cooler) in a single-column menu. Phase 2: add Case Fans, Monitor, Peripherals (keyboard, mouse, headset), Networking and Prebuilt PCs, shown in a grouped mega-menu.
 - **FR-2** Home page: hero promo banner, "Build your PC" call-to-action, featured deals, best sellers, shop by brand, trust strip (authentic, warranty, secure payment, nationwide delivery).
 - **FR-3** Persistent header search, cart count and account menu; mobile bottom-sheet menu.
 
