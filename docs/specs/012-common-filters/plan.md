@@ -87,14 +87,14 @@ type ListingFilter<V> = {
 1. `state = parseListingParams(raw)`; `today = manilaToday()`.
 2. `Promise.all([getBrandOptions(category.id), getCategoryProducts(category.id, state, { today })])`.
 3. `normalized = normalizeFilters(state, { brand: brands })`; if filters changed, `redirect(listingHref(slug, normalized))`. Then the existing past-the-end and canonical redirects.
-4. Layout: `<ListingShell sidebar={<ListingFilters …/>}>` containing `ActiveFilters`, then either the no-match state (`total === 0` with filters active, `role="status"`, "Clear all filters" link button) or `ListingResults` + pager. No filters and `total === 0` keeps "No products in this category yet." with no sidebar. The count line gets `role="status"`.
+4. Layout: `<ListingShell sidebar={<ListingFilters …/>}>` containing `ActiveFilters`, then either the no-match state (`total === 0` with filters active, `role="status"`, "Clear all filters" link button) or `ListingResults` + pager. No filters and `total === 0` keeps "No products in this category yet." with no sidebar. `ListingShell` takes an `announcement` string and renders it in a visually hidden `role="status"` region (the shell stays mounted across results, so the change is announced); the visible count line is plain text.
 5. `generateMetadata`: parse with filters; `robots: { index: false, follow: true }` when any filter is active; canonical `listingHref(slug, { sort: DEFAULT_SORT, page, filters })` (own URL minus sort).
 
 ## Components
 
 - **`ListingShell`** (`"use client"`): `useTransition`, a context exposing `navigate(href)` = `startTransition(() => router.push(href, { scroll: false }))`, grid `lg:grid-cols-[15rem_1fr]`, the results wrapper `aria-busy={isPending}` and dimmed. Children and `sidebar` are server-rendered slots.
 - **`ListingFilters`** (`"use client"`): `<aside aria-label="Filters">` with `FieldSet`s: Brand (checkbox per option, `useOptimistic` for the checked list), Price (Min/Max `Input` with `inputMode="numeric"`, labels "Min price (₱)"/"Max price (₱)", Apply button, a `<form onSubmit>`; local values re-synced from props during render when the URL's price changes, so focus isn't lost; invalid text → `aria-invalid` + `aria-describedby` message, no navigation), Availability ("In stock only" checkbox). Checkbox change: `navigate(listingHref(slug, withFilter(state, key, next)))`.
-- **`ActiveFilters`** (server): chips from each active filter's `chips()`; each chip is a `Link` to `listingHref(slug, withFilter(state, key, without))` named "Remove filter: Brand AMD" with an `XIcon` (`aria-hidden`); "Clear all" link to `clearFilters(state)`. Renders nothing without filters.
+- **`ActiveFilters`** (server): chips from each active filter's `chips()`; each chip is a `Link` to `listingHref(slug, withFilter(state, key, without))` named "Remove filter: Brand: AMD" (a visually hidden "Remove filter: " plus the label) with an `XIcon` (`aria-hidden`); "Clear all" link to `clearFilters(state)`. Renders nothing without filters.
 - **`ProductCard`:** price slot shows `formatPeso(salePrice)` with `<s>` list price beside it and an `sr-only` "Was"; no % badge.
 - Grid: with the 15 rem sidebar the product grid is `grid-cols-2 xl:grid-cols-3` and `sizes` is updated; checked at 1280 and 1024 px.
 

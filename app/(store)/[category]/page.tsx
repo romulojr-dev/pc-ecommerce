@@ -3,11 +3,13 @@ import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { connection } from "next/server"
 
+import { ActiveFilters } from "@/components/catalog/active-filters"
 import { ListingFilters } from "@/components/catalog/listing-filters"
 import { ListingPagination } from "@/components/catalog/listing-pagination"
 import { ListingResults } from "@/components/catalog/listing-results"
 import { ListingShell } from "@/components/catalog/listing-shell"
 import { ListingSort } from "@/components/catalog/listing-sort"
+import { NoMatches } from "@/components/catalog/no-matches"
 import { Container } from "@/components/layout/container"
 import { getCategoryBySlug } from "@/lib/categories"
 import { activeFilterCount, normalizeFilters } from "@/lib/listing-filters"
@@ -48,6 +50,11 @@ export async function generateMetadata({
         filters,
       }),
     },
+    // Filter combinations aren't useful search landing pages. Their links stay
+    // followable, so crawlers still reach the products (FR-7).
+    ...(activeFilterCount(filters) > 0 && {
+      robots: { index: false, follow: true },
+    }),
   }
 }
 
@@ -101,6 +108,11 @@ export default async function CategoryPage({
         </p>
       ) : (
         <ListingShell
+          announcement={
+            total === 0
+              ? "No products match your filters."
+              : `Showing ${from} to ${to} of ${total} ${total === 1 ? "product" : "products"}`
+          }
           sidebar={
             <ListingFilters
               slug={category.slug}
@@ -109,10 +121,18 @@ export default async function CategoryPage({
             />
           }
         >
+          <ActiveFilters
+            slug={category.slug}
+            state={state}
+            options={options}
+            className="mb-4"
+          />
           {total === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No products match your filters.
-            </p>
+            <NoMatches
+              slug={category.slug}
+              categoryName={category.name}
+              state={state}
+            />
           ) : (
             <>
               <ListingResults

@@ -23,13 +23,22 @@ export function useNavigateListing(): Navigate {
 type ListingShellProps = {
   // The filter sidebar, rendered on the server
   sidebar: React.ReactNode
+  // What the results are now, e.g. "Showing 1-24 of 61 products", read out
+  // when it changes. The live region lives here because the shell stays
+  // mounted whatever the results are; a region that appears together with its
+  // text may not be announced.
+  announcement: string
   children: React.ReactNode
 }
 
 // The listing's two columns: filters on the left, results on the right. It
 // owns the navigation transition, so the results are marked busy (and dimmed)
 // while a filter's new results load. Both columns stay server-rendered.
-export function ListingShell({ sidebar, children }: ListingShellProps) {
+export function ListingShell({
+  sidebar,
+  announcement,
+  children,
+}: ListingShellProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -58,6 +67,9 @@ export function ListingShell({ sidebar, children }: ListingShellProps) {
           {children}
         </div>
       </div>
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
     </NavigateContext>
   )
 }

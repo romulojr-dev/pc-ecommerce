@@ -14,7 +14,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify: a sale product (Core Ultra 5 245K) in `pnpm dev`; `pnpm test:e2e` for the category-page spec.
 - [x] **T6. Sidebar and page wiring.** shadcn `checkbox`; `ListingShell`, `ListingFilters`; page wiring (options, normalization redirect, grid columns); brand, in-stock and price apply as in the spec.
   - Verify in `pnpm dev`: URLs update, results change, focus stays on a toggled checkbox, Enter applies a price, invalid price shows its error, bad URLs redirect.
-- [ ] **T7. Chips, clear all, no-match state.** `ActiveFilters`, no-match message with "Clear all filters", `role="status"` on the count, metadata (`noindex`, canonical).
+- [x] **T7. Chips, clear all, no-match state.** `ActiveFilters`, no-match message with "Clear all filters", `role="status"` on the count, metadata (`noindex`, canonical).
   - Verify in `pnpm dev`: remove one chip, Clear all keeps sort; `/cpu?minPrice=9999999`; page source shows `noindex`.
 - [ ] **T8. E2E.** `e2e/category-filters.spec.ts` with the scenarios in the spec.
   - Verify: `pnpm test:e2e`, all specs.
