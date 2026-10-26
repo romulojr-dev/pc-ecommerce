@@ -4,8 +4,7 @@ import { builderCategories } from "../lib/specs/registry"
 
 // The seed creates the category rows from the registry, so it is the source of
 // the expected names and order. Needs a seeded database (CI seeds after
-// migrating). The current-category marker is tested with the category pages
-// (#21), once /<slug> exists.
+// migrating). The current-category marker is tested in category-page.spec.ts.
 const expectedNames = Object.values(builderCategories)
   .toSorted((a, b) => a.sortOrder - b.sortOrder)
   .map((category) => category.name)

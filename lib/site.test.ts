@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest"
 
-import { categoryHref, isCurrentCategory } from "@/lib/site"
+import { categoryHref, isCurrentCategory, productHref } from "@/lib/site"
 
 describe("categoryHref", () => {
   it("links to the top-level category route", () => {
     expect(categoryHref("cpu-cooler")).toBe("/cpu-cooler")
+  })
+})
+
+describe("productHref", () => {
+  it("links to the product under its category", () => {
+    expect(productHref("cpu", "amd-ryzen-5-7600")).toBe("/cpu/amd-ryzen-5-7600")
   })
 })
 

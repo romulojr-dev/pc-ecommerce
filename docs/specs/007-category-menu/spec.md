@@ -72,7 +72,7 @@ Base UI's `Menu` implements the WAI-ARIA menu button pattern. We rely on its beh
 - [x] A "Categories" menu in the header lists the categories from the database, ordered by `sortOrder`.
 - [x] Each item links to `/<category-slug>`; clicking one navigates and closes the menu.
 - [x] Opens with mouse and keyboard; arrow keys move between items; Escape closes it and returns focus to the trigger.
-- [ ] The current category is marked with `aria-current="page"` and a non-color indicator.
+- [x] The current category is marked with `aria-current="page"` and a non-color indicator (E2E in spec 008).
 - [x] The query is cached with the `categories` tag and a 1-hour revalidate; store pages without request data stay static.
 - [x] `SiteHeader` and `CategoryMenu` are server components; only `CategoryMenuLink` is a client component of ours.
 - [x] ADR 0003 written; CLAUDE.md and the README updated.
