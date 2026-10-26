@@ -23,7 +23,8 @@ jobs:
     # Throwaway database for migrations, the seed and E2E; lives only for the job
     services:
       postgres:
-        image: postgres:17
+        # Same major version as the Neon project and docker-compose.yml
+        image: postgres:18
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -73,6 +74,17 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+      # A second database in the same throwaway server, so the integration
+      # tests can empty tables without touching the seeded one (spec 012). The
+      # tests apply the migrations to it themselves.
+      - name: Create integration test database
+        run: psql "postgresql://postgres:postgres@localhost:5432/postgres" -c 'CREATE DATABASE pcsilicon_test'
+
+      - name: Integration tests
+        run: pnpm test:db
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pcsilicon_test
 
       - name: Build
         run: pnpm build

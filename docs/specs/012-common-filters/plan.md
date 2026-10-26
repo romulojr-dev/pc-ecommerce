@@ -33,7 +33,9 @@ lib/listing-filters/server.ts                        where(), options() per key
 lib/listing-filters/server.db.test.ts                integration cases from the spec
 lib/listing-params.ts (+ test)                       state.filters, parse/serialize/canonical
 lib/products.ts                                      filtered getCategoryProducts, effective-price sort, card salePrice
-lib/products.db.test.ts                              sort + trigger tests
+lib/effective-price.db.test.ts                      trigger tests (T2)
+lib/products.db.test.ts                              sort tests (T4)
+test-support/db-guard.ts (+ test)                    refuses a missing or app-host test URL
 
 components/ui/checkbox.tsx                           shadcn
 components/catalog/listing-shell.tsx                 "use client": grid, transition, aria-busy, navigate context
@@ -98,16 +100,16 @@ type ListingFilter<V> = {
 
 ## Integration tests
 
-- **One variable: `TEST_DATABASE_URL`**, a direct (unpooled) URL. The tests need no pooler, and the same URL serves migrations and queries. It is the only variable the tests read; they never fall back to `DATABASE_URL`.
+- **One variable: `TEST_DATABASE_URL`**, a direct URL (no pooler). The same URL serves migrations and queries. It is the only variable the tests read; they never fall back to `DATABASE_URL`.
 - **Safety guard** (`test-support/db-guard.ts`, pure, with unit tests in `pnpm test`): `resolveTestDatabase(env)` throws unless `TEST_DATABASE_URL` is set and is a postgres URL, and refuses a URL that points at the app's database. Hosts are compared after stripping Neon's `-pooler` suffix, against both `DATABASE_URL` and `DATABASE_URL_UNPOOLED`:
-  - same host (and port) as either → refused, whatever the database name; Neon branches have their own host, so a `test` branch passes;
+  - same host (and port) as either → refused, whatever the database name; the Docker database on `localhost:5433` and a Neon app database are different hosts, so it passes;
   - the one exception is a loopback host (`localhost`, `127.0.0.1`, `::1`), which is a throwaway server by definition (CI's service container, a local Docker Postgres): there the **database name** must differ (`pcsilicon_test` vs `pcsilicon`).
   It returns the URL and a printable `host:port/database` (never credentials). Run in three places: at config load (so Vitest won't start), in the global setup (which prints `Integration tests use database <host:port/database>`), and in `resetCatalog()`, which checks the worker's `DATABASE_URL` equals `TEST_DATABASE_URL` before any `TRUNCATE`.
 - `vitest.db.config.ts`: loads `.env.local` (like `prisma7.config.ts`), calls the guard, then `include: ["**/*.db.test.ts"]`, `globalSetup`, `fileParallelism: false` (shared database), `env: { DATABASE_URL, DATABASE_URL_UNPOOLED, TEST_DATABASE_URL }` all set to the test URL, and `NEXT_PUBLIC_SITE_URL`.
 - Global setup runs `prisma migrate deploy` with `DATABASE_URL_UNPOOLED` set to the test URL (`execFileSync` of `pnpm exec prisma migrate deploy`).
 - `test-support/db.ts`: `resetCatalog()` (`TRUNCATE ... CASCADE` like the seed) and `insertFixtures()` (P1–P6, G1 from the spec, today `2026-10-26`).
-- CI: after "Unit tests", a step creates `pcsilicon_test` in the existing throwaway Postgres service (`PGPASSWORD=postgres psql -h localhost -U postgres -c 'CREATE DATABASE pcsilicon_test'`) and a `pnpm test:db` step runs with `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pcsilicon_test`. Same server as `DATABASE_URL`, so the guard's loopback rule applies. The E2E database and seed are unaffected.
-- Local: needs its own database: a Neon branch named `test` (copy its **direct** connection string into `.env.local` as `TEST_DATABASE_URL`) or a local Postgres; the README says how.
+- CI: the service container is bumped to `postgres:18` (Neon is 18.6). After "Unit tests", a step creates `pcsilicon_test` in that service (`PGPASSWORD=postgres psql -h localhost -U postgres -c 'CREATE DATABASE pcsilicon_test'`) and a `pnpm test:db` step runs with `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/pcsilicon_test`. Same server as `DATABASE_URL`, so the guard's loopback rule applies. The E2E database and seed are unaffected.
+- Local: a Docker Postgres from `docker-compose.yml` (service `postgres-test`, image `postgres:18` = the Neon project's major version and CI's, port 5433, healthcheck, data in tmpfs, local-only credentials). Scripts: `test:db:up` (`docker compose up -d --wait`), `test:db:down`, `test:db:migrate` (`scripts/test-db-migrate.ts`, sharing `test-support/migrate.ts` with the global setup). `.env.example` has `TEST_DATABASE_URL` pointing at it; the README says how to use it.
 
 ## Verification
 
