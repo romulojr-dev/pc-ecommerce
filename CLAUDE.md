@@ -11,7 +11,7 @@ Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
 - `pnpm dev` — start Next.js dev server
 - `pnpm build` / `pnpm start` — production build / serve
 - `pnpm lint` — ESLint (flat config, `eslint.config.mjs`)
-- `pnpm typecheck` — `tsc --noEmit`
+- `pnpm typecheck` — `next typegen && tsc --noEmit`; typegen writes the global route types (`PageProps`, `LayoutProps`) that a fresh checkout, like CI, does not have yet
 - `pnpm format` — Prettier on all `ts`/`tsx`
 - `pnpm db:migrate` — create and apply a migration on the local (Neon dev branch) database (`prisma migrate dev`)
 - `pnpm db:deploy` — apply pending migrations (`prisma migrate deploy`); runs before `pnpm build` on Vercel via [vercel.json](vercel.json)
