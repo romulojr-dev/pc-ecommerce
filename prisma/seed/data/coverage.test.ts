@@ -1,5 +1,10 @@
+import { existsSync } from "node:fs"
+import { fileURLToPath } from "node:url"
+
 import { assert, describe, expect, test } from "vitest"
 
+import { PLACEHOLDER_VIEWS, placeholderUrl } from "@/lib/placeholders"
+import { builderCategories } from "@/lib/specs"
 import { getStockStatus } from "@/lib/stock"
 
 import { validateSeed } from "../validate"
@@ -82,8 +87,38 @@ describe("catalog coverage", () => {
     expect(Math.max(...wattages)).toBeGreaterThanOrEqual(1000)
   })
 
+  test("has 5–6 parts with several images, with 2 and with 3", () => {
+    const counts = parts
+      .map((part) => part.images.length)
+      .filter((count) => count > 1)
+    expect(counts.length).toBeGreaterThanOrEqual(5)
+    expect(counts.length).toBeLessThanOrEqual(6)
+    expect(counts).toContain(2)
+    expect(counts).toContain(3)
+  })
+
   test("keeps every spec 001 fixture part", () => {
     const skus = new Set(parts.map((part) => part.sku))
     expect(FIXTURE_SKUS.filter((sku) => !skus.has(sku))).toEqual([])
+  })
+})
+
+describe("image files", () => {
+  const publicDir = fileURLToPath(new URL("../../../public", import.meta.url))
+  const isFile = (url: string) => existsSync(`${publicDir}${url}`)
+
+  test("every local image the seed uses exists under public/", () => {
+    const missing = parts
+      .flatMap((part) => part.images.map((image) => image.url))
+      .filter((url) => url.startsWith("/") && !isFile(url))
+    expect([...new Set(missing)]).toEqual([])
+  })
+
+  test("every builder category and view has a placeholder", () => {
+    const names = [
+      ...Object.keys(builderCategories),
+      ...Object.keys(PLACEHOLDER_VIEWS),
+    ]
+    expect(names.map(placeholderUrl).filter((url) => !isFile(url))).toEqual([])
   })
 })

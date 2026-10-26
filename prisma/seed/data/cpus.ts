@@ -1,3 +1,5 @@
+import { placeholderUrl } from "@/lib/placeholders"
+
 import type { SeedPart } from "../part-schema"
 
 // tdpW is worst-case power at full boost (spec.md): AMD PPT = 1.35 × rated
@@ -14,6 +16,12 @@ export const cpus = [
     warrantyMonths: 36,
     sourceUrl:
       "https://www.amd.com/en/products/processors/desktops/ryzen/7000-series/amd-ryzen-5-7600.html",
+    // Several images, for the product gallery (spec 006)
+    images: [
+      { url: placeholderUrl("cpu") },
+      { url: placeholderUrl("box") },
+      { url: placeholderUrl("detail") },
+    ],
     specs: {
       socket: "AM5",
       generation: "zen-4",

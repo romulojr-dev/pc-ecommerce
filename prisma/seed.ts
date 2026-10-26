@@ -71,7 +71,9 @@ async function main(): Promise<number> {
   console.log(
     `Seeded ${counts.categories} categories, ${counts.brands} brands, ${
       counts.created + counts.updated
-    } products (${counts.created} created, ${counts.updated} updated${kept}).`
+    } products (${counts.created} created, ${counts.updated} updated${kept}), ${
+      counts.images
+    } ${counts.images === 1 ? "image" : "images"} added.`
   )
   return 0
 }

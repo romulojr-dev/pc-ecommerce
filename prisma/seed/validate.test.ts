@@ -1,5 +1,6 @@
 import { assert, describe, expect, test } from "vitest"
 
+import { placeholderUrl } from "@/lib/placeholders"
 import { builderCategories, type FieldMeta } from "@/lib/specs"
 
 import { seedFiles } from "./data"
@@ -77,5 +78,86 @@ describe("reserved category slugs", () => {
     expect(findReservedCategorySlugs(Object.keys(builderCategories))).toEqual(
       []
     )
+  })
+})
+
+describe("images", () => {
+  const { file, parts } = seedFiles.find(({ category }) => category === "cpu")!
+  // A CPU part without its own images, to vary
+  const base = (parts as readonly RawPart[]).find(
+    (part) => !Object.hasOwn(part, "images")
+  )!
+
+  function validateImages(images?: unknown) {
+    const part: Record<string, unknown> = structuredClone(base)
+    if (images !== undefined) part.images = images
+    return validateSeed([{ file, category: "cpu", parts: [part] }])
+  }
+
+  test("defaults to the category placeholder with the name as alt", () => {
+    const result = validateImages()
+    assert(result.ok)
+    const part = result.files[0].parts[0]
+    expect(part.images).toEqual([
+      { url: "/images/placeholders/cpu.svg", alt: part.name },
+    ])
+  })
+
+  test("keeps the given order and fills in missing alt text", () => {
+    const result = validateImages([
+      { url: placeholderUrl("cpu") },
+      { url: placeholderUrl("box") },
+      { url: placeholderUrl("detail") },
+      { url: "https://images.example.com/x.webp", alt: "Front view" },
+    ])
+    assert(result.ok)
+    const { name, images } = result.files[0].parts[0]
+    expect(images).toEqual([
+      { url: "/images/placeholders/cpu.svg", alt: name },
+      { url: "/images/placeholders/box.svg", alt: `${name} — in the box` },
+      { url: "/images/placeholders/detail.svg", alt: `${name} — detail view` },
+      { url: "https://images.example.com/x.webp", alt: "Front view" },
+    ])
+  })
+
+  test("names an unknown extra image by position", () => {
+    const result = validateImages([
+      { url: placeholderUrl("cpu") },
+      { url: "/images/other.png" },
+    ])
+    assert(result.ok)
+    const { name, images } = result.files[0].parts[0]
+    expect(images[1].alt).toBe(`${name} — image 2`)
+  })
+
+  test.each(["images/x.svg", "//cdn.example.com/x.svg", "http://x.com/y.png"])(
+    "rejects the url %s",
+    (url) => {
+      expect(validateImages([{ url }])).toMatchObject({
+        ok: false,
+        errors: [
+          {
+            path: ["images", 0, "url"],
+            message: "must be a path starting with / or an https:// URL",
+          },
+        ],
+      })
+    }
+  )
+
+  test("rejects empty alt text", () => {
+    expect(
+      validateImages([{ url: placeholderUrl("cpu"), alt: " " }])
+    ).toMatchObject({
+      ok: false,
+      errors: [{ path: ["images", 0, "alt"], message: "must be at least 1" }],
+    })
+  })
+
+  test("rejects an empty list", () => {
+    expect(validateImages([])).toMatchObject({
+      ok: false,
+      errors: [{ path: ["images"] }],
+    })
   })
 })

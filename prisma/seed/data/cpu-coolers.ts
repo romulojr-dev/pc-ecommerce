@@ -1,3 +1,5 @@
+import { placeholderUrl } from "@/lib/placeholders"
+
 import type { SeedPart } from "../part-schema"
 
 // heightMm (air coolers) is rounded up from the manufacturer's figure.
@@ -91,6 +93,12 @@ export const cpuCoolers = [
     weightGrams: 2200,
     warrantyMonths: 72,
     sourceUrl: "https://www.noctua.at/en/products/nh-d15-g2/specifications",
+    // Several images, for the product gallery (spec 006)
+    images: [
+      { url: placeholderUrl("cpu-cooler") },
+      { url: placeholderUrl("box") },
+      { url: placeholderUrl("detail") },
+    ],
     // 168 mm: too tall for the Q300L (157) and the AIR 100 (161)
     specs: {
       type: "AIR",
