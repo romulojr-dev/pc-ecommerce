@@ -16,7 +16,7 @@ Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
 - `pnpm db:migrate` — create and apply a migration on the local (Neon dev branch) database (`prisma migrate dev`)
 - `pnpm db:deploy` — apply pending migrations (`prisma migrate deploy`); runs before `pnpm build` on Vercel via [vercel.json](vercel.json)
 - `pnpm db:generate` — regenerate the Prisma client (also runs on `postinstall` and at the start of `pnpm build`, since Vercel may restore cached dependencies without running `postinstall`)
-- `pnpm db:seed` — validate and upsert the catalog fixture parts into the local (Neon dev branch) database; keeps stock, price and status of existing products. `pnpm db:seed --reset` truncates the catalog tables first (refused when `NODE_ENV=production`). Prints the target host before writing. Runs on the dev database, in CI (before E2E), and once by hand on production (see [spec 004](docs/specs/004-product-list/spec.md), "Seeding production"); never part of a build or deploy
+- `pnpm db:seed` — validate and upsert the catalog parts (about 60, see [spec 005](docs/specs/005-expand-seed-catalog/spec.md)) into the local (Neon dev branch) database; keeps stock, price and status of existing products. Rejects a category slug that is a reserved top-level route ([lib/reserved-slugs.ts](lib/reserved-slugs.ts); add new top-level routes there). `pnpm db:seed --reset` truncates the catalog tables first (refused when `NODE_ENV=production`). Prints the target host before writing. Runs on the dev database, in CI (before E2E), and once by hand on production (see [spec 004](docs/specs/004-product-list/spec.md), "Seeding production"); never part of a build or deploy
 
 - `pnpm test` / `pnpm test:watch` — Vitest unit tests, once / in watch mode. Pure: no database or env vars needed
 - `pnpm test:e2e` — Playwright E2E tests (Chromium only); starts `pnpm dev`, or reuses a running dev server. With `CI` set it serves the production build with `pnpm start`, so run `pnpm build` first. One-time setup: `pnpm exec playwright install chromium`
@@ -41,3 +41,6 @@ Unit tests are `*.test.ts`, colocated with the code they test (e.g. [prisma/seed
 ## Formatting
 
 Prettier: no semicolons, double quotes, 2-space indent, 80 cols, `es5` trailing commas, LF endings; Tailwind classes are auto-sorted (including inside `cn` and `cva`).
+
+## Learning notes
+Playbook folder name: PC Silicon

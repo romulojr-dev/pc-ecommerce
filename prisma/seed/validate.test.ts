@@ -4,7 +4,7 @@ import { builderCategories, type FieldMeta } from "@/lib/specs"
 
 import { seedFiles } from "./data"
 import { formatErrors } from "./format-errors"
-import { validateSeed } from "./validate"
+import { findReservedCategorySlugs, validateSeed } from "./validate"
 
 type RawPart = { sku: string; specs: Record<string, unknown> }
 
@@ -64,4 +64,18 @@ describe("seed catalog", () => {
       })
     }
   )
+})
+
+describe("reserved category slugs", () => {
+  test("rejects a category slug that is a top-level route", () => {
+    expect(findReservedCategorySlugs(["gpu", "cart"])).toEqual([
+      'Category slug "cart" is reserved for a top-level route (lib/reserved-slugs.ts)',
+    ])
+  })
+
+  test("accepts every builder category slug", () => {
+    expect(findReservedCategorySlugs(Object.keys(builderCategories))).toEqual(
+      []
+    )
+  })
 })

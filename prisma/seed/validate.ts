@@ -1,3 +1,4 @@
+import { isReservedSlug } from "@/lib/reserved-slugs"
 import { slugify } from "@/lib/slug"
 import type { BuilderCategorySlug } from "@/lib/specs"
 
@@ -79,6 +80,17 @@ export function validateSeed(files: readonly SeedFile[]): SeedValidation {
       a.index - b.index
   )
   return errors.length > 0 ? { ok: false, errors } : { ok: true, files: valid }
+}
+
+// Category pages live at /<slug>, so a category slug may not be a top-level
+// route (spec 005). Returns one message per clash.
+export function findReservedCategorySlugs(slugs: readonly string[]): string[] {
+  return slugs
+    .filter(isReservedSlug)
+    .map(
+      (slug) =>
+        `Category slug "${slug}" is reserved for a top-level route (lib/reserved-slugs.ts)`
+    )
 }
 
 function identify(raw: unknown): { name?: string; sku?: string } {
