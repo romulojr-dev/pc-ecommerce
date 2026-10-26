@@ -40,6 +40,10 @@ Unit tests are `*.test.ts`, colocated with the code they test (e.g. [prisma/seed
 - Root layout ([app/layout.tsx](app/layout.tsx)) wraps everything in `ThemeProvider` (next-themes) and loads Geist / Geist Mono as `--font-sans` / `--font-mono`.
 - Current state is early scaffolding: store pages live in the `app/(store)` route group (shared header/footer layout). `app/(store)/page.tsx` is still the template page; `app/(store)/[category]` is the category listing with a filter sidebar (`/cpu`, [spec 008](docs/specs/008-category-listing/spec.md), [spec 012](docs/specs/012-common-filters/spec.md)); `app/login`, `app/signup` and `app/sidebar` are shadcn block pages (login/signup forms, sidebar shell) built from `components/login-form.tsx`, `signup-form.tsx` and `app-sidebar.tsx` / `nav-*.tsx` / `team-switcher.tsx`, which still contain shadcn sample data (Acme teams, placeholder user) to be replaced with real data.
 
+## Working rules
+
+- Ask before creating git worktrees, symlinks or junctions, or changing anything in `node_modules`. Turbopack can't follow a linked `node_modules`, and removing a link carelessly can delete the real dependencies.
+
 ## Formatting
 
 Prettier: no semicolons, double quotes, 2-space indent, 80 cols, `es5` trailing commas, LF endings; Tailwind classes are auto-sorted (including inside `cn` and `cva`).
