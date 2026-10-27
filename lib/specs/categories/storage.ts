@@ -37,17 +37,17 @@ export const storageFields = {
     label: "Capacity",
     unit: "GB",
     largeUnit: { unit: "TB", per: 1000 },
-    filterable: true,
+    filter: "values",
   },
   formFactor: {
     label: "Form factor",
-    filterable: true,
+    filter: "enum",
     rules: ["m2-slots"],
     options: STORAGE_FORM_FACTOR_LABELS,
   },
   interface: {
     label: "Interface",
-    filterable: true,
+    filter: "enum",
     options: STORAGE_INTERFACE_LABELS,
   },
 } satisfies FieldMetaMap<typeof storageSpecs>

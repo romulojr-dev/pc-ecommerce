@@ -43,26 +43,25 @@ export type CpuCoolerSpecs = z.infer<typeof cpuCoolerSpecs>
 export const cpuCoolerFields = {
   type: {
     label: "Type",
-    filterable: true,
+    filter: "enum",
     rules: ["cooler-height", "radiator-fit"],
     options: COOLER_TYPE_LABELS,
   },
   radiatorSizeMm: {
     label: "Radiator size",
     unit: "mm",
-    filterable: true,
+    filter: "values",
     rules: ["radiator-fit"],
   },
   supportedSockets: {
     label: "Socket support",
-    filterable: true,
+    filter: "contains",
     rules: ["cooler-socket"],
     options: SOCKET_LABELS,
   },
   heightMm: {
     label: "Height",
     unit: "mm",
-    filterable: false,
     rules: ["cooler-height"],
   },
 } satisfies FieldMetaMap<typeof cpuCoolerSpecs>

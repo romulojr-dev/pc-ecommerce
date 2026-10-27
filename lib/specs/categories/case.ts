@@ -26,31 +26,29 @@ export type CaseSpecs = z.infer<typeof caseSpecs>
 export const caseFields = {
   motherboardFormFactors: {
     label: "Motherboard support",
-    filterable: true,
+    filter: "contains",
     rules: ["form-factor"],
     options: MOTHERBOARD_FORM_FACTOR_LABELS,
   },
   maxGpuLengthMm: {
     label: "Max GPU length",
     unit: "mm",
-    filterable: true,
+    filter: "range",
     rules: ["gpu-length"],
   },
   maxCoolerHeightMm: {
     label: "Max CPU cooler height",
     unit: "mm",
-    filterable: true,
+    filter: "range",
     rules: ["cooler-height"],
   },
   radiatorSizesMm: {
     label: "Radiator support",
     unit: "mm",
-    filterable: false,
     rules: ["radiator-fit"],
   },
   psuFormFactors: {
     label: "PSU support",
-    filterable: false,
     rules: ["psu-form-factor"],
     options: PSU_FORM_FACTOR_LABELS,
   },

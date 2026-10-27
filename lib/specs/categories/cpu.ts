@@ -57,39 +57,38 @@ export type CpuSpecs = z.infer<typeof cpuSpecs>
 export const cpuFields = {
   socket: {
     label: "Socket",
-    filterable: true,
+    filter: "enum",
     rules: ["socket-match", "cooler-socket", "bios-update"],
     options: SOCKET_LABELS,
   },
   generation: {
     label: "Generation",
-    filterable: true,
+    filter: "enum",
     rules: ["bios-update"],
     options: CPU_GENERATION_LABELS,
   },
-  cores: { label: "Cores", filterable: true },
-  threads: { label: "Threads", filterable: false },
+  cores: { label: "Cores", filter: "range" },
+  threads: { label: "Threads" },
   baseClockMhz: {
     label: "Base clock",
     unit: "MHz",
     largeUnit: { unit: "GHz", per: 1000 },
-    filterable: false,
   },
   boostClockMhz: {
     label: "Boost clock",
     unit: "MHz",
     largeUnit: { unit: "GHz", per: 1000 },
-    filterable: true,
+    filter: "range",
   },
   hasIntegratedGraphics: {
     label: "Integrated graphics",
-    filterable: true,
+    filter: "boolean",
     rules: ["integrated-graphics"],
   },
   tdpW: {
     label: "Max power",
     unit: "W",
-    filterable: true,
+    filter: "range",
     rules: ["psu-wattage"],
   },
 } satisfies FieldMetaMap<typeof cpuSpecs>

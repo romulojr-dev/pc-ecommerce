@@ -23,7 +23,7 @@ describe("formatSpecValue", () => {
   })
 
   test("groups thousands", () => {
-    const wattage: FieldMeta = { label: "Wattage", unit: "W", filterable: true }
+    const wattage: FieldMeta = { label: "Wattage", unit: "W", filter: "range" }
     expect(formatSpecValue(wattage, 1000)).toBe(`1,000${nbsp}W`)
   })
 

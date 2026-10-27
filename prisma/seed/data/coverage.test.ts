@@ -107,10 +107,6 @@ const TIERS: Record<BuilderCategorySlug, [number, number]> = {
 // Fewer SKUs sell in these, so a tier needs fewer parts
 const SMALL_CATEGORIES: BuilderCategorySlug[] = ["case", "psu", "cpu-cooler"]
 
-// Numeric filterable fields whose natural range is small: 3 distinct values
-// are enough for a range filter
-const COUNT_LIKE = ["moduleCount", "m2Slots", "radiatorSizeMm"]
-
 const statusOf = (part: Part) =>
   getStockStatus(
     { ...part, preorderShipsOn: part.preorderShipsOn ?? null },
@@ -158,7 +154,7 @@ describe("catalog size and brands", () => {
 })
 
 describe("filterable spec fields", () => {
-  // Every field with filterable: true in the display metadata is checked, so
+  // Every field with a filter kind in the display metadata is checked, so
   // the data follows the metadata when it changes
   test.each(files)("$category gives each filter real choices", (file) => {
     const fields: Record<string, FieldMeta> =
@@ -166,7 +162,7 @@ describe("filterable spec fields", () => {
     const problems: string[] = []
 
     for (const [name, meta] of Object.entries(fields)) {
-      if (!meta.filterable) continue
+      if (!meta.filter) continue
       // Parts without the field (radiator size on an air cooler) are skipped.
       // Array fields count each listed value once per part.
       const perValue = new Map<unknown, number>()
@@ -183,18 +179,16 @@ describe("filterable spec fields", () => {
       ])}`
 
       const isBoolean = values.every((value) => typeof value === "boolean")
-      const isNumber = values.every((value) => typeof value === "number")
 
-      if (isNumber && !meta.options) {
-        // Range filter
-        const needed = COUNT_LIKE.includes(name) ? 3 : 4
-        if (values.length < needed) {
-          problems.push(`${found}; a range needs ${needed} distinct values`)
+      if (meta.filter === "range") {
+        if (values.length < 4) {
+          problems.push(`${found}; a range needs 4 distinct values`)
         }
         continue
       }
 
-      // Exact-match filter: 3 values, or every value when it allows fewer
+      // Checkbox filter (enum, values, boolean, contains): 3 values, or every
+      // value when it allows fewer
       const allowed = isBoolean
         ? 2
         : meta.options

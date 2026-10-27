@@ -23,23 +23,23 @@ export const psuFields = {
   wattageW: {
     label: "Wattage",
     unit: "W",
-    filterable: true,
+    filter: "range",
     rules: ["psu-wattage"],
   },
   efficiencyRating: {
     label: "Efficiency",
-    filterable: true,
+    filter: "enum",
     options: EFFICIENCY_RATING_LABELS,
   },
   formFactor: {
     label: "Form factor",
-    filterable: true,
+    filter: "enum",
     rules: ["psu-form-factor"],
     options: PSU_FORM_FACTOR_LABELS,
   },
   modularity: {
     label: "Modularity",
-    filterable: true,
+    filter: "enum",
     options: MODULARITY_LABELS,
   },
 } satisfies FieldMetaMap<typeof psuSpecs>
