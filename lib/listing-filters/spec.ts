@@ -38,7 +38,9 @@ export function specParamKeys(field: string, kind: SpecFilterKind): string[] {
     : [field]
 }
 
-function parseInteger(value: string | undefined): number | null {
+// One range bound: a whole number without leading zeros, else null (the
+// sidebar's range forms validate their fields with it too)
+export function parseSpecBound(value: string | undefined): number | null {
   return value !== undefined && INTEGER.test(value) ? Number(value) : null
 }
 
@@ -157,8 +159,8 @@ function rangeFilter(
     facet: specFacet(info),
 
     parse(raw) {
-      let min = parseInteger(first(raw[minKey]))
-      let max = parseInteger(first(raw[maxKey]))
+      let min = parseSpecBound(first(raw[minKey]))
+      let max = parseSpecBound(first(raw[maxKey]))
       if (min === 0) min = null
       if (min !== null && max !== null && min > max) [min, max] = [max, min]
       return min === null && max === null ? null : { min, max }

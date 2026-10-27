@@ -201,6 +201,11 @@ test("the sidebar works by keyboard", async ({ page }) => {
   await page.keyboard.press("Space")
   await expect(page).toHaveURL("/cpu?brand=amd&brand=intel")
 
+  // Each section's title is a button that collapses it
+  await page.keyboard.press("Tab")
+  await expect(
+    sidebar(page).getByRole("button", { name: "Price (₱)" })
+  ).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(min).toBeFocused()
   await page.keyboard.type("5000")

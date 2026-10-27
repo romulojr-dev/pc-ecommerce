@@ -8,7 +8,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify: `pnpm test`; `/cpu?socket=AM5` in `pnpm dev` keeps the param (no filtering yet), `/cpu?threads=8` redirects to `/cpu`.
 - [x] **T3. Queries and counts.** Spec `where` per kind in `server.ts`; facet queries with `countFacets` (pure, unit-tested); brand options with counts; `getFilterOptions`/`getCategoryProducts` take slug and filters; `insertSpecFixtures`; `spec-filters.db.test.ts` with every case in the spec, the parameter check and the injection case; `server.db.test.ts` updated.
   - Verify: `pnpm test:db`.
-- [ ] **T4. Sidebar.** Collapsible sections in order, spec sections per kind, counts via `aria-describedby`, disabled options, `RangeForm` shared with price, units in titles; chips from the category's list; page wiring with normalization.
+- [x] **T4. Sidebar.** Collapsible sections in order, spec sections per kind, counts via `aria-describedby`, disabled options, `RangeForm` shared with price, units in titles; chips from the category's list; page wiring with normalization.
   - Verify in `pnpm dev`: `/gpu`, `/memory`, `/case`, `/cpu-cooler`: filters apply, counts change with other filters, zero options disabled, chips and Clear all, sections toggle by keyboard.
 - [ ] **T5. E2E.** `e2e/epic-browse.spec.ts` (menu → Memory → DDR5 → product); spec-filter scenarios in `e2e/category-filters.spec.ts` (range, disabled option, ignored field, keyboard).
   - Verify: `pnpm test:e2e`, all specs.
