@@ -135,6 +135,11 @@ export function ListingFilters({
           checked={filters.inStock === true}
           onCheckedChange={(checked) => apply("inStock", checked || null)}
         />
+        <CheckboxField
+          label="On sale"
+          checked={filters.onSale === true}
+          onCheckedChange={(checked) => apply("onSale", checked || null)}
+        />
       </FilterSection>
 
       {specFilters.map((filter) => {

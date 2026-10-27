@@ -29,7 +29,12 @@ describe("commonFilters", () => {
   })
 
   it("lists the filters in URL order", () => {
-    expect(Object.keys(commonFilters)).toEqual(["brand", "price", "inStock"])
+    expect(Object.keys(commonFilters)).toEqual([
+      "brand",
+      "price",
+      "inStock",
+      "onSale",
+    ])
   })
 })
 

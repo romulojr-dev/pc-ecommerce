@@ -101,10 +101,11 @@ describe("filters in the state", () => {
       brand: ["amd", "intel"],
       price: { min: 10000, max: 20000 },
       inStock: true,
+      onSale: true,
     },
   }
   const query =
-    "brand=amd&brand=intel&minPrice=10000&maxPrice=20000&inStock=1&sort=price-desc&page=2"
+    "brand=amd&brand=intel&minPrice=10000&maxPrice=20000&inStock=1&onSale=1&sort=price-desc&page=2"
 
   it("parses every filter next to sort and page", () => {
     expect(
@@ -113,6 +114,7 @@ describe("filters in the state", () => {
         minPrice: "10000",
         maxPrice: "20000",
         inStock: "1",
+        onSale: "1",
         sort: "price-desc",
         page: "2",
       })
@@ -167,6 +169,7 @@ describe("filters in the state", () => {
     expect(removed.filters).toEqual({
       brand: ["amd", "intel"],
       price: { min: 10000, max: 20000 },
+      onSale: true,
     })
     expect(withFilter(plain({ page: 3 }), "brand", ["amd"])).toEqual(
       plain({ filters: { brand: ["amd"] } })

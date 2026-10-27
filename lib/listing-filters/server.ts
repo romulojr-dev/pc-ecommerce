@@ -69,6 +69,12 @@ const serverFilters: { [K in NamedFilterKey]: ServerFilter<K> } = {
       ],
     }),
   },
+
+  // A sale price below the list price; a null sale price never matches.
+  // A field reference compares the two columns in the query.
+  onSale: {
+    where: () => ({ salePrice: { lt: db.product.fields.price } }),
+  },
 }
 
 // Spec conditions are Prisma's typed JSON path filters on Product.specs. The
