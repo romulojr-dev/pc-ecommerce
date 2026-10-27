@@ -181,6 +181,7 @@ export type ProductPageData = {
   effectivePrice: number
   name: string
   slug: string
+  sku: string
   description: string | null
   brand: string
   category: { name: string; slug: string }
@@ -207,6 +208,7 @@ export const getProductPage = cache(
         effectivePrice: true,
         name: true,
         slug: true,
+        sku: true,
         description: true,
         price: true,
         salePrice: true,
