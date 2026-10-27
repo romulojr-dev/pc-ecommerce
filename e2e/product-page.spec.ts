@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./test"
 
 // Product detail page (docs/specs/010-product-page). Needs a seeded database
 // (CI seeds after migrating). Checks behaviour, not exact prices or stock, so

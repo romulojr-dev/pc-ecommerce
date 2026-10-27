@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./test"
 
 test("home page loads with the store header", async ({ page }) => {
   const response = await page.goto("/")
