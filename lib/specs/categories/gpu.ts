@@ -23,7 +23,12 @@ export const gpuFields = {
     options: GPU_CHIPSET_BRAND_LABELS,
   },
   chipset: { label: "Chipset", filter: "values" },
-  vramGb: { label: "VRAM", unit: "GB", filter: "range" },
+  vramGb: {
+    label: "VRAM",
+    unit: "GB",
+    filter: "range",
+    summary: { suffix: "VRAM" },
+  },
   lengthMm: {
     label: "Length",
     unit: "mm",
@@ -32,6 +37,7 @@ export const gpuFields = {
   },
   boardPowerW: {
     label: "Board power",
+    summary: {},
     unit: "W",
     rules: ["psu-wattage"],
   },

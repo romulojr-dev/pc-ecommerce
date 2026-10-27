@@ -68,6 +68,12 @@ export function ProductCard({
             {product.name}
           </Link>
         </Heading>
+        {product.summary && (
+          // One line; the rest is cut visually but still read out
+          <p className="truncate text-xs text-muted-foreground">
+            {product.summary}
+          </p>
+        )}
       </div>
       <div
         className={cn(

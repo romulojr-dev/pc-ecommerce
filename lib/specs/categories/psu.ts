@@ -22,12 +22,14 @@ export type PsuSpecs = z.infer<typeof psuSpecs>
 export const psuFields = {
   wattageW: {
     label: "Wattage",
+    summary: {},
     unit: "W",
     filter: "range",
     rules: ["psu-wattage"],
   },
   efficiencyRating: {
     label: "Efficiency",
+    summary: {},
     filter: "enum",
     options: EFFICIENCY_RATING_LABELS,
   },
@@ -39,6 +41,7 @@ export const psuFields = {
   },
   modularity: {
     label: "Modularity",
+    summary: {},
     filter: "enum",
     options: MODULARITY_LABELS,
   },

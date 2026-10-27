@@ -73,6 +73,10 @@ export type FieldMeta = {
   group?: SpecGroup
   // Absent: not a filter
   filter?: SpecFilterKind
+  // Shown in the product card's summary line (docs/specs/016-home-page),
+  // in metadata order: the formatted value, then the suffix if set
+  // ("8 cores"). Only scalar fields that don't repeat the product's name.
+  summary?: { suffix?: string }
   // Compatibility rules that read this field; such fields must be required
   rules?: readonly RuleId[]
   // Display labels for enum values, e.g. { MICRO_ATX: "Micro-ATX" }

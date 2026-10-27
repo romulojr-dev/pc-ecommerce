@@ -18,6 +18,7 @@ const product: ProductCardData = {
   lowStockAt: 5,
   preorderShipsOn: null,
   image: null,
+  summary: "AM5 · 6 cores · 5.1 GHz boost",
 }
 
 function render(overrides: Partial<ProductCardData> = {}) {
@@ -43,4 +44,9 @@ test("shows the sale price, with the list price struck through", () => {
   expect(html).toMatch(/<p class="[^"]*font-semibold[^"]*">₱9,999\.00<\/p>/)
   // The struck price is read out as "Was ₱11,495.00"
   expect(html).toMatch(/<span class="sr-only">Was <\/span><s>₱11,495\.00<\/s>/)
+})
+
+test("shows the spec summary line, and none when there is no summary", () => {
+  expect(render()).toContain(">AM5 · 6 cores · 5.1 GHz boost</p>")
+  expect(render({ summary: null })).not.toContain("·")
 })

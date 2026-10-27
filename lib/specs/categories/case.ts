@@ -32,12 +32,14 @@ export const caseFields = {
   },
   maxGpuLengthMm: {
     label: "Max GPU length",
+    summary: { suffix: "GPU" },
     unit: "mm",
     filter: "range",
     rules: ["gpu-length"],
   },
   maxCoolerHeightMm: {
     label: "Max CPU cooler height",
+    summary: { suffix: "cooler" },
     unit: "mm",
     filter: "range",
     rules: ["cooler-height"],

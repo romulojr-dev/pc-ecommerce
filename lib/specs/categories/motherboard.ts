@@ -53,6 +53,7 @@ export type MotherboardSpecs = z.infer<typeof motherboardSpecs>
 export const motherboardFields = {
   socket: {
     label: "Socket",
+    summary: {},
     group: "Processor",
     filter: "enum",
     rules: ["socket-match", "bios-update"],
@@ -67,6 +68,7 @@ export const motherboardFields = {
   },
   memoryType: {
     label: "Memory type",
+    summary: {},
     group: "Memory",
     filter: "enum",
     rules: ["memory-type"],
@@ -85,6 +87,7 @@ export const motherboardFields = {
   },
   formFactor: {
     label: "Form factor",
+    summary: {},
     group: "Size and connectivity",
     filter: "enum",
     rules: ["form-factor"],
