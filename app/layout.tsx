@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { env } from "@/lib/env"
 import { siteConfig } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +18,10 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
+  // Makes relative metadata URLs (canonicals, Open Graph) absolute
+  // (docs/specs/017-seo). Never set a canonical here: every page that
+  // doesn't set its own would inherit it.
+  metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
   title: {
     template: `%s | ${siteConfig.name}`,
     default: siteConfig.name,

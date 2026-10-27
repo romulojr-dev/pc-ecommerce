@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import { BrandList } from "@/components/home/brand-list"
 import { CategoryTiles } from "@/components/home/category-tiles"
 import { Hero } from "@/components/home/hero"
@@ -15,6 +17,11 @@ import { manilaToday } from "@/lib/stock"
 // Must match HOME_REVALIDATE in lib/home.ts (a segment config must be a
 // literal).
 export const revalidate = 600
+
+// Absolute through the root layout's metadataBase (docs/specs/017-seo)
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 export default async function HomePage() {
   const [categories, { featured, deals }, brands] = await Promise.all([
