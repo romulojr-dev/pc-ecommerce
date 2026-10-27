@@ -94,11 +94,11 @@ Unit: none new; the card and stock status already have theirs.
 
 ## Acceptance criteria
 
-- [ ] Product pages show "Similar products" with up to 4 active products from the same category, never the current one, closest in effective price, available ones (pre-orders included) before out-of-stock, with the tie-break above.
-- [ ] With no candidates, the section isn't rendered; with 1 to 3, it shows those.
-- [ ] The section reuses `ProductCard`, under an `h2`, and each card opens its product page.
-- [ ] The section streams behind `Suspense` with a skeleton; 404 and 308 responses keep their status; a failed related query doesn't break the page.
-- [ ] Integration and E2E tests above pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
+- [x] Product pages show "Similar products" with up to 4 active products from the same category, never the current one, closest in effective price, available ones (pre-orders included) before out-of-stock, with the tie-break above.
+- [x] With no candidates, the section isn't rendered; with 1 to 3, it shows those.
+- [x] The section reuses `ProductCard`, under an `h2`, and each card opens its product page.
+- [x] The section streams behind `Suspense` with a skeleton; 404 and 308 responses keep their status; a failed related query doesn't break the page.
+- [x] Integration and E2E tests above pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
 
 ## Out of scope
 
