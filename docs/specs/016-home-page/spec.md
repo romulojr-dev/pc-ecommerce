@@ -151,14 +151,14 @@ The home page is **static with a 10-minute refresh**: no `await connection()`, `
 
 ## Acceptance criteria
 
-- [ ] The page uses only the existing shadcn theme tokens and fonts (no changes to `globals.css` or the fonts, no hard-coded colors); text contrast meets AA in light and dark.
-- [ ] Hero with "Build your PC" (to `/builder`, labelled coming soon) and "Shop deals" (to `#deals`); inline SVG illustration that isn't the LCP.
-- [ ] Shop by category (8 tiles from the database), Featured (flagged products), Deals (on sale, available, biggest discount first, no duplicates with Featured, "View all deals"), Shop by brand and the trust strip, in that order; empty product sections are hidden.
-- [ ] Product cards show a spec summary line everywhere, no discount badge and no "Add to cart".
-- [ ] "On sale" filter on category pages and search; `/search?onSale=1` is titled "Deals".
-- [ ] Home page is static with a 10-minute refresh and tagged caches per ADR 0003.
+- [x] The page uses only the existing shadcn theme tokens and fonts (no changes to `globals.css` or the fonts, no hard-coded colors); text contrast meets AA in light and dark.
+- [x] Hero with "Build your PC" (to `/builder`, labelled coming soon) and "Shop deals" (to `#deals`); inline SVG illustration that isn't the LCP.
+- [x] Shop by category (8 tiles from the database), Featured (flagged products), Deals (on sale, available, biggest discount first, no duplicates with Featured, "View all deals"), Shop by brand and the trust strip, in that order; empty product sections are hidden.
+- [x] Product cards show a spec summary line everywhere, no discount badge and no "Add to cart".
+- [x] "On sale" filter on category pages and search; `/search?onSale=1` is titled "Deals".
+- [x] Home page is static with a 10-minute refresh and tagged caches per ADR 0003.
 - [ ] Lighthouse desktop ≥ 90 (performance and accessibility) on the Vercel preview.
-- [ ] Integration, unit and E2E tests above pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
+- [x] Integration, unit and E2E tests above pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
 - [ ] After merge: `pnpm db:seed` run once on production to set the featured products.
 
 ## Out of scope

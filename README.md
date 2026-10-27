@@ -61,7 +61,7 @@ The image's major version matches the Neon project and CI. Check Neon's with
 update `docker-compose.yml` and `.github/workflows/ci.yml` together if it ever
 changes.
 
-## Cached categories
+## Cached data
 
 The header's category menu is cached for up to an hour
 ([ADR 0003](docs/adr/0003-cache-shared-data-with-tags.md)). Changes made
@@ -79,6 +79,11 @@ WHERE "parentId" IS NULL ORDER BY "sortOrder", name;
 If they differ, wait for the hour to pass. In production you can purge the
 Data Cache from the Vercel dashboard (project Settings → Caches) instead.
 Locally, stop `pnpm dev`, delete `.next/cache` and start it again.
+
+The home page's Featured products, Deals and brand list work the same way, with
+a 10-minute delay (tag `products`, [spec 016](docs/specs/016-home-page/spec.md)):
+after a re-seed, its prices, stock labels and picks can be up to 10 minutes old.
+Product pages, listings and search always show current prices and stock.
 
 ## AI agent skills
 
