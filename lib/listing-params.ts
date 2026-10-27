@@ -1,5 +1,6 @@
 import {
   type FilterKey,
+  type FilterList,
   type FilterValues,
   listingFilters,
   parseFilters,
@@ -15,7 +16,7 @@ import { categoryHref } from "@/lib/site"
 // (docs/specs/012-common-filters) each parse and serialize their own keys in
 // lib/listing-filters; this module puts them together with sort and page.
 // Spec filters differ by category (docs/specs/013-spec-filters), so parsing
-// and writing a query take the category slug.
+// and writing a query take the listing's target: what the listing is of.
 
 export const SORTS = ["newest", "price-asc", "price-desc"] as const
 export type ListingSort = (typeof SORTS)[number]
@@ -38,6 +39,19 @@ export type ListingState = {
 
 export type { RawSearchParams }
 
+// What a listing shows (docs/specs/014-search): today a category. Plain data,
+// so server pages can hand it to the client listing components.
+export type ListingTarget = { kind: "category"; slug: string }
+
+export function categoryTarget(slug: string): ListingTarget {
+  return { kind: "category", slug }
+}
+
+// The target's filters in URL order
+export function filtersFor(target: ListingTarget): FilterList {
+  return listingFilters(target.slug)
+}
+
 function isSort(value: string | undefined): value is ListingSort {
   return SORTS.some((sort) => sort === value)
 }
@@ -46,7 +60,7 @@ function isSort(value: string | undefined): value is ListingSort {
 // falls back to the default, each filter ignores its own bad values, and
 // keys that aren't one of the category's filters are ignored
 export function parseListingParams(
-  slug: string,
+  target: ListingTarget,
   raw: RawSearchParams
 ): ListingState {
   const sort = first(raw.sort)
@@ -56,7 +70,7 @@ export function parseListingParams(
   return {
     sort: isSort(sort) ? sort : DEFAULT_SORT,
     page: Number.isSafeInteger(pageNumber) ? pageNumber : 1,
-    filters: parseFilters(raw, listingFilters(slug)),
+    filters: parseFilters(raw, filtersFor(target)),
   }
 }
 
@@ -78,11 +92,14 @@ export function clearFilters(state: ListingState): ListingState {
 // "brand=amd&maxPrice=20000&sort=price-desc&page=2": the filters, then sort
 // and page; defaults omitted, keys in a fixed order, "" when everything is
 // the default
-export function listingQuery(slug: string, state: ListingState): string {
+export function listingQuery(
+  target: ListingTarget,
+  state: ListingState
+): string {
   const params = new URLSearchParams()
   for (const [key, value] of serializeFilters(
     state.filters,
-    listingFilters(slug)
+    filtersFor(target)
   )) {
     params.append(key, value)
   }
@@ -91,15 +108,19 @@ export function listingQuery(slug: string, state: ListingState): string {
   return params.toString()
 }
 
-export function listingHref(slug: string, state: ListingState): string {
-  const query = listingQuery(slug, state)
-  return query ? `${categoryHref(slug)}?${query}` : categoryHref(slug)
+export function listingHref(
+  target: ListingTarget,
+  state: ListingState
+): string {
+  const query = listingQuery(target, state)
+  const path = categoryHref(target.slug)
+  return query ? `${path}?${query}` : path
 }
 
 // True when the request's query is exactly the state's canonical one. Anything
 // else (bad values, defaults spelled out, unknown keys) gets redirected.
 export function isCanonicalQuery(
-  slug: string,
+  target: ListingTarget,
   raw: RawSearchParams,
   state: ListingState
 ): boolean {
@@ -107,7 +128,7 @@ export function isCanonicalQuery(
   for (const [key, value] of Object.entries(raw)) {
     for (const item of [value ?? []].flat()) params.append(key, item)
   }
-  return params.toString() === listingQuery(slug, state)
+  return params.toString() === listingQuery(target, state)
 }
 
 // At least 1, so an empty category still has a page 1

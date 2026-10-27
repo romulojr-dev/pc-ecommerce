@@ -12,19 +12,20 @@ import {
 } from "@/components/ui/select"
 import {
   type ListingState,
+  type ListingTarget,
   listingHref,
   SORT_LABELS,
   SORTS,
 } from "@/lib/listing-params"
 
 type ListingSortProps = {
-  slug: string
+  target: ListingTarget
   state: ListingState
 }
 
 // The listing's sort control. A new sort starts again at page 1 and keeps the
 // filters.
-export function ListingSort({ slug, state }: ListingSortProps) {
+export function ListingSort({ target, state }: ListingSortProps) {
   const router = useRouter()
   const labelId = useId()
 
@@ -38,7 +39,7 @@ export function ListingSort({ slug, state }: ListingSortProps) {
         value={state.sort}
         onValueChange={(value) => {
           if (value) {
-            router.push(listingHref(slug, { ...state, sort: value, page: 1 }))
+            router.push(listingHref(target, { ...state, sort: value, page: 1 }))
           }
         }}
       >

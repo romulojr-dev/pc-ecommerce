@@ -26,7 +26,6 @@ import {
   type FilterOptions,
   type FilterValues,
   type ListingFilter,
-  listingFilters,
 } from "@/lib/listing-filters"
 import {
   MAX_PRICE_PESOS,
@@ -39,14 +38,16 @@ import {
   specParamKeys,
 } from "@/lib/listing-filters/spec"
 import {
+  filtersFor,
   type ListingState,
+  type ListingTarget,
   listingHref,
   withFilter,
 } from "@/lib/listing-params"
 import { cn, focusRing } from "@/lib/utils"
 
 type ListingFiltersProps = {
-  slug: string
+  target: ListingTarget
   state: ListingState
   options: FilterOptions
 }
@@ -59,14 +60,18 @@ type Range = { min: number | null; max: number | null }
 // apply at once, one decision per click; ranges apply on submit, since typing
 // "15000" would otherwise navigate five times with nonsense ranges on the
 // way. Every change starts again at page 1 and keeps the sort.
-export function ListingFilters({ slug, state, options }: ListingFiltersProps) {
+export function ListingFilters({
+  target,
+  state,
+  options,
+}: ListingFiltersProps) {
   const navigate = useNavigateListing()
   // The checkboxes show a click at once, while the new results load
   const [filters, setFilters] = useOptimistic<FilterValues>(state.filters)
 
   function apply<K extends FilterKey>(key: K, value: FilterValues[K] | null) {
     const next = withFilter(state, key, value)
-    navigate(listingHref(slug, next), () => setFilters(next.filters))
+    navigate(listingHref(target, next), () => setFilters(next.filters))
   }
 
   // A checkbox of a multi-value filter (brand, enum, values, contains). The
@@ -84,7 +89,7 @@ export function ListingFilters({ slug, state, options }: ListingFiltersProps) {
     apply(filter.key, filter.parse({ [filter.key]: next }))
   }
 
-  const list = listingFilters(slug)
+  const list = filtersFor(target)
   const brand = list.find((filter) => filter.key === "brand")!
   const specFilters = list.filter((filter) => filter.spec)
 

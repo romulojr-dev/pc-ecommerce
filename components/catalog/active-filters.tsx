@@ -1,20 +1,18 @@
 import { XIcon } from "lucide-react"
 import Link from "next/link"
 
-import {
-  type FilterOptions,
-  activeFilterChips,
-  listingFilters,
-} from "@/lib/listing-filters"
+import { type FilterOptions, activeFilterChips } from "@/lib/listing-filters"
 import {
   clearFilters,
+  filtersFor,
   type ListingState,
+  type ListingTarget,
   listingHref,
 } from "@/lib/listing-params"
 import { cn, focusRing } from "@/lib/utils"
 
 type ActiveFiltersProps = {
-  slug: string
+  target: ListingTarget
   state: ListingState
   options: FilterOptions
   className?: string
@@ -25,12 +23,12 @@ type ActiveFiltersProps = {
 // follow them. Removing one starts again at page 1 and keeps the sort and the
 // other filters; "Clear all" removes every filter but keeps the sort.
 export function ActiveFilters({
-  slug,
+  target,
   state,
   options,
   className,
 }: ActiveFiltersProps) {
-  const chips = activeFilterChips(state.filters, options, listingFilters(slug))
+  const chips = activeFilterChips(state.filters, options, filtersFor(target))
   if (chips.length === 0) return null
 
   const link = cn(
@@ -46,7 +44,7 @@ export function ActiveFilters({
       {chips.map((chip) => (
         <li key={chip.label}>
           <Link
-            href={listingHref(slug, {
+            href={listingHref(target, {
               ...state,
               filters: chip.filters,
               page: 1,
@@ -61,7 +59,7 @@ export function ActiveFilters({
       ))}
       <li>
         <Link
-          href={listingHref(slug, clearFilters(state))}
+          href={listingHref(target, clearFilters(state))}
           className={cn(
             link,
             "border-transparent text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
