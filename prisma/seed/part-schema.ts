@@ -36,6 +36,9 @@ const productFields = {
   // (write.ts): once the store runs, the admin opens and ends pre-orders.
   preorderShipsOn: z.iso.date().optional(),
   status: z.enum(ProductStatus).default("ACTIVE"),
+  // Shown in the home page's Featured products (docs/specs/016-home-page).
+  // One per category, in stock and not on sale (coverage.test.ts).
+  featured: z.literal(true).optional(),
   description: text().optional(),
   // Defaults to slugify(name). Set it only to override the generated one.
   slug: z

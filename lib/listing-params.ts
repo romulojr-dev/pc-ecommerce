@@ -72,13 +72,14 @@ export function searchTarget(raw: RawSearchParams): SearchTarget {
   return { kind: "search", q: cleanQuery(raw) }
 }
 
-// A search for `q` with nothing else set, e.g. for example searches
-export function searchHref(q: string): string {
+// A search for `q` (may be empty) with these filters and the default sort,
+// e.g. example searches, Shop by brand and "View all deals"
+export function searchHref(q: string, filters: FilterValues = {}): string {
   const target: SearchTarget = { kind: "search", q }
   return listingHref(target, {
     sort: defaultSort(target),
     page: 1,
-    filters: {},
+    filters,
   })
 }
 

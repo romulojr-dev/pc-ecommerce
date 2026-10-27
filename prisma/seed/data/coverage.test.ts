@@ -327,6 +327,21 @@ describe("part quality and builder scenarios", () => {
   })
 })
 
+// The home page's Featured products (docs/specs/016-home-page): Deals skips
+// featured products, so a featured part on sale would take a deal's slot
+describe("featured parts", () => {
+  test("one per category, active, in stock and not on sale", () => {
+    for (const file of files) {
+      const featured = file.parts.filter((part) => part.featured)
+      expect(featured, file.category).toHaveLength(1)
+      const [part] = featured
+      expect(part.status, part.name).toBe("ACTIVE")
+      expect(statusOf(part), part.name).toBe("in-stock")
+      expect(part.salePrice, part.name).toBeUndefined()
+    }
+  })
+})
+
 describe("image files", () => {
   const publicDir = fileURLToPath(new URL("../../../public", import.meta.url))
   const isFile = (url: string) => existsSync(`${publicDir}${url}`)

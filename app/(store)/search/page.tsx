@@ -51,8 +51,12 @@ export async function generateMetadata({
 }: PageProps<"/search">): Promise<Metadata> {
   const raw = await searchParams
   const target = searchTarget(raw)
-  const { page } = parseListingParams(target, raw)
-  const title = target.q ? `Search: ${target.q}` : "Search"
+  const { page, filters } = parseListingParams(target, raw)
+  const title = target.q
+    ? `Search: ${target.q}`
+    : isDealsOnly(filters)
+      ? "Deals"
+      : "Search"
   return { title: page > 1 ? `${title} — Page ${page}` : title, robots }
 }
 
@@ -173,17 +177,24 @@ export default async function SearchPage({
 }
 
 // "Results for “rtx 5070”"; a brand's name when browsing one brand (Shop by
-// brand); otherwise "All products"
+// brand); "Deals" for products on sale ("View all deals",
+// docs/specs/016-home-page); otherwise "All products"
 function heading(
   q: string,
   filters: FilterValues,
   options: FilterOptions
 ): React.ReactNode {
   if (q) return <>Results for &ldquo;{q}&rdquo;</>
+  if (isDealsOnly(filters)) return "Deals"
   const brands = filters.brand ?? []
   if (brands.length === 1 && activeFilterCount(filters) === 1) {
     const brand = options.brand?.find((option) => option.value === brands[0])
     if (brand) return brand.label
   }
   return "All products"
+}
+
+// No query and On sale as the only filter: the home page's "View all deals"
+function isDealsOnly(filters: FilterValues): boolean {
+  return filters.onSale === true && activeFilterCount(filters) === 1
 }

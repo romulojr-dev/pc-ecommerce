@@ -1,39 +1,18 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
-import {
-  CircuitBoardIcon,
-  CpuIcon,
-  FanIcon,
-  GpuIcon,
-  HardDriveIcon,
-  MemoryStickIcon,
-  PackageIcon,
-  PcCaseIcon,
-  PlugZapIcon,
-  ScanSearchIcon,
-  type LucideIcon,
-} from "lucide-react"
+import { PackageIcon, ScanSearchIcon, type LucideIcon } from "lucide-react"
 import { renderToStaticMarkup } from "react-dom/server"
 
+import { categoryIcons } from "@/components/catalog/category-icons"
 import { PLACEHOLDER_VIEWS } from "@/lib/placeholders"
-import type { BuilderCategorySlug } from "@/lib/specs"
 
 // pnpm images:placeholders: writes the placeholder product images to
 // public/images/placeholders/ (docs/specs/006-product-images). The output is
 // committed; re-run only to change the artwork.
 
-// Record types make a missing category or view a type error
-const categoryIcons: Record<BuilderCategorySlug, LucideIcon> = {
-  cpu: CpuIcon,
-  motherboard: CircuitBoardIcon,
-  memory: MemoryStickIcon,
-  storage: HardDriveIcon,
-  gpu: GpuIcon,
-  case: PcCaseIcon,
-  psu: PlugZapIcon,
-  "cpu-cooler": FanIcon,
-}
+// A Record type makes a missing view a type error; the category icons are
+// shared with the home page's category tiles
 const viewIcons: Record<keyof typeof PLACEHOLDER_VIEWS, LucideIcon> = {
   box: PackageIcon,
   detail: ScanSearchIcon,

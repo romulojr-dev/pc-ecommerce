@@ -61,6 +61,9 @@ model Product {
   // passed date ends the pre-order (lib/stock.ts, docs/specs/010-product-page).
   preorderShipsOn DateTime?      @db.Date
   status          ProductStatus  @default(DRAFT)
+  // Shown in the home page's "Featured products" (docs/specs/016-home-page),
+  // in place of best sellers until there is order data
+  isFeatured      Boolean        @default(false)
   categoryId      String
   category        Category       @relation(fields: [categoryId], references: [id])
   brandId         String

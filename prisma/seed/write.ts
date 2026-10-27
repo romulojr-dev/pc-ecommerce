@@ -7,7 +7,11 @@ import type { ValidPart, ValidSeedFile } from "./validate"
 // product fields the seed writes"). Everything else (price, salePrice,
 // stock, lowStockAt, status, preorderShipsOn, slug) is set on create only,
 // because once the store runs, orders and the admin panel own those values.
+// isFeatured is refreshed too, so a re-seed sets the home page's picks
+// (docs/specs/016-home-page); it moves to create-only once the admin panel
+// manages it.
 const CATALOG_FIELDS = [
+  "isFeatured",
   "name",
   "description",
   "specs",
@@ -192,6 +196,7 @@ function productData(part: ValidPart, categoryId: string, brandId: string) {
       ? new Date(part.preorderShipsOn)
       : null,
     status: part.status,
+    isFeatured: part.featured ?? false,
     categoryId,
     brandId,
   } satisfies Prisma.ProductUncheckedCreateInput

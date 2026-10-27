@@ -43,12 +43,14 @@ export type CpuCoolerSpecs = z.infer<typeof cpuCoolerSpecs>
 export const cpuCoolerFields = {
   type: {
     label: "Type",
+    summary: {},
     filter: "enum",
     rules: ["cooler-height", "radiator-fit"],
     options: COOLER_TYPE_LABELS,
   },
   radiatorSizeMm: {
     label: "Radiator size",
+    summary: { suffix: "radiator" },
     unit: "mm",
     filter: "values",
     rules: ["radiator-fit"],
@@ -61,6 +63,7 @@ export const cpuCoolerFields = {
   },
   heightMm: {
     label: "Height",
+    summary: { suffix: "tall" },
     unit: "mm",
     rules: ["cooler-height"],
   },

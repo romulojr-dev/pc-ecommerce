@@ -7,6 +7,7 @@ export const memory = [
   {
     sku: "CMK32GX5M2B6000C30",
     name: "Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30",
+    featured: true,
     brand: "Corsair",
     price: 649500, // mid
     stock: 25,

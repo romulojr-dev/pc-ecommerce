@@ -60,6 +60,7 @@ describe("searchFilters", () => {
       "brand",
       "price",
       "inStock",
+      "onSale",
     ])
   })
 })

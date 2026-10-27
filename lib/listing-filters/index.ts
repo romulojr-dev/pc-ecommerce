@@ -8,6 +8,7 @@ import {
 import { brandFilter } from "./brand"
 import { categoryFilter } from "./category"
 import { inStockFilter } from "./in-stock"
+import { onSaleFilter } from "./on-sale"
 import { priceFilter } from "./price"
 import { specFilter } from "./spec"
 import type { FilterOption, ListingFilter, RawSearchParams } from "./types"
@@ -29,6 +30,8 @@ export const commonFilters = {
   brand: brandFilter,
   price: priceFilter,
   inStock: inStockFilter,
+  // docs/specs/016-home-page
+  onSale: onSaleFilter,
 }
 
 export type CommonFilterKey = keyof typeof commonFilters

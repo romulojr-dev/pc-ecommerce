@@ -35,18 +35,21 @@ export type StorageSpecs = z.infer<typeof storageSpecs>
 export const storageFields = {
   capacityGb: {
     label: "Capacity",
+    summary: {},
     unit: "GB",
     largeUnit: { unit: "TB", per: 1000 },
     filter: "values",
   },
   formFactor: {
     label: "Form factor",
+    summary: {},
     filter: "enum",
     rules: ["m2-slots"],
     options: STORAGE_FORM_FACTOR_LABELS,
   },
   interface: {
     label: "Interface",
+    summary: {},
     filter: "enum",
     options: STORAGE_INTERFACE_LABELS,
   },

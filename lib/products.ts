@@ -18,6 +18,7 @@ import {
   type ListingState,
   PAGE_SIZE,
 } from "@/lib/listing-params"
+import { specSummary } from "@/lib/specs"
 
 // What a product card shows. Plain data, so client components can render
 // cards too (docs/specs/008-category-listing).
@@ -35,6 +36,9 @@ export type ProductCardData = {
   preorderShipsOn: string | null
   // The first image, or null when the product has none
   image: { url: string; alt: string } | null
+  // Key specs in one line, e.g. "AM5 · 6 cores · 5.1 GHz boost"
+  // (docs/specs/016-home-page); null when the category has none
+  summary: string | null
 }
 
 // The fields a card needs; listings, search and related products all load
@@ -47,6 +51,8 @@ export const productCardSelect = {
   stock: true,
   lowStockAt: true,
   preorderShipsOn: true,
+  // Read for the summary line only; cards don't get the JSON
+  specs: true,
   brand: { select: { name: true } },
   category: { select: { slug: true } },
   images: {
@@ -72,6 +78,7 @@ export function toProductCardData(row: ProductCardRow): ProductCardData {
     lowStockAt: row.lowStockAt,
     preorderShipsOn: toDateString(row.preorderShipsOn),
     image: row.images[0] ?? null,
+    summary: specSummary(row.category.slug, row.specs),
   }
 }
 

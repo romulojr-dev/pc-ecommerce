@@ -178,6 +178,53 @@ describe("in stock only", () => {
   })
 })
 
+describe("on sale (docs/specs/016-home-page)", () => {
+  // A sale price equal to the list price is set but discounts nothing.
+  // Removed afterwards, so the other cases keep the shared fixtures.
+  beforeAll(async () => {
+    const beta = await db.brand.findUniqueOrThrow({ where: { slug: "beta" } })
+    await db.product.create({
+      data: {
+        name: "P7",
+        slug: "p7",
+        sku: "P7",
+        price: 800_000,
+        salePrice: 800_000,
+        stock: 5,
+        status: "ACTIVE",
+        specs: {},
+        weightGrams: 100,
+        categoryId: cpuId,
+        brandId: beta.id,
+      },
+    })
+  })
+
+  afterAll(() => db.product.delete({ where: { sku: "P7" } }))
+
+  it("keeps only a sale price below the list price", async () => {
+    // P2 (12,000 → 9,000); not P7 (sale price = list price) or no sale price
+    expect(await list({ onSale: true })).toEqual({ names: ["P2"], total: 1 })
+  })
+
+  it("combines with the other filters", async () => {
+    expect((await list({ onSale: true, inStock: true })).names).toEqual(["P2"])
+    expect((await list({ onSale: true, brand: ["beta"] })).names).toEqual([])
+  })
+
+  it("narrows the brand counts", async () => {
+    const options = await getFilterOptions(
+      { id: cpuId, slug: "cpu" },
+      { onSale: true },
+      { today: FIXTURE_TODAY }
+    )
+    expect(options.brand).toEqual([
+      { value: "alpha", label: "Alpha", count: 1 },
+      { value: "beta", label: "Beta", count: 0 },
+    ])
+  })
+})
+
 describe("filters together", () => {
   it("combine with AND across filters", async () => {
     expect(await list({ brand: ["beta"], inStock: true })).toEqual({

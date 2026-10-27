@@ -31,6 +31,7 @@ export const psus = [
   {
     sku: "CP-9020263-NA",
     name: "Corsair RM850e (2023) 850W",
+    featured: true,
     brand: "Corsair",
     price: 749500, // mid
     stock: 9,

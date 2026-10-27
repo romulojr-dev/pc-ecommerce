@@ -57,6 +57,7 @@ export type CpuSpecs = z.infer<typeof cpuSpecs>
 export const cpuFields = {
   socket: {
     label: "Socket",
+    summary: {},
     filter: "enum",
     rules: ["socket-match", "cooler-socket", "bios-update"],
     options: SOCKET_LABELS,
@@ -67,7 +68,7 @@ export const cpuFields = {
     rules: ["bios-update"],
     options: CPU_GENERATION_LABELS,
   },
-  cores: { label: "Cores", filter: "range" },
+  cores: { label: "Cores", filter: "range", summary: { suffix: "cores" } },
   threads: { label: "Threads" },
   baseClockMhz: {
     label: "Base clock",
@@ -76,6 +77,7 @@ export const cpuFields = {
   },
   boostClockMhz: {
     label: "Boost clock",
+    summary: { suffix: "boost" },
     unit: "MHz",
     largeUnit: { unit: "GHz", per: 1000 },
     filter: "range",

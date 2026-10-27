@@ -287,6 +287,7 @@ export const motherboards = [
   {
     sku: "B650 AORUS ELITE AX",
     name: "Gigabyte B650 AORUS ELITE AX",
+    featured: true,
     brand: "Gigabyte",
     price: 1299500, // mid
     stock: 9,

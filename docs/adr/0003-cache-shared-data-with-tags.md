@@ -21,6 +21,7 @@ Data is loaded in one of two ways, chosen by how it changes:
 | --- | --- | --- |
 | **Per request:** changes at runtime, or depends on the visitor | `await connection()` in the page, then query | Stock, prices, product lists, cart, account |
 | **Shared and rarely changing:** the same for every visitor, edited only by the seed or an admin | A function in `lib/` wrapped in `unstable_cache`, with a named tag and a `revalidate` backstop | Category menu (tag `categories`, 1 hour) |
+| **Teaser lists:** product data that a few minutes of staleness doesn't hurt, because the pages that sell re-read it per request | As above, with a short `revalidate`, and the page's `export const revalidate` set to match | Home page Featured, Deals and brands (tag `products`, 10 minutes; [spec 016](../specs/016-home-page/spec.md)) |
 
 Rules for cached data:
 

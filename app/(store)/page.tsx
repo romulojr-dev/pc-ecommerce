@@ -1,19 +1,55 @@
-import { Button } from "@/components/ui/button"
+import { BrandList } from "@/components/home/brand-list"
+import { CategoryTiles } from "@/components/home/category-tiles"
+import { Hero } from "@/components/home/hero"
+import { ProductSection } from "@/components/home/product-section"
+import { TrustStrip } from "@/components/home/trust-strip"
+import { Container } from "@/components/layout/container"
+import { getMenuCategories } from "@/lib/categories"
+import { getHomeBrands, getHomeProducts } from "@/lib/home"
+import { searchHref } from "@/lib/listing-params"
+import { manilaToday } from "@/lib/stock"
 
-export default function Page() {
+// Static, regenerated at most every 10 minutes (docs/specs/016-home-page,
+// ADR 0003): its data is cached by tag, and prices and stock may be up to
+// that old here. Product pages, listings and checkout stay per request.
+// Must match HOME_REVALIDATE in lib/home.ts (a segment config must be a
+// literal).
+export const revalidate = 600
+
+export default async function HomePage() {
+  const [categories, { featured, deals }, brands] = await Promise.all([
+    getMenuCategories(),
+    getHomeProducts(),
+    getHomeBrands(),
+  ])
+  // For pre-order labels; as old as the page, at most 10 minutes
+  const today = manilaToday()
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <Container className="pb-16">
+      <Hero hasDeals={deals.length > 0} />
+      <CategoryTiles categories={categories} />
+      <ProductSection
+        id="featured-products"
+        title="Featured products"
+        description="Popular picks for new builds and upgrades."
+        products={featured}
+        today={today}
+      />
+      <ProductSection
+        id="deals-heading"
+        anchor="deals"
+        title="Deals"
+        description="Limited-time prices on parts that finish a build."
+        products={deals}
+        today={today}
+        action={{
+          label: "View all deals",
+          href: searchHref("", { onSale: true }),
+        }}
+      />
+      <BrandList brands={brands} />
+      <TrustStrip />
+    </Container>
   )
 }

@@ -28,6 +28,7 @@ export const gpus = [
   {
     sku: "GV-N5070WF3OC-12GD",
     name: "Gigabyte GeForce RTX 5070 Windforce OC SFF 12G",
+    featured: true,
     brand: "Gigabyte",
     price: 3699500, // mid
     stock: 6,
