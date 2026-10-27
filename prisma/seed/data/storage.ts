@@ -19,6 +19,7 @@ export const storage = [
   {
     sku: "WDS200T2X0E",
     name: "WD_BLACK SN850X 2TB NVMe SSD",
+    featured: true,
     brand: "Western Digital",
     price: 1199500, // high
     stock: 12,

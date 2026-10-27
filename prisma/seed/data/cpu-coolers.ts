@@ -44,6 +44,7 @@ export const cpuCoolers = [
   {
     sku: "ACFRE00136A",
     name: "Arctic Liquid Freezer III 360",
+    featured: true,
     brand: "Arctic",
     price: 599500, // mid
     stock: 7,

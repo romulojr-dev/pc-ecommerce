@@ -9,6 +9,7 @@ export const cpus = [
   {
     sku: "100-100001015BOX",
     name: "AMD Ryzen 5 7600",
+    featured: true,
     brand: "AMD",
     price: 1149500, // mid
     stock: 12,

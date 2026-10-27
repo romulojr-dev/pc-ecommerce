@@ -9,6 +9,7 @@ export const cases = [
   {
     sku: "LAN216X",
     name: "Lian Li LANCOOL 216 Black",
+    featured: true,
     brand: "Lian Li",
     price: 579500, // mid
     stock: 7,
