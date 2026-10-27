@@ -28,7 +28,7 @@ type ListingFilter<V> = {
 - **Options** take a `scope` (the category's `where`), not a category id, so search can scope them to its result set.
 - **Completeness:** the server half is a `Record` over the same keys as the pure half, so a filter can't be added to only one.
 - **Changing a filter** goes through one helper that sets `page` to 1.
-- **Adding a filter later** = one pure object, one `where` (and `options`) entry, one sidebar group. Story 3's spec filters are generated from field metadata; story 4's keyword filter is a `q` filter with no options.
+- **Adding a filter later** = one pure object, one `where` (and `options`) entry, one sidebar group. Story 3's spec filters are generated from field metadata; story 4's keyword filter is a `q` filter with no options. *Superseded by [spec 014](../014-search/spec.md): `q` is not a filter. It is part of the listing's target, defines the scope with one raw query, and isn't removed by Clear all.*
 
 ## Filters
 

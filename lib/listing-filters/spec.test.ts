@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  categoryTarget,
   isCanonicalQuery,
   listingHref,
   type ListingState,
@@ -248,12 +249,12 @@ describe("listing URL with spec filters", () => {
   const href = "/gpu?brand=asus&chipsetBrand=NVIDIA&minVramGb=12"
 
   it("writes common filters first, then spec filters in metadata order", () => {
-    expect(listingHref("gpu", filtered)).toBe(href)
+    expect(listingHref(categoryTarget("gpu"), filtered)).toBe(href)
   })
 
   it("round-trips with the parser", () => {
     expect(
-      parseListingParams("gpu", {
+      parseListingParams(categoryTarget("gpu"), {
         minVramGb: "12",
         chipsetBrand: "NVIDIA",
         brand: "asus",
@@ -261,7 +262,7 @@ describe("listing URL with spec filters", () => {
     ).toEqual(filtered)
     expect(
       isCanonicalQuery(
-        "gpu",
+        categoryTarget("gpu"),
         { brand: "asus", chipsetBrand: "NVIDIA", minVramGb: "12" },
         filtered
       )
@@ -270,13 +271,15 @@ describe("listing URL with spec filters", () => {
 
   it("ignores non-filterable fields and other categories' fields", () => {
     // boardPowerW isn't filterable; socket and threads belong to other categories
-    const parsed = parseListingParams("gpu", {
+    const parsed = parseListingParams(categoryTarget("gpu"), {
       boardPowerW: "300",
       socket: "AM5",
       threads: "8",
       constructor: "x",
     })
     expect(parsed.filters).toEqual({})
-    expect(isCanonicalQuery("gpu", { boardPowerW: "300" }, parsed)).toBe(false)
+    expect(
+      isCanonicalQuery(categoryTarget("gpu"), { boardPowerW: "300" }, parsed)
+    ).toBe(false)
   })
 })

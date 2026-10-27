@@ -6,6 +6,7 @@ import {
 } from "@/lib/specs"
 
 import { brandFilter } from "./brand"
+import { categoryFilter } from "./category"
 import { inStockFilter } from "./in-stock"
 import { priceFilter } from "./price"
 import { specFilter } from "./spec"
@@ -22,7 +23,8 @@ export type {
 // is the order of their keys in the URL. Adding one: a file like brand.ts, an
 // entry here, its database half in ./server.ts, and a group in the sidebar.
 // Spec filters (docs/specs/013-spec-filters) follow them in each builder
-// category's list; search (story 4) joins this list.
+// category's list. Search results (docs/specs/014-search) have them too,
+// after a Category filter of their own.
 export const commonFilters = {
   brand: brandFilter,
   price: priceFilter,
@@ -30,16 +32,23 @@ export const commonFilters = {
 }
 
 export type CommonFilterKey = keyof typeof commonFilters
+
+// Filters only search results have
+export const searchOnlyFilters = {
+  category: categoryFilter,
+}
+
+// The filters with a fixed key, so their values are typed
+type NamedFilters = typeof commonFilters & typeof searchOnlyFilters
+export type NamedFilterKey = keyof NamedFilters
 // Common filter keys, or a spec field name
 export type FilterKey = string
 
 // The active filters' values by key; an absent key is an inactive filter.
-// Common filters are typed; spec filters are known only per category, so
-// their values are checked by their own filter object.
+// Common and search filters are typed; spec filters are known only per
+// category, so their values are checked by their own filter object.
 export type FilterValues = {
-  [K in CommonFilterKey]?: NonNullable<
-    ReturnType<(typeof commonFilters)[K]["parse"]>
-  >
+  [K in NamedFilterKey]?: NonNullable<ReturnType<NamedFilters[K]["parse"]>>
 } & { [key: string]: unknown }
 
 // Options by filter key, for the filters that have them
@@ -49,6 +58,12 @@ export type FilterOptions = Partial<Record<FilterKey, FilterOption[]>>
 export type FilterList = readonly ListingFilter<unknown>[]
 
 const COMMON_FILTERS: FilterList = Object.values(commonFilters)
+
+// Search results' filters in URL order: Category, then the common ones
+export const searchFilters: FilterList = [
+  ...Object.values(searchOnlyFilters),
+  ...COMMON_FILTERS,
+]
 
 // Built once per builder category; other slugs share the common list, so
 // nothing from the URL grows this cache

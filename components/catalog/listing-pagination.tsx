@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/pagination"
 import {
   type ListingState,
+  type ListingTarget,
   listingHref,
   paginationItems,
 } from "@/lib/listing-params"
 
 type ListingPaginationProps = {
-  slug: string
+  target: ListingTarget
   state: ListingState
   // Number of pages, from pageCount(total)
   count: number
@@ -23,13 +24,13 @@ type ListingPaginationProps = {
 // Page links for a listing; nothing when there is one page. Links keep the
 // rest of the state (sort, and later filters).
 export function ListingPagination({
-  slug,
+  target,
   state,
   count,
 }: ListingPaginationProps) {
   if (count <= 1) return null
 
-  const hrefFor = (page: number) => listingHref(slug, { ...state, page })
+  const hrefFor = (page: number) => listingHref(target, { ...state, page })
 
   return (
     <Pagination aria-label="Pagination" className="mt-10">

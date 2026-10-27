@@ -12,13 +12,11 @@ import { ListingSort } from "@/components/catalog/listing-sort"
 import { NoMatches } from "@/components/catalog/no-matches"
 import { Container } from "@/components/layout/container"
 import { getCategoryBySlug } from "@/lib/categories"
+import { activeFilterCount, normalizeFilters } from "@/lib/listing-filters"
 import {
-  activeFilterCount,
-  listingFilters,
-  normalizeFilters,
-} from "@/lib/listing-filters"
-import {
+  categoryTarget,
   DEFAULT_SORT,
+  filtersFor,
   isCanonicalQuery,
   listingHref,
   listingQuery,
@@ -41,17 +39,15 @@ export async function generateMetadata({
   const category = await getCategoryBySlug(slug)
   if (!category) notFound()
 
-  const { page, filters } = parseListingParams(
-    category.slug,
-    await searchParams
-  )
+  const target = categoryTarget(category.slug)
+  const { page, filters } = parseListingParams(target, await searchParams)
 
   return {
     title: page > 1 ? `${category.name} — Page ${page}` : category.name,
     description: `Shop ${category.name} in the Philippines at ${siteConfig.name}. Compare prices and stock, then check compatibility in the PC Builder.`,
     // Sort variants list the same products, so they share the unsorted URL
     alternates: {
-      canonical: listingHref(category.slug, {
+      canonical: listingHref(target, {
         sort: DEFAULT_SORT,
         page,
         filters,
@@ -77,8 +73,9 @@ export default async function CategoryPage({
   const category = await getCategoryBySlug(slug)
   if (!category) notFound()
 
+  const target = categoryTarget(category.slug)
   const raw = await searchParams
-  const state = parseListingParams(category.slug, raw)
+  const state = parseListingParams(target, raw)
   const today = manilaToday()
   const [options, { products, total }] = await Promise.all([
     getFilterOptions(category, state.filters, { today }),
@@ -90,22 +87,17 @@ export default async function CategoryPage({
   // (parsing can't know the options); the products just loaded then match the
   // cleaned filters too, since an unknown brand adds none. Then past the end
   // goes to the last page, and bad or spelled-out values to the canonical URL.
-  const filters = normalizeFilters(
-    state.filters,
-    options,
-    listingFilters(category.slug)
-  )
+  const filters = normalizeFilters(state.filters, options, filtersFor(target))
   if (
-    listingQuery(category.slug, { ...state, filters }) !==
-    listingQuery(category.slug, state)
+    listingQuery(target, { ...state, filters }) !== listingQuery(target, state)
   ) {
-    redirect(listingHref(category.slug, { ...state, filters, page: 1 }))
+    redirect(listingHref(target, { ...state, filters, page: 1 }))
   }
   if (state.page > count) {
-    redirect(listingHref(category.slug, { ...state, page: count }))
+    redirect(listingHref(target, { ...state, page: count }))
   }
-  if (!isCanonicalQuery(category.slug, raw, state)) {
-    redirect(listingHref(category.slug, state))
+  if (!isCanonicalQuery(target, raw, state)) {
+    redirect(listingHref(target, state))
   }
 
   const from = (state.page - 1) * PAGE_SIZE + 1
@@ -128,23 +120,19 @@ export default async function CategoryPage({
               : `Showing ${from} to ${to} of ${total} ${total === 1 ? "product" : "products"}`
           }
           sidebar={
-            <ListingFilters
-              slug={category.slug}
-              state={state}
-              options={options}
-            />
+            <ListingFilters target={target} state={state} options={options} />
           }
         >
           <ActiveFilters
-            slug={category.slug}
+            target={target}
             state={state}
             options={options}
             className="mb-4"
           />
           {total === 0 ? (
             <NoMatches
-              slug={category.slug}
-              categoryName={category.name}
+              target={target}
+              everything={`every ${category.name} product`}
               state={state}
             />
           ) : (
@@ -159,13 +147,9 @@ export default async function CategoryPage({
                     {total === 1 ? "product" : "products"}
                   </p>
                 }
-                controls={<ListingSort slug={category.slug} state={state} />}
+                controls={<ListingSort target={target} state={state} />}
               />
-              <ListingPagination
-                slug={category.slug}
-                state={state}
-                count={count}
-              />
+              <ListingPagination target={target} state={state} count={count} />
             </>
           )}
         </ListingShell>

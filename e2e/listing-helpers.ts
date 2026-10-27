@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test"
 
-// Shared by the category listing specs (docs/specs/008-category-listing,
-// docs/specs/012-common-filters). Not a spec itself: Playwright only runs
+// Shared by the listing specs (docs/specs/008-category-listing,
+// docs/specs/012-common-filters, docs/specs/014-search). Not a spec itself: Playwright only runs
 // *.spec.ts files.
 
 // Peso prices on the page's cards, as numbers: "₱36,995.00" -> 36995. The
@@ -17,11 +17,12 @@ export async function cardPrices(page: Page): Promise<number[]> {
   return texts.map((text) => Number(text.replace(/[₱,]/g, "")))
 }
 
-// The total in "Showing 1–24 of 61 products". (A hidden live region says the
-// same with "to" instead of a dash, so this matches only the visible line.)
+// The total in "Showing 1–24 of 61 products" (search: "results"). A hidden
+// live region says the same with "to" instead of a dash, so this matches only
+// the visible line.
 export async function resultCount(page: Page): Promise<number> {
   const text = await page
-    .getByText(/^Showing \d+–\d+ of \d+ products?$/)
+    .getByText(/^Showing \d+–\d+ of \d+ (products?|results?)$/)
     .textContent()
   return Number(/of (\d+)/.exec(text ?? "")?.[1])
 }

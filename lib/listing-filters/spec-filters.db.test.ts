@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { PrismaClient } from "@/generated/prisma/client"
 import { listingFilters } from "@/lib/listing-filters"
 import { activeWhere } from "@/lib/listing-filters/server"
-import { parseListingParams } from "@/lib/listing-params"
+import { categoryTarget, parseListingParams } from "@/lib/listing-params"
 import { getCategoryProducts, getFilterOptions } from "@/lib/products"
 import { db, FIXTURE_TODAY, insertSpecFixtures } from "@/test-support/db"
 
@@ -207,14 +207,16 @@ describe("what the URL can't do", () => {
       ["socket", "AM5"],
       ["__proto__", "x"],
     ])
-    const { filters } = parseListingParams("gpu", raw)
+    const { filters } = parseListingParams(categoryTarget("gpu"), raw)
     expect(filters).toEqual({})
     expect(await list(gpu, filters)).toEqual(["X1", "X2", "X3", "X4"])
   })
 
   it("treats SQL in a value as plain text", async () => {
     const injection = `'; DROP TABLE "Product"; --`
-    const { filters } = parseListingParams("gpu", { chipset: injection })
+    const { filters } = parseListingParams(categoryTarget("gpu"), {
+      chipset: injection,
+    })
     expect(filters).toEqual({ chipset: [injection] })
     expect(await list(gpu, filters)).toEqual([])
     expect(await db.product.count()).toBe(11)

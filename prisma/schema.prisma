@@ -66,11 +66,17 @@ model Product {
   brandId         String
   brand           Brand          @relation(fields: [brandId], references: [id])
   images          ProductImage[]
+  // Keyword search: name, brand, SKU, string spec values and category name,
+  // weighted. Set by database triggers (docs/specs/014-search, ADR 0005), so
+  // the app never writes it. Optional only because a required Unsupported
+  // field would remove create() from Prisma Client; it is never null.
+  searchVector    Unsupported("tsvector")?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   @@index([categoryId])
   @@index([brandId])
+  @@index([searchVector], type: Gin)
   // jsonb_path_ops: spec filters are equality/containment (@>); smaller and faster than jsonb_ops for that
   @@index([specs(ops: JsonbPathOps)], type: Gin)
 }

@@ -10,7 +10,11 @@ export type RawSearchParams = Record<string, string | string[] | undefined>
 export type FilterOption = { value: string; label: string; count?: number }
 
 // What the options loader reads of each product to count the options
-export type FacetRow = { specs: unknown; brand: { slug: string; name: string } }
+export type FacetRow = {
+  specs: unknown
+  brand: { slug: string; name: string }
+  category: { slug: string; name: string }
+}
 
 // How a filter finds its options in products: the values one product has, and
 // the order to show them in. Pure, so the counting is unit-tested.

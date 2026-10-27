@@ -286,3 +286,216 @@ export async function insertSpecFixtures() {
 
   return categories
 }
+
+// The search fixtures (docs/specs/014-search, "Tests"): real-looking parts
+// whose names and SKUs are chosen for the query list, so every expected match
+// is known in advance. SKUs are one letter token (FIXA...) that no query
+// uses, except F1's real-shaped one. Specs hold only the string fields search
+// reads, so they skip validateSpecs on purpose. Prices are made up and differ,
+// for the price sorts; createdAt rises with the number.
+export const SEARCH_FIXTURES = [
+  {
+    key: "F1",
+    name: "Gigabyte GeForce RTX 5070 Windforce OC 12G",
+    brand: "Gigabyte",
+    sku: "GV-N5070WF3OC-12GD",
+    category: "gpu",
+    specs: { chipsetBrand: "NVIDIA", chipset: "GeForce RTX 5070" },
+    price: 5_000_000,
+  },
+  {
+    key: "F2",
+    name: "MSI GeForce RTX 5070 Ti Ventus 16G",
+    brand: "MSI",
+    sku: "FIXB",
+    category: "gpu",
+    specs: { chipsetBrand: "NVIDIA", chipset: "GeForce RTX 5070 Ti" },
+    price: 4_500_000,
+  },
+  {
+    key: "F3",
+    name: "ASUS Dual GeForce RTX 4060 OC 8GB",
+    brand: "ASUS",
+    sku: "FIXC",
+    category: "gpu",
+    specs: { chipsetBrand: "NVIDIA", chipset: "GeForce RTX 4060" },
+    price: 1_800_000,
+  },
+  {
+    key: "F4",
+    name: "AMD Ryzen 7 7800X3D",
+    brand: "AMD",
+    sku: "FIXD",
+    category: "cpu",
+    specs: { socket: "AM5", generation: "zen-4" },
+    price: 2_300_000,
+  },
+  {
+    key: "F5",
+    name: "AMD Ryzen 7 9800X3D",
+    brand: "AMD",
+    sku: "FIXE",
+    category: "cpu",
+    specs: { socket: "AM5", generation: "zen-5" },
+    price: 2_900_000,
+  },
+  {
+    key: "F6",
+    name: "AMD Ryzen 5 7600",
+    brand: "AMD",
+    sku: "FIXF",
+    category: "cpu",
+    specs: { socket: "AM5", generation: "zen-4" },
+    price: 1_100_000,
+  },
+  {
+    key: "F7",
+    name: "Intel Core i5-14400F",
+    brand: "Intel",
+    sku: "FIXG",
+    category: "cpu",
+    specs: { socket: "LGA1700", generation: "raptor-lake-refresh" },
+    price: 1_000_000,
+  },
+  {
+    key: "F8",
+    name: "ASUS ROG Strix B650-A Gaming WiFi",
+    brand: "ASUS",
+    sku: "FIXH",
+    category: "motherboard",
+    specs: {
+      socket: "AM5",
+      chipset: "B650",
+      memoryType: "DDR5",
+      formFactor: "ATX",
+    },
+    price: 1_500_000,
+  },
+  {
+    key: "F9",
+    name: "ASRock B650I Lightning WiFi",
+    brand: "ASRock",
+    sku: "FIXI",
+    category: "motherboard",
+    specs: {
+      socket: "AM5",
+      chipset: "B650",
+      memoryType: "DDR5",
+      formFactor: "MINI_ITX",
+    },
+    price: 1_400_000,
+  },
+  {
+    key: "F10",
+    name: "MSI PRO B760M-A WiFi DDR4",
+    brand: "MSI",
+    sku: "FIXJ",
+    category: "motherboard",
+    specs: {
+      socket: "LGA1700",
+      chipset: "B760",
+      memoryType: "DDR4",
+      formFactor: "MICRO_ATX",
+    },
+    price: 900_000,
+  },
+  {
+    key: "F11",
+    name: "Kingston FURY Beast DDR5-5600 16 GB (1×16 GB) CL40",
+    brand: "Kingston",
+    sku: "FIXK",
+    category: "memory",
+    specs: { memoryType: "DDR5" },
+    price: 300_000,
+  },
+  {
+    key: "F12",
+    name: "Kingston FURY Beast DDR4-3200 16 GB (2×8 GB) CL16",
+    brand: "Kingston",
+    sku: "FIXL",
+    category: "memory",
+    specs: { memoryType: "DDR4" },
+    price: 250_000,
+  },
+  {
+    key: "F13",
+    name: "Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30",
+    brand: "Corsair",
+    sku: "FIXM",
+    category: "memory",
+    specs: { memoryType: "DDR5" },
+    price: 650_000,
+  },
+  {
+    key: "F14",
+    name: "Gigabyte GeForce RTX 5070 Windforce OC 12G",
+    brand: "Gigabyte",
+    sku: "FIXN",
+    category: "gpu",
+    specs: { chipsetBrand: "NVIDIA", chipset: "GeForce RTX 5070" },
+    price: 5_000_000,
+    status: "DRAFT", // never found
+  },
+] as const satisfies readonly {
+  key: string
+  name: string
+  brand: string
+  sku: string
+  category: "gpu" | "cpu" | "motherboard" | "memory"
+  specs: object
+  price: number
+  status?: "DRAFT"
+}[]
+
+export type SearchFixtureKey = (typeof SEARCH_FIXTURES)[number]["key"]
+
+const SEARCH_CATEGORIES = {
+  gpu: "Graphics Card",
+  cpu: "CPU",
+  motherboard: "Motherboard",
+  memory: "Memory",
+}
+
+// Empties the catalog and inserts the search fixtures; returns the fixture
+// key of each product id, to read results back as F1, F2...
+export async function insertSearchFixtures(): Promise<
+  Map<string, SearchFixtureKey>
+> {
+  await resetCatalog()
+
+  const categories = new Map<string, string>()
+  for (const [slug, name] of Object.entries(SEARCH_CATEGORIES)) {
+    const { id } = await db.category.create({ data: { name, slug } })
+    categories.set(slug, id)
+  }
+  const brands = new Map<string, string>()
+  for (const { brand } of SEARCH_FIXTURES) {
+    if (brands.has(brand)) continue
+    const { id } = await db.brand.create({
+      data: { name: brand, slug: brand.toLowerCase() },
+    })
+    brands.set(brand, id)
+  }
+
+  const keys = new Map<string, SearchFixtureKey>()
+  for (const [index, product] of SEARCH_FIXTURES.entries()) {
+    const { id } = await db.product.create({
+      data: {
+        name: product.name,
+        slug: product.key.toLowerCase(),
+        sku: product.sku,
+        price: product.price,
+        stock: 10,
+        status: "status" in product ? product.status : "ACTIVE",
+        specs: product.specs,
+        weightGrams: 100,
+        createdAt: new Date(Date.UTC(2026, 9, 1 + index)),
+        categoryId: categories.get(product.category)!,
+        brandId: brands.get(product.brand)!,
+      },
+      select: { id: true },
+    })
+    keys.set(id, product.key)
+  }
+  return keys
+}

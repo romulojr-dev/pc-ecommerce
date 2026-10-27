@@ -4,10 +4,10 @@ import type { SpecFilterKind } from "@/lib/specs"
 
 import { countFacet } from "./facets"
 import type {
-  CommonFilterKey,
   FilterList,
   FilterOptions,
   FilterValues,
+  NamedFilterKey,
 } from "./index"
 import type { SpecChoiceFilterValue, SpecRangeFilterValue } from "./spec"
 import type { FacetRow, SpecFilterInfo } from "./types"
@@ -15,9 +15,10 @@ import type { FacetRow, SpecFilterInfo } from "./types"
 // The database half of the listing filters (docs/specs/012-common-filters,
 // docs/specs/013-spec-filters): the condition each one adds to a product
 // query, and the options with their counts. Server-only (it imports the
-// database); the pure half is in ./index. Common filters are a Record over
-// the same keys as the pure half, and spec filters a Record over the same
-// kinds, so neither can be added to only one half.
+// database); the pure half is in ./index. Named filters (the common ones and
+// search's category) are a Record over the same keys as the pure half, and
+// spec filters a Record over the same kinds, so neither can be added to only
+// one half.
 
 export type FilterContext = {
   // Today in Manila, "YYYY-MM-DD" (manilaToday()). A parameter, not read here,
@@ -28,14 +29,19 @@ export type FilterContext = {
 // The products a listing or a facet is about, e.g. a category's active ones
 export type FilterScope = Prisma.ProductWhereInput
 
-type ServerFilter<K extends CommonFilterKey> = {
+type ServerFilter<K extends NamedFilterKey> = {
   where(
     value: NonNullable<FilterValues[K]>,
     context: FilterContext
   ): Prisma.ProductWhereInput
 }
 
-const serverFilters: { [K in CommonFilterKey]: ServerFilter<K> } = {
+const serverFilters: { [K in NamedFilterKey]: ServerFilter<K> } = {
+  // Search results only (docs/specs/014-search)
+  category: {
+    where: (slugs) => ({ category: { slug: { in: slugs } } }),
+  },
+
   brand: {
     where: (slugs) => ({ brand: { slug: { in: slugs } } }),
   },
@@ -97,7 +103,7 @@ const specWhere: Record<
   boolean: ({ field }) => ({ specs: { path: [field], equals: true } }),
 }
 
-function isCommonKey(key: string): key is CommonFilterKey {
+function isNamedKey(key: string): key is NamedFilterKey {
   return Object.hasOwn(serverFilters, key)
 }
 
@@ -116,7 +122,7 @@ export function activeWhere(
     if (filter.spec) {
       return [specWhere[filter.spec.kind](filter.spec, value as never)]
     }
-    if (isCommonKey(filter.key)) {
+    if (isNamedKey(filter.key)) {
       return [serverFilters[filter.key].where(value as never, context)]
     }
     return []
@@ -126,6 +132,7 @@ export function activeWhere(
 const facetSelect = {
   specs: true,
   brand: { select: { slug: true, name: true } },
+  category: { select: { slug: true, name: true } },
 } satisfies Prisma.ProductSelect
 
 // The options of every filter with a facet, with counts

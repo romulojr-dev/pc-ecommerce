@@ -86,9 +86,13 @@ const tieBreakers: Prisma.ProductOrderByWithRelationInput[] = [
   { id: "asc" },
 ]
 
+// The sorts a typed orderBy can do. Best match orders by search rank, which
+// only lib/search.ts has (docs/specs/014-search).
+export type ColumnSort = Exclude<ListingSort, "relevance">
+
 // Price sorts use the price the shopper pays (ADR 0004), like the price filter
-const sortOrderBy: Record<
-  ListingSort,
+export const sortOrderBy: Record<
+  ColumnSort,
   Prisma.ProductOrderByWithRelationInput[]
 > = {
   newest: [{ createdAt: "desc" }, ...tieBreakers],
@@ -132,6 +136,17 @@ export async function getCategoryProducts(
     AND: activeWhere(filters, context, listingFilters(category.slug)),
   } satisfies Prisma.ProductWhereInput
 
+  // A category never parses "relevance" (sortsFor); newest is its default
+  return getListingPage(where, sort === "relevance" ? "newest" : sort, page)
+}
+
+// One page of the products matching `where` in a column sort, plus how many
+// match in all: category listings, and search results not sorted by rank
+export async function getListingPage(
+  where: Prisma.ProductWhereInput,
+  sort: ColumnSort,
+  page: number
+): Promise<{ products: ProductCardData[]; total: number }> {
   // Not $transaction: inside one, Prisma loads the relations as concurrent
   // queries on a single pg client, which pg deprecates. A count off by one
   // during a concurrent write is harmless here.
