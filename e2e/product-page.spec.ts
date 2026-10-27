@@ -97,3 +97,26 @@ test("a pre-order shows its ship date; cart and builder are disabled", async ({
     )
   }
 })
+
+// docs/specs/015-related-products. The seed has plenty of CPUs, so the
+// section is full; which ones depends on prices, so the test doesn't name them.
+test("similar products open another product", async ({ page }) => {
+  await page.goto("/cpu/amd-ryzen-5-7600")
+
+  const similar = page.getByRole("region", { name: "Similar products" })
+  const cards = similar.getByRole("article")
+  await expect(cards).toHaveCount(4)
+  await expect(
+    similar.getByRole("link", { name: "AMD Ryzen 5 7600", exact: true })
+  ).toHaveCount(0)
+
+  const first = cards.first().getByRole("link")
+  const name = (await first.innerText()).trim()
+  await first.click()
+
+  await expect(page).toHaveURL(/^http:\/\/[^/]+\/cpu\/[a-z0-9-]+$/)
+  await expect(page).not.toHaveURL(/\/cpu\/amd-ryzen-5-7600$/)
+  await expect(
+    page.getByRole("heading", { level: 1, name, exact: true })
+  ).toBeVisible()
+})

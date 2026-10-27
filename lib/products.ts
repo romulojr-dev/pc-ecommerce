@@ -167,6 +167,11 @@ export async function getListingPage(
 // Everything the product page shows (docs/specs/010-product-page). Plain
 // data: dates as "YYYY-MM-DD", specs still unvalidated JSON.
 export type ProductPageData = {
+  id: string
+  categoryId: string
+  // The price the shopper pays (ADR 0004); related products are measured
+  // from it
+  effectivePrice: number
   name: string
   slug: string
   description: string | null
@@ -190,6 +195,9 @@ export const getProductPage = cache(
     const row = await db.product.findFirst({
       where: { slug, status: "ACTIVE" },
       select: {
+        id: true,
+        categoryId: true,
+        effectivePrice: true,
         name: true,
         slug: true,
         description: true,
@@ -217,3 +225,42 @@ export const getProductPage = cache(
     }
   }
 )
+
+// The product that related products are measured from
+export type RelatedSource = {
+  id: string
+  categoryId: string
+  effectivePrice: number
+}
+
+export const RELATED_LIMIT = 4
+
+// Up to 4 other active products from the same category, for "Similar
+// products" (docs/specs/015-related-products). Available ones (stock left,
+// pre-orders included) come first, so out-of-stock products only fill
+// slots; then the closest in the price the shopper pays (ADR 0004). Equal
+// distances go to the cheaper one, then name, then id. A typed orderBy can't
+// sort by ABS(...), so one raw query picks the ids, like lib/search.ts.
+export async function getRelatedProducts(
+  source: RelatedSource
+): Promise<ProductCardData[]> {
+  const rows = await db.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "Product"
+    WHERE "categoryId" = ${source.categoryId}
+      AND "status" = 'ACTIVE'
+      AND "id" <> ${source.id}
+    ORDER BY ("stock" > 0) DESC,
+             ABS("effectivePrice" - ${source.effectivePrice}),
+             "effectivePrice", "name", "id"
+    LIMIT ${RELATED_LIMIT}`
+  if (rows.length === 0) return []
+
+  const position = new Map(rows.map(({ id }, index) => [id, index]))
+  const products = await db.product.findMany({
+    where: { id: { in: [...position.keys()] } },
+    select: { id: true, ...productCardSelect },
+  })
+  return products
+    .sort((a, b) => position.get(a.id)! - position.get(b.id)!)
+    .map(toProductCardData)
+}

@@ -10,11 +10,16 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
 import { connection } from "next/server"
+import { Suspense } from "react"
 
 import { Container } from "@/components/layout/container"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { ProductPrice } from "@/components/product/product-price"
 import { QuantitySelector } from "@/components/product/quantity-selector"
+import {
+  RelatedProducts,
+  RelatedProductsSkeleton,
+} from "@/components/product/related-products"
 import { SpecTable } from "@/components/product/spec-table"
 import {
   Breadcrumb,
@@ -75,7 +80,8 @@ export default async function ProductPage({
     permanentRedirect(productHref(product.category.slug, product.slug))
   }
 
-  const status = getStockStatus(product, manilaToday())
+  const today = manilaToday()
+  const status = getStockStatus(product, today)
   const outOfStock = status === "out-of-stock"
 
   return (
@@ -179,6 +185,12 @@ export default async function ProductPage({
           </section>
         )}
       </div>
+
+      {/* Streams in after the details; notFound and the redirect above run
+          before this boundary, so they keep their HTTP status */}
+      <Suspense fallback={<RelatedProductsSkeleton />}>
+        <RelatedProducts source={product} today={today} />
+      </Suspense>
     </Container>
   )
 }
