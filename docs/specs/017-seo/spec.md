@@ -206,13 +206,13 @@ Record the results in the PR or the issue.
 
 ## Acceptance criteria
 
-- [ ] `metadataBase` comes from `NEXT_PUBLIC_SITE_URL`; home, category (each paginated page to itself) and product pages have absolute canonicals.
-- [ ] Product pages render escaped Product JSON-LD (name, image, brand, SKU, description, offer with effective price in PHP and availability from `getStockStatus`, pre-order included) and a BreadcrumbList that matches the visible breadcrumbs. No ratings or reviews.
-- [ ] `sitemap.xml` lists home, non-empty categories and active products with `lastModified`, no filter or search URLs, cached by tag with an hourly backstop.
-- [ ] `robots.txt` allows everything and points to the absolute sitemap URL.
-- [ ] Home, category and product pages have Open Graph and Twitter tags; a default 1200 × 630 site image exists.
+- [x] `metadataBase` comes from `NEXT_PUBLIC_SITE_URL`; home, category (each paginated page to itself) and product pages have absolute canonicals.
+- [x] Product pages render escaped Product JSON-LD (name, image, brand, SKU, description, offer with effective price in PHP and availability from `getStockStatus`, pre-order included) and a BreadcrumbList that matches the visible breadcrumbs. No ratings or reviews.
+- [x] `sitemap.xml` lists home, non-empty categories and active products with `lastModified`, no filter or search URLs, cached by tag with an hourly backstop.
+- [x] `robots.txt` allows everything and points to the absolute sitemap URL.
+- [x] Home, category and product pages have Open Graph and Twitter tags; a default 1200 × 630 site image exists.
 - [ ] Previews send `X-Robots-Tag: noindex` and production doesn't (checked as above).
-- [ ] Unit, integration and E2E tests above pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
+- [x] Unit, integration and E2E tests above pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
 - [ ] The Rich Results Test on production shows no errors (after merge).
 
 ## Out of scope
