@@ -13,4 +13,4 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
 - [x] **T7. Search page.** All states, redirects, noindex. *Verify in `pnpm dev`:* `/search`, `/search?q=rtx+5070`, `/search?brand=asus`, `/search?q=zzzz`, `/search?q=rtx&brand=xyz` → redirect, category filter counts, sort, pagination, chips; JS disabled in the browser still works.
 - [x] **T8. E2E.** `e2e/search.spec.ts`: header → results → brand filter → product page; no-JS (`test.use({ javaScriptEnabled: false })`); brand browse; prompt; no results; `noindex` meta. *Verify:* full `pnpm test:e2e`.
 - [x] **T9. Docs.** ADR 0005 final, CLAUDE.md (search, `ListingTarget`, `search_normalize`, never write `searchVector`), spec 012's superseded note, tick spec criteria.
-- [ ] **T10. Wrap-up.** `pnpm build`, `format`, `lint`, `typecheck`, `test`, `test:db`, `test:e2e`; browser check (themes, 1280/1024 px, keyboard, axe); push and open the PR per the repo template.
+- [x] **T10. Wrap-up.** `pnpm build`, `format`, `lint`, `typecheck`, `test`, `test:db`, `test:e2e`; browser check (themes, 1280/1024 px, keyboard, axe); push and open the PR per the repo template.
