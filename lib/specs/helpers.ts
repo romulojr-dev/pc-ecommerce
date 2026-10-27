@@ -51,6 +51,14 @@ export type RuleId =
 // grouped (docs/specs/009-spec-table, "Grouping and order rule").
 export type SpecGroup = "Processor" | "Memory" | "Size and connectivity"
 
+// How a field filters a category listing (docs/specs/013-spec-filters):
+// enum: checkboxes for the `options`, any of them; values: checkboxes for the
+// values in stock (numbers or text), any of them; range: min and max;
+// boolean: true only; contains: a list field holding any of the checked
+// `options`
+export type SpecFilterKind =
+  "enum" | "values" | "range" | "boolean" | "contains"
+
 // What the UI needs to know about a spec field: filters (FR-5), the spec
 // table (FR-9) and admin forms (AD-2) all read this. Entry order in a
 // FieldMetaMap is the display order.
@@ -63,7 +71,8 @@ export type FieldMeta = {
   largeUnit?: { unit: string; per: number }
   // Spec table section; all or none of a category's fields have one
   group?: SpecGroup
-  filterable: boolean
+  // Absent: not a filter
+  filter?: SpecFilterKind
   // Compatibility rules that read this field; such fields must be required
   rules?: readonly RuleId[]
   // Display labels for enum values, e.g. { MICRO_ATX: "Micro-ATX" }

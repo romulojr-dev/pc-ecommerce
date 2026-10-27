@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { validateSpecs } from "@/lib/specs"
 
 // Helpers for the database integration tests (*.db.test.ts, run by
 // `pnpm test:db`, docs/specs/012-common-filters)
@@ -140,4 +141,148 @@ export async function insertFixtures() {
   }
 
   return { cpuId: categories.cpu.id, gpuId: categories.gpu.id }
+}
+
+type SpecFixtureProduct = {
+  name: string
+  brand: "Alpha" | "Beta"
+  category: "gpu" | "cpu-cooler" | "motherboard"
+  specs: Record<string, unknown>
+  stock?: number
+  status?: "ACTIVE" | "DRAFT"
+}
+
+const gpu = (
+  chipsetBrand: string,
+  chipset: string,
+  vramGb: number,
+  lengthMm: number
+) => ({ chipsetBrand, chipset, vramGb, lengthMm, boardPowerW: 200 })
+
+const board = (hasWifi: boolean) => ({
+  socket: "AM5",
+  chipset: "B650",
+  nativeCpuGenerations: ["zen-4"],
+  formFactor: "ATX",
+  memoryType: "DDR5",
+  memorySlots: 4,
+  maxMemoryGb: 128,
+  m2Slots: 2,
+  hasWifi,
+})
+
+// The known catalog the spec filter tests run against
+// (docs/specs/013-spec-filters, "Tests"). Prices rise with the list order, so
+// price-asc lists each category in this order.
+const SPEC_FIXTURE_PRODUCTS: SpecFixtureProduct[] = [
+  {
+    name: "X1",
+    brand: "Alpha",
+    category: "gpu",
+    specs: gpu("NVIDIA", "RTX A", 8, 240),
+  },
+  {
+    name: "X2",
+    brand: "Alpha",
+    category: "gpu",
+    specs: gpu("NVIDIA", "RTX B", 12, 300),
+  },
+  {
+    name: "X3",
+    brand: "Beta",
+    category: "gpu",
+    specs: gpu("AMD", "RX C", 16, 320),
+    stock: 0,
+  },
+  {
+    name: "X4",
+    brand: "Beta",
+    category: "gpu",
+    specs: gpu("AMD", "RX C", 16, 340),
+  },
+  {
+    name: "X5",
+    brand: "Beta",
+    category: "gpu",
+    specs: gpu("NVIDIA", "RTX B", 12, 285),
+    status: "DRAFT",
+  },
+  {
+    name: "C1",
+    brand: "Alpha",
+    category: "cpu-cooler",
+    specs: { type: "AIR", supportedSockets: ["AM4", "AM5"], heightMm: 155 },
+  },
+  {
+    name: "C2",
+    brand: "Alpha",
+    category: "cpu-cooler",
+    specs: { type: "AIR", supportedSockets: ["LGA1700"], heightMm: 160 },
+  },
+  {
+    name: "C3",
+    brand: "Beta",
+    category: "cpu-cooler",
+    specs: {
+      type: "AIO",
+      supportedSockets: ["AM5", "LGA1700"],
+      radiatorSizeMm: 240,
+    },
+  },
+  {
+    name: "C4",
+    brand: "Beta",
+    category: "cpu-cooler",
+    specs: { type: "AIO", supportedSockets: ["AM5"], radiatorSizeMm: 360 },
+  },
+  { name: "M1", brand: "Alpha", category: "motherboard", specs: board(true) },
+  { name: "M2", brand: "Alpha", category: "motherboard", specs: board(false) },
+]
+
+// Empties the catalog and inserts the spec fixtures, each checked against its
+// schema first; returns the categories as getCategoryProducts takes them
+export async function insertSpecFixtures() {
+  await resetCatalog()
+
+  const slugs = ["gpu", "cpu-cooler", "motherboard"] as const
+  const categories = Object.fromEntries(
+    await Promise.all(
+      slugs.map(async (slug) => {
+        const { id } = await db.category.create({
+          data: { name: slug, slug },
+          select: { id: true },
+        })
+        return [slug, { id, slug }] as const
+      })
+    )
+  ) as Record<(typeof slugs)[number], { id: string; slug: string }>
+
+  const brands = {
+    Alpha: await db.brand.create({ data: { name: "Alpha", slug: "alpha" } }),
+    Beta: await db.brand.create({ data: { name: "Beta", slug: "beta" } }),
+  }
+
+  for (const [index, product] of SPEC_FIXTURE_PRODUCTS.entries()) {
+    const valid = validateSpecs(product.category, product.specs)
+    if (!valid.success) {
+      throw new Error(`${product.name}: invalid specs: ${valid.error.message}`)
+    }
+    await db.product.create({
+      data: {
+        name: product.name,
+        slug: product.name.toLowerCase(),
+        sku: `SKU-${product.name}`,
+        price: (index + 1) * 1_000_000,
+        stock: product.stock ?? 10,
+        lowStockAt: 5,
+        status: product.status ?? "ACTIVE",
+        specs: valid.data,
+        weightGrams: 100,
+        categoryId: categories[product.category].id,
+        brandId: brands[product.brand].id,
+      },
+    })
+  }
+
+  return categories
 }

@@ -42,7 +42,7 @@ Different filters combine with AND; the values inside Brand combine with OR.
 
 ### Brand
 
-- **Options:** brands with at least one active product in the category, by name. Not narrowed by other filters (counts come in story 3).
+- **Options:** brands with at least one active product in the category, by name. Not narrowed by other filters (counts come in story 3). *Superseded by [spec 013](../013-spec-filters/spec.md): options now come with counts that apply the other active filters.*
 - **Source:** `db.brand.findMany({ where: { products: { some: scope } } })`, **per request**. ADR 0003 caches shared data that changes rarely, but the brand list changes whenever a product is added, hidden or moved, so caching it would add a tag-invalidation duty to every product write. The page is per-request anyway, and the query is one indexed lookup.
 - **Parse:** repeated `brand` values that look like slugs (`[a-z0-9-]+`), deduplicated and sorted, at most 20. Parsing is pure, so it can't know the options. The page loads options and products in parallel, drops slugs that aren't options, and redirects if that changed anything. An unknown slug beside a valid one matches nothing extra, so the discarded result is still correct.
 

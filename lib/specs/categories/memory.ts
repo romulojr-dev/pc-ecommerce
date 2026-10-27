@@ -19,21 +19,21 @@ export type MemorySpecs = z.infer<typeof memorySpecs>
 export const memoryFields = {
   memoryType: {
     label: "Memory type",
-    filterable: true,
+    filter: "enum",
     rules: ["memory-type"],
     options: MEMORY_TYPE_LABELS,
   },
   capacityGb: {
     label: "Capacity",
     unit: "GB",
-    filterable: true,
+    filter: "values",
     rules: ["memory-capacity"],
   },
   moduleCount: {
     label: "Modules",
-    filterable: true,
+    filter: "values",
     rules: ["memory-slots"],
   },
-  speedMts: { label: "Speed", unit: "MT/s", filterable: true },
-  casLatency: { label: "CAS latency", filterable: false },
+  speedMts: { label: "Speed", unit: "MT/s", filter: "range" },
+  casLatency: { label: "CAS latency" },
 } satisfies FieldMetaMap<typeof memorySpecs>

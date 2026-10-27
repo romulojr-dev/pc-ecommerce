@@ -8,7 +8,8 @@ import { builderCategories, type BuilderCategorySlug } from "./registry"
 
 export { builderCategories, type BuilderCategorySlug }
 export * from "./enums"
-export type { FieldMeta, RuleId, SpecGroup } from "./helpers"
+export type { FieldMeta, RuleId, SpecFilterKind, SpecGroup } from "./helpers"
+export { fieldSchemas, isTextField } from "./fields"
 export {
   formatSpecValue,
   getSpecRows,

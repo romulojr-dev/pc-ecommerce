@@ -40,4 +40,10 @@ export const brandFilter = {
     )
     return known.length > 0 ? known : null
   },
+
+  // The brands of the products in the scope, by name
+  facet: {
+    values: (row) => [{ value: row.brand.slug, label: row.brand.name }],
+    compare: (a, b) => a.label.localeCompare(b.label, "en"),
+  },
 } satisfies ListingFilter<BrandFilterValue>

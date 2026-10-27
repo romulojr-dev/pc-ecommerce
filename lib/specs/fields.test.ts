@@ -1,28 +1,18 @@
 import { z } from "zod"
 import { describe, expect, test } from "vitest"
 
-import { builderCategories, type FieldMeta } from "@/lib/specs"
+import {
+  builderCategories,
+  fieldSchemas,
+  isTextField,
+  type BuilderCategorySlug,
+  type FieldMeta,
+  type SpecFilterKind,
+} from "@/lib/specs"
 
 // Field metadata checks (docs/specs/009-spec-table). FieldMetaMap already
 // makes a missing entry a type error; this also catches what types don't:
-// enum labels, units and the grouping rule.
-
-// Each field's schemas by key, one per branch of the cooler union that has
-// it. Optional wrappers are unwrapped; z.never placeholders (a field of the
-// other cooler type) are skipped.
-function fieldSchemas(schema: z.ZodType) {
-  const objects =
-    schema instanceof z.ZodDiscriminatedUnion ? schema.options : [schema]
-  const fields = new Map<string, z.ZodType[]>()
-  for (const object of objects as z.ZodObject[]) {
-    for (const [key, field] of Object.entries(object.shape)) {
-      const inner = field instanceof z.ZodOptional ? field.unwrap() : field
-      if (inner instanceof z.ZodNever) continue
-      fields.set(key, [...(fields.get(key) ?? []), inner as z.ZodType])
-    }
-  }
-  return fields
-}
+// enum labels, units, the grouping rule and filter kinds.
 
 // String values of an enum, a list of enums or a string literal (the cooler
 // `type`, one literal per branch); undefined for any other field
@@ -72,6 +62,28 @@ describe.each(categories)("$slug", ({ schemaFields, meta }) => {
     expect(missing).toEqual([])
   })
 
+  // docs/specs/013-spec-filters, "Filter kinds and fields"
+  test("gives each filter a kind that fits its field", () => {
+    const misfits = meta.flatMap(([key, { filter, options }]) => {
+      if (!filter) return []
+      const schemas = schemaFields.get(key)!
+      const fits = (test: (schema: z.ZodType) => boolean) => schemas.every(test)
+      const isNumber = (schema: z.ZodType) =>
+        schema instanceof z.ZodNumber ||
+        (schema instanceof z.ZodLiteral &&
+          [...schema.values].every((value) => typeof value === "number"))
+      const ok: Record<SpecFilterKind, boolean> = {
+        enum: options !== undefined && !fits((s) => s instanceof z.ZodArray),
+        contains: options !== undefined && fits((s) => s instanceof z.ZodArray),
+        boolean: fits((s) => s instanceof z.ZodBoolean),
+        range: fits(isNumber),
+        values: fits((s) => isNumber(s) || s instanceof z.ZodString),
+      }
+      return ok[filter] ? [] : [`${key}: ${filter}`]
+    })
+    expect(misfits).toEqual([])
+  })
+
   test("has unique labels", () => {
     const labels = meta.map(([, { label }]) => label)
     expect(new Set(labels).size).toBe(labels.length)
@@ -94,5 +106,17 @@ describe.each(categories)("$slug", ({ schemaFields, meta }) => {
         `${run} size`
       ).toBeGreaterThanOrEqual(2)
     }
+  })
+})
+
+describe("isTextField", () => {
+  test.each<[BuilderCategorySlug, string, boolean]>([
+    ["gpu", "chipset", true],
+    ["motherboard", "chipset", true],
+    ["memory", "capacityGb", false],
+    ["cpu-cooler", "radiatorSizeMm", false],
+    ["gpu", "chipsetBrand", false],
+  ])("%s.%s is text: %s", (category, field, expected) => {
+    expect(isTextField(category, field)).toBe(expected)
   })
 })

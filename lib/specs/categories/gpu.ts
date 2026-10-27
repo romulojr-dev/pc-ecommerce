@@ -19,21 +19,20 @@ export type GpuSpecs = z.infer<typeof gpuSpecs>
 export const gpuFields = {
   chipsetBrand: {
     label: "Chipset brand",
-    filterable: true,
+    filter: "enum",
     options: GPU_CHIPSET_BRAND_LABELS,
   },
-  chipset: { label: "Chipset", filterable: true },
-  vramGb: { label: "VRAM", unit: "GB", filterable: true },
+  chipset: { label: "Chipset", filter: "values" },
+  vramGb: { label: "VRAM", unit: "GB", filter: "range" },
   lengthMm: {
     label: "Length",
     unit: "mm",
-    filterable: true,
+    filter: "range",
     rules: ["gpu-length"],
   },
   boardPowerW: {
     label: "Board power",
     unit: "W",
-    filterable: false,
     rules: ["psu-wattage"],
   },
 } satisfies FieldMetaMap<typeof gpuSpecs>

@@ -31,7 +31,7 @@ async function list(
   } = {}
 ) {
   const { products, total } = await getCategoryProducts(
-    cpuId,
+    { id: cpuId, slug: "cpu" },
     { sort, page: 1, filters },
     { today }
   )
@@ -51,9 +51,14 @@ describe("no filters", () => {
 describe("brand", () => {
   it("shows the category's brands: not draft-only or other categories'", async () => {
     // Gamma only has a draft CPU, Delta only a GPU
-    expect((await getFilterOptions(cpuId)).brand).toEqual([
-      { value: "alpha", label: "Alpha" },
-      { value: "beta", label: "Beta" },
+    const options = await getFilterOptions(
+      { id: cpuId, slug: "cpu" },
+      {},
+      { today: FIXTURE_TODAY }
+    )
+    expect(options.brand).toEqual([
+      { value: "alpha", label: "Alpha", count: 2 },
+      { value: "beta", label: "Beta", count: 3 },
     ])
   })
 

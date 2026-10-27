@@ -1,10 +1,16 @@
 "use client"
 
+import { ChevronDownIcon } from "lucide-react"
 import { useId, useOptimistic, useState } from "react"
 
 import { useNavigateListing } from "@/components/catalog/listing-shell"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import {
   Field,
   FieldError,
@@ -14,17 +20,30 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import type { FilterOptions, FilterValues } from "@/lib/listing-filters"
+import {
+  type FilterKey,
+  type FilterOption,
+  type FilterOptions,
+  type FilterValues,
+  type ListingFilter,
+  listingFilters,
+} from "@/lib/listing-filters"
 import {
   MAX_PRICE_PESOS,
   parsePriceBound,
   priceFilter,
 } from "@/lib/listing-filters/price"
 import {
+  parseSpecBound,
+  type SpecRangeFilterValue,
+  specParamKeys,
+} from "@/lib/listing-filters/spec"
+import {
   type ListingState,
   listingHref,
   withFilter,
 } from "@/lib/listing-params"
+import { cn, focusRing } from "@/lib/utils"
 
 type ListingFiltersProps = {
   slug: string
@@ -32,123 +51,287 @@ type ListingFiltersProps = {
   options: FilterOptions
 }
 
-// Typed prices may carry the separators people write: "₱15,000"
-const cleanPrice = (text: string) => text.replace(/[\s,₱]/g, "")
+type Range = { min: number | null; max: number | null }
 
-// The text of one price field for a bound, "" when there is none
-const boundText = (bound: number | null | undefined) =>
-  bound === null || bound === undefined ? "" : String(bound)
-
-// A field's problem, or null when it is empty or a valid whole-peso amount
-function priceError(text: string): string | null {
-  const clean = cleanPrice(text)
-  if (clean === "" || parsePriceBound(clean) !== null) return null
-  return `Enter whole pesos from 0 to ${MAX_PRICE_PESOS.toLocaleString("en-PH")}.`
-}
-
-// The filter sidebar (docs/specs/012-common-filters). Brand and in stock
-// apply at once, one decision per click; the price range applies on submit,
-// since typing "15000" would otherwise navigate five times with nonsense
-// ranges on the way. Every change starts again at page 1 and keeps the sort.
+// The filter sidebar (docs/specs/012-common-filters, docs/specs/013-spec-
+// filters): brand, price and availability, then the category's spec filters
+// in metadata order, each in a section that can be collapsed. Checkboxes
+// apply at once, one decision per click; ranges apply on submit, since typing
+// "15000" would otherwise navigate five times with nonsense ranges on the
+// way. Every change starts again at page 1 and keeps the sort.
 export function ListingFilters({ slug, state, options }: ListingFiltersProps) {
   const navigate = useNavigateListing()
   // The checkboxes show a click at once, while the new results load
   const [filters, setFilters] = useOptimistic<FilterValues>(state.filters)
 
-  function apply<K extends keyof FilterValues>(
-    key: K,
-    value: FilterValues[K] | null
-  ) {
+  function apply<K extends FilterKey>(key: K, value: FilterValues[K] | null) {
     const next = withFilter(state, key, value)
     navigate(listingHref(slug, next), () => setFilters(next.filters))
   }
 
-  const brands = options.brand ?? []
-  const selectedBrands = filters.brand ?? []
-
-  function toggleBrand(slugToToggle: string, checked: boolean) {
+  // A checkbox of a multi-value filter (brand, enum, values, contains). The
+  // filter's own parser puts the values in URL order, so there is no
+  // redirect to tidy up.
+  function toggle(
+    filter: ListingFilter<unknown>,
+    value: string,
+    checked: boolean
+  ) {
+    const selected = (filters[filter.key] as string[] | undefined) ?? []
     const next = checked
-      ? [...selectedBrands, slugToToggle]
-      : selectedBrands.filter((brand) => brand !== slugToToggle)
-    // Sorted, as the URL writes them, so there is no redirect to tidy up
-    apply("brand", next.length > 0 ? next.toSorted() : null)
+      ? [...selected, value]
+      : selected.filter((other) => other !== value)
+    apply(filter.key, filter.parse({ [filter.key]: next }))
   }
 
-  return (
-    <aside aria-label="Filters" className="flex flex-col gap-6">
-      {brands.length > 0 && (
-        <FieldSet>
-          <FieldLegend variant="label">Brand</FieldLegend>
-          <FieldGroup data-slot="checkbox-group" className="gap-2">
-            {brands.map((brand) => (
-              <CheckboxField
-                key={brand.value}
-                label={brand.label}
-                checked={selectedBrands.includes(brand.value)}
-                onCheckedChange={(checked) => toggleBrand(brand.value, checked)}
-              />
-            ))}
-          </FieldGroup>
-        </FieldSet>
-      )}
+  const list = listingFilters(slug)
+  const brand = list.find((filter) => filter.key === "brand")!
+  const specFilters = list.filter((filter) => filter.spec)
 
-      <PriceForm
-        price={state.filters.price}
-        onApply={(price) => apply("price", price)}
+  return (
+    <aside aria-label="Filters" className="flex flex-col gap-4">
+      <CheckboxSection
+        title="Brand"
+        options={options.brand ?? []}
+        selected={filters.brand ?? []}
+        onToggle={(value, checked) => toggle(brand, value, checked)}
       />
 
-      <FieldSet>
-        <FieldLegend variant="label">Availability</FieldLegend>
-        <FieldGroup data-slot="checkbox-group" className="gap-2">
-          <CheckboxField
-            label="In stock only"
-            checked={filters.inStock === true}
-            onCheckedChange={(checked) => apply("inStock", checked || null)}
+      <FilterSection title="Price (₱)">
+        <RangeForm
+          name="Price"
+          unit="₱"
+          range={state.filters.price}
+          keys={["minPrice", "maxPrice"]}
+          parse={(raw) => priceFilter.parse(raw)}
+          // Typed prices may carry the separators people write: "₱15,000"
+          clean={(text) => text.replace(/[\s,₱]/g, "")}
+          isValid={(text) => parsePriceBound(text) !== null}
+          error={`Enter whole pesos from 0 to ${MAX_PRICE_PESOS.toLocaleString("en-PH")}.`}
+          onApply={(price) => apply("price", price)}
+        />
+      </FilterSection>
+
+      <FilterSection title="Availability">
+        <CheckboxField
+          label="In stock only"
+          checked={filters.inStock === true}
+          onCheckedChange={(checked) => apply("inStock", checked || null)}
+        />
+      </FilterSection>
+
+      {specFilters.map((filter) => {
+        const { field, meta, kind } = filter.spec!
+        const fieldOptions = options[field] ?? []
+
+        if (kind === "range") {
+          // No product in the category has the field: nothing to filter
+          if (fieldOptions.length === 0) return null
+          const title = meta.unit ? `${meta.label} (${meta.unit})` : meta.label
+          const [minKey, maxKey] = specParamKeys(field, kind)
+          return (
+            <FilterSection key={field} title={title}>
+              <RangeForm
+                name={meta.label}
+                unit={meta.unit}
+                range={state.filters[field] as SpecRangeFilterValue | undefined}
+                keys={[minKey, maxKey]}
+                parse={(raw) => filter.parse(raw) as Range | null}
+                clean={(text) => text.replace(/[\s,]/g, "")}
+                isValid={(text) => parseSpecBound(text) !== null}
+                error="Enter a whole number."
+                // The category's lowest and highest value
+                placeholders={[
+                  fieldOptions[0].value,
+                  fieldOptions[fieldOptions.length - 1].value,
+                ]}
+                onApply={(range) => apply(field, range)}
+              />
+            </FilterSection>
+          )
+        }
+
+        if (kind === "boolean") {
+          const option = fieldOptions[0]
+          if (!option) return null
+          const checked = filters[field] === true
+          return (
+            <FilterSection key={field} title={meta.label}>
+              <CheckboxField
+                label={meta.label}
+                count={option.count}
+                disabled={option.count === 0 && !checked}
+                checked={checked}
+                onCheckedChange={(on) => apply(field, on || null)}
+              />
+            </FilterSection>
+          )
+        }
+
+        return (
+          <CheckboxSection
+            key={field}
+            title={meta.label}
+            options={fieldOptions}
+            selected={(filters[field] as string[] | undefined) ?? []}
+            onToggle={(value, checked) => toggle(filter, value, checked)}
           />
-        </FieldGroup>
-      </FieldSet>
+        )
+      })}
     </aside>
+  )
+}
+
+// A titled group of filters that can be collapsed. Every section starts open,
+// so an active filter is never hidden on arrival.
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <Collapsible defaultOpen className="border-b pb-4 last:border-b-0">
+      <CollapsibleTrigger
+        className={cn(
+          "group flex w-full items-center justify-between rounded-sm py-1 text-left text-xs/relaxed font-medium",
+          focusRing
+        )}
+      >
+        {title}
+        <ChevronDownIcon
+          aria-hidden="true"
+          className="size-4 text-muted-foreground transition-transform group-data-[panel-open]:rotate-180"
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        <FieldSet>
+          <FieldLegend className="sr-only">{title}</FieldLegend>
+          {children}
+        </FieldSet>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+// One checkbox per option with its count. An option no product matches with
+// the other filters is disabled, unless it is checked, so it can always be
+// unchecked (docs/specs/013-spec-filters, "Option counts").
+function CheckboxSection({
+  title,
+  options,
+  selected,
+  onToggle,
+}: {
+  title: string
+  options: FilterOption[]
+  selected: string[]
+  onToggle: (value: string, checked: boolean) => void
+}) {
+  // The category has none of these values: nothing to filter
+  if (options.length === 0) return null
+  return (
+    <FilterSection title={title}>
+      <FieldGroup data-slot="checkbox-group" className="gap-2">
+        {options.map((option) => {
+          const checked = selected.includes(option.value)
+          return (
+            <CheckboxField
+              key={option.value}
+              label={option.label}
+              count={option.count}
+              disabled={option.count === 0 && !checked}
+              checked={checked}
+              onCheckedChange={(on) => onToggle(option.value, on)}
+            />
+          )
+        })}
+      </FieldGroup>
+    </FilterSection>
   )
 }
 
 function CheckboxField({
   label,
+  count,
+  disabled = false,
   checked,
   onCheckedChange,
 }: {
   label: string
+  count?: number
+  disabled?: boolean
   checked: boolean
   onCheckedChange: (checked: boolean) => void
 }) {
   const id = useId()
   const labelId = `${id}-label`
+  const countId = `${id}-count`
   return (
-    <Field orientation="horizontal">
+    <Field orientation="horizontal" data-disabled={disabled}>
       {/* Base UI only links the label to the checkbox once the page has
           hydrated, and `htmlFor` points at its hidden input; the explicit
-          aria-labelledby names the checkbox in the server-rendered HTML too */}
+          aria-labelledby names the checkbox in the server-rendered HTML too.
+          The count is its description, so its name stays the label. */}
       <Checkbox
         id={id}
         aria-labelledby={labelId}
+        aria-describedby={count === undefined ? undefined : countId}
         checked={checked}
+        disabled={disabled}
         onCheckedChange={onCheckedChange}
       />
       <FieldLabel id={labelId} htmlFor={id} className="font-normal">
         {label}
       </FieldLabel>
+      {count !== undefined && (
+        <span id={countId} className="text-xs text-muted-foreground">
+          <span aria-hidden="true">({count})</span>
+          {/* One string: separate text nodes lose the space in the description */}
+          <span className="sr-only">{`${count} ${count === 1 ? "product" : "products"}`}</span>
+        </span>
+      )}
     </Field>
   )
 }
 
-type PriceFormProps = {
-  price: FilterValues["price"]
-  onApply: (price: FilterValues["price"] | null) => void
+// The text of one range field for a bound, "" when there is none
+const boundText = (bound: number | null | undefined) =>
+  bound === null || bound === undefined ? "" : String(bound)
+
+type RangeFormProps = {
+  // Names the form and its fields: "Price" -> "Min price (₱)"
+  name: string
+  unit?: string
+  range: Range | undefined
+  // The filter's URL keys for the min and max bounds
+  keys: [string, string]
+  // The filter's own parser: drops empty bounds and swaps min > max
+  parse: (raw: Record<string, string>) => Range | null
+  clean: (text: string) => string
+  isValid: (clean: string) => boolean
+  error: string
+  placeholders?: [string, string]
+  onApply: (range: Range | null) => void
 }
 
-function PriceForm({ price, onApply }: PriceFormProps) {
+// Min and max fields with an Apply button, for price and spec ranges
+function RangeForm({
+  name,
+  unit,
+  range,
+  keys,
+  parse,
+  clean,
+  isValid,
+  error,
+  placeholders,
+  onApply,
+}: RangeFormProps) {
   const id = useId()
-  const [min, setMin] = useState(boundText(price?.min))
-  const [max, setMax] = useState(boundText(price?.max))
+  const [min, setMin] = useState(boundText(range?.min))
+  const [max, setMax] = useState(boundText(range?.max))
   // Shown after a submit, so nothing complains while someone is still typing
   const [errors, setErrors] = useState<{
     min: string | null
@@ -158,73 +341,81 @@ function PriceForm({ price, onApply }: PriceFormProps) {
   // When the URL's range changes (an Apply, a chip removed, a bad bound
   // dropped), show what is applied. Done while rendering, not by remounting
   // the form, so the focus stays where it is.
-  const applied = JSON.stringify(price ?? null)
+  const applied = JSON.stringify(range ?? null)
   const [shown, setShown] = useState(applied)
   if (applied !== shown) {
     setShown(applied)
-    setMin(boundText(price?.min))
-    setMax(boundText(price?.max))
+    setMin(boundText(range?.min))
+    setMax(boundText(range?.max))
     setErrors({ min: null, max: null })
+  }
+
+  // A field's problem, or null when it is empty or valid
+  const problem = (text: string) => {
+    const cleaned = clean(text)
+    return cleaned === "" || isValid(cleaned) ? null : error
   }
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
-    const next = { min: priceError(min), max: priceError(max) }
+    const next = { min: problem(min), max: problem(max) }
     setErrors(next)
     if (next.min || next.max) return
-
     // Both fields empty clears the range; the parser also swaps min > max
-    onApply(
-      priceFilter.parse({
-        minPrice: cleanPrice(min),
-        maxPrice: cleanPrice(max),
-      })
-    )
+    onApply(parse({ [keys[0]]: clean(min), [keys[1]]: clean(max) }))
   }
 
+  // "Min price (₱)", "Max VRAM (GB)": the name in lower case, acronyms kept
+  const lowerName = name
+    .split(" ")
+    .map((word) => (/^[A-Z0-9-]+$/.test(word) ? word : word.toLowerCase()))
+    .join(" ")
+  const suffix = ` ${lowerName}${unit ? ` (${unit})` : ""}`
   const fields = [
-    { name: "min", label: "Min", value: min, set: setMin },
-    { name: "max", label: "Max", value: max, set: setMax },
+    { bound: "min", label: "Min", value: min, set: setMin },
+    { bound: "max", label: "Max", value: max, set: setMax },
   ] as const
 
   return (
-    <form onSubmit={submit} noValidate aria-label="Price range">
-      <FieldSet>
-        <FieldLegend variant="label">Price (₱)</FieldLegend>
-        <div className="grid grid-cols-2 gap-2">
-          {fields.map(({ name, label, value, set }) => (
-            <Field key={name} data-invalid={errors[name] !== null}>
-              <FieldLabel htmlFor={`${id}-${name}`} className="font-normal">
-                {label}
-                <span className="sr-only"> price (₱)</span>
-              </FieldLabel>
-              <Input
-                id={`${id}-${name}`}
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder={label}
-                value={value}
-                onChange={(event) => set(event.target.value)}
-                aria-invalid={errors[name] !== null}
-                aria-describedby={
-                  errors[name] ? `${id}-${name}-error` : undefined
-                }
-              />
-            </Field>
-          ))}
-        </div>
-        {(["min", "max"] as const).map(
-          (name) =>
-            errors[name] && (
-              <FieldError key={name} id={`${id}-${name}-error`}>
-                {name === "min" ? "Min" : "Max"}: {errors[name]}
-              </FieldError>
-            )
-        )}
-        <Button type="submit" variant="outline" size="sm">
-          Apply
-        </Button>
-      </FieldSet>
+    <form
+      onSubmit={submit}
+      noValidate
+      aria-label={`${name} range`}
+      className="flex flex-col gap-2"
+    >
+      <div className="grid grid-cols-2 gap-2">
+        {fields.map(({ bound, label, value, set }, index) => (
+          <Field key={bound} data-invalid={errors[bound] !== null}>
+            <FieldLabel htmlFor={`${id}-${bound}`} className="font-normal">
+              {label}
+              <span className="sr-only">{suffix}</span>
+            </FieldLabel>
+            <Input
+              id={`${id}-${bound}`}
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder={placeholders?.[index] ?? label}
+              value={value}
+              onChange={(event) => set(event.target.value)}
+              aria-invalid={errors[bound] !== null}
+              aria-describedby={
+                errors[bound] ? `${id}-${bound}-error` : undefined
+              }
+            />
+          </Field>
+        ))}
+      </div>
+      {fields.map(
+        ({ bound, label }) =>
+          errors[bound] && (
+            <FieldError key={bound} id={`${id}-${bound}-error`}>
+              {label}: {errors[bound]}
+            </FieldError>
+          )
+      )}
+      <Button type="submit" variant="outline" size="sm">
+        Apply
+      </Button>
     </form>
   )
 }

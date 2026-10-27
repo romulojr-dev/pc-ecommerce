@@ -12,7 +12,11 @@ import { ListingSort } from "@/components/catalog/listing-sort"
 import { NoMatches } from "@/components/catalog/no-matches"
 import { Container } from "@/components/layout/container"
 import { getCategoryBySlug } from "@/lib/categories"
-import { activeFilterCount, normalizeFilters } from "@/lib/listing-filters"
+import {
+  activeFilterCount,
+  listingFilters,
+  normalizeFilters,
+} from "@/lib/listing-filters"
 import {
   DEFAULT_SORT,
   isCanonicalQuery,
@@ -37,7 +41,10 @@ export async function generateMetadata({
   const category = await getCategoryBySlug(slug)
   if (!category) notFound()
 
-  const { page, filters } = parseListingParams(await searchParams)
+  const { page, filters } = parseListingParams(
+    category.slug,
+    await searchParams
+  )
 
   return {
     title: page > 1 ? `${category.name} — Page ${page}` : category.name,
@@ -71,11 +78,11 @@ export default async function CategoryPage({
   if (!category) notFound()
 
   const raw = await searchParams
-  const state = parseListingParams(raw)
+  const state = parseListingParams(category.slug, raw)
   const today = manilaToday()
   const [options, { products, total }] = await Promise.all([
-    getFilterOptions(category.id),
-    getCategoryProducts(category.id, state, { today }),
+    getFilterOptions(category, state.filters, { today }),
+    getCategoryProducts(category, state, { today }),
   ])
   const count = pageCount(total)
 
@@ -83,14 +90,21 @@ export default async function CategoryPage({
   // (parsing can't know the options); the products just loaded then match the
   // cleaned filters too, since an unknown brand adds none. Then past the end
   // goes to the last page, and bad or spelled-out values to the canonical URL.
-  const filters = normalizeFilters(state.filters, options)
-  if (listingQuery({ ...state, filters }) !== listingQuery(state)) {
+  const filters = normalizeFilters(
+    state.filters,
+    options,
+    listingFilters(category.slug)
+  )
+  if (
+    listingQuery(category.slug, { ...state, filters }) !==
+    listingQuery(category.slug, state)
+  ) {
     redirect(listingHref(category.slug, { ...state, filters, page: 1 }))
   }
   if (state.page > count) {
     redirect(listingHref(category.slug, { ...state, page: count }))
   }
-  if (!isCanonicalQuery(raw, state)) {
+  if (!isCanonicalQuery(category.slug, raw, state)) {
     redirect(listingHref(category.slug, state))
   }
 

@@ -17,7 +17,7 @@ afterAll(() => db.$disconnect())
 
 async function names(sort: ListingSort) {
   const { products } = await getCategoryProducts(
-    cpuId,
+    { id: cpuId, slug: "cpu" },
     { sort, page: 1, filters: {} },
     { today: FIXTURE_TODAY }
   )
