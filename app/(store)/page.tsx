@@ -9,6 +9,8 @@ import { Container } from "@/components/layout/container"
 import { getMenuCategories } from "@/lib/categories"
 import { getHomeBrands, getHomeProducts } from "@/lib/home"
 import { searchHref } from "@/lib/listing-params"
+import { socialMetadata } from "@/lib/seo/metadata"
+import { siteConfig } from "@/lib/site"
 import { manilaToday } from "@/lib/stock"
 
 // Static, regenerated at most every 10 minutes (docs/specs/016-home-page,
@@ -21,6 +23,11 @@ export const revalidate = 600
 // Absolute through the root layout's metadataBase (docs/specs/017-seo)
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
+  ...socialMetadata({
+    title: siteConfig.name,
+    description: siteConfig.tagline,
+    path: "/",
+  }),
 }
 
 export default async function HomePage() {

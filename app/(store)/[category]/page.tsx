@@ -27,6 +27,7 @@ import {
   VIEW_COOKIE,
 } from "@/lib/listing-params"
 import { getCategoryProducts, getFilterOptions } from "@/lib/products"
+import { socialMetadata } from "@/lib/seo/metadata"
 import { siteConfig } from "@/lib/site"
 import { manilaToday } from "@/lib/stock"
 
@@ -41,18 +42,16 @@ export async function generateMetadata({
 
   const target = categoryTarget(category.slug)
   const { page, filters } = parseListingParams(target, await searchParams)
+  const title = page > 1 ? `${category.name} — Page ${page}` : category.name
+  const description = `Shop ${category.name} in the Philippines at ${siteConfig.name}. Compare prices and stock, then check compatibility in the PC Builder.`
+  // Sort variants list the same products, so they share the unsorted URL
+  const path = listingHref(target, { sort: DEFAULT_SORT, page, filters })
 
   return {
-    title: page > 1 ? `${category.name} — Page ${page}` : category.name,
-    description: `Shop ${category.name} in the Philippines at ${siteConfig.name}. Compare prices and stock, then check compatibility in the PC Builder.`,
-    // Sort variants list the same products, so they share the unsorted URL
-    alternates: {
-      canonical: listingHref(target, {
-        sort: DEFAULT_SORT,
-        page,
-        filters,
-      }),
-    },
+    title,
+    description,
+    alternates: { canonical: path },
+    ...socialMetadata({ title, description, path }),
     // Filter combinations aren't useful search landing pages. Their links stay
     // followable, so crawlers still reach the products (FR-7).
     ...(activeFilterCount(filters) > 0 && {

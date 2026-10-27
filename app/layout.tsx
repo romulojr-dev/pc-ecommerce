@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { env } from "@/lib/env"
+import { socialMetadata } from "@/lib/seo/metadata"
 import { siteConfig } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
@@ -27,6 +28,12 @@ export const metadata: Metadata = {
     default: siteConfig.name,
   },
   description: siteConfig.tagline,
+  // Link-preview defaults for pages that don't set their own (search,
+  // builder); no URL, since that would point them all at the home page
+  ...socialMetadata({
+    title: siteConfig.name,
+    description: siteConfig.tagline,
+  }),
 }
 
 export default function RootLayout({

@@ -35,6 +35,7 @@ import { env } from "@/lib/env"
 import { formatDate, formatWarranty } from "@/lib/format"
 import { getProductPage, type ProductPageData } from "@/lib/products"
 import { type Crumb, breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld"
+import { socialMetadata } from "@/lib/seo/metadata"
 import { categoryHref, productHref, siteConfig } from "@/lib/site"
 import { isBuilderCategory, validateSpecs } from "@/lib/specs"
 import {
@@ -55,14 +56,17 @@ export async function generateMetadata({
   const product = await getProductPage(slug)
   if (!product) notFound()
 
+  const title = product.name
+  const description = product.description
+    ? truncate(product.description, META_DESCRIPTION_MAX)
+    : `${product.name} from ${product.brand}: full specs, warranty and stock at ${siteConfig.name}. Check compatibility in the PC Builder.`
+  const path = productHref(product.category.slug, product.slug)
+
   return {
-    title: product.name,
-    description: product.description
-      ? truncate(product.description, META_DESCRIPTION_MAX)
-      : `${product.name} from ${product.brand}: full specs, warranty and stock at ${siteConfig.name}. Check compatibility in the PC Builder.`,
-    alternates: {
-      canonical: productHref(product.category.slug, product.slug),
-    },
+    title,
+    description,
+    alternates: { canonical: path },
+    ...socialMetadata({ title, description, path, image: product.images[0] }),
   }
 }
 
