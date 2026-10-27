@@ -136,6 +136,17 @@ export async function getCategoryProducts(
     AND: activeWhere(filters, context, listingFilters(category.slug)),
   } satisfies Prisma.ProductWhereInput
 
+  // A category never parses "relevance" (sortsFor); newest is its default
+  return getListingPage(where, sort === "relevance" ? "newest" : sort, page)
+}
+
+// One page of the products matching `where` in a column sort, plus how many
+// match in all: category listings, and search results not sorted by rank
+export async function getListingPage(
+  where: Prisma.ProductWhereInput,
+  sort: ColumnSort,
+  page: number
+): Promise<{ products: ProductCardData[]; total: number }> {
   // Not $transaction: inside one, Prisma loads the relations as concurrent
   // queries on a single pg client, which pg deprecates. A count off by one
   // during a concurrent write is harmless here.
@@ -144,8 +155,7 @@ export async function getCategoryProducts(
     db.product.findMany({
       where,
       select: productCardSelect,
-      // A category never parses "relevance" (sortsFor); newest is its default
-      orderBy: sortOrderBy[sort === "relevance" ? "newest" : sort],
+      orderBy: sortOrderBy[sort],
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),

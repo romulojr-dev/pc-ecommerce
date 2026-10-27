@@ -56,15 +56,21 @@ Shoppers type model numbers in many shapes, and the catalog writes them in many 
 
 | Input | Tokens / tsquery | Finds | Why |
 | --- | --- | --- | --- |
-| `rtx 5070` | `rtx & 5070:*` | RTX 5070 and 5070 Ti cards | Name tokens; plain 5070 ranks first (shorter name) |
+| `rtx 5070` | `rtx & 5070:*` | RTX 5070 and 5070 Ti cards | Name tokens; plain and Ti are a near-tie (see Ranking) |
 | `5070` | `5070:*` | Same | |
 | `RTX5070` | `rtx & 5070:*` | Same | Letter↔digit split |
 | `7800x3d` | `7800 & x & 3 & d` | Ryzen 7 7800X3D only | Same split on both sides; `7800` excludes the 9800X3D |
 | `b650` | `b & 650:*` | B650, B650-A, B650I, B650M boards | Hyphen and suffix letters split off |
-| `16gb ddr5` | `16 & gb & ddr & 5` | DDR5 kits with "16 GB" in the name | Matches "16 GB" and "2×16 GB"; a true 16 GB kit names it twice, so it ranks first |
+| `16gb ddr5` | `16 & gb & ddr & 5` | DDR5 kits with "16 GB" in the name | Matches "16 GB" and "2×16 GB"; a true 16 GB kit has "16 GB" together more often, so it ranks first |
 | `780` | `780:*` | Ryzen 7 7800X3D | Prefix on the last token |
 
-Expected trade-offs: "5070" also matches the Ti (it is one), and a kit of "2×16 GB" matches "16gb". Ranking, not exclusion, handles both.
+Expected trade-offs: "5070" also matches the Ti (it is one), and a kit of "2×16 GB" matches "16gb". Ranking, not exclusion, handles both, as far as word matching can (below).
+
+### Ranking
+
+Best match uses **`ts_rank_cd`** (cover density) with normalization 1 (divided by the log of the entry's length), not `ts_rank`. *Changed during T5:* the fixture tests showed that `ts_rank` barely rewards repeated or adjacent words and penalizes the whole entry's length, so a long SKU pushed the plain RTX 5070 below the Ti, and the 2×16 GB kit above the true 16 GB one. Cover density scores query words found close together higher, which suits model numbers ("16 GB", "RTX 5070"): the true 16 GB kit now ranks first by a clear margin.
+
+**Not guaranteed:** the order of near-equal matches. "RTX 5070" and "RTX 5070 Ti" both contain the query words side by side, so word matching can't tell them apart, and the tests don't check their order. Ranking a plain model above its Ti/Super variant is a Phase 2 rule (see Out of scope).
 
 ## Safety
 
@@ -74,7 +80,7 @@ Expected trade-offs: "5070" also matches the Ti (it is one), and a kit of "2×16
 
 ## Results
 
-- **Query flow** (`lib/search.ts`, server-only): one raw query returns the matching active product ids with `ts_rank` (weights A–D above, normalized by document length). From there everything is typed Prisma with the scope `{ status: "ACTIVE", id: { in: ids } }`: `activeWhere` for filters, `loadFilterOptions(scope, …)` for options and counts (spec 012 made options take a scope for this), `count`, and `findMany` with `productCardSelect` / `toProductCardData`. With no `q`, the scope is all active products. Fine for this catalog; revisit past ~10,000 products.
+- **Query flow** (`lib/search.ts`, server-only): one raw query returns the matching active product ids with `ts_rank_cd` (weights A–D above; see Ranking). From there everything is typed Prisma with the scope `{ status: "ACTIVE", id: { in: ids } }`: `activeWhere` for filters, `loadFilterOptions(scope, …)` for options and counts (spec 012 made options take a scope for this), `count`, and `findMany` with `productCardSelect` / `toProductCardData`. With no `q`, the scope is all active products. Fine for this catalog; revisit past ~10,000 products.
 - **Sort:** **Best match** (relevance: rank, then name, then id) is the default when `q` is set; Newest and both price sorts (effective price) stay available. With no `q`, the default is Newest and `sort=relevance` is ignored. Relevance ordering is applied to the filtered ids before the page is sliced.
 - **Filters:** **Category** first, then the common filters (brand, price, in stock). Category is a new filter object like brand: `category=gpu&category=cpu` (repeated slug, any of them, max 20), options are the categories in the result set with counts that apply the other active filters, unknown slugs are dropped with a redirect. It is not on category pages. Spec filters are not on search (out of scope).
 - **`q` is not a filter.** It defines the scope, is matched in raw SQL, and isn't removed by **Clear all**. This supersedes spec 012's note that search would be "a `q` filter with no options". The state is `{ q, sort, page, filters }`; the URL key order is `q`, filters (list order), `sort`, `page`; defaults omitted; non-canonical URLs redirect, as in spec 008.
@@ -123,7 +129,7 @@ Every `/search` URL gets `robots: { index: false, follow: true }`: result pages 
 
   | Query | Expected |
   | --- | --- |
-  | `rtx 5070`, `5070`, `RTX5070` | F1, F2; F1 first |
+  | `rtx 5070`, `5070`, `RTX5070` | F1, F2 (order not checked, see Ranking) |
   | `7800x3d` | F4 |
   | `x3d` | F4, F5 |
   | `780` | F4 |
@@ -145,4 +151,5 @@ Every `/search` URL gets `robots: { index: false, follow: true }`: result pages 
 ## Out of scope
 
 - Typo tolerance (`pg_trgm` similarity, "did you mean") and autocomplete / suggestions under the box: Phase 2.
+- A ranking rule that puts a plain model above its Ti/Super variants ("rtx 5070" → RTX 5070 before 5070 Ti): Phase 2, with typo tolerance.
 - Synonyms ("graphics card" → GPU), an OR fallback when the AND finds nothing, spec filters on search results, search analytics.

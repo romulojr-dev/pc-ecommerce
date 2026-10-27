@@ -33,6 +33,19 @@ The spike ran in a scratch database (`pcsilicon_spike`) on the local Docker Post
 
 No fallback was needed: neither dropping the index nor building the vector per query.
 
+## Ranking
+
+Best match orders by `ts_rank_cd(searchVector, query, 1)`: cover density, divided by the log of the entry's length. The spec first chose `ts_rank`. The fixture tests in T5 showed why that was wrong: `ts_rank` barely rewards a repeated word or words that appear together, and its length penalty counts the whole entry. So a product with a long SKU lost to one with a short SKU, and a "2×16 GB" kit beat a true "16 GB" kit for `16gb ddr5`.
+
+Scores on the fixtures, for each candidate:
+
+| Query | `ts_rank`, norm. 1 | `ts_rank`, norm. 0 | `ts_rank_cd`, norm. 0 | **`ts_rank_cd`, norm. 1** |
+| --- | --- | --- | --- | --- |
+| `16gb ddr5`: 16 GB kit / 2×16 GB kit | 0.235 / 0.240 | 1.000 / 1.000 (tie) | 0.652 / 0.386 | **0.222 / 0.134** |
+| `rtx 5070`: plain / Ti | 0.217 / 0.239 | 0.996 / 0.996 (tie) | 1.238 / 1.242 | **0.390 / 0.430** |
+
+None of them can tell "RTX 5070" from "RTX 5070 Ti" by word matching alone, since both contain the query words side by side. So the tests don't check the order of near-equal matches. A plain-before-variant rule is Phase 2. Changing the ranking function is a code change in `lib/search.ts` only, with no migration.
+
 ## Alternatives considered
 
 | Option | Why not |

@@ -58,7 +58,7 @@ CLAUDE.md, docs/specs/012-common-filters/spec.md (superseded note on `q`)
 
 ## Server (`lib/search.ts`)
 
-- `matchProducts(q)`: `db.$queryRaw` tagged template — `SELECT id, ts_rank("searchVector", query, 1) AS rank FROM "Product", search_query(${q}) query WHERE status = 'ACTIVE' AND "searchVector" @@ query` → `Map<id, rank>`. Not called when `q` is empty.
+- `matchProducts(q)`: `db.$queryRaw` tagged template — `SELECT id, ts_rank_cd("searchVector", query, 1) AS rank FROM "Product", search_query(${q}) query WHERE status = 'ACTIVE' AND "searchVector" @@ query` → `Map<id, rank>`. Not called when `q` is empty.
 - Scope: `{ status: "ACTIVE", ...(q && { id: { in: [...ranks.keys()] } }) }`.
 - `getSearchFilterOptions` = `loadFilterOptions(scope, filters, ctx, searchFilters)`.
 - `getSearchProducts`: price/newest sorts → same `count` + `findMany` as `getCategoryProducts` (share the `sortOrderBy` helper from `lib/products.ts`). Relevance → `findMany({ select: { id, name } })` with filters, sort by rank desc, name, id; total = length; slice the page; load cards with `productCardSelect` for those ids and reorder.
