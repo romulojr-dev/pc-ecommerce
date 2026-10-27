@@ -132,7 +132,7 @@ export default async function CategoryPage({
           {total === 0 ? (
             <NoMatches
               target={target}
-              categoryName={category.name}
+              everything={`every ${category.name} product`}
               state={state}
             />
           ) : (

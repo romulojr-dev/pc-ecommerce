@@ -9,7 +9,8 @@ The header search box submits to `/search?q=`. Results come from Postgres full-t
 ## Header search box
 
 - `HeaderSearch` becomes a `next/form` `<Form action="/search">` with `role="search"` and one `<input type="search" name="q" maxLength={100}>`. Enter submits it (implicit submission of a one-field form), so it works **without JavaScript** as a plain GET; with JavaScript, `next/form` navigates client-side and prefetches. The search icon stays decorative.
-- **The query stays in the box** on `/search`: the box reads `q` with `useSearchParams` when the path is `/search`, and is empty elsewhere. It is keyed by `q`, so it updates on navigation. `/search` renders per request, so the server HTML already holds the value (no-JS case); on prerendered pages the box sits in a `Suspense` with an empty box as fallback.
+- **The query stays in the box** on `/search`, with or without JavaScript. The store layout has a parallel-route slot, `@search`, for the box. `@search/search/page.tsx` receives `searchParams` and passes the cleaned `q`; `@search/default.tsx` passes `""` on every other page. The box shows the query only while the path is `/search` (`usePathname`), because after a client-side navigation away the slot keeps its last page. It is keyed by the query, so it updates on navigation.
+  - *Changed during T7:* the first design read `q` with `useSearchParams` inside a `Suspense` boundary (needed because the home page is prerendered). On `/search` the server then sent the empty fallback first and streamed the filled box as hidden HTML that only a script swaps in, so without JavaScript the box stayed empty. The slot renders the box on the server with the value, with no `Suspense`, and the home page stays static.
 - An empty submit goes to `/search?q=`, which redirects to `/search` (the prompt).
 
 ## What's searched

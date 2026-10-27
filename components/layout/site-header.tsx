@@ -1,13 +1,8 @@
 import Link from "next/link"
-import { Suspense } from "react"
 import { CircleUserIcon, ShoppingCartIcon, WrenchIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { CategoryMenu } from "@/components/layout/category-menu"
-import {
-  HeaderSearch,
-  HeaderSearchFallback,
-} from "@/components/layout/header-search"
 import { Logo } from "@/components/layout/logo"
 import { siteConfig } from "@/lib/site"
 import { cn, focusRing } from "@/lib/utils"
@@ -18,16 +13,17 @@ const iconLink = cn(
   "[&_svg:not([class*='size-'])]:size-5"
 )
 
-function SiteHeader() {
+type SiteHeaderProps = {
+  // The search box, from the store layout's @search slot (header-search.tsx)
+  search: React.ReactNode
+}
+
+function SiteHeader({ search }: SiteHeaderProps) {
   return (
     <header className="grid h-20 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-6 border-b px-6">
       <div className="flex items-center gap-3">
         <CategoryMenu />
-        {/* Reads the URL's query: prerendered pages (home) render the empty
-            fallback on the server and fill it in the browser */}
-        <Suspense fallback={<HeaderSearchFallback />}>
-          <HeaderSearch />
-        </Suspense>
+        {search}
       </div>
 
       <Link

@@ -2,36 +2,37 @@
 
 import { SearchIcon } from "lucide-react"
 import Form from "next/form"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cleanQuery, MAX_QUERY_LENGTH } from "@/lib/listing-params"
+import { MAX_QUERY_LENGTH } from "@/lib/listing-params"
 import { SEARCH_PATH } from "@/lib/site"
+
+type HeaderSearchProps = {
+  // The cleaned query of /search, from the store layout's @search slot;
+  // "" on every other page (the slot's default)
+  serverQuery: string
+}
 
 // The header's search box (docs/specs/014-search). A GET form to /search, so
 // Enter submits it with or without JavaScript; with it, next/form navigates
 // client-side. On the results page it shows the query that was searched.
-function HeaderSearch() {
+//
+// The query comes from the server through a parallel-route slot, not from
+// useSearchParams: that hook needs a Suspense boundary on prerendered pages,
+// and the boundary sends an empty box first, which stays empty without
+// JavaScript. After a client-side navigation away from /search the slot
+// keeps its last page, so the box also checks the path.
+function HeaderSearch({ serverQuery }: HeaderSearchProps) {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const query =
-    pathname === SEARCH_PATH ? cleanQuery({ q: searchParams.getAll("q") }) : ""
+  const query = pathname === SEARCH_PATH ? serverQuery : ""
 
   // Keyed by the query: defaultValue only applies on mount, so a new search
   // (or leaving the results page) remounts the box with the right text
-  return <SearchBox key={query} query={query} />
-}
-
-// The box without the URL, for the Suspense fallback of prerendered pages,
-// where the search params aren't known until the browser renders
-function HeaderSearchFallback() {
-  return <SearchBox query="" />
-}
-
-function SearchBox({ query }: { query: string }) {
   return (
     <Form
+      key={query}
       action={SEARCH_PATH}
       role="search"
       className="relative w-full max-w-65"
@@ -58,4 +59,4 @@ function SearchBox({ query }: { query: string }) {
   )
 }
 
-export { HeaderSearch, HeaderSearchFallback }
+export { HeaderSearch }

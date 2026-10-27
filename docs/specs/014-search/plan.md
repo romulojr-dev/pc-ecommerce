@@ -31,7 +31,8 @@ test-support/db.ts                           insertSearchFixtures() (F1–F14)
 
 components/catalog/*.tsx                     slug -> target (sort, pagination, chips, sidebar, no-matches)
 components/layout/header-search.tsx          next/form, name="q", prefilled on /search
-components/layout/site-header.tsx            Suspense around HeaderSearch
+components/layout/site-header.tsx            renders the `search` slot
+app/(store)/layout.tsx, @search/default.tsx, @search/search/page.tsx   header box slot (server-rendered query)
 app/(store)/[category]/page.tsx              passes { kind: "category", slug }
 app/(store)/search/page.tsx (new)            states, redirects, metadata (noindex)
 components/catalog/search-prompt.tsx, search-no-results.tsx (new)
@@ -65,7 +66,7 @@ CLAUDE.md, docs/specs/012-common-filters/spec.md (superseded note on `q`)
 
 ## UI
 
-- `HeaderSearch` (client): `<Form action="/search" role="search">`, `<Input type="search" name="q" maxLength={100} key={value} defaultValue={value}>`, value = `q` when `usePathname() === "/search"`. Label "Search parts" kept (home E2E relies on it). `SiteHeader` wraps it in `<Suspense fallback={<empty box>}>` because the home page is prerendered.
+- `HeaderSearch` (client): `<Form action="/search" role="search">`, `<Input type="search" name="q" maxLength={100} key={value} defaultValue={value}>`, value = the slot's `serverQuery` when `usePathname() === "/search"`, else `""`. Label "Search parts" kept (home E2E relies on it). The query reaches it through the `@search` parallel-route slot, not `useSearchParams` + `Suspense` (changed in T7: the Suspense fallback left the box empty without JavaScript; see the spec).
 - `/search` page: `await connection()`; parse → load options + products in parallel → normalize filters / page past end / canonical redirects as on the category page. States per the spec's table (prompt, brand browse, no results with suggestions, `NoMatches` keeping `q`). Heading: `Results for “q”`, single-brand name, or "All products". `generateMetadata`: title, `robots: { index: false, follow: true }`.
 
 ## Verification (end to end)
@@ -73,4 +74,4 @@ CLAUDE.md, docs/specs/012-common-filters/spec.md (superseded note on `q`)
 - `pnpm test` (pure: query cleaning, sorts per target, category filter, URL round trips for both targets).
 - `pnpm test:db` (triggers, the fixed query table, safety inputs, counts).
 - `pnpm test:e2e` (existing suites unchanged after T2; search journey with and without JavaScript).
-- `pnpm build` with the header's Suspense; manual run in `pnpm dev` of each state; `migrate dev` clean on the dev branch.
+- `pnpm build` with the home page still static; manual run in `pnpm dev` of each state; `migrate dev` clean on the dev branch.

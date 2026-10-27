@@ -11,7 +11,8 @@ import { cn, focusRing } from "@/lib/utils"
 
 type NoMatchesProps = {
   target: ListingTarget
-  categoryName: string
+  // What clearing the filters shows, e.g. "every CPU product"
+  everything: string
   state: ListingState
 }
 
@@ -19,12 +20,12 @@ type NoMatchesProps = {
 // sidebar and chips stay on the page, so the shopper can also adjust a single
 // filter; this is the way back to everything. It is announced by the shell's
 // live region, not by this block.
-export function NoMatches({ target, categoryName, state }: NoMatchesProps) {
+export function NoMatches({ target, everything, state }: NoMatchesProps) {
   return (
     <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-8">
       <h2 className="font-medium">No products match your filters.</h2>
       <p className="text-sm text-muted-foreground">
-        Remove a filter, or clear them all to see every {categoryName} product.
+        Remove a filter, or clear them all to see {everything}.
       </p>
       <Link
         href={listingHref(target, clearFilters(state))}

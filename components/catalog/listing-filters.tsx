@@ -55,7 +55,8 @@ type ListingFiltersProps = {
 type Range = { min: number | null; max: number | null }
 
 // The filter sidebar (docs/specs/012-common-filters, docs/specs/013-spec-
-// filters): brand, price and availability, then the category's spec filters
+// filters): category on search results (docs/specs/014-search), brand, price
+// and availability, then a category's spec filters
 // in metadata order, each in a section that can be collapsed. Checkboxes
 // apply at once, one decision per click; ranges apply on submit, since typing
 // "15000" would otherwise navigate five times with nonsense ranges on the
@@ -91,10 +92,21 @@ export function ListingFilters({
 
   const list = filtersFor(target)
   const brand = list.find((filter) => filter.key === "brand")!
+  // Search results only (docs/specs/014-search)
+  const category = list.find((filter) => filter.key === "category")
   const specFilters = list.filter((filter) => filter.spec)
 
   return (
     <aside aria-label="Filters" className="flex flex-col gap-4">
+      {category && (
+        <CheckboxSection
+          title="Category"
+          options={options.category ?? []}
+          selected={filters.category ?? []}
+          onToggle={(value, checked) => toggle(category, value, checked)}
+        />
+      )}
+
       <CheckboxSection
         title="Brand"
         options={options.brand ?? []}

@@ -49,6 +49,8 @@ export type { RawSearchParams }
 export type ListingTarget =
   { kind: "category"; slug: string } | { kind: "search"; q: string }
 
+export type SearchTarget = Extract<ListingTarget, { kind: "search" }>
+
 export function categoryTarget(slug: string): ListingTarget {
   return { kind: "category", slug }
 }
@@ -66,8 +68,18 @@ export function cleanQuery(raw: RawSearchParams): string {
 
 // /search?q=…: the query is read from the URL here, the rest of the state by
 // parseListingParams
-export function searchTarget(raw: RawSearchParams): ListingTarget {
+export function searchTarget(raw: RawSearchParams): SearchTarget {
   return { kind: "search", q: cleanQuery(raw) }
+}
+
+// A search for `q` with nothing else set, e.g. for example searches
+export function searchHref(q: string): string {
+  const target: SearchTarget = { kind: "search", q }
+  return listingHref(target, {
+    sort: defaultSort(target),
+    page: 1,
+    filters: {},
+  })
 }
 
 // The target's filters in URL order
