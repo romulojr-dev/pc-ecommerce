@@ -2,7 +2,11 @@ import { cache } from "react"
 
 import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
-import type { FilterOptions } from "@/lib/listing-filters"
+import {
+  type FilterOptions,
+  type FilterValues,
+  listingFilters,
+} from "@/lib/listing-filters"
 import {
   activeWhere,
   type FilterContext,
@@ -92,27 +96,40 @@ const sortOrderBy: Record<
   "price-desc": [{ effectivePrice: "desc" }, ...tieBreakers],
 }
 
+// The category a listing shows: its id scopes the queries, its slug picks
+// its filters (docs/specs/013-spec-filters)
+export type ListingCategory = { id: string; slug: string }
+
 // The products a category's listing is about, before any filter
 function categoryScope(categoryId: string) {
   return { categoryId, status: "ACTIVE" } satisfies FilterScope
 }
 
-// The options of the category's filters (its brands), from its active
-// products, whatever filters are on
-export function getFilterOptions(categoryId: string): Promise<FilterOptions> {
-  return loadFilterOptions(categoryScope(categoryId))
+// The options of the category's filters (brands, spec values) that its
+// active products have, each counted with the other active filters applied
+export function getFilterOptions(
+  category: ListingCategory,
+  filters: FilterValues,
+  context: FilterContext
+): Promise<FilterOptions> {
+  return loadFilterOptions(
+    categoryScope(category.id),
+    filters,
+    context,
+    listingFilters(category.slug)
+  )
 }
 
 // One page of a category's active products that pass the filters, plus how
 // many there are in all. The caller checks the page against pageCount(total).
 export async function getCategoryProducts(
-  categoryId: string,
+  category: ListingCategory,
   { sort, page, filters }: ListingState,
   context: FilterContext
 ): Promise<{ products: ProductCardData[]; total: number }> {
   const where = {
-    ...categoryScope(categoryId),
-    AND: activeWhere(filters, context),
+    ...categoryScope(category.id),
+    AND: activeWhere(filters, context, listingFilters(category.slug)),
   } satisfies Prisma.ProductWhereInput
 
   // Not $transaction: inside one, Prisma loads the relations as concurrent

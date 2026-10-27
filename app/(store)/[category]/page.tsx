@@ -81,8 +81,8 @@ export default async function CategoryPage({
   const state = parseListingParams(category.slug, raw)
   const today = manilaToday()
   const [options, { products, total }] = await Promise.all([
-    getFilterOptions(category.id),
-    getCategoryProducts(category.id, state, { today }),
+    getFilterOptions(category, state.filters, { today }),
+    getCategoryProducts(category, state, { today }),
   ])
   const count = pageCount(total)
 

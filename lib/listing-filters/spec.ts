@@ -7,7 +7,7 @@ import {
 } from "@/lib/specs"
 
 import { all, first } from "./raw"
-import type { ListingFilter, SpecFilterInfo } from "./types"
+import type { Facet, ListingFilter, SpecFilterInfo } from "./types"
 
 // Spec filters (docs/specs/013-spec-filters): one listing filter per field
 // with a `filter` kind in the display metadata, keyed by the field name. The
@@ -45,8 +45,40 @@ function parseInteger(value: string | undefined): number | null {
 // One value as shoppers read it: "AM5", "Micro-ATX", "32 GB", "GeForce RTX 5070"
 export function specValueLabel(info: SpecFilterInfo, value: string): string {
   if (info.text) return value
-  const typed = info.kind === "values" ? Number(value) : value
+  const isNumber = info.kind === "values" || info.kind === "range"
+  const typed = isNumber ? Number(value) : value
   return formatSpecValue(info.meta, typed) ?? value
+}
+
+// The values one product has for the field: one per list item for contains,
+// "1" for a true boolean, none when the field is missing (an air cooler has
+// no radiator size)
+function specFacet(info: SpecFilterInfo): Facet {
+  const { field, meta, kind, text } = info
+  const order = Object.keys(meta.options ?? {})
+  const compare: Facet["compare"] =
+    kind === "enum" || kind === "contains"
+      ? (a, b) => order.indexOf(a.value) - order.indexOf(b.value)
+      : text
+        ? (a, b) => a.value.localeCompare(b.value, "en")
+        : (a, b) => Number(a.value) - Number(b.value)
+
+  return {
+    values(row) {
+      const specs = row.specs
+      if (typeof specs !== "object" || specs === null) return []
+      const raw = (specs as Record<string, unknown>)[field]
+      if (raw === undefined || raw === null) return []
+      if (kind === "boolean") {
+        return raw === true ? [{ value: "1", label: meta.label }] : []
+      }
+      return [raw].flat().map((item) => {
+        const value = String(item)
+        return { value, label: specValueLabel(info, value) }
+      })
+    },
+    compare,
+  }
 }
 
 // enum, contains and values: repeated keys, any of the values
@@ -74,6 +106,7 @@ function choiceFilter(
   return {
     key: field,
     spec: info,
+    facet: specFacet(info),
 
     parse(raw) {
       const values = all(raw, field)
@@ -121,6 +154,7 @@ function rangeFilter(
   return {
     key: field,
     spec: info,
+    facet: specFacet(info),
 
     parse(raw) {
       let min = parseInteger(first(raw[minKey]))
@@ -160,6 +194,7 @@ function booleanFilter(
   return {
     key: field,
     spec: info,
+    facet: specFacet(info),
 
     parse(raw) {
       return first(raw[field]) === "1" ? true : null
