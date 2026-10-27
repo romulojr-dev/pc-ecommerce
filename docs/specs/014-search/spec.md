@@ -149,6 +149,18 @@ Every `/search` URL gets `robots: { index: false, follow: true }`: result pages 
   Also: F14 never appears; **safety inputs** return without error (`'`, `"`, `\`, `&`, `|`, `!`, `:*`, `(`, `<->`, `'; DROP TABLE "Product"; --`, emoji, only punctuation → none, 1,000 characters); `ddr5` category counts are Memory 2, Motherboard 2; `rtx` + `category=gpu` + `brand=asus` → F3; price sort within a query; the trigger sets the vector on insert and on a name or specs update; renaming a brand or category updates its products' matches.
 - **E2E** (`e2e/search.spec.ts`, seeded DB, role-based locators): on the home page, type "rtx 5070" in the header box and press Enter → URL `/search?q=rtx+5070`, the box still holds "rtx 5070", every card name contains "5070" → check a brand in the sidebar → URL keeps `q` and adds `brand`, every card is that brand → open the first card → its product page heading matches the card. Also: the same search with JavaScript disabled reaches the results; `/search?brand=<seeded brand>` lists only that brand; `/search` shows the prompt; a nonsense query shows "No results for"; the page has a `noindex` robots meta tag.
 
+## Acceptance criteria
+
+From issue #37:
+
+- [x] The header search box works; results at `/search?q=`. It works without JavaScript, and the box keeps the query on the results page.
+- [x] Searches name, brand, model number/SKU and key specs (Postgres full-text search, trigger-maintained `searchVector`, ADR 0005).
+- [x] Results reuse the product card, sort, pagination and the common filters, plus a Category filter with counts; Best match is the default with a query.
+- [x] Works with no query but a brand filter (`/search?brand=asus`), so the home page's "Shop by brand" can link to it.
+- [x] Empty query and no-results states, and "no products match your filters" with Clear all keeping the query.
+- [x] User text is always a bound parameter, and no input makes the query fail; queries are cut to 100 characters.
+- [x] Search pages are `noindex, follow`.
+
 ## Out of scope
 
 - Typo tolerance (`pg_trgm` similarity, "did you mean") and autocomplete / suggestions under the box: Phase 2.

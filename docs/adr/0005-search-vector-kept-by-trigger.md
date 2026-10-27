@@ -33,6 +33,8 @@ The spike ran in a scratch database (`pcsilicon_spike`) on the local Docker Post
 
 No fallback was needed: neither dropping the index nor building the vector per query.
 
+The migration was then applied to the Neon dev branch with `pnpm db:migrate`. A following `migrate dev` again produced an empty migration, and the seed re-ran. Production gets it from `pnpm db:deploy` before the Vercel build ([vercel.json](../../vercel.json)), and the migration's backfill fills the vectors of existing products, so production needs no re-seed.
+
 ## Ranking
 
 Best match orders by `ts_rank_cd(searchVector, query, 1)`: cover density, divided by the log of the entry's length. The spec first chose `ts_rank`. The fixture tests in T5 showed why that was wrong: `ts_rank` barely rewards a repeated word or words that appear together, and its length penalty counts the whole entry. So a product with a long SKU lost to one with a short SKU, and a "2×16 GB" kit beat a true "16 GB" kit for `16gb ddr5`.
