@@ -14,7 +14,11 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import type { FilterOptions, FilterValues } from "@/lib/listing-filters"
+import type {
+  FilterKey,
+  FilterOptions,
+  FilterValues,
+} from "@/lib/listing-filters"
 import {
   MAX_PRICE_PESOS,
   parsePriceBound,
@@ -55,10 +59,7 @@ export function ListingFilters({ slug, state, options }: ListingFiltersProps) {
   // The checkboxes show a click at once, while the new results load
   const [filters, setFilters] = useOptimistic<FilterValues>(state.filters)
 
-  function apply<K extends keyof FilterValues>(
-    key: K,
-    value: FilterValues[K] | null
-  ) {
+  function apply<K extends FilterKey>(key: K, value: FilterValues[K] | null) {
     const next = withFilter(state, key, value)
     navigate(listingHref(slug, next), () => setFilters(next.filters))
   }

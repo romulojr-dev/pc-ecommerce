@@ -1,3 +1,5 @@
+import type { FieldMeta, SpecFilterKind } from "@/lib/specs"
+
 // The shape of a page's awaited searchParams
 export type RawSearchParams = Record<string, string | string[] | undefined>
 
@@ -24,4 +26,15 @@ export type ListingFilter<V> = {
   // Drops values that aren't among the options (parsing is pure, so it can't
   // know them). Only for filters with options. null = nothing left.
   normalize?(value: V, options: FilterOption[]): V | null
+  // Set on spec filters (docs/specs/013-spec-filters): the field they filter,
+  // read by the sidebar and the database half
+  spec?: SpecFilterInfo
+}
+
+export type SpecFilterInfo = {
+  field: string
+  meta: FieldMeta
+  kind: SpecFilterKind
+  // A `values` filter on free text (a chipset) rather than numbers
+  text: boolean
 }

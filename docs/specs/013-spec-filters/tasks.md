@@ -4,7 +4,7 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
 
 - [x] **T1. Filter kinds in the metadata.** `FieldMeta.filter?: SpecFilterKind` replaces `filterable`; kinds per the spec's table in every category file; `lib/specs/fields.ts` with `fieldSchemas` (moved from the test) and `isTextField`; kind-fits-field test; `format.test.ts` and the seed coverage test read `filter`.
   - Verify: `pnpm test`, `pnpm typecheck`.
-- [ ] **T2. Pure spec filters and per-category URL state.** `lib/listing-filters/spec.ts` (one factory per kind), `listingFilters(slug)`, helpers take the list, `FilterValues` widened, `FilterOption.count`; `parseListingParams`/`listingQuery`/`isCanonicalQuery` take the slug; callers updated so the page still works; unit tests per kind, key collisions, round trip.
+- [x] **T2. Pure spec filters and per-category URL state.** `lib/listing-filters/spec.ts` (one factory per kind), `listingFilters(slug)`, helpers take the list, `FilterValues` widened, `FilterOption.count`; `parseListingParams`/`listingQuery`/`isCanonicalQuery` take the slug; callers updated so the page still works; unit tests per kind, key collisions, round trip.
   - Verify: `pnpm test`; `/cpu?socket=AM5` in `pnpm dev` keeps the param (no filtering yet), `/cpu?threads=8` redirects to `/cpu`.
 - [ ] **T3. Queries and counts.** Spec `where` per kind in `server.ts`; facet queries with `countFacets` (pure, unit-tested); brand options with counts; `getFilterOptions`/`getCategoryProducts` take slug and filters; `insertSpecFixtures`; `spec-filters.db.test.ts` with every case in the spec, the parameter check and the injection case; `server.db.test.ts` updated.
   - Verify: `pnpm test:db`.

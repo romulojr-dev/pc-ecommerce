@@ -2,7 +2,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
 
 import type {
-  FilterKey,
+  CommonFilterKey,
   FilterOption,
   FilterOptions,
   FilterValues,
@@ -23,7 +23,7 @@ export type FilterContext = {
 // The products a listing or a facet is about, e.g. a category's active ones
 export type FilterScope = Prisma.ProductWhereInput
 
-type ServerFilter<K extends FilterKey> = {
+type ServerFilter<K extends CommonFilterKey> = {
   where(
     value: NonNullable<FilterValues[K]>,
     context: FilterContext
@@ -32,7 +32,7 @@ type ServerFilter<K extends FilterKey> = {
   options?(scope: FilterScope): Promise<FilterOption[]>
 }
 
-const serverFilters: { [K in FilterKey]: ServerFilter<K> } = {
+const serverFilters: { [K in CommonFilterKey]: ServerFilter<K> } = {
   brand: {
     where: (slugs) => ({ brand: { slug: { in: slugs } } }),
 
@@ -72,7 +72,7 @@ const serverFilters: { [K in FilterKey]: ServerFilter<K> } = {
   },
 }
 
-const FILTER_KEYS = Object.keys(serverFilters) as FilterKey[]
+const FILTER_KEYS = Object.keys(serverFilters) as CommonFilterKey[]
 
 // One condition per active filter, to go in the query's AND so that two
 // filters never fight over the same key (inStock has an OR of its own)

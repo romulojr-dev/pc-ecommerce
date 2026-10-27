@@ -4,13 +4,15 @@ import {
   activeFilterChips,
   activeFilterCount,
   commonFilters,
-  type FilterKey,
+  type FilterList,
   type FilterOptions,
   normalizeFilters,
   parseFilters,
   serializeFilters,
   setFilter,
 } from "./index"
+
+const common: FilterList = Object.values(commonFilters)
 
 const options: FilterOptions = {
   brand: [
@@ -33,22 +35,25 @@ describe("commonFilters", () => {
 
 describe("parseFilters and serializeFilters", () => {
   it("parse nothing from an empty query, and write nothing for it", () => {
-    expect(parseFilters({})).toEqual({})
-    expect(serializeFilters({})).toEqual([])
+    expect(parseFilters({}, common)).toEqual({})
+    expect(serializeFilters({}, common)).toEqual([])
   })
 
   it("write in filter order whatever the order they were given", () => {
-    const filters = parseFilters({
-      inStock: "1",
-      maxPrice: "500",
-      brand: ["intel", "amd"],
-    })
+    const filters = parseFilters(
+      {
+        inStock: "1",
+        maxPrice: "500",
+        brand: ["intel", "amd"],
+      },
+      common
+    )
     expect(filters).toEqual({
       brand: ["amd", "intel"],
       price: { min: null, max: 500 },
       inStock: true,
     })
-    expect(serializeFilters(filters)).toEqual([
+    expect(serializeFilters(filters, common)).toEqual([
       ["brand", "amd"],
       ["brand", "intel"],
       ["maxPrice", "500"],
@@ -62,7 +67,8 @@ describe("normalizeFilters", () => {
     expect(
       normalizeFilters(
         { brand: ["amd", "nope"], price: { min: 1, max: null }, inStock: true },
-        options
+        options,
+        common
       )
     ).toEqual({
       brand: ["amd"],
@@ -72,13 +78,13 @@ describe("normalizeFilters", () => {
   })
 
   it("removes the filter when nothing is left", () => {
-    expect(normalizeFilters({ brand: ["nope"] }, options)).toEqual({})
+    expect(normalizeFilters({ brand: ["nope"] }, options, common)).toEqual({})
   })
 
   it("leaves filters without a normalize step, or without options, alone", () => {
     const filters = { brand: ["nope"], inStock: true } as const
     expect(
-      normalizeFilters({ ...filters, brand: [...filters.brand] }, {})
+      normalizeFilters({ ...filters, brand: [...filters.brand] }, {}, common)
     ).toEqual(filters)
   })
 })
@@ -114,7 +120,8 @@ describe("activeFilterChips", () => {
   it("has a chip per brand, one for the price and one for stock", () => {
     const chips = activeFilterChips(
       { ...filters, brand: [...filters.brand] },
-      options
+      options,
+      common
     )
     expect(chips.map(({ key, label }) => [key, label])).toEqual([
       ["brand", "Brand: AMD"],
@@ -127,7 +134,8 @@ describe("activeFilterChips", () => {
   it("gives the filters as they are once a chip is removed", () => {
     const chips = activeFilterChips(
       { ...filters, brand: [...filters.brand] },
-      options
+      options,
+      common
     )
     const byLabel = (label: string) =>
       chips.find((chip) => chip.label === label)!.filters
@@ -148,11 +156,6 @@ describe("activeFilterChips", () => {
   })
 
   it("has no chips without filters", () => {
-    expect(activeFilterChips({}, options)).toEqual([])
-  })
-
-  it("is typed by filter key", () => {
-    const key: FilterKey = "brand"
-    expect(key in commonFilters).toBe(true)
+    expect(activeFilterChips({}, options, common)).toEqual([])
   })
 })

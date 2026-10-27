@@ -1,7 +1,11 @@
 import { XIcon } from "lucide-react"
 import Link from "next/link"
 
-import { type FilterOptions, activeFilterChips } from "@/lib/listing-filters"
+import {
+  type FilterOptions,
+  activeFilterChips,
+  listingFilters,
+} from "@/lib/listing-filters"
 import {
   clearFilters,
   type ListingState,
@@ -26,7 +30,7 @@ export function ActiveFilters({
   options,
   className,
 }: ActiveFiltersProps) {
-  const chips = activeFilterChips(state.filters, options)
+  const chips = activeFilterChips(state.filters, options, listingFilters(slug))
   if (chips.length === 0) return null
 
   const link = cn(
