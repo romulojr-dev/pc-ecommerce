@@ -9,5 +9,5 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
 - [x] **T3. On sale filter.** `onSale` common filter (pure, server, sidebar checkbox); `/search?onSale=1` titled "Deals"; unit and integration tests. _Verify:_ `pnpm test`, `pnpm test:db`; `/cpu?onSale=1` in dev.
 - [x] **T4. Home queries and caching.** `lib/home.ts` (featured, deals, brands; cached with `PRODUCTS_TAG`, 10 min); `lib/home.db.test.ts`. _Verify:_ `pnpm test:db`.
 - [x] **T5. Home page and builder placeholder.** Hero with the wafer SVG, category tiles (shared icon map), Featured, Deals, brands, trust strip; `/builder`. _Verify:_ screenshots of `/` and `/builder` (light, dark); keyboard and axe; `pnpm build` shows `/` with a 10-minute revalidate.
-- [ ] **T6. E2E.** Home sections and links, "View all deals", summary line on `/cpu`. _Verify:_ full `pnpm test:e2e`.
+- [x] **T6. E2E.** Home sections and links, "View all deals", summary line on `/cpu`. _Verify:_ full `pnpm test:e2e`.
 - [ ] **T7. Docs and wrap-up.** ADR 0003 row, CLAUDE.md, tick the spec's criteria; `pnpm format`, `lint`, `typecheck`, `test`, `test:db`, `build`, `test:e2e`; push and open the PR; Lighthouse desktop on the preview. After merge: `pnpm db:seed` on production.

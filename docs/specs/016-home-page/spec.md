@@ -23,7 +23,7 @@ The page is one `<main>` (from the store layout) with one `h1` in the hero. Ever
 ### 1. Hero
 
 - `h1` "Build a PC that just works.", the short text from the design, and two links styled as buttons:
-  - **Build your PC** → `/builder`, with a small "Coming soon" text label next to it (the issue asks for the label until the Builder epic). Accessible name: "Build your PC, coming soon".
+  - **Build your PC** → `/builder`, with a small "Coming soon" text label next to it (the issue asks for the label until the Builder epic). Accessible name: "Build your PC Coming soon", the visible text.
   - **Shop deals** → `#deals`. Smooth scroll only when `prefers-reduced-motion` allows it (CSS `scroll-behavior`). Not rendered when there are no deals.
 - **Illustration:** an original inline SVG of a wafer: a circle filled with a die grid (`<pattern>`), a dashed outer ring and three callouts (CPU, GPU, RAM) on chips. Server-rendered, no JavaScript, no network request, no animation or filters, under 10 KB. Strokes and fills use `currentColor` and token classes, so it follows dark mode. Decorative: `aria-hidden="true"`; the callout words are in the SVG, not needed by screen readers. The `h1` text, not the SVG, is the LCP element.
 
