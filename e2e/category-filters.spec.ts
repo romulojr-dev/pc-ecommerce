@@ -3,9 +3,9 @@ import type { Page } from "@playwright/test"
 import { cardPrices, resultCount } from "./listing-helpers"
 import { expect, test } from "./test"
 
-// Category filters (docs/specs/012-common-filters). Needs a seeded database
-// (CI seeds after migrating). Checks behaviour, not exact catalog data, so
-// fixture edits don't break it. The queries themselves are covered by the
+// Category filters (docs/specs/012-common-filters, docs/specs/013-spec-
+// filters). Needs a seeded database (CI seeds after migrating). Checks
+// behaviour, not exact catalog data, so fixture edits don't break it. The queries themselves are covered by the
 // integration tests (pnpm test:db); here it is the URL, the controls and the
 // page working together. Assumes what the seed guarantees: CPUs from AMD and
 // Intel, at least one CPU that isn't in stock (a pre-order), and more than 24
@@ -245,4 +245,82 @@ test("the checkboxes are named in the server-rendered HTML", async ({
     // ...and the label it points at is in the HTML
     expect(html).toContain(`id="${labelledBy}"`)
   }
+})
+
+// Spec filters (docs/specs/013-spec-filters). Assumes GPUs with several VRAM
+// sizes from more than one chipset brand, and DDR4 and DDR5 memory (spec 011).
+
+test("a spec range filter applies on Enter and its chip removes it", async ({
+  page,
+}) => {
+  await page.goto("/gpu")
+  const before = await resultCount(page)
+
+  await sidebar(page).getByRole("textbox", { name: "Min VRAM (GB)" }).fill("12")
+  await page.keyboard.press("Enter")
+  await expect(page).toHaveURL("/gpu?minVramGb=12")
+  // The unit is joined with a non-breaking space, which \s matches
+  const chip = page.getByRole("link", {
+    name: /Remove filter: VRAM: from 12\sGB/,
+  })
+  await expect(chip).toBeVisible()
+  expect(await resultCount(page)).toBeLessThan(before)
+
+  await chip.click()
+  await expect(page).toHaveURL("/gpu")
+  await expect(
+    sidebar(page).getByRole("textbox", { name: "Min VRAM (GB)" })
+  ).toHaveValue("")
+})
+
+test("options the other filters rule out are disabled", async ({ page }) => {
+  await page.goto("/gpu")
+  await expect(
+    sidebar(page).getByRole("checkbox", { disabled: true })
+  ).toHaveCount(0)
+
+  const amd = sidebar(page).getByRole("checkbox", { name: "AMD" })
+  await amd.click()
+  await expect(page).toHaveURL("/gpu?chipsetBrand=AMD")
+
+  // NVIDIA chipsets have no AMD card; the checked option itself stays enabled
+  const disabled = sidebar(page).getByRole("checkbox", { disabled: true })
+  await expect(disabled.first()).toBeVisible()
+  await expect(disabled.first()).toHaveAccessibleDescription("0 products")
+  await expect(amd).toBeEnabled()
+  // Its own filter doesn't count against it, so NVIDIA can still be added
+  await expect(
+    sidebar(page).getByRole("checkbox", { name: "NVIDIA" })
+  ).toBeEnabled()
+})
+
+test("fields that aren't filters, and bad values, redirect away", async ({
+  page,
+}) => {
+  await page.goto("/cpu?threads=8")
+  await expect(page).toHaveURL("/cpu")
+  await page.goto("/gpu?chipsetBrand=nvidia&maxLengthMm=abc")
+  await expect(page).toHaveURL("/gpu")
+})
+
+test("spec sections collapse and filter by keyboard", async ({ page }) => {
+  await page.goto("/memory")
+  const section = sidebar(page).getByRole("button", { name: "Memory type" })
+  const ddr4 = sidebar(page).getByRole("checkbox", { name: "DDR4" })
+
+  // Enter on a section title closes and reopens it
+  await section.focus()
+  await page.keyboard.press("Enter")
+  await expect(section).toHaveAttribute("aria-expanded", "false")
+  await expect(ddr4).toBeHidden()
+  await page.keyboard.press("Enter")
+  await expect(section).toHaveAttribute("aria-expanded", "true")
+
+  // The section's first option is next; Space checks it and keeps the focus
+  await page.keyboard.press("Tab")
+  await expect(ddr4).toBeFocused()
+  await page.keyboard.press("Space")
+  await expect(page).toHaveURL("/memory?memoryType=DDR4")
+  await expect(ddr4).toBeChecked()
+  await expect(ddr4).toBeFocused()
 })
