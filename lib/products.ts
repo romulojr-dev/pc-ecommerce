@@ -86,9 +86,13 @@ const tieBreakers: Prisma.ProductOrderByWithRelationInput[] = [
   { id: "asc" },
 ]
 
+// The sorts a typed orderBy can do. Best match orders by search rank, which
+// only lib/search.ts has (docs/specs/014-search).
+export type ColumnSort = Exclude<ListingSort, "relevance">
+
 // Price sorts use the price the shopper pays (ADR 0004), like the price filter
-const sortOrderBy: Record<
-  ListingSort,
+export const sortOrderBy: Record<
+  ColumnSort,
   Prisma.ProductOrderByWithRelationInput[]
 > = {
   newest: [{ createdAt: "desc" }, ...tieBreakers],
@@ -140,7 +144,8 @@ export async function getCategoryProducts(
     db.product.findMany({
       where,
       select: productCardSelect,
-      orderBy: sortOrderBy[sort],
+      // A category never parses "relevance" (sortsFor); newest is its default
+      orderBy: sortOrderBy[sort === "relevance" ? "newest" : sort],
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),

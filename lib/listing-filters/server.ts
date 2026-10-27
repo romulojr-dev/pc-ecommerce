@@ -126,6 +126,7 @@ export function activeWhere(
 const facetSelect = {
   specs: true,
   brand: { select: { slug: true, name: true } },
+  category: { select: { slug: true, name: true } },
 } satisfies Prisma.ProductSelect
 
 // The options of every filter with a facet, with counts

@@ -15,7 +15,7 @@ import {
   type ListingTarget,
   listingHref,
   SORT_LABELS,
-  SORTS,
+  sortsFor,
 } from "@/lib/listing-params"
 
 type ListingSortProps = {
@@ -23,11 +23,16 @@ type ListingSortProps = {
   state: ListingState
 }
 
-// The listing's sort control. A new sort starts again at page 1 and keeps the
+// The listing's sort control, with the sorts its target offers (Best match
+// only for a search). A new sort starts again at page 1 and keeps the
 // filters.
 export function ListingSort({ target, state }: ListingSortProps) {
   const router = useRouter()
   const labelId = useId()
+  const sorts = sortsFor(target)
+  const items = Object.fromEntries(
+    sorts.map((sort) => [sort, SORT_LABELS[sort]])
+  )
 
   return (
     <div className="flex items-center gap-2">
@@ -35,7 +40,7 @@ export function ListingSort({ target, state }: ListingSortProps) {
         Sort by
       </span>
       <Select
-        items={SORT_LABELS}
+        items={items}
         value={state.sort}
         onValueChange={(value) => {
           if (value) {
@@ -47,7 +52,7 @@ export function ListingSort({ target, state }: ListingSortProps) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {SORTS.map((value) => (
+          {sorts.map((value) => (
             <SelectItem key={value} value={value}>
               {SORT_LABELS[value]}
             </SelectItem>

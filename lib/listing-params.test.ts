@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import {
   categoryTarget,
+  cleanQuery,
   clearFilters,
+  defaultSort,
   isCanonicalQuery,
   type ListingState,
   listingHref,
@@ -12,6 +14,8 @@ import {
   paginationItems,
   parseListingParams,
   parseView,
+  searchTarget,
+  sortsFor,
   withFilter,
 } from "@/lib/listing-params"
 
@@ -268,6 +272,145 @@ describe("isCanonicalQuery", () => {
         plain({ sort: "price-asc", filters: { inStock: true } })
       )
     ).toBe(false)
+  })
+})
+
+describe("search (docs/specs/014-search)", () => {
+  const search = (q: string) => searchTarget({ q })
+
+  describe("cleanQuery", () => {
+    it("is empty without a query", () => {
+      expect(cleanQuery({})).toBe("")
+      expect(cleanQuery({ q: "" })).toBe("")
+      expect(cleanQuery({ q: "   " })).toBe("")
+    })
+
+    it("trims and collapses whitespace, keeping the case", () => {
+      expect(cleanQuery({ q: "  RTX \t\n 5070  " })).toBe("RTX 5070")
+    })
+
+    it("turns control characters into spaces", () => {
+      expect(cleanQuery({ q: "rtx\u00005070\u0007x" })).toBe("rtx 5070 x")
+    })
+
+    it("uses the first of repeated queries", () => {
+      expect(cleanQuery({ q: ["b650", "x670"] })).toBe("b650")
+    })
+
+    it("keeps at most 100 characters, counting emoji as one", () => {
+      expect(cleanQuery({ q: "a".repeat(300) })).toBe("a".repeat(100))
+      expect(cleanQuery({ q: "😀".repeat(150) })).toBe("😀".repeat(100))
+      // A cut that ends on a space doesn't leave it behind
+      expect(cleanQuery({ q: `${"a".repeat(99)} b` })).toBe("a".repeat(99))
+    })
+
+    it("keeps odd characters for the database to normalize", () => {
+      expect(cleanQuery({ q: "a&b|c:* '\"(" })).toBe("a&b|c:* '\"(")
+    })
+  })
+
+  describe("sorts", () => {
+    it("offers Best match first, and defaults to it, only with a query", () => {
+      expect(sortsFor(search("rtx"))).toEqual([
+        "relevance",
+        "newest",
+        "price-asc",
+        "price-desc",
+      ])
+      expect(defaultSort(search("rtx"))).toBe("relevance")
+      expect(sortsFor(search(""))).toEqual([
+        "newest",
+        "price-asc",
+        "price-desc",
+      ])
+      expect(defaultSort(search(""))).toBe("newest")
+    })
+
+    it("never offers Best match on a category", () => {
+      expect(sortsFor(categoryTarget("cpu"))).not.toContain("relevance")
+      expect(defaultSort(categoryTarget("cpu"))).toBe("newest")
+      expect(
+        parseListingParams(categoryTarget("cpu"), { sort: "relevance" }).sort
+      ).toBe("newest")
+    })
+
+    it("ignores Best match without a query", () => {
+      expect(parseListingParams(search(""), { sort: "relevance" }).sort).toBe(
+        "newest"
+      )
+    })
+  })
+
+  describe("URL state", () => {
+    it("parses the category filter, then the common ones", () => {
+      expect(
+        parseListingParams(search("rtx"), {
+          q: "rtx",
+          category: ["gpu", "cpu"],
+          brand: "asus",
+          inStock: "1",
+          sort: "price-asc",
+          page: "2",
+        })
+      ).toEqual({
+        sort: "price-asc",
+        page: 2,
+        filters: { category: ["cpu", "gpu"], brand: ["asus"], inStock: true },
+      })
+    })
+
+    it("ignores spec filters, which search doesn't have", () => {
+      expect(
+        parseListingParams(search("rtx"), { socket: "AM5" }).filters
+      ).toEqual({})
+    })
+
+    it("writes q first, then filters, sort and page; defaults omitted", () => {
+      const state: ListingState = {
+        sort: "price-desc",
+        page: 2,
+        filters: { brand: ["asus"], category: ["gpu"] },
+      }
+      expect(listingHref(search("rtx 5070"), state)).toBe(
+        "/search?q=rtx+5070&category=gpu&brand=asus&sort=price-desc&page=2"
+      )
+      expect(listingHref(search("rtx"), plain({ sort: "relevance" }))).toBe(
+        "/search?q=rtx"
+      )
+      expect(listingHref(search(""), plain())).toBe("/search")
+      expect(
+        listingHref(search(""), plain({ filters: { brand: ["asus"] } }))
+      ).toBe("/search?brand=asus")
+    })
+
+    it("round-trips through the parser", () => {
+      const target = search("16gb ddr5")
+      const state: ListingState = {
+        sort: "newest",
+        page: 3,
+        filters: {
+          category: ["memory"],
+          price: { min: 3000, max: null },
+        },
+      }
+      const raw = Object.fromEntries(
+        new URLSearchParams(listingQuery(target, state))
+      )
+      expect(searchTarget(raw)).toEqual(target)
+      expect(parseListingParams(target, raw)).toEqual(state)
+    })
+
+    it("accepts only the cleaned, canonical query", () => {
+      const target = search("rtx 5070")
+      const state = plain({ sort: "relevance" })
+      expect(isCanonicalQuery(target, { q: "rtx 5070" }, state)).toBe(true)
+      expect(isCanonicalQuery(target, { q: " rtx  5070 " }, state)).toBe(false)
+      expect(
+        isCanonicalQuery(target, { q: "rtx 5070", sort: "relevance" }, state)
+      ).toBe(false)
+      expect(isCanonicalQuery(search(""), { q: "" }, plain())).toBe(false)
+      expect(isCanonicalQuery(search(""), {}, plain())).toBe(true)
+    })
   })
 })
 

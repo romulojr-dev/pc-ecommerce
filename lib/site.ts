@@ -8,6 +8,9 @@ export function productHref(categorySlug: string, productSlug: string) {
   return `${categoryHref(categorySlug)}/${productSlug}`
 }
 
+// Search results (docs/specs/014-search); the header's search box submits here
+export const SEARCH_PATH = "/search"
+
 // True on the category's page and on its products' pages (/cpu, /cpu/…)
 export function isCurrentCategory(pathname: string, slug: string) {
   return pathname.split("/")[1] === slug

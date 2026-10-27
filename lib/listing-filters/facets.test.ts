@@ -16,6 +16,7 @@ function facetOf(slug: string, key: string): Facet {
 const row = (specs: unknown, brand = "alpha"): FacetRow => ({
   specs,
   brand: { slug: brand, name: brand.toUpperCase() },
+  category: { slug: "cpu", name: "CPU" },
 })
 
 describe("countFacet", () => {
