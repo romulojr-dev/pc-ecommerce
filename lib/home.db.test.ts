@@ -187,19 +187,24 @@ describe("no duplicates", () => {
 })
 
 describe("brands", () => {
-  it("lists brands with an active product, by name", async () => {
-    const [{ id: zetaId }, { id: draftOnlyId }] = await Promise.all([
-      db.brand.create({ data: { name: "Zeta", slug: "zeta" } }),
-      db.brand.create({ data: { name: "Draft only", slug: "draft-only" } }),
-      db.brand.create({ data: { name: "Empty", slug: "empty" } }),
-    ])
+  it("lists brands with an active product, by name ignoring case", async () => {
+    const [{ id: zetaId }, { id: draftOnlyId }, , { id: betaId }] =
+      await Promise.all([
+        db.brand.create({ data: { name: "Zeta", slug: "zeta" } }),
+        db.brand.create({ data: { name: "Draft only", slug: "draft-only" } }),
+        db.brand.create({ data: { name: "Empty", slug: "empty" } }),
+        // Lowercase, like "be quiet!": sorts between Alpha and Zeta
+        db.brand.create({ data: { name: "beta", slug: "beta" } }),
+      ])
     await insert(
       { name: "Z1", price: 1000, brandId: zetaId },
       { name: "A1", price: 1000 },
+      { name: "B1", price: 1000, brandId: betaId },
       { name: "D1", price: 1000, brandId: draftOnlyId, status: "DRAFT" }
     )
     expect(await loadHomeBrands()).toEqual([
       { name: "Alpha", slug: "alpha" },
+      { name: "beta", slug: "beta" },
       { name: "Zeta", slug: "zeta" },
     ])
   })

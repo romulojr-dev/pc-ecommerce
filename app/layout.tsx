@@ -34,7 +34,9 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "font-sans antialiased",
+        // Smooth scrolling for in-page links (the home page's "Shop deals"),
+        // only when the visitor allows motion
+        "font-sans antialiased motion-safe:scroll-smooth",
         fontSans.variable,
         fontMono.variable
       )}

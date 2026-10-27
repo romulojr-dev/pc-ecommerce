@@ -14,6 +14,7 @@ import {
   paginationItems,
   parseListingParams,
   parseView,
+  searchHref,
   searchTarget,
   sortsFor,
   withFilter,
@@ -414,6 +415,17 @@ describe("search (docs/specs/014-search)", () => {
       expect(isCanonicalQuery(search(""), { q: "" }, plain())).toBe(false)
       expect(isCanonicalQuery(search(""), {}, plain())).toBe(true)
     })
+  })
+})
+
+describe("searchHref", () => {
+  it("links a search with the default sort", () => {
+    expect(searchHref("rtx 5070")).toBe("/search?q=rtx+5070")
+  })
+
+  it("links browsing without a query (docs/specs/016-home-page)", () => {
+    expect(searchHref("", { brand: ["amd"] })).toBe("/search?brand=amd")
+    expect(searchHref("", { onSale: true })).toBe("/search?onSale=1")
   })
 })
 

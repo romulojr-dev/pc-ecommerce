@@ -73,13 +73,15 @@ async function loadDeals(excludeIds: string[]): Promise<ProductCardData[]> {
     .map(toProductCardData)
 }
 
-// Brands with at least one active product, by name, for Shop by brand
-export function loadHomeBrands(): Promise<HomeBrand[]> {
-  return db.brand.findMany({
+// Brands with at least one active product, for Shop by brand. Sorted here,
+// like the brand filter's options: the database orders by case, which
+// would put "be quiet!" after "Western Digital".
+export async function loadHomeBrands(): Promise<HomeBrand[]> {
+  const brands = await db.brand.findMany({
     where: { products: { some: { status: "ACTIVE" } } },
-    orderBy: { name: "asc" },
     select: { name: true, slug: true },
   })
+  return brands.sort((a, b) => a.name.localeCompare(b.name, "en"))
 }
 
 // The cached versions the page uses. The loaders above are exported for the
