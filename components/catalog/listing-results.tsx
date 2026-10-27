@@ -1,7 +1,7 @@
 "use client"
 
 import { LayoutGridIcon, ListIcon } from "lucide-react"
-import { useState } from "react"
+import { Fragment, useState } from "react"
 
 import { ProductCard } from "@/components/product/product-card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -49,9 +49,13 @@ export function ListingResults({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        {summary}
+        {/* Elements from the server can arrive as lazy references when their
+            data streams in late (a slow connection), and React 19.3 then
+            misses that they were listed in place and warns about missing keys
+            (issue #44). As a Fragment's only child they are in no list. */}
+        <Fragment>{summary}</Fragment>
         <div className="flex items-center gap-4">
-          {controls}
+          <Fragment>{controls}</Fragment>
           <ToggleGroup
             aria-label="View"
             variant="outline"

@@ -1,6 +1,5 @@
-import { expect, test } from "@playwright/test"
-
 import { builderCategories } from "../lib/specs/registry"
+import { expect, test } from "./test"
 
 // The seed creates the category rows from the registry, so it is the source of
 // the expected names and order. Needs a seeded database (CI seeds after

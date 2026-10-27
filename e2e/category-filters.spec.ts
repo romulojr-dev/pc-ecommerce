@@ -1,6 +1,7 @@
-import { expect, type Page, test } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
 import { cardPrices, resultCount } from "./listing-helpers"
+import { expect, test } from "./test"
 
 // Category filters (docs/specs/012-common-filters). Needs a seeded database
 // (CI seeds after migrating). Checks behaviour, not exact catalog data, so

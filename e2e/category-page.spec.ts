@@ -1,6 +1,5 @@
-import { expect, test } from "@playwright/test"
-
 import { cardPrices } from "./listing-helpers"
+import { expect, test } from "./test"
 
 // Category listing (docs/specs/008-category-listing). Needs a seeded database
 // (CI seeds after migrating). Checks behaviour, not exact prices or stock, so
@@ -83,6 +82,40 @@ test("sorting by price is kept in the URL", async ({ page }) => {
     "Price: high to low"
   )
   expect(await cardPrices(page)).toEqual(prices)
+})
+
+// Issue #44: React warned about keys in ListingResults when a sort's new
+// results streamed in over a slow connection, so throttle the network after
+// the page has loaded. The test fixture (e2e/test.ts) fails on the warning.
+test("changing the sort on a slow connection logs no key warning", async ({
+  page,
+}) => {
+  const cdp = await page.context().newCDPSession(page)
+  for (const slug of ["cpu", "gpu"]) {
+    await cdp.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: 0,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    })
+    await page.goto(`/${slug}`)
+    await page.waitForLoadState("networkidle")
+    // About 1 Mbit/s, so the results arrive in several pieces
+    await cdp.send("Network.emulateNetworkConditions", {
+      offline: false,
+      latency: 20,
+      downloadThroughput: 128_000,
+      uploadThroughput: 128_000,
+    })
+
+    const sort = page.getByRole("combobox", { name: "Sort by" })
+    for (const name of ["Price: high to low", "Price: low to high"]) {
+      await sort.click()
+      await page.getByRole("option", { name }).click()
+      await expect(sort).toContainText(name, { timeout: 15_000 })
+      await page.waitForLoadState("networkidle")
+    }
+  }
 })
 
 test("invalid and out-of-range parameters fall back to the canonical URL", async ({
