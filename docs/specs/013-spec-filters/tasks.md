@@ -12,5 +12,5 @@ Work top to bottom, one task at a time, and stop after each. Each task leaves `p
   - Verify in `pnpm dev`: `/gpu`, `/memory`, `/case`, `/cpu-cooler`: filters apply, counts change with other filters, zero options disabled, chips and Clear all, sections toggle by keyboard.
 - [x] **T5. E2E.** `e2e/epic-browse.spec.ts` (menu → Memory → DDR5 → product); spec-filter scenarios in `e2e/category-filters.spec.ts` (range, disabled option, ignored field, keyboard).
   - Verify: `pnpm test:e2e`, all specs.
-- [ ] **T6. Docs.** CLAUDE.md (per-category filter list, spec filters, counts, `FieldMeta.filter`), spec 012's superseded line, tick the spec's acceptance criteria.
+- [x] **T6. Docs.** CLAUDE.md (per-category filter list, spec filters, counts, `FieldMeta.filter`), spec 012's superseded line, tick the spec's acceptance criteria.
 - [ ] **T7. Build and wrap-up.** `pnpm build`, `pnpm format`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm test:e2e`; browser check (themes, 1280/1024 px, keyboard, axe); push and open the PR.

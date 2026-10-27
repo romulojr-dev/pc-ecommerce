@@ -156,11 +156,11 @@ Docs: CLAUDE.md's listing-filter note (per-category list, spec filters, counts) 
 
 ## Acceptance criteria
 
-- [ ] Spec filters come from `FieldMeta.filter` for every builder category; no page lists fields.
-- [ ] `enum`, `values`, `range`, `boolean` and `contains` filters work, combine with brand, price, in stock, sort and pagination, and live in the URL.
-- [ ] Brand and spec options show counts that reflect the other active filters. Options the category doesn't have are hidden; options ruled out by other filters are disabled; checked options stay enabled.
-- [ ] Only metadata fields are accepted from the URL; values are bound parameters.
-- [ ] Queries filter on the JSONB `specs` column (index: see the finding).
+- [x] Spec filters come from `FieldMeta.filter` for every builder category; no page lists fields.
+- [x] `enum`, `values`, `range`, `boolean` and `contains` filters work, combine with brand, price, in stock, sort and pagination, and live in the URL.
+- [x] Brand and spec options show counts that reflect the other active filters. Options the category doesn't have are hidden; options ruled out by other filters are disabled; checked options stay enabled.
+- [x] Only metadata fields are accepted from the URL; values are bound parameters.
+- [x] Queries filter on the JSONB `specs` column (index: see the finding).
 - [ ] Unit, integration (in CI) and E2E tests, including the epic test, pass; `pnpm lint`, `pnpm typecheck` and `pnpm build` pass.
 
 ## Out of scope
