@@ -10,7 +10,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
 import { connection } from "next/server"
-import { Suspense } from "react"
+import { Fragment, Suspense } from "react"
 
 import { Container } from "@/components/layout/container"
 import { ProductGallery } from "@/components/product/product-gallery"
@@ -21,6 +21,7 @@ import {
   RelatedProductsSkeleton,
 } from "@/components/product/related-products"
 import { SpecTable } from "@/components/product/spec-table"
+import { JsonLd } from "@/components/seo/json-ld"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,8 +31,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
+import { env } from "@/lib/env"
 import { formatDate, formatWarranty } from "@/lib/format"
 import { getProductPage, type ProductPageData } from "@/lib/products"
+import { type Crumb, breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld"
+import { socialMetadata } from "@/lib/seo/metadata"
 import { categoryHref, productHref, siteConfig } from "@/lib/site"
 import { isBuilderCategory, validateSpecs } from "@/lib/specs"
 import {
@@ -52,14 +56,17 @@ export async function generateMetadata({
   const product = await getProductPage(slug)
   if (!product) notFound()
 
+  const title = product.name
+  const description = product.description
+    ? truncate(product.description, META_DESCRIPTION_MAX)
+    : `${product.name} from ${product.brand}: full specs, warranty and stock at ${siteConfig.name}. Check compatibility in the PC Builder.`
+  const path = productHref(product.category.slug, product.slug)
+
   return {
-    title: product.name,
-    description: product.description
-      ? truncate(product.description, META_DESCRIPTION_MAX)
-      : `${product.name} from ${product.brand}: full specs, warranty and stock at ${siteConfig.name}. Check compatibility in the PC Builder.`,
-    alternates: {
-      canonical: productHref(product.category.slug, product.slug),
-    },
+    title,
+    description,
+    alternates: { canonical: path },
+    ...socialMetadata({ title, description, path, image: product.images[0] }),
   }
 }
 
@@ -83,26 +90,37 @@ export default async function ProductPage({
   const today = manilaToday()
   const status = getStockStatus(product, today)
   const outOfStock = status === "out-of-stock"
+  // One trail for the visible breadcrumbs and their JSON-LD, so they match
+  const breadcrumbs: Crumb[] = [
+    { name: "Home", path: "/" },
+    { name: product.category.name, path: categoryHref(product.category.slug) },
+    { name: product.name },
+  ]
+  const siteUrl = env.NEXT_PUBLIC_SITE_URL
 
   return (
     <Container className="py-8">
+      {/* Before the Suspense boundary, so they're in the first HTML chunk
+          (docs/specs/017-seo) */}
+      <JsonLd data={productJsonLd({ product, status, siteUrl })} />
+      <JsonLd data={breadcrumbJsonLd(breadcrumbs, siteUrl)} />
+
       <Breadcrumb aria-label="Breadcrumb">
         <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink
-              render={<Link href={categoryHref(product.category.slug)} />}
-            >
-              {product.category.name}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{product.name}</BreadcrumbPage>
-          </BreadcrumbItem>
+          {breadcrumbs.map((crumb, index) => (
+            <Fragment key={crumb.path ?? "current"}>
+              {index > 0 && <BreadcrumbSeparator />}
+              <BreadcrumbItem>
+                {crumb.path ? (
+                  <BreadcrumbLink render={<Link href={crumb.path} />}>
+                    {crumb.name}
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          ))}
         </BreadcrumbList>
       </Breadcrumb>
 

@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import { BrandList } from "@/components/home/brand-list"
 import { CategoryTiles } from "@/components/home/category-tiles"
 import { Hero } from "@/components/home/hero"
@@ -7,6 +9,8 @@ import { Container } from "@/components/layout/container"
 import { getMenuCategories } from "@/lib/categories"
 import { getHomeBrands, getHomeProducts } from "@/lib/home"
 import { searchHref } from "@/lib/listing-params"
+import { socialMetadata } from "@/lib/seo/metadata"
+import { siteConfig } from "@/lib/site"
 import { manilaToday } from "@/lib/stock"
 
 // Static, regenerated at most every 10 minutes (docs/specs/016-home-page,
@@ -15,6 +19,16 @@ import { manilaToday } from "@/lib/stock"
 // Must match HOME_REVALIDATE in lib/home.ts (a segment config must be a
 // literal).
 export const revalidate = 600
+
+// Absolute through the root layout's metadataBase (docs/specs/017-seo)
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  ...socialMetadata({
+    title: siteConfig.name,
+    description: siteConfig.tagline,
+    path: "/",
+  }),
+}
 
 export default async function HomePage() {
   const [categories, { featured, deals }, brands] = await Promise.all([
