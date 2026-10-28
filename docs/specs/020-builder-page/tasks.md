@@ -9,7 +9,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `isBuyable` in `lib/stock.ts`, tested for all four statuses.
   - `lib/build-state/parts.ts`: `MAX_BUILD_PRODUCTS`, `builderPartsQuerySchema` (E40–E45), `capProducts` (E56) and the `BuilderPartData` type.
   - `lib/build-state/slots.ts`: per-slot copy.
-- [ ] **T3. Server, test-first.**
+- [x] **T3. Server, test-first.**
   - `lib/builder-parts.ts`, `getBuilderParts`: E4, E36, E38, E39, E46, E49, the four stock statuses, invalid specs left out.
   - `app/api/builder/parts/route.ts`: 200 with `Cache-Control: no-store` (E37), 400s (E41, E42).
   - *Verify:* `pnpm test:db`.
