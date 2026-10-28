@@ -110,12 +110,12 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 ## PC Builder
 
-The builder lets a shopper pick one part per slot, checks every pair of parts as they go, and never lets an incompatible build reach checkout without a clear warning.
+The builder lets a shopper fill each slot (one part per slot, except Memory, which takes one kit in any quantity, and Storage, which takes several drives), checks every pair of parts as they go, and never lets an incompatible build reach checkout without a clear warning.
 
 ### Flow
 
 1. Start empty or from a template (Phase 2).
-2. Pick parts slot by slot: CPU → Motherboard → Memory → Storage → GPU → Case → PSU → CPU Cooler (fans, OS, peripherals optional). Slots can be filled in any order.
+2. Pick parts slot by slot: CPU → Motherboard → Memory → Storage → GPU → Case → PSU → CPU Cooler (fans, OS, peripherals optional). Slots can be filled in any order. Storage holds several drives; Memory holds one kit with a quantity; every other slot holds one part.
 3. Each slot opens a filtered product list showing **only compatible, in-stock parts by default**, with a toggle to "show all" (incompatible items greyed out with the reason).
 4. A sticky summary shows total price, estimated wattage vs PSU capacity, and a compatibility status: OK / Warnings / Errors.
 5. Save the build (account) or share it via link (no account needed).

@@ -12,7 +12,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
 - [x] **T6. Rules, test-first.** `format.ts`, then each rule's test (red), then the rule (green), in PRD order (E5–E42). This can be one commit per rule or per pair of rules.
 - [x] **T7. checkBuild, buildStatus, candidates.** `check.ts`, `candidate.ts` and their tests (E1–E4, E43–E59), plus the `index.ts` API.
 - [x] **T8. Bench.** `check.bench.ts`. *Verify:* `pnpm exec vitest bench --run --reporter=verbose` prints timings (Vitest 5: `bench` comes from the test context), and `pnpm test` doesn't run it. Measured: `checkBuild` ≈ 1.3 µs; 30 GPU candidates ≈ 40 µs.
-- [ ] **T9. Docs and wrap-up.**
+- [x] **T9. Docs and wrap-up.**
   - Docs: the PRD intro and Flow step 2 wording; CLAUDE.md lines on `lib/builder` and the purity rule; tick the spec's acceptance criteria.
   - Data: check the NH-L9i-17xx (sockets, weight, box contents) against its `sourceUrl` by hand, then remove its TODO. T3 drafted it while noctua.at refused automated fetches.
   - Checks: `pnpm format`, `lint`, `typecheck`, `test`, `build`.

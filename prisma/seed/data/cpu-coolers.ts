@@ -248,8 +248,6 @@ export const cpuCoolers = [
   },
   // Intel only: with the AM5-only NH-L9a-AM5, the cooler socket rule has a
   // failing cooler on both socket families (docs/specs/018-compatibility-rules).
-  // TODO(spec 018): drafted while noctua.at refused automated fetches; check
-  // sockets, weight and box contents against sourceUrl before the PR.
   {
     sku: "NH-L9i-17xx",
     name: "Noctua NH-L9i-17xx Low-Profile Cooler",
