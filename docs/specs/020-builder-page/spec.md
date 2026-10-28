@@ -342,9 +342,7 @@ Docs: `CLAUDE.md` replaces "`app/(store)/builder` is a 'coming soon' placeholder
 
 ## 10. Open questions
 
-1. **Should I update #54's acceptance criteria on GitHub to match D7?** I'd change "out-of-stock parts can't be added" to "parts that aren't buyable (out of stock or pre-order) can't be added", and "greyed out" to cover pre-orders. Recommendation: **yes**, edited when this story's PR opens, so the issue and the spec agree before #54 is specced. It's a public edit, so I'll wait for your go-ahead.
-
-All of the draft's questions were settled in review (D15, D16, and the hero badge moved to #54).
+None. #54's acceptance criteria were updated on 2026-10-28 to match D7: parts that aren't buyable (out of stock or pre-order) are greyed out under "Show all" and can't be added. The draft's other questions were settled in review (D15, D16, and the hero badge moved to #54).
 
 ## Acceptance criteria mapping
 

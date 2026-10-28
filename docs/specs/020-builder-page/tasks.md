@@ -40,7 +40,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `e2e/builder.spec.ts` (spec §7 E2E row).
   - `seo.spec.ts`: E57, E58.
   - *Verify:* E2E against `pnpm dev`, and with `CI=1` against `pnpm build && pnpm start`.
-- [ ] **T10. Wrap-up.**
+- [x] **T10. Wrap-up.**
   - Docs: the CLAUDE.md builder lines (page, store, parts route, buyable rule, ids-only saved build); tick the spec's acceptance criteria.
   - Checks: `pnpm format`, `lint`, `typecheck`, `test`, `test:db`, `build`, E2E.
   - PR: push with `git push -u origin HEAD` and open the PR per the repo template. Edit #54's acceptance criteria to match D7 only with approval (spec open question 1).
