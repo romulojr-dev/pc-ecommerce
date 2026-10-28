@@ -15,7 +15,7 @@ The engine is a set of pure functions. It has no screen, so "the shopper sees" b
 3. **The shape is checked again.** Slot limits: Storage holds several entries (each with quantity ≥ 1, one per product). Memory holds one entry with quantity ≥ 1. Every other slot holds one entry with quantity 1. Each part's category must equal its slot. A build that came through `parseBuild` and `assembleBuild` always passes. If one still breaks a limit, that is a bug in the calling code: the engine throws `InvalidBuildError` and checks no rules.
 4. **`checkBuild(build)` runs every rule.** A rule runs only when all of the parts it reads are picked. Otherwise it is silent. Each rule that fails gives one issue `{ rule, severity, parts, message }`.
 5. **Issues come back in a fixed order:** errors before warnings, then PRD table order (socket match, memory type, form factor, GPU length, cooler height, cooler socket, radiator fit, PSU form factor, BIOS update). The same build always gives the same list, in the browser and on the server.
-6. **`checkCandidate(build, slot, part, options?)`** answers "what would go wrong if I picked this part?" for the slot picker. It puts the candidate into a copy of the build and returns only the issues that involve the candidate. In a single-part slot the candidate **replaces** the current part. In storage it is **added**, or it **replaces** one entry when the picker is changing that drive. The part being replaced is gone from the copy, so its conflicts are never reported against the candidate.
+6. **`checkCandidate(build, slot, part, options?)`** answers "what would go wrong if I picked this part?" for the slot picker. It puts the candidate into a copy of the build and returns the issues that are new or more severe than in the same build without the candidate (amended by spec 019, see Rules › checkCandidate). In a single-part slot the candidate **replaces** the current part. In storage it is **added**, or it **replaces** one entry when the picker is changing that drive. The part being replaced is gone from the copy, so its conflicts are never reported against the candidate.
 7. **`buildStatus(issues)`** gives `"errors"` if any issue is an error, else `"warnings"` if any is a warning, else `"ok"`. #53 shows these as OK / Warnings / Errors.
 
 **Empty state:** an empty build, or one with no rule whose parts are all picked, gives `[]` and status `"ok"`. `parseBuild` of nothing stored gives an empty build with no changes. The builder page decides how to show an empty build (#53).
@@ -148,7 +148,7 @@ Parts are real seed parts, referred to by name. "Build A/B/C" are spec 001's com
 | E56 | storage [990 PRO ×2] | `applyCandidate(…, Kingston NV3, { replace: 990 PRO })` | storage [NV3 ×2]: the replacement keeps the entry's quantity |
 | E57 | storage [990 PRO, SN850X] | `applyCandidate(…, 990 PRO, { replace: SN850X })` | storage [990 PRO ×2]: replacing with a drive already listed merges into that entry |
 | E58 | storage [990 PRO] | `applyCandidate(…, NV3, { replace: SN850X })` | throws `InvalidBuildError`: SN850X is not in storage |
-| E59 | Build A | `checkCandidate(b, "cpu", Ryzen 5 7600)` (the CPU already picked) | `[]`, the part's current issues |
+| E59 | Build A | `checkCandidate(b, "cpu", Ryzen 5 7600)` (the CPU already picked) | `[]`, the issues the part adds |
 
 ### Shape validation (`checkBuild` on a malformed build)
 
@@ -259,11 +259,11 @@ Items are `{ slot, productId, quantity }`. Ids below are seed SKUs standing in f
 
 ### `checkCandidate` and `applyCandidate`
 
-- `applyCandidate(build, slot, part, options?)` returns the changed copy of the build. `checkCandidate` takes the same arguments and returns the issues from `checkBuild(applyCandidate(…))` whose `parts` include the candidate (matched by slot and id).
+- `applyCandidate(build, slot, part, options?)` returns the changed copy of the build. `checkCandidate` takes the same arguments and returns the issues from `checkBuild(applyCandidate(…))` whose rule has no issue, or a less severe one, in `checkBuild(baseline)` (none < warning < error). The baseline is the build with the candidate's slot empty; for storage, it is the build as given when adding, or the build without the replaced drive when `replace` is given. *Amended by [spec 019](../019-count-capacity-power-rules/spec.md) (D7–D8); it originally returned the issues whose `parts` include the candidate. For the nine rules here the results are the same, except a CPU candidate no longer gets a cooler-socket error the board already had (spec 019 E60).*
 - **Single-part slots** (cpu, motherboard, gpu, case, psu, cpu-cooler) and **memory**: the candidate **replaces** the current part. The replaced part is not in the copy, so no issue between it and the candidate (or anything else) can be reported. Memory keeps the slot's current quantity (default 1); the others use quantity 1. `replace` is not used for these slots.
 - **Storage, adding:** with no `replace`, the candidate is added with quantity 1 at the end. If the same drive is already listed, that entry's quantity goes up by 1 instead (one entry per product).
 - **Storage, changing a drive:** with `{ replace: productId }`, the candidate takes that entry's place and keeps its position and quantity. Nothing is added, so the drive count stays the same and the replaced drive's conflicts disappear (E55). If the candidate is already listed elsewhere in storage, the two entries merge into the existing one, quantities summed (E57). A `replace` id that isn't in storage throws `InvalidBuildError` (a picker bug, E58).
-- A candidate that is already the slot's part gives that part's current issues (E59).
+- A candidate that is already the slot's part gives the issues it adds compared with the slot empty (E59).
 
 ### Purity
 
@@ -374,7 +374,7 @@ No database, route or Prisma schema change. A new folder `lib/builder/` exports:
 | `InvalidBuildError` | `Error` with `problems: BuildProblem[]` |
 | `checkBuild(build): Issue[]` | All issues, in the fixed order |
 | `applyCandidate(build, slot, part, options?: { replace?: string }): Build` | The build with the candidate in place (Rules › checkCandidate) |
-| `checkCandidate(build, slot, part, options?): Issue[]` | Issues the candidate would cause |
+| `checkCandidate(build, slot, part, options?): Issue[]` | Issues the candidate makes new or more severe (spec 019) |
 | `buildStatus(issues): BuildStatus` | Worst severity |
 
 - `RuleId` stays in `lib/specs` (field metadata uses it). The engine re-exports it.
@@ -433,7 +433,7 @@ The PRD's testing strategy asks for builder rules **test-first** in Vitest. Ever
 | D8 | No coercion in `buildItemsSchema` (`"2"` is dropped) | Same rule as the seed and spec schemas; our own code never writes strings | Coercing numeric strings |
 | D9 | The engine trusts validated specs | Every write goes through `validateSpecs`; re-parsing on each of ~26 picker calls costs time for nothing | Re-validating specs inside `checkBuild` |
 | D10 | Issue order: errors, then PRD table order | Stable tests, and the UI shows blockers first | Insertion order, or PRD order only |
-| D11 | `checkCandidate` returns only issues that involve the candidate, on a copy where the replaced part is gone | Existing conflicts between other parts, or with the part being swapped out, would otherwise show on every candidate | Returning the full changed build's issues |
+| D11 | `checkCandidate` returns only issues that are new or more severe than in the build without the candidate, on a copy where the replaced part is gone (amended by spec 019 D7; originally "issues that involve the candidate") | Existing conflicts between other parts, or with the part being swapped out, would otherwise show on every candidate | Returning the full changed build's issues; "issues that involve the candidate" (blames every CPU for an overloaded PSU) |
 | D12 | Memory candidate keeps the slot's quantity. A storage candidate is appended, or replaces one entry (keeping its position and quantity) when `replace` is given | Matches "change this kit", "add another drive" and "change this drive" in #53; keeps #52's counts honest | Always quantity 1; storage changes as remove-then-add (moves the drive to the end) |
 | D13 | One entry per product in storage | Keeps entries 1:1 with `BuildItem` rows without duplicate (slot, productId) pairs | Allowing duplicates and summing |
 | D14 | PRD "All ↔ PSU" is tested as cpu, gpu, psu; "CPU, no GPU" as cpu only | Only those categories have fields these rules read; tagging others would be meaningless | Requiring a tag in every category |
