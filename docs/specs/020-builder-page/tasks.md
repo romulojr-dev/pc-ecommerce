@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Docs.** Spec 020, this plan and task list. The spec's test plan records two moves: E7–E9 go to component and integration tests, and E57/E58 go to `seo.spec.ts`.
-- [ ] **T2. Pure foundations, test-first.**
+- [x] **T2. Pure foundations, test-first.**
   - `isBuyable` in `lib/stock.ts`, tested for all four statuses.
   - `lib/build-state/parts.ts`: `MAX_BUILD_PRODUCTS`, `builderPartsQuerySchema` (E40–E45), `capProducts` (E56) and the `BuilderPartData` type.
   - `lib/build-state/slots.ts`: per-slot copy.

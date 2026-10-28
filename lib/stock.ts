@@ -29,6 +29,13 @@ export function getStockStatus(
   return "in-stock"
 }
 
+// Can be bought now: the inStock filter's meaning (docs/specs/012-common-
+// filters). Only buyable parts can be added to a build
+// (docs/specs/020-builder-page, Rules › Buyable).
+export function isBuyable(status: StockStatus): boolean {
+  return status === "in-stock" || status === "low-stock"
+}
+
 // en-CA formats dates as YYYY-MM-DD
 const manilaDate = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Manila",
