@@ -26,7 +26,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `hooks/use-build.ts`: hydration once, `storage`-event sync.
   - `hooks/use-build-parts.ts`: loader, stale-response guard, drop with notice only after success, error and retry.
   - `lib/build-state/loader.ts` (added): the loader's decisions without React, unit-tested, since the repo has no DOM test library. It decides when to request, assembles the build and works out which requested ids are gone.
-- [ ] **T7. `/builder` UI.**
+- [x] **T7. `/builder` UI.**
   - The page with its metadata.
   - `components/builder/`: the client root, slot rows, quantity stepper, summary, notice, skeleton.
   - Markup tests for the summary and the row: E1–E10, E14–E16, E54.

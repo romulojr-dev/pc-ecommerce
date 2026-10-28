@@ -1,0 +1,250 @@
+import { CircleXIcon, TriangleAlertIcon } from "lucide-react"
+import Link from "next/link"
+
+import { QuantityStepper } from "@/components/builder/quantity-stepper"
+import { ProductImage } from "@/components/product/product-image"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { BuilderPartData } from "@/lib/build-state/parts"
+import { SLOT_COPY } from "@/lib/build-state/slots"
+import {
+  type Issue,
+  SLOT_LIMITS,
+  type Severity,
+  type Slot,
+} from "@/lib/builder"
+import { formatPeso } from "@/lib/format"
+import { categoryHref, productHref } from "@/lib/site"
+import { isBuyable, stockStatusLabel } from "@/lib/stock"
+import { cn, focusRing } from "@/lib/utils"
+
+export type SlotEntry = { quantity: number; data: BuilderPartData }
+
+type SlotSectionProps = {
+  slot: Slot
+  entries: readonly SlotEntry[]
+  // The saved build or its parts haven't loaded yet, or failed to
+  loading: boolean
+  issues: readonly Issue[]
+  onRemove: (productId: string) => void
+  onQuantity: (productId: string, quantity: number) => void
+}
+
+const linkClass = cn(
+  buttonVariants({ variant: "outline", size: "lg" }),
+  focusRing,
+  "w-fit"
+)
+
+// One builder slot (docs/specs/020-builder-page, Behavior 10–14): its parts,
+// or a link to choose one. The links go to the category listing until the
+// slot picker (#54).
+export function SlotSection({
+  slot,
+  entries,
+  loading,
+  issues,
+  onRemove,
+  onQuantity,
+}: SlotSectionProps) {
+  const copy = SLOT_COPY[slot]
+  const headingId = `slot-${slot}`
+
+  return (
+    <li
+      aria-labelledby={headingId}
+      className="flex flex-col gap-3 rounded-lg border p-4"
+    >
+      <h2 id={headingId} className="text-sm font-medium text-muted-foreground">
+        {copy.name}
+      </h2>
+      {loading ? (
+        <div className="flex items-center gap-4" aria-hidden="true">
+          <Skeleton className="size-16" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-4 w-1/4" />
+          </div>
+        </div>
+      ) : entries.length === 0 ? (
+        <Link href={categoryHref(slot)} className={linkClass}>
+          {copy.choose}
+        </Link>
+      ) : (
+        <>
+          <ul className="flex flex-col gap-4">
+            {entries.map((entry) => (
+              <PartRow
+                key={entry.data.part.id}
+                slot={slot}
+                entry={entry}
+                severity={worstSeverity(issues, slot, entry.data.part.id)}
+                onRemove={() => onRemove(entry.data.part.id)}
+                onQuantity={(quantity) =>
+                  onQuantity(entry.data.part.id, quantity)
+                }
+              />
+            ))}
+          </ul>
+          {SLOT_LIMITS[slot].multipleEntries && (
+            <Link href={categoryHref(slot)} className={linkClass}>
+              Add another drive
+            </Link>
+          )}
+        </>
+      )}
+    </li>
+  )
+}
+
+// The most severe issue that names this part, if any
+export function worstSeverity(
+  issues: readonly Issue[],
+  slot: Slot,
+  id: string
+): Severity | null {
+  const named = issues.filter((issue) =>
+    issue.parts.some((part) => part.slot === slot && part.id === id)
+  )
+  if (named.some((issue) => issue.severity === "error")) return "error"
+  return named.length > 0 ? "warning" : null
+}
+
+type PartRowProps = {
+  slot: Slot
+  entry: SlotEntry
+  severity: Severity | null
+  onRemove: () => void
+  onQuantity: (quantity: number) => void
+}
+
+function PartRow({
+  slot,
+  entry: { quantity, data },
+  severity,
+  onRemove,
+  onQuantity,
+}: PartRowProps) {
+  const { part } = data
+  const buyable = isBuyable(data.stockStatus)
+  const multipleUnits = SLOT_LIMITS[slot].quantity === "any"
+
+  return (
+    <li className="flex gap-4">
+      <ProductImage
+        image={data.image}
+        productName={part.name}
+        sizes="64px"
+        className="size-16 shrink-0"
+      />
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">{data.brand}</p>
+            <Link
+              href={productHref(part.category, data.slug)}
+              className={cn("font-medium hover:underline", focusRing)}
+            >
+              {part.name}
+            </Link>
+          </div>
+          <PartPrice data={data} quantity={quantity} />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span className={cn(!buyable && "font-medium text-destructive")}>
+            {stockStatusLabel[data.stockStatus]}
+          </span>
+          {severity && <SeverityMarker severity={severity} />}
+        </div>
+        {!buyable && (
+          <p className="text-sm text-muted-foreground">
+            Not available to buy right now. Replace it to add this build to
+            cart.
+          </p>
+        )}
+
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {multipleUnits && (
+            <QuantityStepper
+              partName={part.name}
+              quantity={quantity}
+              stock={data.stock}
+              buyable={buyable}
+              onChange={onQuantity}
+            />
+          )}
+          {!SLOT_LIMITS[slot].multipleEntries && (
+            <Link
+              href={categoryHref(slot)}
+              aria-label={`Change ${SLOT_COPY[slot].name}`}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                focusRing
+              )}
+            >
+              Change
+            </Link>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Remove ${part.name} from your build`}
+            onClick={onRemove}
+          >
+            Remove
+          </Button>
+        </div>
+      </div>
+    </li>
+  )
+}
+
+// The price the shopper pays (struck-through regular price when on sale),
+// and the line total when there's more than one
+function PartPrice({
+  data,
+  quantity,
+}: {
+  data: BuilderPartData
+  quantity: number
+}) {
+  const unit = formatPeso(data.effectivePrice)
+  return (
+    <div className="flex flex-col items-end text-right tabular-nums">
+      <p className="flex items-baseline gap-2">
+        {data.salePrice !== null && (
+          <span className="text-sm text-muted-foreground">
+            <span className="sr-only">Was </span>
+            <s>{formatPeso(data.price)}</s>
+          </span>
+        )}
+        <span className={cn(quantity === 1 && "font-semibold")}>
+          {quantity > 1 ? `${unit} × ${quantity}` : unit}
+        </span>
+      </p>
+      {quantity > 1 && (
+        <p className="font-semibold">
+          {formatPeso(data.effectivePrice * quantity)}
+        </p>
+      )}
+    </div>
+  )
+}
+
+export function SeverityMarker({ severity }: { severity: Severity }) {
+  const Icon = severity === "error" ? CircleXIcon : TriangleAlertIcon
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 text-sm font-medium",
+        severity === "error"
+          ? "text-destructive"
+          : "text-amber-700 dark:text-amber-400"
+      )}
+    >
+      <Icon aria-hidden="true" className="size-4" />
+      {severity === "error" ? "Error" : "Warning"}
+    </span>
+  )
+}
