@@ -171,12 +171,12 @@ Items are `{ slot, productId, quantity }`. Ids below are seed SKUs standing in f
 | # | Input | Clean result | Changes reported |
 | --- | --- | --- | --- |
 | E69 | `[{ slot: "fans", productId: "x", quantity: 1 }, Ryzen 5 7600 ×1 in cpu]` | cpu: Ryzen 5 7600 | dropped `fans` entry: unknown slot |
-| E70 | memory: Vengeance DDR5, quantity 0 | no memory | dropped: invalid quantity (0) |
+| E70 | memory: Vengeance DDR5, quantity 0, -1 or 1.5 | no memory | dropped: invalid quantity |
 | E71 | cpu: Ryzen 5 7600, then cpu: i5-14400F | cpu: Ryzen 5 7600 (the first) | dropped i5-14400F: cpu holds one part |
 | E72 | memory: Vengeance DDR5 ×2, then memory: FURY Beast DDR4 ×1 | memory: Vengeance DDR5 ×2 | dropped FURY Beast: memory holds one kit |
 | E73 | storage: 990 PRO ×1, SN850X ×1, 990 PRO ×2 | storage: 990 PRO ×3, SN850X ×1 (first position kept) | merged the duplicate 990 PRO entries |
 | E74 | gpu: RTX 4060, quantity 2 | gpu: RTX 4060 ×1 | repaired: gpu quantity set to 1 |
-| E75 | memory: quantity 1.5, or `"2"` (a string), or missing `productId` | entry dropped | dropped: invalid entry (no coercion, as in the seed) |
+| E75 | memory: quantity `"2"` (a string), a missing or empty `productId`, or an item that isn't an object | entry dropped | dropped: invalid entry (no coercion, as in the seed) |
 | E76 | `"oops"`, `null`, or an object instead of a list | empty build | reset: not a list of items |
 | E77 | `undefined` (nothing stored) | empty build | none |
 | E78 | Build A as items | the same items, in slot order | none. Parsing the output again gives the same result |
