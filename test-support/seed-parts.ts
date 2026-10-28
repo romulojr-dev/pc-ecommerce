@@ -23,6 +23,14 @@ export function seedPart<S extends Slot>(
   }
 }
 
+// Every seed part of a category, e.g. a slot picker's candidates
+export function seedParts<S extends Slot>(category: S): BuildPart<S>[] {
+  const file = seedFiles.find((seed) => seed.category === category)!
+  return (file.parts as readonly { sku: string }[]).map((part) =>
+    seedPart(category, part.sku)
+  )
+}
+
 // A hand-written part for a case the seed can't reach. Name it as a fixture.
 export function fixturePart<S extends Slot>(
   category: S,
