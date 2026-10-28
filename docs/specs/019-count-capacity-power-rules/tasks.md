@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Docs.** Spec 019, the spec 018 `checkCandidate` amendment, this plan and task list.
-- [ ] **T2. Power, test-first.** `power.test.ts` (E1–E9, E19–E26) red, then `power.ts` (`estimateWattage`, the three constants, the shared calculation) green. `seed-parts.ts`: the new seed parts (spec §7) and the `nb("958 W")` helper. *Verify:* the exact-percentage tests (E24–E26) fail with `watts / psuW * 100` and pass with `watts * 100 / psuW`.
+- [x] **T2. Power, test-first.** `power.test.ts` (E1–E9, E19–E26) red, then `power.ts` (`estimateWattage`, the three constants, the shared calculation) green. `seed-parts.ts`: the new seed parts (spec §7) and the `nb("958 W")` helper. *Verify:* the exact-percentage tests (E24–E26) fail with `watts / psuW * 100` and pass with `watts * 100 / psuW`.
 - [ ] **T3. Memory rules, test-first.** `memory-slots`, `memory-capacity` (E27–E36) and `plural` in `format.ts`.
 - [ ] **T4. PSU wattage, test-first.** E10–E23: spec 001/011 scenarios, the 80% and 100% boundaries, GPU only, no PSU.
 - [ ] **T5. M.2 slots and integrated graphics, test-first.** E37–E48.
