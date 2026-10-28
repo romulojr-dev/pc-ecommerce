@@ -13,6 +13,7 @@ import { connection } from "next/server"
 import { Fragment, Suspense } from "react"
 
 import { Container } from "@/components/layout/container"
+import { AddToBuild } from "@/components/product/add-to-build"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { ProductPrice } from "@/components/product/product-price"
 import { QuantitySelector } from "@/components/product/quantity-selector"
@@ -40,6 +41,7 @@ import { categoryHref, productHref, siteConfig } from "@/lib/site"
 import { isBuilderCategory, validateSpecs } from "@/lib/specs"
 import {
   getStockStatus,
+  isBuyable,
   manilaToday,
   type StockStatus,
   stockStatusLabel,
@@ -90,6 +92,10 @@ export default async function ProductPage({
   const today = manilaToday()
   const status = getStockStatus(product, today)
   const outOfStock = status === "out-of-stock"
+  const buyable = isBuyable(status)
+  const builderSlot = isBuilderCategory(product.category.slug)
+    ? product.category.slug
+    : null
   // One trail for the visible breadcrumbs and their JSON-LD, so they match
   const breadcrumbs: Crumb[] = [
     { name: "Home", path: "/" },
@@ -142,26 +148,46 @@ export default async function ProductPage({
               <Button
                 size="lg"
                 disabled
-                aria-describedby="coming-soon"
+                aria-describedby="cart-coming-soon"
                 className="h-10 px-6 text-sm"
               >
                 Add to cart
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                disabled
-                aria-describedby="coming-soon"
-                className="h-10 px-6 text-sm"
-              >
-                Add to build
-              </Button>
+              {/* Only buyable parts can be added to a build
+                  (docs/specs/020-builder-page, Behavior 18) */}
+              {builderSlot &&
+                (buyable ? (
+                  <AddToBuild
+                    productId={product.id}
+                    name={product.name}
+                    slot={builderSlot}
+                    stock={product.stock}
+                  />
+                ) : (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    disabled
+                    aria-describedby="build-unavailable"
+                    className="h-10 px-6 text-sm"
+                  >
+                    Add to build
+                  </Button>
+                ))}
             </div>
             {/* Visible text, not a tooltip: disabled buttons can't be
                 focused or hovered */}
-            <p id="coming-soon" className="text-sm text-muted-foreground">
-              Cart and PC Builder are coming soon.
+            <p id="cart-coming-soon" className="text-sm text-muted-foreground">
+              Cart is coming soon.
             </p>
+            {builderSlot && !buyable && (
+              <p
+                id="build-unavailable"
+                className="text-sm text-muted-foreground"
+              >
+                Only parts in stock can be added to a build.
+              </p>
+            )}
           </div>
           <p className="flex items-center gap-2 text-sm">
             <ShieldCheckIcon

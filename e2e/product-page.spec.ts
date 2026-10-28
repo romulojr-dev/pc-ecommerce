@@ -89,13 +89,24 @@ test("a pre-order shows its ship date; cart and builder are disabled", async ({
     page.getByText(/^Pre-order: ships \w+ \d+, \d{4}$/)
   ).toBeVisible()
 
-  for (const name of ["Add to cart", "Add to build"]) {
-    const button = page.getByRole("button", { name })
-    await expect(button).toBeDisabled()
-    await expect(button).toHaveAccessibleDescription(
-      "Cart and PC Builder are coming soon."
-    )
-  }
+  const cart = page.getByRole("button", { name: "Add to cart" })
+  await expect(cart).toBeDisabled()
+  await expect(cart).toHaveAccessibleDescription("Cart is coming soon.")
+
+  // Only buyable parts can be added to a build (docs/specs/020-builder-page)
+  const build = page.getByRole("button", { name: "Add to build" })
+  await expect(build).toBeDisabled()
+  await expect(build).toHaveAccessibleDescription(
+    "Only parts in stock can be added to a build."
+  )
+})
+
+test("an in-stock part can be added to a build", async ({ page }) => {
+  await page.goto("/cpu/amd-ryzen-5-7600")
+  await expect(
+    page.getByRole("button", { name: "Add to cart" })
+  ).toHaveAccessibleDescription("Cart is coming soon.")
+  await expect(page.getByRole("button", { name: "Add to build" })).toBeEnabled()
 })
 
 // docs/specs/015-related-products. The seed has plenty of CPUs, so the

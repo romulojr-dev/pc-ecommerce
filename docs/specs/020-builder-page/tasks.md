@@ -30,7 +30,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - The page with its metadata.
   - `components/builder/`: the client root, slot rows, quantity stepper, summary, notice, skeleton.
   - Markup tests for the summary and the row: E1–E10, E14–E16, E54.
-- [ ] **T8. Product page.**
+- [x] **T8. Product page.**
   - `components/product/add-to-build.tsx`: `planAdd`, the replace dialog, the status line.
   - The not-buyable disabled state (E34, E35).
   - "Cart is coming soon."
