@@ -33,6 +33,13 @@ export {
 } from "./parse"
 export { buildStatus, checkBuild } from "./check"
 export {
+  estimateWattage,
+  OTHER_PARTS_ALLOWANCE_W,
+  PSU_HEADROOM_TENTHS,
+  PSU_WARNING_PERCENT,
+  type PowerEstimate,
+} from "./power"
+export {
   applyCandidate,
   checkCandidate,
   type CandidateOptions,

@@ -13,6 +13,7 @@ import { checkBuild } from "./check"
 
 const build = buildA()
 const gpus = seedParts("gpu")
+const cpus = seedParts("cpu")
 
 test("rules engine", async ({ bench }) => {
   await bench.compare(
@@ -21,6 +22,9 @@ test("rules engine", async ({ bench }) => {
     }),
     bench(`checkCandidate for all ${gpus.length} GPUs`, () => {
       for (const gpu of gpus) checkCandidate(build, "gpu", gpu)
+    }),
+    bench(`checkCandidate for all ${cpus.length} CPUs`, () => {
+      for (const cpu of cpus) checkCandidate(build, "cpu", cpu)
     })
   )
 })

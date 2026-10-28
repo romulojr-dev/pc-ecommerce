@@ -59,6 +59,10 @@ export const seed = {
   ryzen5_5600: seedPart("cpu", "100-100000927BOX"),
   i5_14400f: seedPart("cpu", "BX8071514400F"),
   i5_13400f: seedPart("cpu", "BX8071513400F"),
+  i7_14700k: seedPart("cpu", "BX8071514700K"),
+  i9_14900k: seedPart("cpu", "BX8071514900K"),
+  ultra7_265k: seedPart("cpu", "BX80768265K"),
+  ryzen9_9950x: seedPart("cpu", "100-100001277WOF"),
   strixB650a: seedPart("motherboard", "90MB1BP0-M0AAY0"),
   b650iLightning: seedPart("motherboard", "B650I LIGHTNING WIFI"),
   proB760mDdr4: seedPart("motherboard", "PRO B760M-A WIFI DDR4"),
@@ -68,13 +72,23 @@ export const seed = {
   h610m: seedPart("motherboard", "H610M-HDV/M.2 R2.0"),
   vengeanceDdr5: seedPart("memory", "CMK32GX5M2B6000C30"),
   furyDdr4: seedPart("memory", "KF432C16BBK2/16"),
+  furyDdr5_1x16: seedPart("memory", "KF556C40BB-16"),
+  vengeanceDdr5_4x16: seedPart("memory", "CMK64GX5M4B6000C36"),
+  vengeanceDdr5_96: seedPart("memory", "CMK96GX5M2B6400C32"),
+  lpxDdr4_64: seedPart("memory", "CMK64GX4M2E3200C16"),
   pro990: seedPart("storage", "MZ-V9P1T0BW"),
   sn850x: seedPart("storage", "WDS200T2X0E"),
   mx500: seedPart("storage", "CT1000MX500SSD1"),
+  nv3: seedPart("storage", "SNV3S/1000G"),
+  sn770m: seedPart("storage", "WDS100T3X0G"),
+  barracuda2tb: seedPart("storage", "ST2000DM008"),
   rtx4060: seedPart("gpu", "DUAL-RTX4060-O8G"),
   rtx5070Sff: seedPart("gpu", "GV-N5070WF3OC-12GD"),
   rtx5090Astral: seedPart("gpu", "ROG-ASTRAL-RTX5090-O32G-GAMING"),
   rx9070xtNitro: seedPart("gpu", "11348-01-20G"),
+  rtx3060: seedPart("gpu", "DUAL-RTX3060-O12G-V2"),
+  rtx5070Prime: seedPart("gpu", "PRIME-RTX5070-O12G"),
+  rtx5080Trio: seedPart("gpu", "GeForce RTX 5080 16G GAMING TRIO OC"),
   lancool216: seedPart("case", "LAN216X"),
   q300l: seedPart("case", "MCB-Q300L-KANN-S00"),
   ridge: seedPart("case", "FD-C-RID1N-11"),
@@ -85,6 +99,9 @@ export const seed = {
   rm850e: seedPart("psu", "CP-9020263-NA"),
   sf750: seedPart("psu", "CP-9020186-NA"),
   sf850l: seedPart("psu", "CP-9020245-NA"),
+  a650bn: seedPart("psu", "MAG A650BN"),
+  gx1000: seedPart("psu", "SSR-1000FX3"),
+  rm1200x: seedPart("psu", "CP-9020254-NA"),
   peerless: seedPart("cpu-cooler", "PA120 SE"),
   nhL9aAm5: seedPart("cpu-cooler", "NH-L9a-AM5"),
   nhL9i17xx: seedPart("cpu-cooler", "NH-L9i-17xx"),
@@ -138,3 +155,8 @@ export function swap(build: Build, ...parts: AnyBuildPart[]): Build {
 // Spec values with units use a non-breaking space ("358 mm"), like the spec
 // table; write plain spaces in expected messages and pass them through this
 export const nbsp = (text: string) => text.replace(/ (mm)\b/g, " $1")
+
+// One formatted value with its unit ("958 W", "1,076 W"), with the
+// non-breaking space specValue puts before the unit. For messages that also
+// hold product names, where nbsp() would change spaces inside the names.
+export const nb = (value: string) => value.replace(/ (\S+)$/, " $1")

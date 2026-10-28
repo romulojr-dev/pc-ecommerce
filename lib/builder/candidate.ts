@@ -1,6 +1,13 @@
 import { checkBuild } from "./check"
 import { InvalidBuildError } from "./limits"
-import type { Build, BuildEntry, BuildPart, Issue, Slot } from "./types"
+import type {
+  Build,
+  BuildEntry,
+  BuildPart,
+  Issue,
+  Severity,
+  Slot,
+} from "./types"
 
 // The slot picker's questions (docs/specs/018-compatibility-rules,
 // "checkCandidate and applyCandidate")
@@ -72,17 +79,42 @@ export function applyCandidate<S extends Slot>(
   return { ...build, [slot]: [{ part, quantity }] }
 }
 
-// The issues the candidate would cause: those in the changed build that
-// involve it. Conflicts between other parts, and those of the part it
-// replaces, are left out.
+// The build the candidate is judged against: its slot empty, or for
+// storage the build without the candidate's change (adding: the build as
+// given; replacing: without the replaced drive)
+function baseline(build: Build, slot: Slot, replace: string | undefined) {
+  if (slot !== "storage") return { ...build, [slot]: [] }
+  if (replace === undefined) return build
+  const drives = (build.storage ?? []).filter(
+    (entry) => entry.part.id !== replace
+  )
+  return { ...build, storage: drives }
+}
+
+const RANK: Record<Severity | "none", number> = {
+  none: 0,
+  warning: 1,
+  error: 2,
+}
+
+// The issues the candidate makes new or more severe than in the baseline
+// (docs/specs/019-count-capacity-power-rules, "checkCandidate"). A problem
+// the build already has, like a PSU the GPU alone overloads, isn't blamed on
+// every candidate; the picker shows it once (#54).
 export function checkCandidate<S extends Slot>(
   build: Build,
   slot: S,
   part: BuildPart<S>,
   options: CandidateOptions = {}
 ): Issue[] {
-  return checkBuild(applyCandidate(build, slot, part, options)).filter(
-    (issue) =>
-      issue.parts.some((ref) => ref.slot === slot && ref.id === part.id)
+  const after = checkBuild(applyCandidate(build, slot, part, options))
+  const before = new Map(
+    checkBuild(baseline(build, slot, options.replace)).map((issue) => [
+      issue.rule,
+      issue.severity,
+    ])
+  )
+  return after.filter(
+    (issue) => RANK[issue.severity] > RANK[before.get(issue.rule) ?? "none"]
   )
 }

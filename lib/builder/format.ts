@@ -50,3 +50,12 @@ export function specList(
   const text = joinList(items, conjunction)
   return meta.unit ? withUnit(text, meta.unit) : text
 }
+
+// A count with its noun: "1 memory slot", "2 memory slots"
+export function plural(
+  count: number,
+  singular: string,
+  plural = `${singular}s`
+) {
+  return `${count} ${count === 1 ? singular : plural}`
+}

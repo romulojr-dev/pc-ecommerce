@@ -5,8 +5,10 @@ import {
   buildB,
   buildC,
   buildOf,
+  fixturePart,
   seed,
   seedPart,
+  seedParts,
   swap,
 } from "@/test-support/seed-parts"
 
@@ -135,7 +137,7 @@ describe("checkCandidate: replacing", () => {
     ).toThrow("storage: cannot replace WDS200T2X0E, it is not in the build")
   })
 
-  test("E59: the part already picked gives its current issues", () => {
+  test("E59: the part already picked gives the issues it adds", () => {
     expect(checkCandidate(buildA(), "cpu", seed.ryzen5_7600)).toEqual([])
     expect(rules(checkCandidate(buildB(), "cpu", seed.i5_14400f))).toEqual([
       "bios-update",
@@ -149,5 +151,141 @@ describe("checkCandidate: replacing", () => {
     applyCandidate(build, "storage", pro990)
     applyCandidate(build, "cpu", seed.i5_14400f)
     expect(build).toEqual(before)
+  })
+})
+
+// docs/specs/019-count-capacity-power-rules, E60–E75: issues new or more
+// severe than in the baseline (the build with the slot empty; for storage,
+// the build without the candidate's change)
+const severities = (issues: Issue[]) =>
+  issues.map((issue) => [issue.rule, issue.severity])
+
+describe("checkCandidate: only what the candidate makes new or worse", () => {
+  test("E60: a cooler the board already rejects isn't blamed on the CPU", () => {
+    const build = buildOf(seed.proB760mDdr4, seed.nhL9aAm5)
+    // Its own issues remain: no GPU yet, and an early B760 BIOS
+    expect(rules(checkCandidate(build, "cpu", seed.i5_14400f))).toEqual([
+      "integrated-graphics",
+      "bios-update",
+    ])
+  })
+
+  test("E61: a CPU on another socket still gets the socket error", () => {
+    const build = buildOf(seed.proB760mDdr4, seed.nhL9aAm5)
+    expect(rules(checkCandidate(build, "cpu", seed.ryzen5_7600))).toEqual([
+      "socket-match",
+    ])
+  })
+
+  test("E62: no CPU is blamed for a GPU that already overloads the PSU", () => {
+    const build = buildOf(seed.rtx5090Astral, seed.mwe550)
+    for (const cpu of seedParts("cpu")) {
+      expect(checkCandidate(build, "cpu", cpu)).toEqual([])
+    }
+  })
+
+  test("E63: a CPU that turns a warning into an error is shown", () => {
+    const build = buildOf(seed.rtx5090Astral, seed.rm850e)
+    expect(severities(checkCandidate(build, "cpu", seed.ryzen5_7600))).toEqual([
+      ["psu-wattage", "error"],
+    ])
+  })
+
+  test("E64: a warning that stays a warning isn't shown", () => {
+    const psu900 = fixturePart("psu", "psu-900", {
+      ...seed.mwe550.specs,
+      wattageW: 900,
+    })
+    const build = buildOf(seed.rtx5090Astral, psu900)
+    expect(checkCandidate(build, "cpu", seed.ryzen5_7600)).toEqual([])
+    expect(
+      severities(checkCandidate(build, "cpu", seed.ryzen7_9800x3d))
+    ).toEqual([["psu-wattage", "error"]])
+  })
+
+  test("E65: CPUs that create a warning or an error", () => {
+    const build = buildOf(seed.rtx5090Astral, seed.gx1000)
+    const check = (cpu: BuildPart<"cpu">) =>
+      severities(checkCandidate(build, "cpu", cpu))
+    expect(check(seed.ryzen5_7600)).toEqual([["psu-wattage", "warning"]])
+    expect(check(seed.ryzen7_9800x3d)).toEqual([["psu-wattage", "warning"]])
+    expect(check(seed.i9_14900k)).toEqual([["psu-wattage", "error"]])
+  })
+
+  test("E66: PSU candidates always get their own wattage result", () => {
+    const build = buildOf(seed.ryzen7_9800x3d, seed.rtx5090Astral)
+    const check = (psu: BuildPart<"psu">) =>
+      severities(checkCandidate(build, "psu", psu))
+    expect(check(seed.mwe550)).toEqual([["psu-wattage", "error"]])
+    expect(check(seed.sf750)).toEqual([["psu-wattage", "error"]])
+    expect(check(seed.rm850e)).toEqual([["psu-wattage", "error"]])
+    expect(check(seed.gx1000)).toEqual([["psu-wattage", "warning"]])
+    expect(check(seed.rm1200x)).toEqual([])
+  })
+
+  test("E67: GPU candidates against the PSU", () => {
+    const build = buildOf(seed.ryzen7_9800x3d, seed.mwe550)
+    const check = (gpu: BuildPart<"gpu">) =>
+      severities(checkCandidate(build, "gpu", gpu))
+    expect(check(seed.rtx4060)).toEqual([])
+    expect(check(seed.rtx5070Sff)).toEqual([["psu-wattage", "warning"]])
+    expect(check(seed.rtx5090Astral)).toEqual([["psu-wattage", "error"]])
+  })
+
+  test("E68–E70: a drive is judged against the drives it joins", () => {
+    const build = swap(buildC(), pro990, sn850x)
+    expect(
+      checkCandidate(build, "storage", seed.nv3, { replace: sn850x.id })
+    ).toEqual([])
+    expect(rules(checkCandidate(build, "storage", seed.nv3))).toEqual([
+      "m2-slots",
+    ])
+    expect(checkCandidate(build, "storage", seed.mx500)).toEqual([])
+  })
+
+  test("E71: once the M.2 slots are over, more drives aren't blamed", () => {
+    const build: Build = {
+      ...buildC(),
+      storage: [
+        { part: pro990, quantity: 2 },
+        { part: sn850x, quantity: 1 },
+      ],
+    }
+    expect(checkCandidate(build, "storage", seed.nv3)).toEqual([])
+    expect(checkCandidate(build, "storage", seed.mx500)).toEqual([])
+  })
+
+  test("E72: boards are judged against the drives already picked", () => {
+    const build: Build = {
+      ...buildOf(seed.ryzen5_7600),
+      storage: [
+        { part: pro990, quantity: 2 },
+        { part: sn850x, quantity: 1 },
+      ],
+    }
+    expect(
+      rules(checkCandidate(build, "motherboard", seed.b650iLightning))
+    ).toEqual(["m2-slots"])
+    expect(checkCandidate(build, "motherboard", seed.x870eAorus)).toEqual([])
+  })
+
+  test("E73: a kit with more sticks than the board has slots", () => {
+    const build = buildOf(seed.ryzen5_7600, seed.b650iLightning)
+    expect(
+      rules(checkCandidate(build, "memory", seed.vengeanceDdr5_4x16))
+    ).toEqual(["memory-slots"])
+  })
+
+  test("E74: a GPU that fixes a warning reports nothing", () => {
+    expect(
+      checkCandidate(buildOf(seed.i5_14400f), "gpu", seed.rtx4060)
+    ).toEqual([])
+  })
+
+  test("E75: a CPU without graphics in an empty build", () => {
+    expect(rules(checkCandidate({}, "cpu", seed.i5_14400f))).toEqual([
+      "integrated-graphics",
+    ])
+    expect(checkCandidate({}, "cpu", seed.ryzen5_7600)).toEqual([])
   })
 })
