@@ -13,7 +13,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/builder-parts.ts`, `getBuilderParts`: E4, E36, E38, E39, E46, E49, the four stock statuses, invalid specs left out.
   - `app/api/builder/parts/route.ts`: 200 with `Cache-Control: no-store` (E37), 400s (E41, E42).
   - *Verify:* `pnpm test:db`.
-- [ ] **T4. Store, test-first.**
+- [x] **T4. Store, test-first.**
   - `pnpm add zustand`.
   - `plan-add.ts`: every row of Behavior 19 (E20, E22, E24–E33).
   - `store.ts`:
