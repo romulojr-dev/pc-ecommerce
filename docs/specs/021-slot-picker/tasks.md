@@ -11,7 +11,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/build-state/picker.ts`: `pickerList`, covering groups and precedence, cheapest-first order, markers, actions, banner, empty states and "change your" slots (E1–E9, E11a, E11b, E14, E14a, E15, E21a, E23–E29, E33).
   - `lib/build-state/picker.perf.test.ts`: E39 (5 warm-ups, median of 20 runs < 50 ms). Point the comment in `lib/builder/check.bench.ts` to it.
 - [x] **T3. Store.** `replaceDrive` (E21, E22). Memory cap through `planAdd` (E16), and the 20-product cap for adds (E20).
-- [ ] **T4. Server, test-first.**
+- [x] **T4. Server, test-first.**
   - `toBuilderPartData` extracted from `lib/builder-parts.ts` (the parts tests stay green).
   - `lib/builder-candidates.ts`, `getBuilderCandidates`: active only (E36), card data and the four stock statuses (E35), invalid specs left out (E37), fresh price (E34).
   - `app/api/builder/candidates/route.ts`: 200 with `today` and `Cache-Control: no-store` (E35, E35a), 400s (E38–E38e).
