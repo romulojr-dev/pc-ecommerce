@@ -8,7 +8,7 @@ import { builderCategories, type BuilderCategorySlug } from "./registry"
 const number = new Intl.NumberFormat("en-PH", { maximumFractionDigits: 2 })
 
 // A non-breaking space, so "228 mm" never wraps between number and unit
-const withUnit = (value: string, unit: string) => `${value} ${unit}`
+export const withUnit = (value: string, unit: string) => `${value} ${unit}`
 
 // One value without its unit: true -> "Yes", "MICRO_ATX" -> "Micro-ATX"
 function formatItem(meta: FieldMeta, value: unknown): string {

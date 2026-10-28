@@ -9,7 +9,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
 - [x] **T3. Seed cooler.** NH-L9i-17xx plus the coverage check (E86). *Verify:* `pnpm test` passes (151 parts) and `pnpm db:seed` on the dev branch gives 1 created.
 - [x] **T4. Types, limits, validateBuild.** `types.ts`, `limits.ts`, `build.test.ts` (E60–E68), written first.
 - [x] **T5. parseBuild / assembleBuild.** `parse.ts`, `parse.test.ts` (E69–E81), written first. (`test-support/seed-parts.ts` landed in T4.)
-- [ ] **T6. Rules, test-first.** `format.ts`, then each rule's test (red), then the rule (green), in PRD order (E5–E42). This can be one commit per rule or per pair of rules.
+- [x] **T6. Rules, test-first.** `format.ts`, then each rule's test (red), then the rule (green), in PRD order (E5–E42). This can be one commit per rule or per pair of rules.
 - [ ] **T7. checkBuild, buildStatus, candidates.** `check.ts`, `candidate.ts` and their tests (E1–E4, E43–E59), plus the `index.ts` API.
 - [ ] **T8. Bench.** `check.bench.ts`. *Verify:* `pnpm exec vitest bench --run` prints timings, and `pnpm test` doesn't run it.
 - [ ] **T9. Docs and wrap-up.**
