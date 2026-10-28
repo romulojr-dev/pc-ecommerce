@@ -35,7 +35,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - The not-buyable disabled state (E34, E35).
   - "Cart is coming soon."
   - Update `product-page.spec.ts`.
-- [ ] **T9. E2E.**
+- [x] **T9. E2E.**
   - The hydration guard in `e2e/test.ts`.
   - `e2e/builder.spec.ts` (spec §7 E2E row).
   - `seo.spec.ts`: E57, E58.

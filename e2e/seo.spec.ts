@@ -50,6 +50,16 @@ test.describe("sitemap.xml", () => {
   })
 })
 
+// A shopper's own build (docs/specs/020-builder-page, E57). The sitemap
+// test above checks it isn't listed (E58).
+test("/builder is not indexed", async ({ page }) => {
+  await page.goto("/builder")
+  await expect(meta(page, "name", "robots")).toHaveAttribute(
+    "content",
+    "noindex"
+  )
+})
+
 test.describe("robots.txt", () => {
   test("allows crawling and points at the sitemap", async ({ request }) => {
     const response = await request.get("/robots.txt")
@@ -70,6 +80,7 @@ test.describe("canonical URLs", () => {
     // Each page is canonical to itself, not to page 1
     { path: "/cpu?page=2", expected: `${SITE}/cpu?page=2` },
     { path: PRODUCT, expected: `${SITE}${PRODUCT}` },
+    { path: "/builder", expected: `${SITE}/builder` },
   ]
   for (const { path, expected } of cases) {
     test(`${path} is canonical to ${expected}`, async ({ page }) => {
