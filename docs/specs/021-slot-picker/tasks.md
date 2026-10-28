@@ -16,7 +16,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/builder-candidates.ts`, `getBuilderCandidates`: active only (E36), card data and the four stock statuses (E35), invalid specs left out (E37), fresh price (E34).
   - `app/api/builder/candidates/route.ts`: 200 with `today` and `Cache-Control: no-store` (E35, E35a), 400s (E38–E38e).
   - *Verify:* `pnpm test:db`.
-- [ ] **T5. Picker UI.**
+- [x] **T5. Picker UI.**
   - `ProductCard`: greyed variant and footer; the listing markup test unchanged.
   - `picker-card.tsx` and `picker-body.tsx` with markup tests (E3, E5, E7, E14, E14a, E19, E20, E26–E28, E30, E31).
   - `hooks/use-candidates.ts`, `addLoaded` in `useBuildParts`, `slot-picker.tsx` (dialog, fixed header, scrolling list, nested "Add anyway" confirm, focus).

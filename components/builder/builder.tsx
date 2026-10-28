@@ -1,12 +1,19 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { BuildNotice } from "@/components/builder/build-notice"
 import { BuildSummary } from "@/components/builder/build-summary"
-import { type SlotEntry, SlotSection } from "@/components/builder/slot-section"
+import {
+  changeFocusKey,
+  type OpenPicker,
+  type SlotEntry,
+  SlotSection,
+} from "@/components/builder/slot-section"
+import { type PickerTarget, SlotPicker } from "@/components/builder/slot-picker"
 import { useBuild } from "@/hooks/use-build"
 import { useBuildParts } from "@/hooks/use-build-parts"
+import type { BuilderCandidate } from "@/lib/build-state/candidates"
 import { buildStore } from "@/lib/build-state/store"
 import {
   availabilityMessage,
@@ -19,9 +26,10 @@ import { buildStatus, checkBuild, estimateWattage, SLOTS } from "@/lib/builder"
 // The builder page's client side (docs/specs/020-builder-page): the saved
 // build, its parts loaded fresh, the rules run in the browser. Until the
 // saved build and its parts have loaded, the slots and the summary show
-// skeletons, as the server rendered them.
+// skeletons, as the server rendered them. Each slot's buttons open the slot
+// picker (docs/specs/021-slot-picker).
 export function Builder() {
-  const { status, build, loaded, retry } = useBuildParts()
+  const { status, build, loaded, retry, addLoaded } = useBuildParts()
   const noticeChanges = useBuild((state) => state.noticeChanges)
   const ready = status === "ready"
 
@@ -38,6 +46,54 @@ export function Builder() {
   }, [build, loaded])
 
   const { remove, setQuantity, dismissNotice } = buildStore.getState()
+
+  // The picker's last target is kept while it closes (SlotPicker)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [picker, setPicker] = useState<PickerTarget | null>(null)
+  // After a pick, the slot's Change button for the new part gets focus once
+  // it has rendered (Behavior 14)
+  const focusAfterPick = useRef<string | null>(null)
+  useEffect(() => {
+    const key = focusAfterPick.current
+    if (key === null) return
+    const button = document.querySelector<HTMLElement>(
+      `[data-focus="${CSS.escape(key)}"]`
+    )
+    if (button) {
+      focusAfterPick.current = null
+      button.focus()
+    }
+  })
+
+  const openPicker: OpenPicker = (slot, trigger, replace) => {
+    setPicker((previous) => ({
+      slot,
+      replace,
+      trigger,
+      opening: (previous?.opening ?? 0) + 1,
+    }))
+    setPickerOpen(true)
+  }
+
+  // Adds or replaces at once: the shopper opened the picker to do it (D4).
+  // The store decides on the build as it is now (Rules › Adding).
+  function pick(candidate: BuilderCandidate, replace: string | null) {
+    if (!picker) return
+    const { slot } = picker
+    const { part, stock } = candidate.data
+    addLoaded(candidate.data)
+    const store = buildStore.getState()
+    if (replace !== null) {
+      store.replaceDrive(replace, part.id, stock)
+    } else {
+      const plan = store.add(slot, part.id, stock)
+      if (plan?.kind === "confirm-replace") {
+        store.replace(slot, part.id, plan.quantity)
+      }
+    }
+    focusAfterPick.current = changeFocusKey(slot, part.id)
+    setPickerOpen(false)
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,6 +121,7 @@ export function Builder() {
                 onQuantity={(productId, quantity) =>
                   setQuantity(slot, productId, quantity)
                 }
+                onOpenPicker={openPicker}
               />
             )
           })}
@@ -80,6 +137,13 @@ export function Builder() {
           onRetry={retry}
         />
       </div>
+      <SlotPicker
+        open={pickerOpen}
+        target={picker}
+        build={build}
+        onClose={() => setPickerOpen(false)}
+        onPick={pick}
+      />
     </div>
   )
 }

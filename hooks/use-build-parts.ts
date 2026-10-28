@@ -76,5 +76,10 @@ export function useBuildParts() {
     build,
     loaded,
     retry: () => setFailed(null),
+    // A part the slot picker has just loaded fresh: call it before adding
+    // the part to the store, so the slot shows it with no request
+    // (docs/specs/021-slot-picker, D11)
+    addLoaded: (data: BuilderPartData) =>
+      setLoaded((previous) => new Map(previous).set(data.part.id, data)),
   }
 }

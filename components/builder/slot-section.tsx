@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import { QuantityStepper } from "@/components/builder/quantity-stepper"
 import { ProductImage } from "@/components/product/product-image"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { BuilderPartData } from "@/lib/build-state/parts"
 import { SLOT_COPY } from "@/lib/build-state/slots"
@@ -14,11 +14,25 @@ import {
   type Slot,
 } from "@/lib/builder"
 import { formatPeso } from "@/lib/format"
-import { categoryHref, productHref } from "@/lib/site"
+import { productHref } from "@/lib/site"
 import { isBuyable, stockStatusLabel } from "@/lib/stock"
 import { cn, focusRing } from "@/lib/utils"
 
 export type SlotEntry = { quantity: number; data: BuilderPartData }
+
+// Opens the slot picker (docs/specs/021-slot-picker, Behavior 1): to add a
+// part, or for storage to replace the drive named in `replace`. `trigger`
+// gets focus back when the picker closes without a pick.
+export type OpenPicker = (
+  slot: Slot,
+  trigger: HTMLElement,
+  replace?: string
+) => void
+
+// The attribute the builder focuses after a pick: the slot's Change button
+// for that part
+export const changeFocusKey = (slot: Slot, productId: string) =>
+  `change-${slot}-${productId}`
 
 type SlotSectionProps = {
   slot: Slot
@@ -28,17 +42,12 @@ type SlotSectionProps = {
   issues: readonly Issue[]
   onRemove: (productId: string) => void
   onQuantity: (productId: string, quantity: number) => void
+  onOpenPicker: OpenPicker
 }
 
-const linkClass = cn(
-  buttonVariants({ variant: "outline", size: "lg" }),
-  focusRing,
-  "w-fit"
-)
-
 // One builder slot (docs/specs/020-builder-page, Behavior 10–14): its parts,
-// or a link to choose one. The links go to the category listing until the
-// slot picker (#54).
+// or a button to choose one. "Choose", "Change" and "Add another drive" open
+// the slot picker (docs/specs/021-slot-picker, Behavior 1).
 export function SlotSection({
   slot,
   entries,
@@ -46,6 +55,7 @@ export function SlotSection({
   issues,
   onRemove,
   onQuantity,
+  onOpenPicker,
 }: SlotSectionProps) {
   const copy = SLOT_COPY[slot]
   const headingId = `slot-${slot}`
@@ -67,9 +77,14 @@ export function SlotSection({
           </div>
         </div>
       ) : entries.length === 0 ? (
-        <Link href={categoryHref(slot)} className={linkClass}>
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-fit"
+          onClick={(event) => onOpenPicker(slot, event.currentTarget)}
+        >
           {copy.choose}
-        </Link>
+        </Button>
       ) : (
         <>
           <ul className="flex flex-col gap-4">
@@ -83,13 +98,27 @@ export function SlotSection({
                 onQuantity={(quantity) =>
                   onQuantity(entry.data.part.id, quantity)
                 }
+                onChange={(trigger) =>
+                  onOpenPicker(
+                    slot,
+                    trigger,
+                    SLOT_LIMITS[slot].multipleEntries
+                      ? entry.data.part.id
+                      : undefined
+                  )
+                }
               />
             ))}
           </ul>
           {SLOT_LIMITS[slot].multipleEntries && (
-            <Link href={categoryHref(slot)} className={linkClass}>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-fit"
+              onClick={(event) => onOpenPicker(slot, event.currentTarget)}
+            >
               Add another drive
-            </Link>
+            </Button>
           )}
         </>
       )}
@@ -116,6 +145,7 @@ type PartRowProps = {
   severity: Severity | null
   onRemove: () => void
   onQuantity: (quantity: number) => void
+  onChange: (trigger: HTMLElement) => void
 }
 
 function PartRow({
@@ -124,6 +154,7 @@ function PartRow({
   severity,
   onRemove,
   onQuantity,
+  onChange,
 }: PartRowProps) {
   const { part } = data
   const buyable = isBuyable(data.stockStatus)
@@ -174,18 +205,19 @@ function PartRow({
               onChange={onQuantity}
             />
           )}
-          {!SLOT_LIMITS[slot].multipleEntries && (
-            <Link
-              href={categoryHref(slot)}
-              aria-label={`Change ${SLOT_COPY[slot].name}`}
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                focusRing
-              )}
-            >
-              Change
-            </Link>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={
+              SLOT_LIMITS[slot].multipleEntries
+                ? `Change ${part.name}`
+                : `Change ${SLOT_COPY[slot].name}`
+            }
+            data-focus={changeFocusKey(slot, part.id)}
+            onClick={(event) => onChange(event.currentTarget)}
+          >
+            Change
+          </Button>
           <Button
             variant="ghost"
             size="sm"

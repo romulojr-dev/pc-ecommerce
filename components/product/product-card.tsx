@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { ReactNode } from "react"
 
 import { ProductImage } from "@/components/product/product-image"
 import { formatPeso } from "@/lib/format"
@@ -18,6 +19,13 @@ type ProductCardProps = {
   loading?: "lazy" | "eager"
   // 2 when the cards are the page's main content, 3 under a section heading
   headingLevel?: 2 | 3
+  // The slot picker's greyed card: a part that doesn't fit or can't be
+  // bought (docs/specs/021-slot-picker, Rules › Greyed cards). The card is
+  // muted, the text keeps its contrast.
+  greyed?: boolean
+  // Shown under the card, above the link that covers it, so its buttons
+  // stay clickable: the picker's badges, reasons and action
+  children?: ReactNode
   className?: string
 }
 
@@ -34,29 +42,27 @@ export function ProductCard({
   sizes,
   loading,
   headingLevel = 3,
+  greyed = false,
+  children,
   className,
 }: ProductCardProps) {
   const Heading = `h${headingLevel}` as const
   const status = getStockStatus(product, today)
 
-  return (
-    <article
-      className={cn(
-        "relative rounded-lg border bg-card text-card-foreground transition-colors hover:border-foreground/30",
-        // The link has no ring of its own, so the card shows its focus
-        "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
-        layout === "grid"
-          ? "flex flex-col gap-3 p-3"
-          : "flex items-center gap-4 p-3",
-        className
-      )}
-    >
+  const rowClass =
+    layout === "grid" ? "flex flex-col gap-3" : "flex items-center gap-4"
+
+  const row = (
+    <>
       <ProductImage
         image={product.image}
         productName={product.name}
         sizes={sizes}
         loading={loading}
-        className={layout === "grid" ? "w-full" : "size-24 shrink-0"}
+        className={cn(
+          layout === "grid" ? "w-full" : "size-24 shrink-0",
+          greyed && "opacity-50 grayscale"
+        )}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="text-xs text-muted-foreground">{product.brand}</p>
@@ -109,6 +115,28 @@ export function ProductCard({
           {stockStatusLabel[status]}
         </p>
       </div>
+    </>
+  )
+
+  return (
+    <article
+      className={cn(
+        "relative rounded-lg border bg-card p-3 text-card-foreground transition-colors hover:border-foreground/30",
+        // The link has no ring of its own, so the card shows its focus
+        "has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background",
+        greyed && "bg-muted/60",
+        children ? "flex flex-col gap-3" : rowClass,
+        className
+      )}
+    >
+      {children ? (
+        <>
+          <div className={rowClass}>{row}</div>
+          <div className="relative z-10">{children}</div>
+        </>
+      ) : (
+        row
+      )}
     </article>
   )
 }

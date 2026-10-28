@@ -55,6 +55,7 @@ function render(
       issues={issues}
       onRemove={() => {}}
       onQuantity={() => {}}
+      onOpenPicker={() => {}}
     />
   )
 }
@@ -78,10 +79,11 @@ function stepper(html: string, name: string) {
 const vengeance = seed.vengeanceDdr5.name
 
 describe("SlotSection", () => {
-  test("an empty slot links to its listing (E1)", () => {
+  // docs/specs/021-slot-picker, Behavior 1: buttons that open the picker
+  test("an empty slot has a button that opens the picker (E1)", () => {
     const html = render("cpu", [])
-    expect(html).toContain('href="/cpu"')
-    expect(html).toContain("Choose a CPU")
+    expect(html).toMatch(/<button[^>]*>Choose a CPU<\/button>/)
+    expect(html).not.toContain('href="/cpu"')
     expect(html).toContain(">CPU</h2>")
   })
 
@@ -97,7 +99,7 @@ describe("SlotSection", () => {
     expect(render(slot, [])).toContain(choose)
   })
 
-  test("loading shows a skeleton, not a link", () => {
+  test("loading shows a skeleton, not a button", () => {
     const html = render("cpu", [], { loading: true })
     expect(html).toContain('data-slot="skeleton"')
     expect(html).not.toContain("Choose a CPU")
@@ -109,7 +111,8 @@ describe("SlotSection", () => {
     expect(html).toContain(seed.ryzen5_7600.name)
     expect(html).toContain("₱11,495.00")
     expect(html).toContain("In stock")
-    expect(html).toContain('aria-label="Change CPU"')
+    expect(html).toMatch(/<button[^>]*aria-label="Change CPU"/)
+    expect(html).toContain('data-focus="change-cpu-100-100001015BOX"')
     expect(html).toContain(
       `aria-label="Remove ${seed.ryzen5_7600.name} from your build"`
     )
@@ -192,11 +195,14 @@ describe("SlotSection", () => {
     )
   })
 
-  test("storage offers another drive, and no Change (E17)", () => {
-    const html = render("storage", [entry(seed.pro990)])
-    expect(html).toContain("Add another drive")
-    expect(html).toContain('href="/storage"')
-    expect(html).not.toContain(">Change<")
+  test("storage offers another drive, and a Change per drive (E17, D12)", () => {
+    const html = render("storage", [entry(seed.pro990), entry(seed.mx500)])
+    expect(html).toMatch(/<button[^>]*>Add another drive<\/button>/)
+    expect(html).not.toContain('href="/storage"')
+    expect(html).toContain(`aria-label="Change ${seed.pro990.name}"`)
+    expect(html).toContain(
+      `aria-label="Change ${seed.mx500.name.replaceAll('"', "&quot;")}"`
+    )
   })
 
   test("a part named in an error is marked (E6)", () => {
