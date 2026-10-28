@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { clampQuantity, getStockStatus, manilaToday } from "./stock"
+import { clampQuantity, getStockStatus, isBuyable, manilaToday } from "./stock"
 
 const TODAY = "2026-10-26"
 
@@ -94,5 +94,22 @@ describe("clampQuantity", () => {
     [2.7, 2],
   ])("clamps %d to %i with 10 available", (value, expected) => {
     expect(clampQuantity(value, 10)).toBe(expected)
+  })
+})
+
+// docs/specs/020-builder-page, Rules › Buyable: the inStock filter's meaning
+describe("isBuyable", () => {
+  test.each([
+    ["in-stock", true],
+    ["low-stock", true],
+    ["out-of-stock", false],
+    ["pre-order", false],
+  ] as const)("%s is %s", (status, expected) => {
+    expect(isBuyable(status)).toBe(expected)
+  })
+
+  test("a pre-order whose ship date has passed is buyable", () => {
+    const product = { stock: 10, lowStockAt: 5, preorderShipsOn: "2026-10-26" }
+    expect(isBuyable(getStockStatus(product, TODAY))).toBe(true)
   })
 })
