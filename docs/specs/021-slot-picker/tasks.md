@@ -26,7 +26,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `e2e/epic-build.spec.ts`: E40–E44 (focus, Escape, focus return, Show all reason, status OK), E13, and no candidates request when toggling "Show all".
   - The home hero loses its "Coming soon" badge; update `home.spec.ts`.
   - *Verify:* E2E against `pnpm dev`, and with `CI=1` against `pnpm build && pnpm start`.
-- [ ] **T7. Wrap-up.**
+- [x] **T7. Wrap-up.**
   - Docs: `CLAUDE.md` (the picker, the candidates route, `pickerList`, ADR 0006; drop the "until #54" wording). Tick the spec's acceptance criteria.
   - Checks: `pnpm format`, `lint`, `typecheck`, `test`, `test:db`, `build`, E2E.
   - Manual check at 1024 and 1280 px (plan › Verification).
