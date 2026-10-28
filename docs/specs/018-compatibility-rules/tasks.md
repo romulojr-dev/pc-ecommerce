@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Spec data coverage.** `lib/specs/rules-coverage.test.ts` (E82–E85) and the `cooler-socket` tag on `motherboard.socket`. *Verify:* the test fails on both doctored copies and passes on the real registry.
-- [ ] **T2. Purity lint.** The ESLint block for both folders. *Verify:* `pnpm lint` passes, and a temporary `import { db } from "@/lib/db"` in a `lib/specs` file fails (then reverted) (E87).
+- [x] **T2. Purity lint.** The ESLint block for both folders. *Verify:* `pnpm lint` passes, and a temporary `import { db } from "@/lib/db"` in a `lib/specs` file fails (then reverted) (E87).
 - [ ] **T3. Seed cooler.** NH-L9i-17xx plus the coverage check (E86). *Verify:* `pnpm test` passes (151 parts) and `pnpm db:seed` on the dev branch gives 1 created.
 - [ ] **T4. Types, limits, validateBuild.** `types.ts`, `limits.ts`, `build.test.ts` (E60–E68), written first.
 - [ ] **T5. parseBuild / assembleBuild.** `parse.ts`, `parse.test.ts` (E69–E81), written first. `test-support/seed-parts.ts` lands here.
