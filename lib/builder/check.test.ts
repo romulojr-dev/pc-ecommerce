@@ -10,6 +10,7 @@ const rules = (issues: Issue[]) => issues.map((issue) => issue.rule)
 
 // docs/specs/018-compatibility-rules, E1–E4, E43–E45
 describe("checkBuild", () => {
+  // With all 14 rules, as before (spec 019 E10)
   test("E1, E3: spec 001's builds A and C have no issues", () => {
     expect(checkBuild(buildA())).toEqual([])
     expect(checkBuild(buildC())).toEqual([])
@@ -43,6 +44,32 @@ describe("checkBuild", () => {
     )
     const severities = issues.map((issue) => issue.severity)
     expect(severities).toEqual([...severities].sort())
+  })
+
+  // docs/specs/019-count-capacity-power-rules, E10, E37, E49
+  test("E37: build B without a GPU adds the integrated graphics warning", () => {
+    const issues = checkBuild({ ...buildB(), gpu: [] })
+    expect(rules(issues)).toEqual(["integrated-graphics", "bios-update"])
+  })
+
+  test("E49: the count, capacity and power rules take their PRD rows", () => {
+    const build: Build = {
+      ...swap(buildC(), seed.rtx5090Astral, seed.rm850e),
+      memory: [{ part: seed.vengeanceDdr5, quantity: 2 }],
+      storage: [
+        { part: seed.pro990, quantity: 2 },
+        { part: seed.sn850x, quantity: 1 },
+      ],
+    }
+    const issues = checkBuild(build)
+    expect(rules(issues)).toEqual([
+      "memory-slots",
+      "gpu-length",
+      "psu-wattage",
+      "psu-form-factor",
+      "m2-slots",
+    ])
+    expect(buildStatus(issues)).toBe("errors")
   })
 
   test("doesn't change the build, and gives the same answer twice", () => {
