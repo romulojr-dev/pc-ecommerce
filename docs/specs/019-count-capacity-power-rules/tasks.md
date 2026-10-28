@@ -11,8 +11,8 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
 - [x] **T5. M.2 slots and integrated graphics, test-first.** E37–E48.
 - [x] **T6. Register the rules.** `RULES` in full PRD order (14). `check.test.ts`: builds A/B/C unchanged (E10), E37, E49. *Verify:* every spec 018 test passes with its expectations unchanged.
 - [x] **T7. checkCandidate, test-first.** E60–E75 in `candidate.test.ts` (red under the old filter), then the baseline comparison (green). Rename the E59 test to "gives the issues it adds".
-- [ ] **T8. Wrap-up.**
-  - Code: `index.ts` exports; `check.bench.ts` gains a CPU-candidates bench, re-run with the timings recorded here.
+- [x] **T8. Wrap-up.**
+  - Code: `index.ts` exports; `check.bench.ts` gains a CPU-candidates bench, re-run with the timings recorded here. Measured: `checkBuild` ≈ 2.0 µs (was 1.3 µs); 30 GPU candidates ≈ 147 µs and 26 CPU candidates ≈ 137 µs (was ≈ 40 µs for the GPUs: two `checkBuild` runs per candidate, 14 rules instead of 9). Far under #54's 100 ms.
   - Docs: the CLAUDE.md `lib/builder` line (`estimateWattage`, constants, new `checkCandidate` wording); tick the spec's acceptance criteria.
   - Checks: `pnpm format`, `lint`, `typecheck`, `test`, `build`.
   - PR: push with `git push -u origin HEAD` and open the PR per the repo template.
