@@ -309,6 +309,19 @@ describe("part quality and builder scenarios", () => {
     expect(Math.max(...wattages)).toBeGreaterThanOrEqual(1200)
   })
 
+  // So the cooler socket rule fails on both socket families
+  // (docs/specs/018-compatibility-rules)
+  test("has a cooler for no AMD socket and one for no Intel socket", () => {
+    const coolers = files.find((file) => file.category === "cpu-cooler")!.parts
+    const socketLists = coolers.map(
+      (part) => (part.specs as { supportedSockets: string[] }).supportedSockets
+    )
+    const fitsNone = (family: string[]) =>
+      socketLists.some((sockets) => !sockets.some((s) => family.includes(s)))
+    expect(fitsNone(["AM4", "AM5"]), "Intel-only cooler").toBe(true)
+    expect(fitsNone(["LGA1700", "LGA1851"]), "AMD-only cooler").toBe(true)
+  })
+
   test("has 5–6 parts with several images, with 2 and with 3", () => {
     const counts = parts
       .map((part) => part.images.length)
