@@ -246,4 +246,28 @@ export const cpuCoolers = [
       radiatorSizeMm: 280,
     },
   },
+  // Intel only: with the AM5-only NH-L9a-AM5, the cooler socket rule has a
+  // failing cooler on both socket families (docs/specs/018-compatibility-rules).
+  {
+    sku: "NH-L9i-17xx",
+    name: "Noctua NH-L9i-17xx Low-Profile Cooler",
+    brand: "Noctua",
+    price: 329500, // mid
+    stock: 8,
+    weightGrams: 420,
+    warrantyMonths: 72,
+    boxContents: [
+      "CPU cooler with NF-A9x14 HS-PWM fan",
+      "SecuFirm2 mounting kit",
+      "NT-H1 thermal paste",
+      "Low-noise adapter",
+      "Case badge",
+    ],
+    sourceUrl: "https://www.noctua.at/en/products/nh-l9i-17xx/specifications",
+    specs: {
+      type: "AIR",
+      supportedSockets: ["LGA1700", "LGA1851"],
+      heightMm: 37,
+    },
+  },
 ] satisfies SeedPart<"cpu-cooler">[]

@@ -12,6 +12,7 @@ export type { FieldMeta, RuleId, SpecFilterKind, SpecGroup } from "./helpers"
 export { fieldSchemas, isTextField } from "./fields"
 export {
   formatSpecValue,
+  withUnit,
   getSpecRows,
   type SpecRow,
   type SpecRowGroup,

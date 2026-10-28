@@ -56,7 +56,9 @@ export const motherboardFields = {
     summary: {},
     group: "Processor",
     filter: "enum",
-    rules: ["socket-match", "bios-update"],
+    // Cooler socket reads the board's socket when no CPU is picked
+    // (docs/specs/018-compatibility-rules)
+    rules: ["socket-match", "cooler-socket", "bios-update"],
     options: SOCKET_LABELS,
   },
   chipset: { label: "Chipset", group: "Processor", filter: "values" },
