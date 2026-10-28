@@ -2,8 +2,8 @@ import type { Page } from "@playwright/test"
 
 import { expect, test } from "./test"
 
-// The PC Builder page and Add to build (docs/specs/020-builder-page). Needs a
-// seeded database. Every test starts with an empty saved build: each gets a
+// The PC Builder page and Add to build (docs/specs/020-builder-page); the
+// slot picker is in epic-build.spec.ts. Needs a seeded database. Every test starts with an empty saved build: each gets a
 // fresh browser context, so localStorage is empty.
 
 const RYZEN = "/cpu/amd-ryzen-5-7600"
@@ -50,7 +50,7 @@ test("a part added on its product page is in the build, after a reload too", asy
   await expect(summary(page)).toContainText("₱11,495.00")
 })
 
-test("an empty build offers a link for every slot", async ({ page }) => {
+test("an empty build offers a button for every slot", async ({ page }) => {
   await page.goto("/builder")
   for (const name of [
     "Choose a CPU",
@@ -62,15 +62,17 @@ test("an empty build offers a link for every slot", async ({ page }) => {
     "Choose a power supply",
     "Choose a CPU cooler",
   ]) {
-    await expect(page.getByRole("link", { name, exact: true })).toBeVisible()
+    await expect(page.getByRole("button", { name, exact: true })).toBeVisible()
   }
   await expect(summary(page)).toContainText("Add parts to check compatibility.")
   await expect(
     summary(page).getByRole("button", { name: "Add build to cart" })
   ).toBeDisabled()
 
-  await page.getByRole("link", { name: "Choose a CPU", exact: true }).click()
-  await expect(page).toHaveURL("/cpu")
+  // The button opens the slot picker, not the listing
+  await page.getByRole("button", { name: "Choose a CPU", exact: true }).click()
+  await expect(page).toHaveURL("/builder")
+  await expect(page.getByRole("dialog", { name: "Choose a CPU" })).toBeVisible()
 })
 
 test("replacing a part asks first", async ({ page }) => {
@@ -141,7 +143,7 @@ test("memory is raised from the product page and changed on the builder", async 
   // Removing a part needs no reload
   await memory.getByRole("button", { name: /^Remove / }).click()
   await expect(
-    page.getByRole("link", { name: "Choose memory", exact: true })
+    page.getByRole("button", { name: "Choose memory", exact: true })
   ).toBeVisible()
 })
 

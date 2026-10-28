@@ -97,10 +97,11 @@ test("the hero's calls to action", async ({ page }) => {
     region(page, "Deals").getByRole("heading", { name: "Deals" })
   ).toBeInViewport()
 
-  await page.getByRole("link", { name: "Build your PC Coming soon" }).click()
+  // The builder is live, so the link carries no "Coming soon" badge
+  await expect(page.getByText("Coming soon")).toHaveCount(0)
+  await page.getByRole("link", { name: "Build your PC", exact: true }).click()
   await expect(page).toHaveURL("/builder")
   await expect(h1(page)).toHaveText("PC Builder")
-  await expect(page.getByText("Coming soon")).toBeVisible()
 })
 
 test("View all deals lists only products on sale", async ({ page }) => {

@@ -207,6 +207,82 @@ describe("actions", () => {
     expect(store.getState().items).toEqual([item("storage", "pro990", 2)])
   })
 
+  // docs/specs/021-slot-picker, Behavior 14
+  test("add plans memory's kept quantity, capped at the new kit's stock (E16)", () => {
+    const { store } = hydrated(saved([item("memory", "vengeance", 12)]))
+    const plan = store.getState().add("memory", "flareX5", 11)
+    expect(plan).toEqual({ kind: "confirm-replace", quantity: 11 })
+    store.getState().replace("memory", "flareX5", 11)
+    expect(store.getState().items).toEqual([item("memory", "flareX5", 11)])
+  })
+
+  test("add refuses a new drive in a build of 20 products (E20)", () => {
+    const others = (
+      ["cpu", "motherboard", "memory", "gpu", "case", "psu"] as const
+    )
+      .map((slot) => item(slot, slot))
+      .concat(item("cpu-cooler", "cooler"))
+    const drives = Array.from({ length: 13 }, (_, i) =>
+      item("storage", `drive${i}`)
+    )
+    const { store } = hydrated(saved([...others, ...drives]))
+    expect(store.getState().add("storage", "another", 10)).toEqual({
+      kind: "full",
+    })
+    expect(store.getState().add("storage", "drive0", 10)).toEqual({
+      kind: "raise",
+      quantity: 2,
+    })
+    expect(store.getState().items).toHaveLength(20)
+  })
+
+  test("replaceDrive puts the new drive in the old one's place (E21)", () => {
+    const { store } = hydrated(
+      saved([item("storage", "pro990", 2), item("storage", "mx500")])
+    )
+    store.getState().replaceDrive("pro990", "sn850x", 20)
+    expect(store.getState().items).toEqual([
+      item("storage", "sn850x", 2),
+      item("storage", "mx500"),
+    ])
+  })
+
+  test("replaceDrive caps the kept quantity at the new drive's stock", () => {
+    const { store } = hydrated(saved([item("storage", "pro990", 5)]))
+    store.getState().replaceDrive("pro990", "sn850x", 3)
+    expect(store.getState().items).toEqual([item("storage", "sn850x", 3)])
+  })
+
+  test("replaceDrive merges into a drive already in the build (E22)", () => {
+    const { store } = hydrated(
+      saved([item("storage", "pro990"), item("storage", "mx500")])
+    )
+    store.getState().replaceDrive("pro990", "mx500", 18)
+    expect(store.getState().items).toEqual([item("storage", "mx500", 2)])
+  })
+
+  test("replaceDrive caps a merge at the stock", () => {
+    const { store } = hydrated(
+      saved([item("storage", "pro990", 3), item("storage", "mx500", 2)])
+    )
+    store.getState().replaceDrive("pro990", "mx500", 4)
+    expect(store.getState().items).toEqual([item("storage", "mx500", 4)])
+  })
+
+  test("replaceDrive does nothing when the old drive is gone", () => {
+    const { store } = hydrated(saved([item("storage", "mx500")]))
+    store.getState().replaceDrive("pro990", "sn850x", 20)
+    expect(store.getState().items).toEqual([item("storage", "mx500")])
+  })
+
+  test("replaceDrive waits for the saved build to be read", () => {
+    const storage = memoryStorage(saved([item("storage", "pro990")]))
+    const store = createBuildStore(storage)
+    store.getState().replaceDrive("pro990", "sn850x", 20)
+    store.persist.rehydrate()
+    expect(store.getState().items).toEqual([item("storage", "pro990")])
+  })
+
   test("remove empties a slot (E11)", () => {
     const { store } = hydrated(
       saved([item("cpu", "ryzen5_7600"), item("gpu", "rtx4060")])

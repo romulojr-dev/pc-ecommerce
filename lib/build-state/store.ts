@@ -37,6 +37,11 @@ export type BuildState = {
   // read. A "confirm-replace" changes nothing until replace is called.
   add: (slot: Slot, productId: string, stock: number) => AddPlan | null
   replace: (slot: Slot, productId: string, quantity: number) => void
+  // Storage: the new drive takes the old one's place and quantity, capped at
+  // its stock; a drive already in the build absorbs it instead, as
+  // applyCandidate does (docs/specs/021-slot-picker, Behavior 14). Nothing
+  // happens when the old drive is no longer in the build.
+  replaceDrive: (oldId: string, newId: string, stock: number) => void
   remove: (slot: Slot, productId: string) => void
   setQuantity: (slot: Slot, productId: string, quantity: number) => void
   // Removes the parts assembleBuild reported as gone and keeps the changes
@@ -132,6 +137,31 @@ export function createBuildStore(
                 { slot, productId, quantity },
               ])
             )
+          },
+
+          replaceDrive(oldId, newId, stock) {
+            update((items) => {
+              const old = items.find(isEntry("storage", oldId))
+              if (!old || oldId === newId) return items
+              const existing = items.find(isEntry("storage", newId))
+              if (existing) {
+                const quantity = Math.min(
+                  existing.quantity + old.quantity,
+                  stock
+                )
+                return items
+                  .filter((item) => item !== old)
+                  .map((item) =>
+                    item === existing ? { ...item, quantity } : item
+                  )
+              }
+              const quantity = Math.min(old.quantity, stock)
+              return items.map((item) =>
+                item === old
+                  ? { slot: "storage", productId: newId, quantity }
+                  : item
+              )
+            })
           },
 
           remove(slot, productId) {
