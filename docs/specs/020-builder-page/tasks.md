@@ -21,7 +21,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
     - `parseBuild` on read (E52, E53) and the cap (E56);
     - actions (E11–E13, E20, E22, E25, E27–E31);
     - no writes before hydration.
-- [ ] **T5. Summary helpers, test-first.** `buildTotal` (E1–E4, E7, E11–E13), `buildNotice` (E48, E50–E53, silent kinds), `availabilityMessage` (E7–E9).
+- [x] **T5. Summary helpers, test-first.** `buildTotal` (E1–E4, E7, E11–E13), `buildNotice` (E48, E50–E53, silent kinds), `availabilityMessage` (E7–E9).
 - [ ] **T6. Hooks.**
   - `hooks/use-build.ts`: hydration once, `storage`-event sync.
   - `hooks/use-build-parts.ts`: loader, stale-response guard, drop with notice only after success, error and retry.
