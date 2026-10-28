@@ -80,7 +80,7 @@ export function AddToBuild({ productId, name, slot, stock }: AddToBuildProps) {
     setOutcome({ kind: "added" })
   }
 
-  const noun = SLOT_COPY[slot].noun ?? SLOT_COPY[slot].name
+  const { noun } = SLOT_COPY[slot]
   const keeping =
     slot === "memory" && replace && replace.quantity > 1
       ? `, keeping ${replace.quantity} kits`

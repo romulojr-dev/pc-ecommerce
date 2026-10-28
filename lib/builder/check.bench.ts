@@ -9,7 +9,8 @@ import { checkBuild } from "./check"
 // `pnpm exec vitest bench --run --reporter=verbose` (the verbose reporter
 // prints the timings). `pnpm test` and CI don't run it
 // (docs/specs/018-compatibility-rules, D17). The real budget, 100 ms per
-// build change in the slot picker, is tested in the slot picker story (#54).
+// build change in the slot picker, is tested in CI by
+// lib/build-state/picker.perf.test.ts (docs/specs/021-slot-picker, D9).
 
 const build = buildA()
 const gpus = seedParts("gpu")

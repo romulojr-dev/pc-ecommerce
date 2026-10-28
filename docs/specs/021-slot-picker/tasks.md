@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Docs.** Spec 021 (approved with the review changes), this plan and task list, ADR 0006.
-- [ ] **T2. Pure picker logic, test-first.**
+- [x] **T2. Pure picker logic, test-first.**
   - `lib/build-state/candidates.ts`: `builderCandidatesQuerySchema` (E35a, E38–E38e) and the `BuilderCandidate` type.
   - `lib/build-state/slots.ts`: `plural`, storage's noun "drive", title and empty-state copy.
   - `lib/build-state/picker.ts`: `pickerList`, covering groups and precedence, cheapest-first order, markers, actions, banner, empty states and "change your" slots (E1–E9, E11a, E11b, E14, E14a, E15, E21a, E23–E29, E33).

@@ -82,7 +82,7 @@ This story adds the slot picker, the builder's main way to fill a slot. "Choose 
 
 17. When the default list is empty, the picker says why and what to change. One of these applies:
     - **No active products in the category:** "There are no CPU coolers in the store right now." The "Show all" toggle is hidden.
-    - **Some parts fit, but none is buyable:** "No motherboard that fits your build is in stock right now. Turn on "Show all" to see the ones that fit, or change your case."
+    - **Some parts fit, but none is buyable:** "No motherboard that fits your build is in stock right now. Turn on "Show all" to see the ones that fit, or change your CPU or case."
     - **Nothing fits:** "No motherboard fits your build. Turn on "Show all" to see why, or change your CPU or memory."
 
     "Change your …" names the other slots whose parts appear in the candidates' errors, in slot order (Rules › Empty states). With "Show all" on, the list is never empty unless the category is.
@@ -108,7 +108,7 @@ Prices and stock are seed values on 2026-10-28 (Manila). "Build A" is spec 001's
 | E6 | Build A | Graphics card ("Change") | 21 of 30 shown. RTX 4060 is marked "Current" and has no button. Warnings: Sapphire PULSE Radeon RX 7800 XT 16GB (84%), ASUS Prime GeForce RTX 5070 Ti OC Edition 16GB (92%), Sapphire PULSE Radeon RX 9070 XT 16GB (93%), Sapphire NITRO+ Radeon RX 9070 XT OC 16GB (99%), each with spec 019's "close to its limit" message. Hidden: MSI GeForce RTX 5080 16G Gaming Trio OC, MSI GeForce RTX 5090 32G Gaming Trio OC and Sapphire PULSE Radeon RX 7900 XTX 24GB (errors, e.g. "…need an estimated 595 W, more than the 550 W the Cooler Master MWE 550 Bronze V2 supplies."); ASUS ROG Astral GeForce RTX 5090 OC Edition 32GB and ASUS TUF Gaming GeForce RTX 5080 OC Edition 16GB (error and out of stock); MSI GeForce RTX 5070 Ti 16G Ventus 3X OC (warning, out of stock); ASUS Dual GeForce RTX 3060 V2 OC Edition 12GB (out of stock); MSI GeForce RTX 5060 Ti 16G Ventus 2X OC Plus and ASUS Prime Radeon RX 9070 OC Edition 16GB (pre-orders) |
 | E7 | Build A | CPU cooler | 12 of 13 shown. Hidden: Noctua NH-L9i-17xx Low-Profile Cooler. With "Show all": "The Noctua NH-L9i-17xx Low-Profile Cooler doesn't support the AM5 socket of the AMD Ryzen 5 7600. It supports LGA1700 and LGA1851." |
 | E8 | Build A | Power supply | 9 of 12. Hidden: Corsair SF750 750W SFX and Lian Li SP850 850W SFX ("…(SFX) doesn't fit the Lian Li LANCOOL 216 Black, which takes ATX power supplies."), and Corsair SF850L 850W SFX-L (same error, out of stock) |
-| E9 | Build A | Storage ("Add another drive") | All 20 drives fit (no errors). The 990 PRO shows "In your build (×1)" and "Add to build" (adds a second unit). No part is marked "Current" |
+| E9 | Build A | Storage ("Add another drive") | All 20 drives fit (no errors). 18 of 20 are shown: the Samsung 9100 PRO 2TB (pre-order) and the Seagate IronWolf 8TB (out of stock) are hidden. The 990 PRO shows "In your build (×1)" and "Add to build" (adds a second unit). No part is marked "Current" |
 
 ### Adding
 
@@ -140,7 +140,7 @@ Prices and stock are seed values on 2026-10-28 (Manila). "Build A" is spec 001's
 | E24 | E23 | Graphics card | No banner: with the GPU slot empty, the build has no error |
 | E25 | Intel Core i5-14400F | Graphics card | No banner. The build's "no integrated graphics" warning is a warning (D7), and every GPU candidate fixes it anyway |
 | E26 | Ryzen 5 7600 + Kingston FURY Beast DDR4-3200 16 GB (2×8 GB) CL16 | Motherboard | Empty: "No motherboard fits your build. Turn on "Show all" to see why, or change your CPU or memory." "Show all": all 18 greyed (AM5 boards: the DDR4 message; the others: the socket message, some both) |
-| E27 | Ryzen 5 7600 + Fractal Design Ridge Black, ASRock B650I Lightning WiFi set to stock 0 (fixture) | Motherboard | Empty: "No motherboard that fits your build is in stock right now. Turn on "Show all" to see the ones that fit, or change your case." "Show all": B650I Lightning first, greyed with "Out of stock". The others say "…(ATX) doesn't fit the Fractal Design Ridge Black, which takes Mini-ITX boards." |
+| E27 | Ryzen 5 7600 + Fractal Design Ridge Black, ASRock B650I Lightning WiFi set to stock 0 (fixture) | Motherboard | Empty: "No motherboard that fits your build is in stock right now. Turn on "Show all" to see the ones that fit, or change your CPU or case." (the boards with another socket name the CPU) "Show all": B650I Lightning first, greyed with "Out of stock". The others say "…(ATX) doesn't fit the Fractal Design Ridge Black, which takes Mini-ITX boards." |
 | E28 | Any | A category with no active products (fixture) | "There are no CPU coolers in the store right now." No toggle |
 | E29 | Ryzen 5 7600 + Fractal Design Ridge Black (seed stock) | CPU cooler | 2 of 13 without warnings or errors: Noctua NH-L9a-AM5 and Arctic Liquid Freezer III 280. NZXT Kraken 240 and Arctic Liquid Freezer III 360 also shown with the radiator-fit warning. The 9 others are hidden (cooler height, or the NH-L9i's socket) |
 
