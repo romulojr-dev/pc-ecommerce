@@ -31,3 +31,9 @@ export {
   type BuildChangeKind,
   type BuildItem,
 } from "./parse"
+export { buildStatus, checkBuild } from "./check"
+export {
+  applyCandidate,
+  checkCandidate,
+  type CandidateOptions,
+} from "./candidate"
