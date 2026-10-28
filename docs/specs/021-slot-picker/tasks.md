@@ -21,7 +21,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `picker-card.tsx` and `picker-body.tsx` with markup tests (E3, E5, E7, E14, E14a, E19, E20, E26–E28, E30, E31).
   - `hooks/use-candidates.ts`, `addLoaded` in `useBuildParts`, `slot-picker.tsx` (dialog, fixed header, scrolling list, nested "Add anyway" confirm, focus).
   - `slot-section.tsx`: buttons instead of links, "Change" per drive. `builder.tsx`: picker state, picking, focus after a pick.
-- [ ] **T6. E2E and home.**
+- [x] **T6. E2E and home.**
   - `e2e/builder.spec.ts`: buttons instead of links.
   - `e2e/epic-build.spec.ts`: E40–E44 (focus, Escape, focus return, Show all reason, status OK), E13, and no candidates request when toggling "Show all".
   - The home hero loses its "Coming soon" badge; update `home.spec.ts`.

@@ -34,10 +34,6 @@ export function Hero({ hasDeals }: { hasDeals: boolean }) {
           >
             <WrenchIcon aria-hidden="true" data-icon="inline-start" />
             Build your PC
-            {/* Until the Builder epic; read as "Build your PC Coming soon" */}
-            <span className="ml-1 rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs font-medium">
-              Coming soon
-            </span>
           </Link>
           {hasDeals && (
             <Link
