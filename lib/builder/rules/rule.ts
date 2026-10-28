@@ -11,11 +11,16 @@ import type {
 } from "../types"
 
 // What a failed rule reports: the parts involved, in the PRD table's "Parts
-// checked" order, and the message
-export type Finding = { parts: AnyBuildPart[]; message: string }
+// checked" order, and the message. `severity` overrides the rule's for a
+// rule with two levels (PSU wattage).
+export type Finding = {
+  parts: AnyBuildPart[]
+  message: string
+  severity?: Severity
+}
 
 // One row of the PRD rules table. `check` returns null when a part it reads
-// isn't picked, or when the parts fit.
+// isn't picked, or when the parts fit. `severity` is the rule's worst.
 export type Rule = {
   id: RuleId
   severity: Severity
@@ -35,7 +40,7 @@ export function checkRule(rule: Rule, build: Build): Issue | null {
   if (!finding) return null
   return {
     rule: rule.id,
-    severity: rule.severity,
+    severity: finding.severity ?? rule.severity,
     parts: finding.parts.map((part) => ({ slot: part.category, id: part.id })),
     message: finding.message,
   }
