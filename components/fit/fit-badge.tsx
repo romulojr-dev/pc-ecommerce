@@ -39,12 +39,7 @@ const TONE: Record<Shown["kind"], string> = {
 export function FitLabel({ fit }: { fit: Shown }) {
   const Icon = ICON[fit.kind]
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 font-medium",
-        TONE[fit.kind]
-      )}
-    >
+    <span className={cn("flex items-center gap-1 font-medium", TONE[fit.kind])}>
       <Icon aria-hidden="true" className="size-3.5 shrink-0" />
       {COPY[fit.kind]}
     </span>
