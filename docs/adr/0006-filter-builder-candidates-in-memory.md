@@ -33,7 +33,7 @@ This works because builder categories are small. The largest today is Graphics C
 
 ## Consequences
 
-- **One source of truth for compatibility:** a rule change in `lib/builder/` changes the picker, the summary and (later) checkout together.
+- **One source of truth for compatibility:** a rule change in `lib/builder/` changes the picker, the summary, the "Fits your build" hints on listings and product pages ([spec 023](../specs/023-fits-your-build-hints/spec.md), which runs `checkCandidate` in the browser too) and (later) checkout together.
 - **The picker gets no pagination, search or SQL filtering.** It shows the whole category, sorted cheapest first within each group.
 - **Payload and CPU grow linearly with category size.** That's fine at tens of parts. It isn't at thousands.
 - **Revisit when** a builder category goes above about **500 active parts**, or when the picker is used for **non-builder categories** (fans, OS, peripherals), which may be much larger. Options then:
