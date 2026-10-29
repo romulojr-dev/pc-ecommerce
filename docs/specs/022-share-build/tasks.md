@@ -26,10 +26,11 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `prisma/seed.ts` uses the guard in place of the `NODE_ENV` check. `prisma/seed/write.ts` and `resetCatalog()` truncate `Build` too and call the guard first (E23, E69).
   - `prisma/seed/reset-cli.test.ts` (E68, runs the real script as a child process) and `prisma/seed/write.db.test.ts` (E70, E23). `test-support/reset-catalog.db.test.ts` covers E69.
   - *Verify:* `pnpm test`, `pnpm test:db`.
-- [ ] **T5. Share UI.**
+- [x] **T5. Share UI.**
   - `app/(store)/builder/actions.ts`: the server action.
-  - `components/builder/part-summary.tsx` extracted from `slot-section.tsx` (the `/builder` markup tests stay green).
-  - `components/builder/share-dialog.tsx`, the Share build button in `build-summary.tsx`, and the wiring in `builder.tsx`, with markup tests (E39–E48).
+  - `components/builder/share-dialog.tsx` (the dialog and its request) and `share-dialog-body.tsx` (its contents, split out so unit tests don't load the server action and the env), the Share build button in `build-summary.tsx`, and the wiring in `builder.tsx`, with markup tests (E39, E40–E46).
+  - `e2e/share-build.spec.ts` started: E39, E40, E41, E43, E45 against `pnpm dev`. T8 extends it.
+  - The `part-summary` extraction from `slot-section.tsx` moves to T6, where the shared page's rows need it.
 - [ ] **T6. Shared page.**
   - `lib/shared-build.ts` and `lib/shared-build.db.test.ts` (E24–E31, E33–E36).
   - `app/(store)/builds/[slug]/page.tsx` and `components/builds/shared-build.tsx`, with markup tests (E24–E30b) and metadata (E37).

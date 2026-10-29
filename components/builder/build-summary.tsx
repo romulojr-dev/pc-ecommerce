@@ -31,6 +31,10 @@ export type BuildSummaryProps = {
   // The summary's line about parts that aren't buyable, or null
   availability: string | null
   onRetry: () => void
+  // Share build is enabled when the build has parts and has loaded
+  // (docs/specs/022-share-build, Behavior 1)
+  canShare: boolean
+  onShare: () => void
 }
 
 const watts = (value: number) => specValue("psu", "wattageW", value)
@@ -85,7 +89,34 @@ export function BuildSummary(props: BuildSummaryProps) {
           Adding a whole build to the cart is coming soon.
         </p>
       </div>
+      <ShareButton {...props} />
     </aside>
+  )
+}
+
+// Share build, under the cart button. Disabled with a visible reason for an
+// empty build; while loading or after a load error the summary itself already
+// says what is going on, so it stays disabled without a note.
+function ShareButton({ state, isEmpty, canShare, onShare }: BuildSummaryProps) {
+  const needsParts = state === "ready" && isEmpty
+  return (
+    <div className="flex flex-col gap-2">
+      <Button
+        size="lg"
+        variant="outline"
+        disabled={!canShare}
+        aria-describedby={needsParts ? "build-share-note" : undefined}
+        className="h-10 text-sm"
+        onClick={onShare}
+      >
+        Share build
+      </Button>
+      {needsParts && (
+        <p id="build-share-note" className="text-sm text-muted-foreground">
+          Add parts to share your build.
+        </p>
+      )}
+    </div>
   )
 }
 

@@ -10,6 +10,7 @@ import {
   type SlotEntry,
   SlotSection,
 } from "@/components/builder/slot-section"
+import { ShareDialog } from "@/components/builder/share-dialog"
 import { type PickerTarget, SlotPicker } from "@/components/builder/slot-picker"
 import { useBuild } from "@/hooks/use-build"
 import { useBuildParts } from "@/hooks/use-build-parts"
@@ -46,6 +47,10 @@ export function Builder() {
   }, [build, loaded])
 
   const { remove, setQuantity, dismissNotice } = buildStore.getState()
+
+  // Share build's dialog (docs/specs/022-share-build). `opening` changes on
+  // each click, so each opening asks the server again.
+  const [share, setShare] = useState({ open: false, opening: 0 })
 
   // The picker's last target is kept while it closes (SlotPicker)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -135,8 +140,21 @@ export function Builder() {
           issues={summary.issues}
           availability={summary.availability}
           onRetry={retry}
+          canShare={ready && !summary.isEmpty}
+          onShare={() =>
+            setShare((previous) => ({
+              open: true,
+              opening: previous.opening + 1,
+            }))
+          }
         />
       </div>
+      <ShareDialog
+        open={share.open}
+        opening={share.opening}
+        onClose={() => setShare((previous) => ({ ...previous, open: false }))}
+        nameOf={(id) => loaded.get(id)?.part.name}
+      />
       <SlotPicker
         open={pickerOpen}
         target={picker}
