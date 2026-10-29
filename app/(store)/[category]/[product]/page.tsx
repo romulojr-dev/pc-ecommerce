@@ -14,6 +14,7 @@ import { Fragment, Suspense } from "react"
 
 import { Container } from "@/components/layout/container"
 import { AddToBuild } from "@/components/product/add-to-build"
+import { FitWithBuild } from "@/components/product/fit-with-build"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { ProductPrice } from "@/components/product/product-price"
 import { QuantitySelector } from "@/components/product/quantity-selector"
@@ -32,6 +33,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
+import { fitPartOf } from "@/lib/build-state/fit"
 import { env } from "@/lib/env"
 import { formatDate, formatWarranty } from "@/lib/format"
 import { getProductPage, type ProductPageData } from "@/lib/products"
@@ -103,6 +105,14 @@ export default async function ProductPage({
     { name: product.name },
   ]
   const siteUrl = env.NEXT_PUBLIC_SITE_URL
+  // What the "Fits your build" block needs (docs/specs/023-fits-your-build-
+  // hints); null outside the builder categories
+  const fitPart = fitPartOf({
+    id: product.id,
+    name: product.name,
+    category: product.category.slug,
+    specs: product.specs,
+  })
 
   return (
     <Container className="py-8">
@@ -196,6 +206,7 @@ export default async function ProductPage({
             />
             {formatWarranty(product.warrantyMonths)}
           </p>
+          {fitPart && <FitWithBuild part={fitPart} />}
         </div>
       </div>
 

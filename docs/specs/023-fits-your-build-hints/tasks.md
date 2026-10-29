@@ -15,7 +15,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `listingSelect`, `ListingProduct`, `toListingProduct` in `lib/products.ts`; `getListingPage` and `lib/search.ts` use them; the category and search pages' types follow.
   - `components/fit/fit-badge.tsx` and its markup test.
   - `ListingResults` calls `useFits` and passes the badge in `ProductCard` `children`.
-- [ ] **T5. Product page.** `components/product/fit-with-build.tsx` with its markup test, wired after the warranty line.
+- [x] **T5. Product page.** `components/product/fit-with-build.tsx` with its markup test, wired after the warranty line.
 - [ ] **T6. E2E and docs.**
   - `e2e/fits-build.spec.ts`: named parts, accessibility (E23, E23a), card heights, one request, empty state, product pages, search, error, cross-tab.
   - CLAUDE.md paragraph; one line in ADR 0006's Consequences. Tick the spec's Definition of done.
