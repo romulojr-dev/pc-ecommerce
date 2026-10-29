@@ -19,6 +19,11 @@ const card = (page: Page, name: string) =>
     .getByRole("article")
     .filter({ has: page.getByRole("heading", { name, exact: true }) })
 
+// For "nothing else happens": there is no event to wait for, and
+// "networkidle" never comes in the production build (link prefetching keeps
+// the network busy), so this gives a stray request or hint time to show up.
+const settle = (page: Page) => page.waitForTimeout(500)
+
 const fitBlock = (page: Page) =>
   page.getByRole("region", { name: "Fit with your build" })
 
@@ -93,14 +98,15 @@ test("one parts request serves every card, and an empty build makes none (E25, E
   })
 
   await page.goto("/motherboard")
-  await page.waitForLoadState("networkidle")
+  await expect(card(page, LGA1700)).toBeVisible()
+  await settle(page)
   expect(partsRequests).toHaveLength(0)
   await expect(page.getByText(/Fits your build|Doesn't fit/)).toHaveCount(0)
 
   const items = await buildAItems(request)
   await saveBuild(page, items)
   await expect(card(page, FITS)).toContainText("Fits your build")
-  await page.waitForLoadState("networkidle")
+  await settle(page)
   expect(partsRequests).toHaveLength(1)
   const ids = new URL(partsRequests[0]).searchParams.get("ids")!.split(",")
   expect(ids.sort()).toEqual(items.map((item) => item.productId).sort())
@@ -195,7 +201,8 @@ test("similar products and the home page have no hint (E32)", async ({
   await expect(similar).not.toContainText(/Fits your build|Doesn't fit/)
 
   await page.goto("/")
-  await page.waitForLoadState("networkidle")
+  await expect(page.getByRole("main")).toBeVisible()
+  await settle(page)
   await expect(page.getByRole("main")).not.toContainText(
     /Fits your build|Doesn't fit your build|In your build/
   )
@@ -210,8 +217,10 @@ test("a failed parts request shows no hint and leaves the build alone (E33)", as
   )
   await page.goto("/motherboard")
   const items = await buildAItems(request)
+  const failed = page.waitForResponse("**/api/builder/parts*")
   await saveBuild(page, items)
-  await page.waitForLoadState("networkidle")
+  expect((await failed).status()).toBe(500)
+  await settle(page)
 
   await expect(card(page, FITS)).toBeVisible()
   await expect(page.getByText(/Fits your build|Doesn't fit/)).toHaveCount(0)
