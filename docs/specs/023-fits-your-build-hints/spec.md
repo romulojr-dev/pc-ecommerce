@@ -226,7 +226,7 @@ No schema change, migration, new route, environment variable or dependency. The 
 | Badges on "Similar products" and home cards | Out of scope by the AC; not planned |
 | Products outside the builder categories (fans, OS, peripherals) | When such a category exists, it has no rules and so no badge; a later story if it should |
 | Filtering or sorting a listing by fit ("Show only parts that fit") | Not planned; the picker does that (spec 021) |
-| Add to build on a "Doesn't fit" product page asking first, like the picker's "Add anyway" | [#68](https://github.com/romulojr-dev/pc-ecommerce/issues/68) (Backlog) |
+| Add to build on a "Doesn't fit" product page asking first, like the picker's "Add anyway" | [#68](https://github.com/romulojr-dev/pc-ecommerce/issues/68) (Backlog). *Changed by spec 024 (#68): done, see [spec 024](../024-add-anyway-product-page/spec.md).* |
 | Hints from an account's saved builds instead of the browser's saved build | Accounts epic (FR-19) |
 | Re-checking a build at checkout | Checkout epic (#62 and later) |
 | Cart hints and stock flags in the cart | #60, #63 |
@@ -252,7 +252,7 @@ No schema change, migration, new route, environment variable or dependency. The 
 | D12 | No new ADR | It reuses ADR 0006's decision (rules in the browser) and ADR 0003's (per-request pages) | An ADR for "hints" |
 | D13 | **Only a page that can show a notice may change the saved build.** `/builder` removes gone parts (with its notice); the listing, search and product pages only read the build, through `useBuildParts` in read-only mode (review decision, was Q1) | A removal with no notice in sight loses the explanation, and a reload before `/builder` would lose it for good. The rule also covers future pages that read the build | Using the hook unchanged (simpler, but the build is quietly edited from anywhere on the site) |
 | D14 | The reserved badge line stays on every builder card (review decision, was Q2) | See D9 | Overlaying the badge on the image |
-| D15 | The product page's confirmation for a part that doesn't fit is a separate story, #68 (review decision, was Q3) | It changes spec 020 Behavior 19 and wasn't asked for here | Adding "Add anyway" to this story |
+| D15 | The product page's confirmation for a part that doesn't fit is a separate story, #68 (review decision, was Q3) | It changes spec 020 Behavior 19 and wasn't asked for here | Adding "Add anyway" to this story. *Changed by spec 024 (#68): done there.* |
 
 ## 10. Open questions
 

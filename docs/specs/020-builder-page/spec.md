@@ -59,10 +59,12 @@ This story turns `/builder` from a "coming soon" placeholder into a working buil
     | One-part slot or memory, another product there | A confirmation dialog asks first. "Replace" swaps the part in place, "Cancel" changes nothing. Memory keeps the kit quantity (spec 018 D12), capped at the new kit's stock. The dialog states the quantity it will keep |
     | Storage, new drive, build already holds 20 different products | Nothing changes: "Your build has the most parts it can hold. Remove a drive to add another." |
 
+    *Changed by spec 024 (#68): when the page's fit state is "Doesn't fit your build" and the add would change the build (the "Empty", "Storage, drive not in the build" and "another product there" rows), a confirmation comes first, and the "Replace?" dialog is not shown in that case. This table applies to everything else.*
+
 20. After an add, raise or replace, a status line under the buttons says "Added to your build." with a "View build" link to `/builder`. When nothing changed, it shows the matching line from the table, with the same link. The line is announced to screen readers.
 21. The product page's quantity selector doesn't affect Add to build: it belongs to Add to cart (D15). Quantities beyond one are changed on `/builder`, or by adding again.
-22. The button does nothing until the saved build has been read, which happens right after hydration, so an early click can't overwrite a saved build. It renders the same on the server and the client: its label never depends on the saved build.
-23. The product page doesn't run the compatibility rules. The shopper sees any issues on `/builder` (D9).
+22. The button does nothing until the saved build has been read, which happens right after hydration, so an early click can't overwrite a saved build. It renders the same on the server and the client: its label never depends on the saved build. *Changed by spec 024 (#68): a click before the saved build is read or its parts are loaded is pending, not ignored. It waits and then decides, so it still can't overwrite the saved build.*
+23. The product page doesn't run the compatibility rules. The shopper sees any issues on `/builder` (D9). *Changed by spec 024 (#68): the page runs the rules for the "Fits your build" hint (spec 023), and Add to build asks first on errors.*
 
 ### Elsewhere
 
@@ -254,6 +256,7 @@ Prices and stock are seed values. "Build A" is spec 001's compatible build (`bui
 | Product page, link | View build |
 | Product page, not buyable | Only parts in stock can be added to a build. |
 | Product page, cart note | Cart is coming soon. |
+| Product page, pending | Checking your build… *(Changed by spec 024 (#68): added)* |
 | Replace dialog title | Replace the {slot noun} in your build? |
 | Replace dialog body | This replaces the {slot noun} you picked with the {part}. |
 | Replace dialog body, memory, kept quantity > 1 | This replaces the memory you picked with the {part}, keeping {quantity} kits. |
@@ -307,7 +310,7 @@ Docs: `CLAUDE.md` replaces "`app/(store)/builder` is a 'coming soon' placeholder
 | --- | --- |
 | Slot picker, compatible-first lists, "Show all", greyed reasons, confirming incompatible picks; turning "Choose"/"Change" into the picker; replacing one specific drive in place | #54 |
 | Removing the home hero's "Coming soon" badge from "Build your PC" | #54 |
-| "Fits your build" hints and compatibility checks on product and listing pages | FR-10 (later builder story) |
+| "Fits your build" hints and compatibility checks on product and listing pages | FR-10 (later builder story). *Changed by spec 024 (#68): done in spec 023 (hints) and spec 024 (confirmation before adding a part that doesn't fit).* |
 | Adding the build to the cart, blocking on errors and on parts that aren't buyable, acknowledging warnings, the server re-check | Checkout epic |
 | Saved builds, share links, syncing the build to the database when logged in | Saved builds story (FR-19, PRD Flow step 5) |
 | A build count in the header; "Start over" / clear build | Later builder story |
@@ -328,7 +331,7 @@ Docs: `CLAUDE.md` replaces "`app/(store)/builder` is a 'coming soon' placeholder
 | D6 | The replace dialog doesn't name the current part | The product page doesn't load the saved build's parts. "The CPU you picked" is enough to decide | An extra parts request on the product page |
 | D7 | **One rule everywhere: only buyable parts (in stock or low stock) can be added to a build** (review decision). Spec 010 stays as is. **#54's picker follows the same rule**: this replaces the issues' looser wording ("disabled for out-of-stock parts" in #53, "out-of-stock parts can't be added" in #54), so pre-orders can't be added from the picker either | One meaning of "can be added", the same as the `inStock` filter and as what Add to cart will accept. A build should hold parts the shopper can buy now | Allowing pre-orders (the draft's reading of "matching the slot picker") |
 | D8 | Memory keeps its quantity when replaced, capped at the new kit's stock, and the dialog says so | Matches `applyCandidate` (spec 018 D12), so the picker's checks and the result agree. The cap keeps the quantity buyable | Resetting to 1. Keeping a quantity above the new stock |
-| D9 | The product page doesn't run the rules before adding | The AC asks only for the replace confirmation. Compatibility hints are FR-10 and need the build's parts on every product page | Loading the build and confirming errors on the product page |
+| D9 | The product page doesn't run the rules before adding | The AC asks only for the replace confirmation. Compatibility hints are FR-10 and need the build's parts on every product page | Loading the build and confirming errors on the product page. *Superseded by spec 024 (#68): the rejected alternative is what happens now.* |
 | D10 | Storage drives get a quantity stepper too, and adding the same drive again raises its quantity | The data model allows it (spec 018), and the M.2 rule already counts quantity. Two identical drives are a real choice | Memory-only stepper, with a second identical drive impossible |
 | D11 | The stepper and Add to build stop at current stock, not at the board's slots | The rules explain board limits in words. Stock is the one hard limit the shopper can't change | Capping at `memorySlots / moduleCount` (silently hides the rule) |
 | D12 | An empty build shows "Add parts to check compatibility." instead of "OK" | "OK" for nothing reads as a passed check | Showing "OK" |
