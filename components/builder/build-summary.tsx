@@ -1,22 +1,12 @@
 import {
-  CircleCheckIcon,
-  CircleXIcon,
-  InfoIcon,
-  TriangleAlertIcon,
-} from "lucide-react"
-
-import { SeverityMarker } from "@/components/builder/slot-section"
+  IssueList,
+  PowerLine,
+  StatusLine,
+} from "@/components/builder/summary-parts"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import type { BuildStatus, Issue, PowerEstimate } from "@/lib/builder"
-import { specValue } from "@/lib/builder/format"
 import { formatPeso } from "@/lib/format"
-import { cn, focusRing } from "@/lib/utils"
 
 export type BuildSummaryProps = {
   // loading: the saved build or its parts haven't loaded; error: the parts
@@ -36,30 +26,6 @@ export type BuildSummaryProps = {
   canShare: boolean
   onShare: () => void
 }
-
-const watts = (value: number) => specValue("psu", "wattageW", value)
-
-// The power line (docs/specs/019-count-capacity-power-rules, Messages):
-// always called "Estimated"
-export function powerText({ watts: w, psuWatts, loadPercent }: PowerEstimate) {
-  return psuWatts === null
-    ? `Estimated power: ${watts(w)}`
-    : `Estimated power: ${watts(w)} of ${watts(psuWatts)} (${loadPercent}%)`
-}
-
-const STATUS = {
-  ok: {
-    label: "OK",
-    Icon: CircleCheckIcon,
-    className: "text-emerald-700 dark:text-emerald-400",
-  },
-  warnings: {
-    label: "Warnings",
-    Icon: TriangleAlertIcon,
-    className: "text-amber-700 dark:text-amber-400",
-  },
-  errors: { label: "Errors", Icon: CircleXIcon, className: "text-destructive" },
-} as const
 
 // The builder's summary (docs/specs/020-builder-page, Behavior 15–16): total,
 // estimated power, compatibility status and issues, availability, and the
@@ -152,7 +118,6 @@ function SummaryBody({
     )
   }
 
-  const { label, Icon, className } = STATUS[status]
   return (
     <>
       <dl className="flex flex-col gap-2">
@@ -163,24 +128,7 @@ function SummaryBody({
           </dd>
         </div>
       </dl>
-      <p className="flex items-center gap-1.5 text-sm tabular-nums">
-        {powerText(power)}
-        <Tooltip>
-          <TooltipTrigger
-            aria-label="How is this estimated?"
-            className={cn(
-              "rounded-full text-muted-foreground hover:text-foreground",
-              focusRing
-            )}
-          >
-            <InfoIcon aria-hidden="true" className="size-4" />
-          </TooltipTrigger>
-          <TooltipContent>
-            The CPU&rsquo;s and graphics card&rsquo;s maximum power draw, plus
-            30% headroom for the other parts and short power spikes.
-          </TooltipContent>
-        </Tooltip>
-      </p>
+      <PowerLine power={power} />
 
       {isEmpty ? (
         <p className="text-sm text-muted-foreground">
@@ -188,32 +136,8 @@ function SummaryBody({
         </p>
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="flex items-center gap-2 text-sm">
-            Compatibility:
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 font-medium",
-                className
-              )}
-            >
-              <Icon aria-hidden="true" className="size-4" />
-              {label}
-            </span>
-          </p>
-          {issues.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No compatibility issues found.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {issues.map((issue) => (
-                <li key={issue.rule} className="flex flex-col gap-0.5 text-sm">
-                  <SeverityMarker severity={issue.severity} />
-                  <span>{issue.message}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <StatusLine status={status} />
+          <IssueList issues={issues} />
         </div>
       )}
 

@@ -31,9 +31,12 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `components/builder/share-dialog.tsx` (the dialog and its request) and `share-dialog-body.tsx` (its contents, split out so unit tests don't load the server action and the env), the Share build button in `build-summary.tsx`, and the wiring in `builder.tsx`, with markup tests (E39, E40–E46).
   - `e2e/share-build.spec.ts` started: E39, E40, E41, E43, E45 against `pnpm dev`. T8 extends it.
   - The `part-summary` extraction from `slot-section.tsx` moves to T6, where the shared page's rows need it.
-- [ ] **T6. Shared page.**
-  - `lib/shared-build.ts` and `lib/shared-build.db.test.ts` (E24–E31, E33–E36).
-  - `app/(store)/builds/[slug]/page.tsx` and `components/builds/shared-build.tsx`, with markup tests (E24–E30b) and metadata (E37).
+- [x] **T6. Shared page.**
+  - `components/builder/part-summary.tsx` (`PartInfo`, `PartPrice`, `SeverityMarker`) and `summary-parts.tsx` (`PowerLine`, `StatusLine`, `IssueList`, with the "Incomplete" status) extracted from the builder's components; the `/builder` markup tests stay green.
+  - `lib/shared-build.ts` and `lib/shared-build.db.test.ts` (E24, E26–E29, E31–E34, E36).
+  - `app/(store)/builds/[slug]/page.tsx` and `components/builds/shared-build.tsx`, with markup tests (E24–E30b, E32, E33) and metadata (E37). `test-support/shared-snapshot.ts` holds the snapshot fixtures both view and component tests use.
+  - E2E: the page for another visitor, 404s, noindex, canonical and link preview, and no `/builds` in the sitemap (E24, E25, E34, E35, E37, E38).
+  - The Open in builder button comes with T7; until then the summary ends with the status and issues.
 - [ ] **T7. Open in builder.**
   - Store `load` action with its tests (E49, E52–E55).
   - `components/builds/open-in-builder.tsx`: same-contents shortcut, replace dialog, notice (E50, E51, E51a, E51b, E56).
