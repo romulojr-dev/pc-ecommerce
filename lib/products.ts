@@ -1,6 +1,7 @@
 import { cache } from "react"
 
 import type { Prisma } from "@/generated/prisma/client"
+import { type FitPart, fitPartOf } from "@/lib/build-state/fit"
 import { db } from "@/lib/db"
 import {
   type FilterOptions,
@@ -82,6 +83,32 @@ export function toProductCardData(row: ProductCardRow): ProductCardData {
   }
 }
 
+// A listing card, with what the "Fits your build" hint needs
+// (docs/specs/023-fits-your-build-hints): the product's id, slot, name and
+// rule spec fields, or null for a product outside the builder categories.
+// Only category listings and search results load it, so the home page and
+// related products send no hint data.
+export type ListingProduct = ProductCardData & { fit: FitPart | null }
+
+export const listingSelect = {
+  id: true,
+  ...productCardSelect,
+} satisfies Prisma.ProductSelect
+
+type ListingRow = Prisma.ProductGetPayload<{ select: typeof listingSelect }>
+
+export function toListingProduct(row: ListingRow): ListingProduct {
+  return {
+    ...toProductCardData(row),
+    fit: fitPartOf({
+      id: row.id,
+      name: row.name,
+      category: row.category.slug,
+      specs: row.specs,
+    }),
+  }
+}
+
 // A date column (UTC midnight) as "YYYY-MM-DD", so product data stays plain
 export function toDateString(date: Date | null): string | null {
   return date ? date.toISOString().slice(0, 10) : null
@@ -137,7 +164,7 @@ export async function getCategoryProducts(
   category: ListingCategory,
   { sort, page, filters }: ListingState,
   context: FilterContext
-): Promise<{ products: ProductCardData[]; total: number }> {
+): Promise<{ products: ListingProduct[]; total: number }> {
   const where = {
     ...categoryScope(category.id),
     AND: activeWhere(filters, context, listingFilters(category.slug)),
@@ -153,7 +180,7 @@ export async function getListingPage(
   where: Prisma.ProductWhereInput,
   sort: ColumnSort,
   page: number
-): Promise<{ products: ProductCardData[]; total: number }> {
+): Promise<{ products: ListingProduct[]; total: number }> {
   // Not $transaction: inside one, Prisma loads the relations as concurrent
   // queries on a single pg client, which pg deprecates. A count off by one
   // during a concurrent write is harmless here.
@@ -161,14 +188,14 @@ export async function getListingPage(
     db.product.count({ where }),
     db.product.findMany({
       where,
-      select: productCardSelect,
+      select: listingSelect,
       orderBy: sortOrderBy[sort],
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
   ])
 
-  return { products: rows.map(toProductCardData), total }
+  return { products: rows.map(toListingProduct), total }
 }
 
 // Everything the product page shows (docs/specs/010-product-page). Plain

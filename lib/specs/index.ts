@@ -18,6 +18,7 @@ export {
   type SpecRowGroup,
 } from "./format"
 export { specSummary } from "./summary"
+export { ruleSpecsOf } from "./rule-specs"
 export type { CaseSpecs } from "./categories/case"
 export type { CpuSpecs } from "./categories/cpu"
 export type { CpuCoolerSpecs } from "./categories/cpu-cooler"

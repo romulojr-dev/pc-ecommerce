@@ -40,6 +40,7 @@ export {
   PSU_WARNING_PERCENT,
   type PowerEstimate,
 } from "./power"
+export { hasComparableParts } from "./comparable"
 export {
   applyCandidate,
   checkCandidate,
