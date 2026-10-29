@@ -9,4 +9,4 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
 - [x] **T3. One verdict.** `useFitsStatus`, `components/product/product-fit.tsx`, `FitWithBuild` reads the context, the product page wraps the buy column.
 - [x] **T4. Dialog and button.** `components/builder/misfit-dialog.tsx` with markup tests, the picker switched to it, `AddToBuild` with the decision and the pending state.
 - [x] **T5. E2E.** `e2e/add-anyway.spec.ts`: E17–E22 and E26; re-run the builder, epic-build, fits-build and product-page specs.
-- [ ] **T6. Docs wrap-up.** CLAUDE.md paragraph with its note; tick the spec's Definition of done.
+- [x] **T6. Docs wrap-up.** CLAUDE.md paragraph with its note; tick the spec's Definition of done.
