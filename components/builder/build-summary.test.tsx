@@ -25,6 +25,8 @@ function propsFor(build: Build, total: number): BuildSummaryProps {
     issues,
     availability: null,
     onRetry: () => {},
+    canShare: true,
+    onShare: () => {},
   }
 }
 
@@ -110,5 +112,41 @@ describe("BuildSummary", () => {
       /<button[^>]*disabled[^>]*aria-describedby="build-cart-note"[^>]*>Add build to cart|<button[^>]*aria-describedby="build-cart-note"[^>]*disabled[^>]*>Add build to cart/
     )
     expect(html).toContain("Adding a whole build to the cart is coming soon.")
+  })
+  describe("Share build (docs/specs/022-share-build, Behavior 1; E39, E44)", () => {
+    const shareButton = /<button[^>]*>Share build<\/button>/
+    // The disabled attribute, not Tailwind's "disabled:" classes
+    const isDisabled = (button: string) => /\sdisabled(=|\s|>)/.test(button)
+
+    test("is enabled for a build that has loaded", () => {
+      const html = render(propsFor(buildA(), 6_906_000))
+      const button = html.match(shareButton)![0]
+      expect(isDisabled(button)).toBe(false)
+      expect(html).not.toContain("Add parts to share your build.")
+    })
+
+    test("is disabled for an empty build, and says why", () => {
+      const html = render({ ...propsFor({}, 0), canShare: false })
+      const button = html.match(shareButton)![0]
+      expect(isDisabled(button)).toBe(true)
+      expect(button).toContain('aria-describedby="build-share-note"')
+      expect(html).toContain('id="build-share-note"')
+      expect(html).toContain("Add parts to share your build.")
+    })
+
+    test.each(["loading", "error"] as const)(
+      "is disabled, without a note, while %s",
+      (state) => {
+        const html = render({
+          ...propsFor(buildA(), 6_906_000),
+          state,
+          canShare: false,
+        })
+        const button = html.match(shareButton)![0]
+        expect(isDisabled(button)).toBe(true)
+        expect(button).not.toContain("aria-describedby")
+        expect(html).not.toContain("Add parts to share your build.")
+      }
+    )
   })
 })

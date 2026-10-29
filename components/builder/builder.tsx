@@ -10,6 +10,7 @@ import {
   type SlotEntry,
   SlotSection,
 } from "@/components/builder/slot-section"
+import { ShareDialog } from "@/components/builder/share-dialog"
 import { type PickerTarget, SlotPicker } from "@/components/builder/slot-picker"
 import { useBuild } from "@/hooks/use-build"
 import { useBuildParts } from "@/hooks/use-build-parts"
@@ -31,6 +32,7 @@ import { buildStatus, checkBuild, estimateWattage, SLOTS } from "@/lib/builder"
 export function Builder() {
   const { status, build, loaded, retry, addLoaded } = useBuildParts()
   const noticeChanges = useBuild((state) => state.noticeChanges)
+  const sharedGone = useBuild((state) => state.sharedGone)
   const ready = status === "ready"
 
   const summary = useMemo(() => {
@@ -46,6 +48,10 @@ export function Builder() {
   }, [build, loaded])
 
   const { remove, setQuantity, dismissNotice } = buildStore.getState()
+
+  // Share build's dialog (docs/specs/022-share-build). `opening` changes on
+  // each click, so each opening asks the server again.
+  const [share, setShare] = useState({ open: false, opening: 0 })
 
   // The picker's last target is kept while it closes (SlotPicker)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -98,7 +104,7 @@ export function Builder() {
   return (
     <div className="flex flex-col gap-6">
       <BuildNotice
-        lines={buildNotice(noticeChanges)}
+        lines={buildNotice(noticeChanges, sharedGone)}
         onDismiss={dismissNotice}
       />
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
@@ -135,8 +141,21 @@ export function Builder() {
           issues={summary.issues}
           availability={summary.availability}
           onRetry={retry}
+          canShare={ready && !summary.isEmpty}
+          onShare={() =>
+            setShare((previous) => ({
+              open: true,
+              opening: previous.opening + 1,
+            }))
+          }
         />
       </div>
+      <ShareDialog
+        open={share.open}
+        opening={share.opening}
+        onClose={() => setShare((previous) => ({ ...previous, open: false }))}
+        nameOf={(id) => loaded.get(id)?.part.name}
+      />
       <SlotPicker
         open={pickerOpen}
         target={picker}

@@ -33,6 +33,10 @@ export type BuildState = {
   // Changes the shopper is told about (Rules › Store): a reset, and parts
   // that are no longer available. buildNotice turns them into copy.
   noticeChanges: BuildChange[]
+  // Parts that Open in builder left out of a shared build (docs/specs/022-
+  // share-build, Behavior 24). In memory only: the notice shows once, on
+  // the visit that opened the shared build.
+  sharedGone: BuildChange[]
   // Plans the add and applies "add" and "raise". Returns null before the
   // read. A "confirm-replace" changes nothing until replace is called.
   add: (slot: Slot, productId: string, stock: number) => AddPlan | null
@@ -47,6 +51,10 @@ export type BuildState = {
   // Removes the parts assembleBuild reported as gone and keeps the changes
   // for the notice
   drop: (changes: readonly BuildChange[]) => void
+  // Open in builder: replaces the whole saved build with a shared one's
+  // items, and keeps what was left out for the notice. Ignored before the
+  // read, like every action.
+  load: (items: readonly BuildItem[], gone: readonly BuildChange[]) => void
   dismissNotice: () => void
 }
 
@@ -110,6 +118,7 @@ export function createBuildStore(
           items: [],
           hydrated: false,
           noticeChanges: [],
+          sharedGone: [],
 
           add(slot, productId, stock) {
             if (!get().hydrated) return null
@@ -199,9 +208,21 @@ export function createBuildStore(
             set({ noticeChanges: [...get().noticeChanges, ...gone] })
           },
 
+          // Whatever the items are, they are cleaned like any other read:
+          // parseBuild, then the product cap. The earlier notice was about
+          // the build this replaces.
+          load(items, gone) {
+            if (!get().hydrated) return
+            set({
+              items: capProducts(parseBuild([...items]).items),
+              noticeChanges: [],
+              sharedGone: [...gone],
+            })
+          },
+
           // Every set saves the items, so this waits for the read too
           dismissNotice() {
-            if (get().hydrated) set({ noticeChanges: [] })
+            if (get().hydrated) set({ noticeChanges: [], sharedGone: [] })
           },
         }
       },

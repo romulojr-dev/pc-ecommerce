@@ -16,6 +16,10 @@ export const env = createEnv({
     DATABASE_URL: postgresUrl(),
     // Direct connection, used by Prisma migrations
     DATABASE_URL_UNPOOLED: postgresUrl(),
+    // The production database's host, so `pnpm db:seed --reset` can refuse
+    // to run against it (docs/specs/022-share-build, ADR 0007). Only that
+    // script reads it, so the app doesn't need it.
+    PRODUCTION_DATABASE_HOST: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.url({

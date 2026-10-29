@@ -1,11 +1,9 @@
-import { CircleXIcon, TriangleAlertIcon } from "lucide-react"
-import Link from "next/link"
-
 import { QuantityStepper } from "@/components/builder/quantity-stepper"
-import { ProductImage } from "@/components/product/product-image"
+import { PartInfo, SeverityMarker } from "@/components/builder/part-summary"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { BuilderPartData } from "@/lib/build-state/parts"
+import { worstSeverity } from "@/lib/build-state/severity"
 import { SLOT_COPY } from "@/lib/build-state/slots"
 import {
   type Issue,
@@ -13,10 +11,7 @@ import {
   type Severity,
   type Slot,
 } from "@/lib/builder"
-import { formatPeso } from "@/lib/format"
-import { productHref } from "@/lib/site"
-import { isBuyable, stockStatusLabel } from "@/lib/stock"
-import { cn, focusRing } from "@/lib/utils"
+import { isBuyable } from "@/lib/stock"
 
 export type SlotEntry = { quantity: number; data: BuilderPartData }
 
@@ -126,18 +121,10 @@ export function SlotSection({
   )
 }
 
-// The most severe issue that names this part, if any
-export function worstSeverity(
-  issues: readonly Issue[],
-  slot: Slot,
-  id: string
-): Severity | null {
-  const named = issues.filter((issue) =>
-    issue.parts.some((part) => part.slot === slot && part.id === id)
-  )
-  if (named.some((issue) => issue.severity === "error")) return "error"
-  return named.length > 0 ? "warning" : null
-}
+// Lives in lib/build-state/severity.ts, since the shared page uses it too
+export { worstSeverity }
+// Lives in part-summary.tsx, since the shared page uses it too
+export { SeverityMarker }
 
 type PartRowProps = {
   slot: Slot
@@ -161,122 +148,44 @@ function PartRow({
   const multipleUnits = SLOT_LIMITS[slot].quantity === "any"
 
   return (
-    <li className="flex gap-4">
-      <ProductImage
-        image={data.image}
-        productName={part.name}
-        sizes="64px"
-        className="size-16 shrink-0"
-      />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">{data.brand}</p>
-            <Link
-              href={productHref(part.category, data.slug)}
-              className={cn("font-medium hover:underline", focusRing)}
-            >
-              {part.name}
-            </Link>
-          </div>
-          <PartPrice data={data} quantity={quantity} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <span className={cn(!buyable && "font-medium text-destructive")}>
-            {stockStatusLabel[data.stockStatus]}
-          </span>
-          {severity && <SeverityMarker severity={severity} />}
-        </div>
-        {!buyable && (
-          <p className="text-sm text-muted-foreground">
-            Not available to buy right now. Replace it to add this build to
-            cart.
-          </p>
-        )}
-
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          {multipleUnits && (
-            <QuantityStepper
-              partName={part.name}
-              quantity={quantity}
-              stock={data.stock}
-              buyable={buyable}
-              onChange={onQuantity}
-            />
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={
-              SLOT_LIMITS[slot].multipleEntries
-                ? `Change ${part.name}`
-                : `Change ${SLOT_COPY[slot].name}`
-            }
-            data-focus={changeFocusKey(slot, part.id)}
-            onClick={(event) => onChange(event.currentTarget)}
-          >
-            Change
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`Remove ${part.name} from your build`}
-            onClick={onRemove}
-          >
-            Remove
-          </Button>
-        </div>
-      </div>
-    </li>
-  )
-}
-
-// The price the shopper pays (struck-through regular price when on sale),
-// and the line total when there's more than one
-function PartPrice({
-  data,
-  quantity,
-}: {
-  data: BuilderPartData
-  quantity: number
-}) {
-  const unit = formatPeso(data.effectivePrice)
-  return (
-    <div className="flex flex-col items-end text-right tabular-nums">
-      <p className="flex items-baseline gap-2">
-        {data.salePrice !== null && (
-          <span className="text-sm text-muted-foreground">
-            <span className="sr-only">Was </span>
-            <s>{formatPeso(data.price)}</s>
-          </span>
-        )}
-        <span className={cn(quantity === 1 && "font-semibold")}>
-          {quantity > 1 ? `${unit} × ${quantity}` : unit}
-        </span>
-      </p>
-      {quantity > 1 && (
-        <p className="font-semibold">
-          {formatPeso(data.effectivePrice * quantity)}
-        </p>
-      )}
-    </div>
-  )
-}
-
-export function SeverityMarker({ severity }: { severity: Severity }) {
-  const Icon = severity === "error" ? CircleXIcon : TriangleAlertIcon
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 text-sm font-medium",
-        severity === "error"
-          ? "text-destructive"
-          : "text-amber-700 dark:text-amber-400"
-      )}
+    <PartInfo
+      data={data}
+      quantity={quantity}
+      severity={severity}
+      note="Not available to buy right now. Replace it to add this build to cart."
     >
-      <Icon aria-hidden="true" className="size-4" />
-      {severity === "error" ? "Error" : "Warning"}
-    </span>
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        {multipleUnits && (
+          <QuantityStepper
+            partName={part.name}
+            quantity={quantity}
+            stock={data.stock}
+            buyable={buyable}
+            onChange={onQuantity}
+          />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={
+            SLOT_LIMITS[slot].multipleEntries
+              ? `Change ${part.name}`
+              : `Change ${SLOT_COPY[slot].name}`
+          }
+          data-focus={changeFocusKey(slot, part.id)}
+          onClick={(event) => onChange(event.currentTarget)}
+        >
+          Change
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={`Remove ${part.name} from your build`}
+          onClick={onRemove}
+        >
+          Remove
+        </Button>
+      </div>
+    </PartInfo>
   )
 }

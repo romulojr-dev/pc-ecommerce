@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url"
 
 import { db } from "@/lib/db"
 import { env } from "@/lib/env"
+import { assertResetAllowed, ResetRefusedError } from "@/lib/reset-guard"
 import { builderCategories } from "@/lib/specs"
 
 import { seedFiles } from "./seed/data"
@@ -56,9 +57,24 @@ async function main(): Promise<number> {
     return 1
   }
 
-  if (reset && process.env.NODE_ENV === "production") {
-    console.error("Refusing --reset: NODE_ENV is production.")
-    return 1
+  // A reset deletes shared builds too (docs/specs/022-share-build). The
+  // production seed is run by hand, so the guard also checks the host.
+  if (reset) {
+    try {
+      assertResetAllowed(
+        {
+          NODE_ENV: process.env.NODE_ENV,
+          VERCEL_ENV: process.env.VERCEL_ENV,
+          DATABASE_URL: env.DATABASE_URL,
+          PRODUCTION_DATABASE_HOST: env.PRODUCTION_DATABASE_HOST,
+        },
+        { requireProductionHost: true }
+      )
+    } catch (error) {
+      if (!(error instanceof ResetRefusedError)) throw error
+      console.error(error.message)
+      return 1
+    }
   }
 
   // Name the target before writing, so a one-off production seed can be

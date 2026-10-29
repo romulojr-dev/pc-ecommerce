@@ -330,3 +330,110 @@ describe("actions", () => {
     expect(store.getState().noticeChanges).toEqual([])
   })
 })
+
+// Open in builder replaces the saved build with a shared one
+// (docs/specs/022-share-build, Behavior 23–24)
+describe("load", () => {
+  const gone = (slot: Slot, productId: string) => ({
+    kind: "not-found" as const,
+    slot,
+    productId,
+    detail: "",
+  })
+
+  test("replaces the whole saved build, and saves it (E49, E50)", () => {
+    const { store, storage } = hydrated(saved([item("cpu", "old")]))
+    const shared = [item("cpu", "ryzen5_7600"), item("gpu", "rtx4060")]
+
+    store.getState().load(shared, [])
+
+    expect(store.getState().items).toEqual(shared)
+    expect(stored(storage).state.items).toEqual(shared)
+    expect(stored(storage).version).toBe(1)
+  })
+
+  test("loads into an empty build (E49)", () => {
+    const { store } = hydrated()
+    store.getState().load([item("cpu", "ryzen5_7600")], [])
+    expect(store.getState().items).toEqual([item("cpu", "ryzen5_7600")])
+    expect(store.getState().sharedGone).toEqual([])
+  })
+
+  test("keeps quantities and the order the drives come in (E55)", () => {
+    const { store } = hydrated()
+    const shared = [
+      item("memory", "kit", 2),
+      item("storage", "b"),
+      item("storage", "a"),
+    ]
+    store.getState().load(shared, [])
+    expect(store.getState().items).toEqual(shared)
+  })
+
+  test("keeps the parts left out for the notice, and saves only the items (E52)", () => {
+    const { store, storage } = hydrated()
+    const left = [gone("gpu", "rtx4060")]
+
+    store.getState().load([item("cpu", "ryzen5_7600")], left)
+
+    expect(store.getState().sharedGone).toEqual(left)
+    expect(Object.keys(stored(storage).state)).toEqual(["items"])
+  })
+
+  test("drops an earlier notice, which was about the build it replaced", () => {
+    const { store } = hydrated(
+      saved([item("cpu", "ryzen5_7600"), item("gpu", "gone")])
+    )
+    store
+      .getState()
+      .drop([{ kind: "not-found", slot: "gpu", productId: "gone", detail: "" }])
+    expect(store.getState().noticeChanges).toHaveLength(1)
+
+    store.getState().load([item("cpu", "other")], [])
+
+    expect(store.getState().noticeChanges).toEqual([])
+  })
+
+  test("dismissing the notice clears the shared-build lines too", () => {
+    const { store } = hydrated()
+    store.getState().load([item("cpu", "x")], [gone("gpu", "y")])
+    store.getState().dismissNotice()
+    expect(store.getState().sharedGone).toEqual([])
+  })
+
+  test("cleans what it is given with parseBuild, and the product cap", () => {
+    const { store } = hydrated()
+    const drives = Array.from({ length: 14 }, (_, index) =>
+      item("storage", `drive-${index}`)
+    )
+    store
+      .getState()
+      .load(
+        [
+          item("cpu", "a"),
+          item("cpu", "b"),
+          item("storage", "x"),
+          item("storage", "x"),
+          ...drives,
+        ],
+        []
+      )
+    const { items } = store.getState()
+    // One CPU, a merged drive, and no more than 20 different products
+    expect(items.filter((entry) => entry.slot === "cpu")).toHaveLength(1)
+    expect(items.find((entry) => entry.productId === "x")?.quantity).toBe(2)
+    expect(
+      new Set(items.map((entry) => entry.productId)).size
+    ).toBeLessThanOrEqual(20)
+  })
+
+  test("waits for the saved build to be read (E56)", () => {
+    const storage = memoryStorage(saved([item("cpu", "mine")]))
+    const store = createBuildStore(storage)
+
+    store.getState().load([item("cpu", "shared")], [])
+
+    expect(store.getState().items).toEqual([])
+    expect(stored(storage).state.items).toEqual([item("cpu", "mine")])
+  })
+})

@@ -43,9 +43,12 @@ export function writeSeed(
   return db.$transaction(
     async (tx) => {
       if (reset) {
-        // CASCADE also empties tables that reference products (carts,
-        // builds, … in later stories): a clean slate
-        await tx.$executeRaw`TRUNCATE TABLE "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // CASCADE also empties tables that reference products (BuildItem,
+        // and carts, orders, … in later stories): a clean slate. "Build" is
+        // named too: nothing in it points at a product, so CASCADE from
+        // "Product" would leave it behind with no items (docs/specs/022-
+        // share-build, D9). Add each new table of that kind here.
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)

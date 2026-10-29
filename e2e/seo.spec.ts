@@ -47,6 +47,8 @@ test.describe("sitemap.xml", () => {
     }
     expect(locations.some((url) => url.includes("/search"))).toBe(false)
     expect(locations.some((url) => url.endsWith("/builder"))).toBe(false)
+    // Shared builds (docs/specs/022-share-build, E38)
+    expect(locations.some((url) => url.includes("/builds"))).toBe(false)
   })
 })
 

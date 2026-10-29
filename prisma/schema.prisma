@@ -74,6 +74,7 @@ model Product {
   // the app never writes it. Optional only because a required Unsupported
   // field would remove create() from Prisma Client; it is never null.
   searchVector    Unsupported("tsvector")?
+  buildItems      BuildItem[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
@@ -92,5 +93,38 @@ model ProductImage {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([productId])
+}
+
+// A shared build: an immutable snapshot of a build's items, found by its
+// content hash so the same contents always give the same row and link
+// (docs/specs/022-share-build, ADR 0007). The app never updates or deletes
+// one. Saved builds and cart snapshots will point at these rows.
+model Build {
+  id          String      @id @default(cuid())
+  // The link: 10 random characters of a-z and 0-9, never derived from the
+  // contents
+  shareSlug   String      @unique
+  // SHA-256 hex of the canonical items; only the server makes it
+  contentHash String      @unique
+  items       BuildItem[]
+  createdAt   DateTime    @default(now())
+}
+
+model BuildItem {
+  id        String  @id @default(cuid())
+  buildId   String
+  build     Build   @relation(fields: [buildId], references: [id], onDelete: Cascade)
+  // A builder slot (the category slug), checked in code, not a database enum
+  // (ADR 0002)
+  slot      String
+  // Restrict: products are retired through status, never deleted, so a
+  // snapshot's parts always exist (docs/specs/022-share-build, "The data").
+  // The migration also adds CHECK (quantity >= 1), which Prisma can't express.
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+
+  @@unique([buildId, slot, productId])
   @@index([productId])
 }
