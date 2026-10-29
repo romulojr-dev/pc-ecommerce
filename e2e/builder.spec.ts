@@ -106,6 +106,13 @@ test("replacing a part asks first", async ({ page }) => {
 test("parts that don't fit show as errors", async ({ page }) => {
   await addToBuild(page, RYZEN)
   await addToBuild(page, B760M)
+  // Changed by spec 024 (#68): a part the page says doesn't fit asks first
+  // (the click here may land while the build loads; it waits for the answer)
+  await page
+    .getByRole("dialog", { name: "Add a part that doesn't fit?" })
+    .getByRole("button", { name: "Add anyway" })
+    .click()
+  await expect(page.getByRole("status")).toContainText("Added to your build.")
   await page.goto("/builder")
 
   await expect(summary(page)).toContainText("Errors")
