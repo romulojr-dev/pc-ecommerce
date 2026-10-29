@@ -252,7 +252,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | Validation | Zod | Same schemas validate forms, server actions and spec fields |
 | Auth | Auth.js or Better Auth | Email/password + Google; `role` on user for admin |
 | Search | Postgres full-text search in MVP | Move to Meilisearch / Typesense in Phase 2 if needed |
-| Builder state | Zustand (persisted to localStorage), synced to DB when logged in | Shareable build URL via saved build ID |
+| Builder state | Zustand (persisted to localStorage), synced to DB when logged in | Shareable build URL via the build snapshot's share slug |
 | Images | Cloudinary or UploadThing | Responsive images via next/image |
 | Email | Resend + React Email | Order and auth emails |
 | Payments | PayMongo API (test mode) | Checkout session + webhooks |
@@ -268,8 +268,9 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `Brand` | id, name, slug, logoUrl |
 | `Product` | id, categoryId, brandId, name, slug, sku, price, salePrice, stock, lowStockAt, specs (JSONB), weightGrams, warrantyMonths, status (draft / active) |
 | `ProductImage` | productId, url, alt, sortOrder |
-| `Build` | id, userId (nullable), name, shareSlug, createdAt |
+| `Build` | id, shareSlug, contentHash, createdAt. An immutable snapshot of a build's parts: sharing or carting the same contents again reuses the row (same content hash, same slug) |
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
+| `SavedBuild` | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
 | `Cart` / `CartItem` | cartId (cookie or userId), productId, quantity, buildId (nullable, for grouping) |
 | `Order` | id, orderNumber, userId / guestEmail, status, subtotal, shippingFee, discount, total, paymentMethod, shippingAddress (snapshot), courier, trackingNumber |
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity |
@@ -279,7 +280,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `StockMovement` | productId, change, reason, actorId, createdAt |
 | `AuditLog` | actorId, entity, entityId, action, before, after, createdAt |
 
-Order items and addresses are **snapshots**, so later price or address edits never change past orders.
+Order items and addresses are **snapshots**, so later price or address edits never change past orders. Products are retired through `status`, never deleted, so builds, carts and orders that point at them stay valid.
 
 ## Development approach
 
@@ -298,7 +299,7 @@ The MVP is built incrementally in vertical slices, one user story at a time, usi
 
 ### Workflow per story
 
-1. Stories are GitHub issues (template includes acceptance criteria, PRD reference and definition of done), grouped under epics that match the milestones, and scheduled into sprints on the GitHub Projects board.
+1. Stories are GitHub issues (template includes acceptance criteria, PRD reference and definition of done), grouped under epics (see Milestones), and scheduled into sprints on the GitHub Projects board.
 2. Create a branch from the issue.
 3. Write `spec.md` (behavior, examples, edge cases, out of scope), then `plan.md` and `tasks.md`; review each before moving on. Small stories may use a short spec.
 4. Implement task by task with tests; commit small with Conventional Commit messages.
@@ -347,22 +348,34 @@ As a portfolio project, success is measured in demo-ability and quality rather t
 
 ## Milestones
 
-About 12 weeks for one developer, delivered in five milestones; each ends with a deployable preview. Work inside each milestone runs in short sprints (1–2 weeks) planned on the GitHub Projects board.
+Eight sprints (1–2 weeks each) for one developer, planned on the GitHub Projects board; each sprint ends with a deployable preview. Each epic covers one area; an epic can span sprints, and a sprint can serve two epics.
+
+| Sprint | Epic | Scope |
+| --- | --- | --- |
+| 1 | Foundations | Repo, CI, schema, seed catalog, layout shell |
+| 2–3 | Catalog | Category pages, filters, search, product pages, home page, SEO |
+| 4 | PC Builder | Rules engine, builder page, slot picker |
+| 5 | PC Builder, Checkout | Share a build by link, "Fits your build" hints (FR-10), cart (FR-12), add build to cart |
+| 6 | Checkout | 3-step checkout (FR-14 to FR-16), stock re-check (FR-13), orders, PayMongo sandbox and webhooks (FR-22 to FR-24, FR-27) |
+| 7 | Checkout, Accounts | COD (FR-25), vouchers (FR-17), transactional emails (FR-21); accounts (FR-18), address book, order history and saved builds (FR-19) |
+| 8 | Admin + launch | Admin panel, refunds (FR-26), full E2E suite, success-metric checks, production deploy and demo |
 
 ```mermaid
 flowchart LR
-    M1["<b>Foundations</b><br/>Weeks 1–2<br/>Repo, CI, schema<br/>Seed catalog<br/>Design system"]
-    M2["<b>Catalog</b><br/>Weeks 3–5<br/>Category pages<br/>Filters + search<br/>Product pages"]
-    M3["<b>PC Builder</b><br/>Weeks 6–8<br/>Rules engine<br/>Builder UI<br/>Saved builds"]
-    M4["<b>Checkout</b><br/>Weeks 9–10<br/>Cart + vouchers<br/>PayMongo sandbox<br/>COD + emails"]
-    M5["<b>Admin + launch</b><br/>Weeks 11–12<br/>Admin panel<br/>E2E tests<br/>Deploy + demo"]
+    S1["<b>Foundations</b><br/>Sprint 1<br/>Repo, CI, schema<br/>Seed catalog<br/>Layout shell"]
+    S2["<b>Catalog</b><br/>Sprints 2–3<br/>Category pages<br/>Filters + search<br/>Product pages"]
+    S4["<b>PC Builder</b><br/>Sprint 4<br/>Rules engine<br/>Builder page<br/>Slot picker"]
+    S5["<b>Builder + cart</b><br/>Sprint 5<br/>Share builds<br/>Fits-your-build hints<br/>Cart + add build"]
+    S6["<b>Checkout</b><br/>Sprint 6<br/>Checkout steps<br/>Orders<br/>PayMongo sandbox"]
+    S7["<b>Checkout + Accounts</b><br/>Sprint 7<br/>COD + vouchers<br/>Emails<br/>Accounts + saved builds"]
+    S8["<b>Admin + launch</b><br/>Sprint 8<br/>Admin panel<br/>E2E tests<br/>Deploy + demo"]
 
-    M1 --> M2 --> M3 --> M4 --> M5
+    S1 --> S2 --> S4 --> S5 --> S6 --> S7 --> S8
 
-    style M3 stroke-width:3px
+    style S5 stroke-width:3px
 ```
 
-The seed script stands in for the admin panel until weeks 11–12, so catalog and builder work never waits on admin screens.
+The seed script stands in for the admin panel until Sprint 8, so catalog, builder and checkout work never waits on admin screens.
 
 After the MVP ships, Phase 2 items are planned as their own backlog, prioritized in this order: product compare and wishlist, prebuilt build templates, partial COD, warranty / RMA flow, then admin roles and CSV import. Phase 3 items are optional stretch goals.
 
