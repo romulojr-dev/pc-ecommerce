@@ -14,11 +14,12 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/build-state/shared.ts`: `sharedBuildView` with `openPlan` (E24–E33, E30a, E30b).
   - `lib/build-state/share-copy.ts`: `shareErrorText`.
   - `lib/build-state/summary.ts`: `buildNotice` gains the shared-build lines.
-- [ ] **T3. Schema and `shareBuild`.**
-  - `Build` and `BuildItem` in `prisma/schema.prisma`, `pnpm db:migrate --name share_builds`; commit the migration.
+- [x] **T3. Schema and `shareBuild`.**
+  - `Build` and `BuildItem` in `prisma/schema.prisma`, `pnpm db:migrate --name share_builds`; commit the migration. The migration also adds `CHECK (quantity >= 1)`, which Prisma can't express.
+  - `test-support/build-fixtures.ts` (seed parts in the test database) and `resetCatalog()` truncating `Build` (the guard follows in T4).
   - `lib/build-share.ts`: `shareBuild` with P2002 handling and an injectable slug generator.
   - `lib/build-share.db.test.ts`: E1–E8, E10, E15–E17, E19–E22, E5 (ten at once), **E61 (two in parallel)**, E62.
-  - *Verify:* `pnpm test:db`. First check that the pg adapter reports unique violations as `P2002`.
+  - *Verify:* `pnpm test:db`. The pg adapter does report unique violations as `P2002` (E61, E62 prove it).
 - [ ] **T4. Production safety.**
   - `lib/db-url.ts` extracted from `test-support/db-guard.ts`; its tests stay green.
   - `lib/reset-guard.ts` and its tests (E63–E67). `PRODUCTION_DATABASE_HOST` in `lib/env.ts` and `.env.example`.

@@ -16,10 +16,12 @@ function assertTestDatabase() {
   }
 }
 
-// Empties the catalog, like `pnpm db:seed --reset`
+// Empties the catalog, like `pnpm db:seed --reset`. "Build" is named too:
+// CASCADE from "Product" empties "BuildItem" but not "Build", which would be
+// left pointing at nothing (docs/specs/022-share-build, D9).
 export async function resetCatalog() {
   assertTestDatabase()
-  await db.$executeRaw`TRUNCATE TABLE "ProductImage", "Product", "Brand", "Category" CASCADE`
+  await db.$executeRaw`TRUNCATE TABLE "Build", "ProductImage", "Product", "Brand", "Category" CASCADE`
 }
 
 // One category and one brand, for tests that only need somewhere to put products
