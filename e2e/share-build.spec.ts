@@ -315,3 +315,100 @@ test("a build that has gained a part is asked about (E51a)", async ({
     "Opening this build replaces the 2 parts in your builder."
   )
 })
+
+// The acceptance criterion: share Build A (spec 001's compatible build), open
+// the link in a fresh browser context, Open in builder, and the build matches.
+const BUILD_A = [
+  { path: RYZEN, name: "AMD Ryzen 5 7600", slot: "CPU" },
+  {
+    path: STRIX,
+    name: "ASUS ROG Strix B650-A Gaming WiFi",
+    slot: "Motherboard",
+  },
+  {
+    path: "/memory/corsair-vengeance-ddr5-6000-32-gb-2-16-gb-cl30",
+    name: "Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30",
+    slot: "Memory",
+  },
+  {
+    path: "/storage/samsung-990-pro-1tb-nvme-ssd",
+    name: "Samsung 990 PRO 1TB NVMe SSD",
+    slot: "Storage",
+  },
+  {
+    path: "/gpu/asus-dual-geforce-rtx-4060-oc-edition-8gb",
+    name: "ASUS Dual GeForce RTX 4060 OC Edition 8GB",
+    slot: "Graphics Card",
+  },
+  {
+    path: "/case/lian-li-lancool-216-black",
+    name: "Lian Li LANCOOL 216 Black",
+    slot: "Case",
+  },
+  {
+    path: "/psu/cooler-master-mwe-550-bronze-v2",
+    name: "Cooler Master MWE 550 Bronze V2",
+    slot: "Power Supply",
+  },
+  {
+    path: "/cpu-cooler/thermalright-peerless-assassin-120-se",
+    name: "Thermalright Peerless Assassin 120 SE",
+    slot: "CPU Cooler",
+  },
+] as const
+
+// The saved items in a fixed order, to compare two builds
+const canonicalSaved = async (page: Page) =>
+  [...(await savedItems(page))].sort(
+    (
+      a: { slot: string; productId: string },
+      b: { slot: string; productId: string }
+    ) => a.slot.localeCompare(b.slot) || a.productId.localeCompare(b.productId)
+  )
+
+async function expectBuildA(page: Page, summaryName: string) {
+  for (const { name, slot } of BUILD_A) {
+    const row = page.getByRole("listitem").filter({
+      has: page.getByRole("heading", { name: slot, exact: true }),
+    })
+    await expect(row.getByRole("link", { name, exact: true })).toBeVisible()
+  }
+  const summary = page.getByRole("complementary", { name: summaryName })
+  await expect(summary).toContainText("₱69,060.00")
+  await expect(summary).toContainText("Estimated power: 264 W of 550 W (48%)")
+  await expect(summary).toContainText("No compatibility issues found.")
+  await expect(summary).toContainText("OK")
+}
+
+test("share Build A, open it as someone else, and the builds match", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120_000)
+  for (const { path } of BUILD_A) await addToBuild(page, path)
+  await page.goto("/builder")
+  await expect(page.getByRole("button", { name: "Share build" })).toBeEnabled()
+  await expectBuildA(page, "Your build")
+  const sharerItems = await canonicalSaved(page)
+  expect(sharerItems).toHaveLength(8)
+
+  await page.getByRole("button", { name: "Share build" }).click()
+  const field = shareDialog(page).getByRole("textbox", { name: "Share link" })
+  await expect(field).toHaveValue(LINK)
+  const path = new URL(await field.inputValue()).pathname
+
+  const visitor = await asVisitor(browser, path)
+  try {
+    const view = visitor.page
+    await expectBuildA(view, "Summary")
+    await expect(view.getByText("no longer sold")).toHaveCount(0)
+
+    await openInBuilder(view).click()
+    await expect(view).toHaveURL("/builder")
+    await expectBuildA(view, "Your build")
+    expect(await canonicalSaved(view)).toEqual(sharerItems)
+    await expect(view.getByText(/shared build is no longer/)).toHaveCount(0)
+  } finally {
+    await visitor.close()
+  }
+})

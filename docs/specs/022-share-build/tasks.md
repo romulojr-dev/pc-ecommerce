@@ -41,9 +41,9 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - Store `load` action and `sharedGone` (in memory, never saved) with its tests (E49, E52–E56), and the builder's notice (`buildNotice(noticeChanges, sharedGone)`).
   - `components/builds/open-in-builder.tsx`: same-contents shortcut, replace dialog, client navigation. The page passes it the server-built `openPlan`.
   - E2E: no build (E49), a different build with Cancel then Replace (E50), your own link (E51), a build that gained a part (E51a). The gone-part path (E28, E52) was checked once by hand against the Docker database, flipping the RTX 4060 to `DRAFT` and back (E2E has no database access).
-- [ ] **T8. E2E and wrap-up.**
-  - `e2e/share-build.spec.ts`: the acceptance flow in a fresh browser context (E49), copy confirmation with clipboard permission (E41), the replace dialog (E50), a 404 (E34). `seo.spec.ts`: noindex, canonical, no `/builds` in the sitemap (E37, E38).
-  - Docs: `CLAUDE.md` (a sharing bullet; the `db:seed` reset rule; `PRODUCTION_DATABASE_HOST`). Tick the issue's acceptance criteria.
-  - Checks: `pnpm format`, `lint`, `typecheck`, `test`, `test:db`, `build`, E2E (dev, then `CI=1` against `pnpm build && pnpm start`).
-  - Manual check at 1024 and 1280 px (plan › Verification).
+- [x] **T8. E2E and wrap-up.**
+  - `e2e/share-build.spec.ts`: the acceptance flow with the full Build A in a fresh browser context (E49 and E3's figures), plus everything added in T5 to T7. `seo.spec.ts`: no `/builds` in the sitemap (E38).
+  - Docs: `CLAUDE.md` (a sharing bullet; the `db:seed` reset rule; `PRODUCTION_DATABASE_HOST`; the route list). The issue's acceptance criteria are ticked on the PR.
+  - Checks: `pnpm lint`, `typecheck`, `test` (983), `test:db` (211), `build` (`/builds/[slug]` is dynamic), E2E 84 of 84 in dev and, with `CI=1`, against the production build. The first production run had 3 tests that passed on retry (cold start after the build); a rerun without retries passed 84 of 84. `prettier --check` finds only the six files that were already unformatted.
+  - Manual check at 1024 and 1280 px: the share dialog and the shared page, from screenshots.
   - PR: push with `git push -u origin HEAD`, then open the PR per the repo template.
