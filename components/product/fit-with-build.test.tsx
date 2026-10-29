@@ -7,6 +7,7 @@ import { ruleSpecsOf } from "@/lib/specs"
 import { buildA, seed, seedPart } from "@/test-support/seed-parts"
 
 import { FitBlock, FitWithBuild } from "./fit-with-build"
+import { ProductFit } from "./product-fit"
 
 // The product page's block (docs/specs/023-fits-your-build-hints, Behavior
 // 10–12; E27–E29)
@@ -79,7 +80,9 @@ describe("FitBlock", () => {
 describe("FitWithBuild", () => {
   test("renders only the reserved line on the server, whatever the saved build", () => {
     const html = renderToStaticMarkup(
-      <FitWithBuild part={partOf(seed.proB760mDdr4)} />
+      <ProductFit part={partOf(seed.proB760mDdr4)}>
+        <FitWithBuild />
+      </ProductFit>
     )
     expect(html).toContain('<div class="min-h-5 leading-5"></div>')
     expect(html).not.toContain("Fits")

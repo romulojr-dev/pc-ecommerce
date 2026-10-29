@@ -1,11 +1,10 @@
 "use client"
 
 import { CircleXIcon, TriangleAlertIcon } from "lucide-react"
-import { useMemo } from "react"
 
 import { FitLabel, isShown } from "@/components/fit/fit-badge"
-import { useFits } from "@/hooks/use-fits"
-import type { Fit, FitPart } from "@/lib/build-state/fit"
+import { useProductFit } from "@/components/product/product-fit"
+import type { Fit } from "@/lib/build-state/fit"
 
 // The product page's "Fits your build" block
 // (docs/specs/023-fits-your-build-hints, Behavior 10–12): the label, and for
@@ -13,9 +12,9 @@ import type { Fit, FitPart } from "@/lib/build-state/fit"
 // first, each marked Error or Warning. It goes at the end of the buy column,
 // so a long list never pushes the price, stock or buttons. The label's line
 // is there from the server render on, and the block is not a live region.
-export function FitWithBuild({ part }: { part: FitPart }) {
-  const parts = useMemo(() => [part], [part])
-  return <FitBlock fit={useFits(parts)?.[0] ?? null} />
+// The verdict comes from ProductFit, which Add to build shares.
+export function FitWithBuild() {
+  return <FitBlock fit={useProductFit().fit} />
 }
 
 // The block's markup for one state; null before the build has loaded
