@@ -37,9 +37,10 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `app/(store)/builds/[slug]/page.tsx` and `components/builds/shared-build.tsx`, with markup tests (E24–E30b, E32, E33) and metadata (E37). `test-support/shared-snapshot.ts` holds the snapshot fixtures both view and component tests use.
   - E2E: the page for another visitor, 404s, noindex, canonical and link preview, and no `/builds` in the sitemap (E24, E25, E34, E35, E37, E38).
   - The Open in builder button comes with T7; until then the summary ends with the status and issues.
-- [ ] **T7. Open in builder.**
-  - Store `load` action with its tests (E49, E52–E55).
-  - `components/builds/open-in-builder.tsx`: same-contents shortcut, replace dialog, notice (E50, E51, E51a, E51b, E56).
+- [x] **T7. Open in builder.**
+  - Store `load` action and `sharedGone` (in memory, never saved) with its tests (E49, E52–E56), and the builder's notice (`buildNotice(noticeChanges, sharedGone)`).
+  - `components/builds/open-in-builder.tsx`: same-contents shortcut, replace dialog, client navigation. The page passes it the server-built `openPlan`.
+  - E2E: no build (E49), a different build with Cancel then Replace (E50), your own link (E51), a build that gained a part (E51a). The gone-part path (E28, E52) was checked once by hand against the Docker database, flipping the RTX 4060 to `DRAFT` and back (E2E has no database access).
 - [ ] **T8. E2E and wrap-up.**
   - `e2e/share-build.spec.ts`: the acceptance flow in a fresh browser context (E49), copy confirmation with clipboard permission (E41), the replace dialog (E50), a 404 (E34). `seo.spec.ts`: noindex, canonical, no `/builds` in the sitemap (E37, E38).
   - Docs: `CLAUDE.md` (a sharing bullet; the `db:seed` reset rule; `PRODUCTION_DATABASE_HOST`). Tick the issue's acceptance criteria.

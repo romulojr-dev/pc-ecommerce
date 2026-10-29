@@ -32,6 +32,7 @@ import { buildStatus, checkBuild, estimateWattage, SLOTS } from "@/lib/builder"
 export function Builder() {
   const { status, build, loaded, retry, addLoaded } = useBuildParts()
   const noticeChanges = useBuild((state) => state.noticeChanges)
+  const sharedGone = useBuild((state) => state.sharedGone)
   const ready = status === "ready"
 
   const summary = useMemo(() => {
@@ -103,7 +104,7 @@ export function Builder() {
   return (
     <div className="flex flex-col gap-6">
       <BuildNotice
-        lines={buildNotice(noticeChanges)}
+        lines={buildNotice(noticeChanges, sharedGone)}
         onDismiss={dismissNotice}
       />
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">

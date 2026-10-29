@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { connection } from "next/server"
 
+import { OpenInBuilder } from "@/components/builds/open-in-builder"
 import { SharedBuild } from "@/components/builds/shared-build"
 import { Container } from "@/components/layout/container"
 import { isShareSlug } from "@/lib/build-share-slug"
@@ -61,7 +62,9 @@ export default async function SharedBuildPage({
           parts are the ones chosen when it was shared.
         </p>
       </div>
-      <SharedBuild view={view} />
+      <SharedBuild view={view}>
+        <OpenInBuilder plan={view.openPlan} />
+      </SharedBuild>
     </Container>
   )
 }

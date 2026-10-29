@@ -200,3 +200,118 @@ test("a shared page is not indexed, has its own canonical and link preview (E37)
     /og-default\.png$/
   )
 })
+
+// Open in builder (docs/specs/022-share-build, Behavior 20–26)
+
+const I5 = "/cpu/intel-core-i5-14400f"
+const STRIX = "/motherboard/asus-rog-strix-b650-a-gaming-wifi"
+const SAVED_BUILD = "pc-silicon-build"
+
+async function addToBuild(page: Page, path: string) {
+  await page.goto(path)
+  await page.getByRole("button", { name: "Add to build" }).click()
+  await expect(page.getByRole("status")).toContainText("Added to your build.")
+}
+
+const savedItems = (page: Page) =>
+  page.evaluate(
+    (key) => JSON.parse(localStorage.getItem(key) ?? "null")?.state.items,
+    SAVED_BUILD
+  )
+
+const cpuRow = (page: Page, name: string) =>
+  page
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("heading", { name: "CPU", exact: true }) })
+    .getByRole("link", { name, exact: true })
+
+const openInBuilder = (page: Page) =>
+  page.getByRole("button", { name: "Open in builder" })
+
+const replaceDialog = (page: Page) =>
+  page.getByRole("dialog", { name: "Replace your current build?" })
+
+test("someone with no build opens a shared one straight into their builder (E49)", async ({
+  page,
+  browser,
+}) => {
+  const path = await shareRyzen(page)
+
+  const visitor = await asVisitor(browser, path)
+  try {
+    const view = visitor.page
+    await openInBuilder(view).click()
+
+    // No question to ask, and nothing to say about parts left out
+    await expect(view).toHaveURL("/builder")
+    await expect(cpuRow(view, "AMD Ryzen 5 7600")).toBeVisible()
+    expect(await savedItems(view)).toEqual([
+      expect.objectContaining({ slot: "cpu", quantity: 1 }),
+    ])
+    await expect(view.getByText(/shared build is no longer/)).toHaveCount(0)
+  } finally {
+    await visitor.close()
+  }
+})
+
+test("a different saved build is replaced only after asking (E50)", async ({
+  page,
+  browser,
+}) => {
+  const path = await shareRyzen(page)
+
+  const visitor = await asVisitor(browser, I5)
+  try {
+    const view = visitor.page
+    await view.getByRole("button", { name: "Add to build" }).click()
+    await expect(view.getByRole("status")).toContainText("Added to your build.")
+    const before = await savedItems(view)
+
+    await view.goto(path)
+    await openInBuilder(view).click()
+    const dialog = replaceDialog(view)
+    await expect(dialog).toContainText(
+      "Opening this build replaces the 1 part in your builder."
+    )
+
+    // Cancel changes nothing
+    await dialog.getByRole("button", { name: "Cancel" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(view).toHaveURL(path)
+    expect(await savedItems(view)).toEqual(before)
+    await expect(openInBuilder(view)).toBeFocused()
+
+    // Replace swaps the build and goes to the builder
+    await openInBuilder(view).click()
+    await replaceDialog(view).getByRole("button", { name: "Replace" }).click()
+    await expect(view).toHaveURL("/builder")
+    await expect(cpuRow(view, "AMD Ryzen 5 7600")).toBeVisible()
+    await expect(cpuRow(view, "Intel Core i5-14400F")).toHaveCount(0)
+  } finally {
+    await visitor.close()
+  }
+})
+
+test("opening your own shared build doesn't ask (E51)", async ({ page }) => {
+  const path = await shareRyzen(page)
+
+  await page.goto(path)
+  await openInBuilder(page).click()
+
+  await expect(page).toHaveURL("/builder")
+  await expect(cpuRow(page, "AMD Ryzen 5 7600")).toBeVisible()
+})
+
+test("a build that has gained a part is asked about (E51a)", async ({
+  page,
+}) => {
+  const path = await shareRyzen(page)
+  await addToBuild(page, STRIX)
+
+  await page.goto(path)
+  await openInBuilder(page).click()
+
+  await expect(replaceDialog(page)).toContainText(
+    "Opening this build replaces the 2 parts in your builder."
+  )
+})
