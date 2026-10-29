@@ -6,6 +6,7 @@ import { ProductImage } from "@/components/product/product-image"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { BuilderPartData } from "@/lib/build-state/parts"
+import { worstSeverity } from "@/lib/build-state/severity"
 import { SLOT_COPY } from "@/lib/build-state/slots"
 import {
   type Issue,
@@ -126,18 +127,8 @@ export function SlotSection({
   )
 }
 
-// The most severe issue that names this part, if any
-export function worstSeverity(
-  issues: readonly Issue[],
-  slot: Slot,
-  id: string
-): Severity | null {
-  const named = issues.filter((issue) =>
-    issue.parts.some((part) => part.slot === slot && part.id === id)
-  )
-  if (named.some((issue) => issue.severity === "error")) return "error"
-  return named.length > 0 ? "warning" : null
-}
+// Lives in lib/build-state/severity.ts, since the shared page uses it too
+export { worstSeverity }
 
 type PartRowProps = {
   slot: Slot

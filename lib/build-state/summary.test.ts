@@ -215,6 +215,51 @@ describe("buildNotice", () => {
     ])
   })
 
+  describe("for a shared build opened in the builder (E52, E53)", () => {
+    test("names the slot of one part left out", () => {
+      expect(buildNotice([], [change("not-found", "gpu")])).toEqual([
+        "A part from the shared build is no longer available, so we left it out: Graphics Card.",
+      ])
+    })
+
+    test("lists the slots of several, once each, in slot order", () => {
+      expect(
+        buildNotice(
+          [],
+          [change("not-found", "gpu"), change("not-found", "storage", "a")]
+        )
+      ).toEqual([
+        "Some parts from the shared build are no longer available, so we left them out: Storage, Graphics Card.",
+      ])
+    })
+
+    test("counts two drives as several parts in one slot", () => {
+      expect(
+        buildNotice(
+          [],
+          [
+            change("not-found", "storage", "a"),
+            change("not-found", "storage", "b"),
+          ]
+        )
+      ).toEqual([
+        "Some parts from the shared build are no longer available, so we left them out: Storage.",
+      ])
+    })
+
+    test("comes after the saved-build lines and ignores other repairs", () => {
+      expect(
+        buildNotice(
+          [change("reset")],
+          [change("merged-duplicate", "storage"), change("not-found", "case")]
+        )
+      ).toEqual([
+        "We couldn't read your saved build, so we started a new one.",
+        "A part from the shared build is no longer available, so we left it out: Case.",
+      ])
+    })
+  })
+
   test.each([
     "invalid-entry",
     "unknown-slot",

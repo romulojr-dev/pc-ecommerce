@@ -31,6 +31,7 @@ export {
   type BuildChangeKind,
   type BuildItem,
 } from "./parse"
+export { canonicalItems, canonicalText, type CanonicalItem } from "./canonical"
 export { buildStatus, checkBuild } from "./check"
 export {
   estimateWattage,

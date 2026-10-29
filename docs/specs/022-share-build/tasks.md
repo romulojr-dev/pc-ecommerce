@@ -5,8 +5,10 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Docs.** Spec 022 (approved with the review changes), this plan and task list, ADR 0007.
-- [ ] **T2. Pure logic, test-first.**
+- [x] **T2. Pure logic, test-first.**
   - `lib/builder/canonical.ts`: `canonicalItems` and the canonical text (E3, E57–E60). Export from `lib/builder/index.ts`.
+  - `lib/build-share-hash.ts`: `contentHashOf`, pinned to E57's hash. Split from `lib/build-share.ts` so it tests without a database.
+  - `lib/build-state/severity.ts`: `worstSeverity` moved out of `slot-section.tsx`, which re-exports it.
   - `lib/build-state/share.ts`: `MAX_SHARE_QUANTITY` and `shareInput` (E9–E14, E18).
   - `lib/build-share-slug.ts`: `randomSlug`, `isShareSlug` (E1, E35).
   - `lib/build-state/shared.ts`: `sharedBuildView` with `openPlan` (E24–E33, E30a, E30b).
