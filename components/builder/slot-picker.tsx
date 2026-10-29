@@ -2,15 +2,12 @@
 
 import { useMemo, useRef, useState } from "react"
 
+import { MisfitDialog } from "@/components/builder/misfit-dialog"
 import { PickerBody } from "@/components/builder/picker-body"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -154,49 +151,19 @@ function PickerDialog({
         onRetry={retry}
       />
 
-      <Dialog
-        open={confirming !== null}
+      <MisfitDialog
+        request={
+          confirming && {
+            partName: confirming.candidate.data.part.name,
+            errors: confirming.errors,
+          }
+        }
         onOpenChange={(open) => {
           if (!open) setConfirming(null)
         }}
-      >
-        {confirming && (
-          <DialogContent
-            showCloseButton={false}
-            className="text-sm"
-            finalFocus={confirmButton}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-base">
-                Add a part that doesn&apos;t fit?
-              </DialogTitle>
-              <DialogDescription className="flex flex-col gap-2 text-sm text-foreground">
-                <span>
-                  The {confirming.candidate.data.part.name} doesn&apos;t fit
-                  your build:
-                </span>
-              </DialogDescription>
-            </DialogHeader>
-            <ul className="flex list-disc flex-col gap-1 pl-5">
-              {confirming.errors.map((issue) => (
-                <li key={issue.rule}>{issue.message}</li>
-              ))}
-            </ul>
-            <p className="text-muted-foreground">
-              You can still add it, but you can&apos;t add the build to your
-              cart until this is fixed.
-            </p>
-            <DialogFooter>
-              <DialogClose render={<Button variant="outline" size="lg" />}>
-                Cancel
-              </DialogClose>
-              <Button size="lg" onClick={() => pick(confirming)}>
-                Add anyway
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        )}
-      </Dialog>
+        onConfirm={() => confirming && pick(confirming)}
+        finalFocus={confirmButton}
+      />
     </DialogContent>
   )
 }
