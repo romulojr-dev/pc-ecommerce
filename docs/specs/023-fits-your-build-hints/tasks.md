@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Docs.** Spec 023 (approved, with the precedence and test-plan fixes), this plan and task list. Follow-up story #68 is in Backlog.
-- [ ] **T2. Pure logic, test-first.**
+- [x] **T2. Pure logic, test-first.**
   - `lib/specs/rule-specs.ts`: `ruleSpecsOf`, with the equivalence test over every seed part and Build A, B and C.
   - `lib/builder/comparable.ts`: `hasComparableParts` (E13–E21), every `RuleId` listed, and the drift test. Export from `lib/builder/index.ts`.
   - `lib/build-state/fit.ts`: `FitPart`, `fitPartOf`, `fitOf` (E1–E12), and `fit.perf.test.ts` (24 verdicts, median under 50 ms).

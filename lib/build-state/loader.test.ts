@@ -3,7 +3,12 @@ import { describe, expect, test } from "vitest"
 import type { AnyBuildPart, BuildItem, Slot } from "@/lib/builder"
 import { seed } from "@/test-support/seed-parts"
 
-import { assembleLoaded, goneChanges, partsRequest } from "./loader"
+import {
+  assembleLoaded,
+  goneChanges,
+  partsRequest,
+  unreturnedIds,
+} from "./loader"
 import type { BuilderPartData } from "./parts"
 
 // The builder page's parts loader, minus React (docs/specs/020-builder-page,
@@ -53,6 +58,41 @@ describe("partsRequest", () => {
   test("asks for nothing when only a quantity changed (E12)", () => {
     const memory = item("memory", seed.vengeanceDdr5.id, 2)
     expect(partsRequest([memory], loaded(seed.vengeanceDdr5))).toBeNull()
+  })
+})
+
+describe("read-only pages (docs/specs/023-fits-your-build-hints, D13)", () => {
+  const missing = item("gpu", "cm0000000000000000000000000")
+
+  test("unreturnedIds names the requested ids the response lacked (E34)", () => {
+    const ids = unreturnedIds(
+      new Set([cpu.productId, missing.productId]),
+      loaded(seed.ryzen5_7600)
+    )
+    expect([...ids]).toEqual([missing.productId])
+  })
+
+  test("a gone id is left out of the next request, so nothing is left to ask for (E34)", () => {
+    const skip = new Set([missing.productId])
+    expect(
+      partsRequest([cpu, missing], loaded(seed.ryzen5_7600))
+    ).not.toBeNull()
+    expect(
+      partsRequest([cpu, missing], loaded(seed.ryzen5_7600), skip)
+    ).toBeNull()
+  })
+
+  test("another missing part is still asked for, without the gone one", () => {
+    const skip = new Set([missing.productId])
+    expect(
+      partsRequest([cpu, gpu, missing], loaded(seed.ryzen5_7600), skip)
+    ).toBe(`${seed.ryzen5_7600.id},${seed.rtx4060.id}`)
+  })
+
+  test("assembleLoaded leaves a gone part out of the build and drops nothing", () => {
+    const { build } = assembleLoaded([cpu, missing], loaded(seed.ryzen5_7600))
+    expect(build.gpu).toBeUndefined()
+    expect(build.cpu).toEqual([{ part: seed.ryzen5_7600, quantity: 1 }])
   })
 })
 

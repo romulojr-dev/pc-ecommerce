@@ -129,13 +129,13 @@ A badge shows only when some rule can compare the product with a part already in
 | `form-factor` | motherboard, case |
 | `gpu-length` | gpu, case |
 | `cooler-height`, `radiator-fit` | cpu-cooler, case |
-| `cooler-socket` | cpu-cooler, cpu |
+| `cooler-socket` | cpu-cooler, and a cpu or a motherboard (the board's socket is used when no CPU is picked, spec 018) |
 | `psu-wattage` | psu, and a cpu or a gpu |
 | `psu-form-factor` | psu, case |
 | `m2-slots` | storage, motherboard |
 | `integrated-graphics` | (cpu alone: never counts) |
 
-The candidate's slot counts as filled. The part it would replace, in its own slot, does not count as something to compare with. So the badge shows when a counted rule needs the candidate's slot and every other slot it needs is filled in the build. For `psu-wattage`: a cpu or gpu candidate needs a PSU in the build; a PSU candidate needs a cpu or a gpu.
+The candidate's slot counts as filled. The part it would replace, in its own slot, does not count as something to compare with. So the badge shows when a counted rule needs the candidate's slot and every other slot it needs is filled in the build. For `psu-wattage`: a cpu or gpu candidate needs a PSU in the build; a PSU candidate needs a cpu or a gpu. For `cooler-socket`: a cooler candidate needs a cpu or a motherboard; a cpu or motherboard candidate needs a cooler. (The slot-by-slot table was corrected after the drift test found the board alternative.)
 
 - The table is derived from the rules, not kept as a second list that can drift: a new rule must declare its slots, and a test fails if a rule has none (see Test plan).
 - The helper looks at the loaded build, so a saved item whose part isn't loaded yet doesn't count.

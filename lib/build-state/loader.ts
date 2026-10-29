@@ -15,12 +15,30 @@ type Loaded = ReadonlyMap<string, BuilderPartData>
 // The `ids` to ask for, or null when every part is already loaded. When one
 // is missing, every id is asked for, so the whole build is fresh. Removing a
 // part or changing a quantity needs no request.
+//
+// `skip` is for pages that only read the build (docs/specs/023-fits-your-
+// build-hints, D13): ids a response already showed to be gone. They are never
+// removed from the saved build there, so they must not keep the request open.
 export function partsRequest(
   items: readonly BuildItem[],
-  loaded: Loaded
+  loaded: Loaded,
+  skip: ReadonlySet<string> = new Set()
 ): string | null {
-  const ids = [...new Set(items.map((item) => item.productId))]
+  const ids = [
+    ...new Set(
+      items.map((item) => item.productId).filter((id) => !skip.has(id))
+    ),
+  ]
   return ids.every((id) => loaded.has(id)) ? null : ids.join(",")
+}
+
+// The requested ids a successful response didn't return: deleted or draft
+// products. Read-only pages remember them instead of dropping them.
+export function unreturnedIds(
+  requested: ReadonlySet<string>,
+  loaded: Loaded
+): Set<string> {
+  return new Set([...requested].filter((id) => !loaded.has(id)))
 }
 
 const partsOf = (loaded: Loaded) =>
