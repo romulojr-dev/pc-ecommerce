@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { assertResetAllowed } from "@/lib/reset-guard"
 import { validateSpecs } from "@/lib/specs"
 
 // Helpers for the database integration tests (*.db.test.ts, run by
@@ -19,7 +20,12 @@ function assertTestDatabase() {
 // Empties the catalog, like `pnpm db:seed --reset`. "Build" is named too:
 // CASCADE from "Product" empties "BuildItem" but not "Build", which would be
 // left pointing at nothing (docs/specs/022-share-build, D9).
+//
+// The production guard runs first, as a second lock beside assertTestDatabase
+// (docs/specs/022-share-build, Rules › Production safety). It doesn't need
+// PRODUCTION_DATABASE_HOST: the tests only run on TEST_DATABASE_URL.
 export async function resetCatalog() {
+  assertResetAllowed(process.env)
   assertTestDatabase()
   await db.$executeRaw`TRUNCATE TABLE "Build", "ProductImage", "Product", "Brand", "Category" CASCADE`
 }

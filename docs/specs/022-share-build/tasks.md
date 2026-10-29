@@ -20,11 +20,11 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/build-share.ts`: `shareBuild` with P2002 handling and an injectable slug generator.
   - `lib/build-share.db.test.ts`: E1–E8, E10, E15–E17, E19–E22, E5 (ten at once), **E61 (two in parallel)**, E62.
   - *Verify:* `pnpm test:db`. The pg adapter does report unique violations as `P2002` (E61, E62 prove it).
-- [ ] **T4. Production safety.**
+- [x] **T4. Production safety.**
   - `lib/db-url.ts` extracted from `test-support/db-guard.ts`; its tests stay green.
   - `lib/reset-guard.ts` and its tests (E63–E67). `PRODUCTION_DATABASE_HOST` in `lib/env.ts` and `.env.example`.
   - `prisma/seed.ts` uses the guard in place of the `NODE_ENV` check. `prisma/seed/write.ts` and `resetCatalog()` truncate `Build` too and call the guard first (E23, E69).
-  - `prisma/seed/reset-cli.test.ts` (E68) and `prisma/seed/write.db.test.ts` (E70).
+  - `prisma/seed/reset-cli.test.ts` (E68, runs the real script as a child process) and `prisma/seed/write.db.test.ts` (E70, E23). `test-support/reset-catalog.db.test.ts` covers E69.
   - *Verify:* `pnpm test`, `pnpm test:db`.
 - [ ] **T5. Share UI.**
   - `app/(store)/builder/actions.ts`: the server action.
