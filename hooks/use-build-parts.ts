@@ -7,6 +7,7 @@ import {
   assembleLoaded,
   goneChanges,
   partsRequest,
+  unreturnedIds,
 } from "@/lib/build-state/loader"
 import type { BuilderPartData } from "@/lib/build-state/parts"
 import { buildStore } from "@/lib/build-state/store"
@@ -18,7 +19,13 @@ export type PartsStatus = "loading" | "ready" | "error"
 // an id isn't loaded yet; an older response is ignored once a newer request
 // starts. Parts are dropped from the saved build only after a successful
 // response, never on an error.
-export function useBuildParts() {
+//
+// `readOnly` is for pages that can't show a notice (docs/specs/023-fits-your-
+// build-hints, D13): only a page that can show one may change the saved build.
+// There a part the server doesn't return is remembered and left out of the
+// build and of later requests, and never dropped, so the status still reaches
+// "ready" and /builder removes the part later, with its notice.
+export function useBuildParts({ readOnly = false } = {}) {
   const items = useBuild((state) => state.items)
   const hydrated = useBuild((state) => state.hydrated)
   const [loaded, setLoaded] = useState<ReadonlyMap<string, BuilderPartData>>(
@@ -26,8 +33,12 @@ export function useBuildParts() {
   )
   // The request that failed, until Try again (or a change to the build)
   const [failed, setFailed] = useState<string | null>(null)
+  // Read-only only: ids a response showed to be gone
+  const [gone, setGone] = useState<ReadonlySet<string>>(() => new Set())
 
-  const request = hydrated ? partsRequest(items, loaded) : null
+  const request = hydrated
+    ? partsRequest(items, loaded, readOnly ? gone : undefined)
+    : null
 
   useEffect(() => {
     if (request === null || request === failed) return
@@ -45,9 +56,16 @@ export function useBuildParts() {
         const requested = new Set(request.split(","))
         // Set together, so the render after this sees both
         setLoaded(next)
-        buildStore
-          .getState()
-          .drop(goneChanges(buildStore.getState().items, next, requested))
+        if (readOnly) {
+          setGone(
+            (previous) =>
+              new Set([...previous, ...unreturnedIds(requested, next)])
+          )
+        } else {
+          buildStore
+            .getState()
+            .drop(goneChanges(buildStore.getState().items, next, requested))
+        }
       })
       .catch(() => {
         if (current) setFailed(request)
@@ -55,7 +73,7 @@ export function useBuildParts() {
     return () => {
       current = false
     }
-  }, [request, failed])
+  }, [request, failed, readOnly])
 
   const build = useMemo(
     () => assembleLoaded(items, loaded).build,

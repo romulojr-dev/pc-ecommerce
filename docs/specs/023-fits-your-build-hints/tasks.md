@@ -10,7 +10,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/builder/comparable.ts`: `hasComparableParts` (E13–E21), every `RuleId` listed, and the drift test. Export from `lib/builder/index.ts`.
   - `lib/build-state/fit.ts`: `FitPart`, `fitPartOf`, `fitOf` (E1–E12), and `fit.perf.test.ts` (24 verdicts, median under 50 ms).
   - `lib/build-state/loader.ts`: `unreturnedIds`, `skip` on `partsRequest`, with tests.
-- [ ] **T3. Hooks.** `useBuildParts({ readOnly })` (D13) and `hooks/use-fits.ts`. `/builder` is unchanged.
+- [x] **T3. Hooks.** `useBuildParts({ readOnly })` (D13) and `hooks/use-fits.ts`. `/builder` is unchanged.
 - [ ] **T4. Listing and search.**
   - `listingSelect`, `ListingProduct`, `toListingProduct` in `lib/products.ts`; `getListingPage` and `lib/search.ts` use them; the category and search pages' types follow.
   - `components/fit/fit-badge.tsx` and its markup test.
