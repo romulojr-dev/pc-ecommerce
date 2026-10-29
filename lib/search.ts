@@ -14,9 +14,9 @@ import {
 import { type ListingState, PAGE_SIZE } from "@/lib/listing-params"
 import {
   getListingPage,
-  productCardSelect,
-  type ProductCardData,
-  toProductCardData,
+  listingSelect,
+  type ListingProduct,
+  toListingProduct,
 } from "@/lib/products"
 
 // Keyword search (docs/specs/014-search, ADR 0005). Server-only: it queries
@@ -68,7 +68,7 @@ export async function getSearchProducts(
   scope: SearchScope,
   { sort, page, filters }: ListingState,
   context: FilterContext
-): Promise<{ products: ProductCardData[]; total: number }> {
+): Promise<{ products: ListingProduct[]; total: number }> {
   const where = {
     ...scope.where,
     AND: activeWhere(filters, context, searchFilters),
@@ -97,14 +97,14 @@ export async function getSearchProducts(
 
   const rows = await db.product.findMany({
     where: { id: { in: pageIds } },
-    select: { id: true, ...productCardSelect },
+    select: listingSelect,
   })
   const byId = new Map(rows.map((row) => [row.id, row]))
   return {
     products: pageIds.flatMap((id) => {
       const row = byId.get(id)
       // Gone between the two queries: leave it out
-      return row ? [toProductCardData(row)] : []
+      return row ? [toListingProduct(row)] : []
     }),
     total: ordered.length,
   }

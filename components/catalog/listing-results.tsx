@@ -1,12 +1,14 @@
 "use client"
 
 import { LayoutGridIcon, ListIcon } from "lucide-react"
-import { Fragment, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 
+import { FitBadge } from "@/components/fit/fit-badge"
 import { ProductCard } from "@/components/product/product-card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useFits } from "@/hooks/use-fits"
 import { type ListingView, parseView, VIEW_COOKIE } from "@/lib/listing-params"
-import type { ProductCardData } from "@/lib/products"
+import type { ListingProduct } from "@/lib/products"
 import { cn, focusRing } from "@/lib/utils"
 
 // shadcn's pressed state (bg-muted) is too close to unpressed; use a solid fill
@@ -19,7 +21,7 @@ const toggleItem = cn(
 const EAGER_CARDS = 6
 
 type ListingResultsProps = {
-  products: ProductCardData[]
+  products: ListingProduct[]
   // From the view cookie, so the first render already has the right layout
   initialView: ListingView
   // Today in Manila, from the server, so cards show pre-orders consistently
@@ -40,6 +42,17 @@ export function ListingResults({
   controls,
 }: ListingResultsProps) {
   const [view, setView] = useState(initialView)
+  // "Fits your build" (docs/specs/023-fits-your-build-hints): one parts
+  // request for every card on the page. Null until the saved build has
+  // loaded, so the first render matches the server's.
+  const withFit = useMemo(
+    () => products.flatMap((product) => (product.fit ? [product.fit] : [])),
+    [products]
+  )
+  const fits = useFits(withFit)
+  const fitById = new Map(
+    withFit.map((part, index) => [part.id, fits?.[index]])
+  )
 
   function changeView(next: ListingView) {
     setView(next)
@@ -99,7 +112,11 @@ export function ListingResults({
               loading={index < EAGER_CARDS ? "eager" : "lazy"}
               headingLevel={2}
               className="h-full"
-            />
+            >
+              {product.fit && (
+                <FitBadge fit={fitById.get(product.fit.id) ?? null} />
+              )}
+            </ProductCard>
           </li>
         ))}
       </ul>
