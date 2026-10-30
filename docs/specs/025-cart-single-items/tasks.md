@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T1. Docs.** Spec 025 (approved with the review changes), the "Changed by spec 025 (#60)" notes in spec 020, this plan and task list.
-- [ ] **T2. Drift check.**
+- [x] **T2. Drift check.**
   - `datasource.shadowDatabaseUrl` (optional `SHADOW_DATABASE_URL`) in `prisma7.config.ts`; `pnpm db:drift` in `package.json`.
   - CI: create `pcsilicon_shadow` beside `pcsilicon_test`, and a "Check schema drift" step after "Apply migrations".
   - *Verify:* on the Docker Postgres with an inline shadow URL, the current migrations give exit 0. If today's triggers or CHECKs show as drift, stop and report.
