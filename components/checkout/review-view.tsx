@@ -40,11 +40,9 @@ function EditLink({ label }: { label: string }) {
 export function ReviewView({
   result,
   onCheckAgain,
-  checking = false,
 }: {
   result: Ok
   onCheckAgain: () => void
-  checking?: boolean
 }) {
   const { review, contact, address, store } = result
   const warned = new Set(review.warnings.map((w) => w.buildId))
@@ -175,12 +173,7 @@ export function ReviewView({
                 {STEP_COPY.placeSoon}
               </p>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              disabled={checking}
-              onClick={onCheckAgain}
-            >
+            <Button type="button" variant="outline" onClick={onCheckAgain}>
               {STEP_COPY.checkAgain}
             </Button>
           </div>

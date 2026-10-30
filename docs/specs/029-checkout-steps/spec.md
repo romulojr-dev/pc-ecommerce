@@ -1,6 +1,6 @@
 # 029 — Checkout steps: contact, delivery and review
 
-Status: **Approved** (review changes applied) · Issue: #77 (Sprint 6, Checkout epic #4; depends on #76, merged as spec 028) · PRD refs: FR-13 (full: stock re-checked at checkout), FR-14 (3-step checkout, guest), FR-15 (PH address form), FR-16 (shipping fee by zone and weight, free-shipping threshold), FR-27 (Test mode banner); NFR Privacy (collect only what checkout needs); spec 026 (re-run `checkBuild` per group at checkout), spec 027 (block checkout on flagged lines)
+Status: **Implemented** · Issue: #77 (Sprint 6, Checkout epic #4; depends on #76, merged as spec 028) · PRD refs: FR-13 (full: stock re-checked at checkout), FR-14 (3-step checkout, guest), FR-15 (PH address form), FR-16 (shipping fee by zone and weight, free-shipping threshold), FR-27 (Test mode banner); NFR Privacy (collect only what checkout needs); spec 026 (re-run `checkBuild` per group at checkout), spec 027 (block checkout on flagged lines)
 
 ## 1. Summary
 
@@ -226,7 +226,7 @@ Province code `null` means no official parent (Behavior 31). Names are the datas
 ### Steps and storage
 
 - Step 1's values are saved on change; leaving step 1 for `/cart` and coming back keeps them.
-- The saved object holds the contact, the method, the codes, the street and ZIP, and the place names the dropdowns showed (for display only; the server ignores them). Nothing else: no prices, no cart.
+- The saved object holds the contact, the method, the codes, the street and ZIP, and nothing else about the places: the lists are loaded again after a reload and the server names the places. Nothing else: no prices, no cart.
 - Stored data with an unknown version, or that fails the schema's shape check, is discarded; partial step-1 data that is merely incomplete (a field left empty) is kept so the shopper can finish it.
 - A saved address whose codes the current dataset version doesn't have (a future PSGC quarter) fails the server check and sends the shopper back to choose again (I10's message).
 - The server render never reads `sessionStorage`, so `/checkout` and `/checkout?step=review` render the same shell; the client picks the step after mounting.
@@ -366,6 +366,7 @@ No schema change and no migration.
 - **D12 — The weight counts the same lines as the subtotal.** A retired part neither costs nor ships. With a blocked review it doesn't matter; with a clean one they're all sold.
 - **D14 — Province in the address follows "the PSA's official parent only" (Behavior 31); a wrapper normalizes, `resolveAddress` stays as spec 028 has it.** The PSA has no province for independent cities, NCR's cities, Isabela or the Special Geographic Area, so a province **code** for them would be invented (or, for Cebu, a real code the city isn't officially under). The snapshot keeps the name the courier reads (the geographic province, or the pseudo-province's name) and `null` for the code, with a flag for the geographic case. A wrapper normalizes both entry paths to one result, so the same address never has two snapshots, and spec 028's V10 ("province named 'City of Mandaue'") stays true for `resolveAddress`. *Rejected:* changing `resolveAddress`'s output (breaks an implemented spec's examples); storing the geographic province's real code for independent cities (it would read as the PSA's own parent); storing the pseudo-province as the province (the courier reads "City of Mandaue" where the shopper chose Cebu). **#78 stores this shape in its address snapshot.** *Flag:* the issue and PRD say addresses carry PSGC codes for every level; the province code is the one level that can be absent, and #78's `Order` columns must allow it.
 - **D15 — Focus moves to the step heading, and to the problem summary on a blocked review (review decision).** A step change replaces content on one URL; without a focus move, keyboard and screen reader users stay on a button that no longer exists. The problems box takes focus instead of being a live region, so it is announced once. *Rejected:* a live region for the problems (double announcement with the focus move); focusing the page top (loses the place).
+- **D16 — The address dropdowns are native `<select>` elements, and Edit / Change delivery / Back to details are links to `/checkout`.** Native selects give the platform's keyboard and screen reader behaviour and testable roles; the Base UI Select adds nothing this form needs. Links to `/checkout` are soft navigations that also reload the page's cart data, which is what returning to step 1 needs (Behavior 9). *Rejected:* the Base UI Select; buttons that only push history.
 - **D13 — "Check again" instead of polling.** The review is re-checked on every showing; a button covers changes in another tab without timers or extra load. *Rejected:* refreshing on window focus (surprising re-layout while reading).
 
 Flags against earlier documents:

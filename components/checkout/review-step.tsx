@@ -34,6 +34,9 @@ type Props = {
 // server action only reads (D1).
 export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
   const [phase, setPhase] = useState<Phase>({ kind: "loading" })
+  // Check again keeps the review on screen (and focus on its button) while
+  // the new answer is on its way
+  const [checking, setChecking] = useState(false)
   // Only the latest request may answer
   const latest = useRef(0)
 
@@ -48,6 +51,7 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
       // A network failure: the same "Try again" as a server error
     }
     if (mine !== latest.current) return
+    setChecking(false)
     if (!result || (!result.ok && result.reason === "error")) {
       setPhase({ kind: "error" })
     } else if (result.ok) {
@@ -61,7 +65,12 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
 
   // Check again and Try again
   function run(source: "arrival" | "again") {
-    setPhase({ kind: "loading" })
+    if (source === "again" && phase.kind === "ready") {
+      if (checking) return
+      setChecking(true)
+    } else {
+      setPhase({ kind: "loading" })
+    }
     void request(source)
   }
 
@@ -89,7 +98,7 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
     phase.kind === "ready" && phase.result.review.problems.length === 0
   // One polite live region (Behavior 34), not role="status"
   const live =
-    phase.kind === "loading"
+    phase.kind === "loading" || checking
       ? STEP_COPY.loading
       : phase.kind === "error"
         ? STEP_COPY.loadFailed
