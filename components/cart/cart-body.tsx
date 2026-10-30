@@ -5,6 +5,7 @@ import { CartGroup } from "@/components/cart/cart-group"
 import { CartLine, type LineMessage } from "@/components/cart/cart-line"
 import { CartSummary } from "@/components/cart/cart-summary"
 import { bannerText } from "@/lib/cart/copy"
+import { checkoutButton } from "@/lib/checkout/button"
 import type { CartView } from "@/lib/cart/types"
 
 type CartBodyProps = {
@@ -82,7 +83,11 @@ export function CartBody({
               )}
             </ul>
           </div>
-          <CartSummary count={view.count} subtotal={view.subtotal} />
+          <CartSummary
+            count={view.count}
+            subtotal={view.subtotal}
+            checkout={checkoutButton(view)}
+          />
         </div>
       )}
     </>

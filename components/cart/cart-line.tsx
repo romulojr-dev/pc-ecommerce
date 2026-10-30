@@ -31,6 +31,9 @@ type CartLineProps = {
   onQuantity: (quantity: number) => void
   onSetTo: (quantity: number) => void
   onRemove: () => void
+  // The checkout's review (docs/specs/029-checkout-steps, Behavior 19): the
+  // line as it is, with no stepper, Set to or Remove
+  readOnly?: boolean
 }
 
 // One single-item line of /cart (docs/specs/025-cart-single-items, Behavior
@@ -44,6 +47,7 @@ export function CartLine({
   onQuantity,
   onSetTo,
   onRemove,
+  readOnly = false,
 }: CartLineProps) {
   return (
     <li aria-busy={busy} className="flex gap-4 py-5">
@@ -91,7 +95,7 @@ export function CartLine({
                 {line.flag && (
                   <div className="flex flex-wrap items-center gap-3">
                     <FlagLine flag={line.flag} />
-                    {line.setTo !== null && (
+                    {!readOnly && line.setTo !== null && (
                       <Button
                         type="button"
                         variant="outline"
@@ -137,32 +141,38 @@ export function CartLine({
       <div className="flex shrink-0 flex-col items-end gap-3">
         {line.sold && (
           <>
-            <CartQuantity
-              name={line.name}
-              quantity={line.quantity}
-              max={line.max}
-              disabled={busy}
-              inputId={quantityInputId(line.id)}
-              onChange={onQuantity}
-            />
+            {readOnly ? (
+              <p className="text-sm tabular-nums">Quantity: {line.quantity}</p>
+            ) : (
+              <CartQuantity
+                name={line.name}
+                quantity={line.quantity}
+                max={line.max}
+                disabled={busy}
+                inputId={quantityInputId(line.id)}
+                onChange={onQuantity}
+              />
+            )}
             <p className="font-semibold tabular-nums">
               <span className="sr-only">Line total: </span>
               {formatPeso(line.lineTotal)}
             </p>
           </>
         )}
-        <Button
-          id={removeButtonId(line.id)}
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label={`Remove ${line.name}`}
-          disabled={busy}
-          onClick={onRemove}
-        >
-          <Trash2Icon aria-hidden="true" data-icon="inline-start" />
-          Remove
-        </Button>
+        {!readOnly && (
+          <Button
+            id={removeButtonId(line.id)}
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Remove ${line.name}`}
+            disabled={busy}
+            onClick={onRemove}
+          >
+            <Trash2Icon aria-hidden="true" data-icon="inline-start" />
+            Remove
+          </Button>
+        )}
       </div>
     </li>
   )

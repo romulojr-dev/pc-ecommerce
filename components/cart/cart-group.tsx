@@ -28,6 +28,11 @@ type CartGroupProps = {
   onRemove: () => void
   // Starts open; tests render the open state
   defaultExpanded?: boolean
+  // The checkout's review (docs/specs/029-checkout-steps, Behavior 19): the
+  // group as it is, with no Remove
+  readOnly?: boolean
+  // A line above the issues, e.g. the review's "check these warnings"
+  issuesLead?: string
 }
 
 // One build group of /cart (docs/specs/026-add-build-to-cart, Behavior
@@ -40,6 +45,8 @@ export function CartGroup({
   message,
   onRemove,
   defaultExpanded = false,
+  readOnly = false,
+  issuesLead,
 }: CartGroupProps) {
   const [expanded, setExpanded] = useState(defaultExpanded)
   const panelId = useId()
@@ -87,18 +94,20 @@ export function CartGroup({
         >
           View build
         </Link>
-        <Button
-          id={removeButtonId(group.buildId)}
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label={`Remove ${name}`}
-          disabled={busy}
-          onClick={onRemove}
-        >
-          <Trash2Icon aria-hidden="true" data-icon="inline-start" />
-          Remove
-        </Button>
+        {!readOnly && (
+          <Button
+            id={removeButtonId(group.buildId)}
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={`Remove ${name}`}
+            disabled={busy}
+            onClick={onRemove}
+          >
+            <Trash2Icon aria-hidden="true" data-icon="inline-start" />
+            Remove
+          </Button>
+        )}
       </div>
 
       {message && (
@@ -137,7 +146,12 @@ export function CartGroup({
                 />
               ))}
             </ul>
-            {group.issues.length > 0 && <IssueList issues={group.issues} />}
+            {group.issues.length > 0 && (
+              <>
+                {issuesLead && <p className="text-sm">{issuesLead}</p>}
+                <IssueList issues={group.issues} />
+              </>
+            )}
           </>
         )}
       </div>

@@ -1,20 +1,29 @@
-import { Button } from "@/components/ui/button"
+import Link from "next/link"
+
+import { Button, buttonVariants } from "@/components/ui/button"
+import type { CheckoutButton } from "@/lib/checkout/button"
+import { CART_BUTTON_COPY } from "@/lib/checkout/copy"
 import { subtotalLabel } from "@/lib/cart/copy"
 import { formatPeso } from "@/lib/format"
+import { cn, focusRing } from "@/lib/utils"
 
-const CHECKOUT_NOTE_ID = "checkout-coming-soon"
+const CHECKOUT_NOTE_ID = "checkout-blocked"
 
 // The cart's summary (docs/specs/025-cart-single-items, Behavior 18): the
-// subtotal at today's prices and a Checkout button that does nothing yet. No
-// client hooks.
+// subtotal at today's prices and the Checkout button. Checkout is a link to
+// /checkout, or disabled with the reason as visible text while a line is
+// flagged or a build has errors (docs/specs/029-checkout-steps, Behavior
+// 1–2). No client hooks.
 export function CartSummary({
   count,
   subtotal,
+  checkout,
 }: {
   // The cart count, the same number as the header's
   count: number
   // Centavos
   subtotal: number
+  checkout: CheckoutButton
 }) {
   return (
     <aside
@@ -31,19 +40,38 @@ export function CartSummary({
         Shipping and vouchers are calculated at checkout.
       </p>
       <div className="flex flex-col gap-2">
-        <Button
-          size="lg"
-          disabled
-          aria-describedby={CHECKOUT_NOTE_ID}
-          className="h-10 w-full text-sm"
-        >
-          Checkout
-        </Button>
-        {/* Visible text, not a tooltip: disabled buttons can't be focused or
-            hovered */}
-        <p id={CHECKOUT_NOTE_ID} className="text-sm text-muted-foreground">
-          Checkout is coming soon.
-        </p>
+        {checkout.enabled ? (
+          <Link
+            href="/checkout"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "h-10 w-full text-sm",
+              focusRing
+            )}
+          >
+            Checkout
+          </Link>
+        ) : (
+          <>
+            <Button
+              size="lg"
+              disabled
+              aria-describedby={CHECKOUT_NOTE_ID}
+              className="h-10 w-full text-sm"
+            >
+              Checkout
+            </Button>
+            {/* Visible text, not a tooltip: disabled buttons can't be focused
+                or hovered */}
+            <div
+              id={CHECKOUT_NOTE_ID}
+              className="flex flex-col gap-1 text-sm text-muted-foreground"
+            >
+              {checkout.flagged && <p>{CART_BUTTON_COPY.flagged}</p>}
+              {checkout.errors && <p>{CART_BUTTON_COPY.errors}</p>}
+            </div>
+          </>
+        )}
       </div>
     </aside>
   )

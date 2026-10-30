@@ -52,7 +52,7 @@ This story makes `/cart` say which lines can't be bought as they are. A line who
 
 16. **Loading:** unchanged (`loading.tsx`). **Empty cart:** unchanged, no banner. **Database error:** the app's standard error page.
 17. **Stale page:** flags are as fresh as the render. Stock that changes while the page is open shows at the next render (any cart action refreshes it, or a reload). There is no polling (D13).
-18. **Checkout** stays disabled with "Checkout is coming soon." The banner text anticipates it; blocking checkout on flagged lines is Sprint 6.
+18. **Checkout** stays disabled with "Checkout is coming soon." The banner text anticipates it; blocking checkout on flagged lines is Sprint 6. *Changed by spec 029 (#77): Checkout is a link, and is disabled with visible text only while a line is flagged or a group has errors.*
 
 ## 3. Examples
 

@@ -36,10 +36,12 @@ Unit tests are `*.test.ts` next to the code they test. Integration tests are
 `*.db.test.ts`; they run real queries against Postgres. E2E tests live in `e2e/`.
 
 E2E runs against the database the app server uses (`DATABASE_URL`: locally the
-Neon dev branch, in CI a throwaway Postgres). One spec, `e2e/cart-flags.spec.ts`,
-changes a product's stock there through `e2e/stock.ts` and restores it; the
-helper refuses to run on the production database, and locally it needs
-`PRODUCTION_DATABASE_HOST` in `.env.local` ([spec 027](docs/specs/027-cart-stock-flags/spec.md)).
+Neon dev branch, in CI a throwaway Postgres). Two specs, `e2e/cart-flags.spec.ts`
+and `e2e/checkout.spec.ts`, change a product's stock there through
+`e2e/stock.ts` and restore it; the helper refuses to run on the production
+database, and locally it needs `PRODUCTION_DATABASE_HOST` in `.env.local`
+([spec 027](docs/specs/027-cart-stock-flags/spec.md),
+[spec 029](docs/specs/029-checkout-steps/spec.md)).
 Running local E2E on the Docker Postgres instead is
 [#74](https://github.com/romulojr-dev/pc-ecommerce/issues/74).
 
