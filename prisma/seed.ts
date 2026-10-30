@@ -10,8 +10,10 @@ import { assertResetAllowed, ResetRefusedError } from "@/lib/reset-guard"
 import { builderCategories } from "@/lib/specs"
 
 import { seedFiles } from "./seed/data"
+import { shippingSeed } from "./seed/data/shipping"
 import { formatErrors } from "./seed/format-errors"
 import { findReservedCategorySlugs, validateSeed } from "./seed/validate"
+import { validateShippingSeed } from "./seed/validate-shipping"
 import { SeedWriteError, writeSeed } from "./seed/write"
 
 // pnpm db:seed [--reset]: loads the catalog fixture set into the dev
@@ -57,6 +59,12 @@ async function main(): Promise<number> {
     return 1
   }
 
+  const shippingErrors = validateShippingSeed(shippingSeed)
+  if (shippingErrors.length > 0) {
+    console.error(`${shippingErrors.join("\n")}\nNothing was written.`)
+    return 1
+  }
+
   // A reset deletes shared builds too (docs/specs/022-share-build). The
   // production seed is run by hand, so the guard also checks the host.
   if (reset) {
@@ -82,7 +90,10 @@ async function main(): Promise<number> {
   const host = new URL(env.DATABASE_URL).host
   console.log(reset ? `Resetting catalog on ${host}` : `Seeding ${host}`)
 
-  const counts = await writeSeed(db, validation.files, { reset })
+  const counts = await writeSeed(db, validation.files, {
+    reset,
+    shipping: shippingSeed,
+  })
   const kept = counts.updated > 0 ? "; stock, price and status kept" : ""
   console.log(
     `Seeded ${counts.categories} categories, ${counts.brands} brands, ${
@@ -90,6 +101,16 @@ async function main(): Promise<number> {
     } products (${counts.created} created, ${counts.updated} updated${kept}), ${
       counts.images
     } ${counts.images === 1 ? "image" : "images"} added.`
+  )
+  console.log(
+    counts.shippingRates > 0
+      ? `Shipping rates: ${counts.shippingRates} added.`
+      : "Shipping rates: kept (already set)."
+  )
+  console.log(
+    counts.settingsCreated
+      ? "Store settings: created."
+      : "Store settings: kept (already set)."
   )
   return 0
 }

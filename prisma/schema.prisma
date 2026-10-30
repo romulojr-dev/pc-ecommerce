@@ -170,3 +170,48 @@ model CartItem {
   @@index([productId])
   @@index([buildId])
 }
+
+// The four shipping zones (docs/specs/028-shipping-data-and-fee-rules); the
+// code uses "metro-manila" … "mindanao" (lib/shipping/zones.ts)
+enum ShippingZone {
+  METRO_MANILA
+  LUZON
+  VISAYAS
+  MINDANAO
+}
+
+// One weight tier of a zone's shipping fee, in centavos. maxWeightGrams is the
+// tier's upper limit; null is the zone's open-ended top tier. Seeded with
+// demo values and edited in the admin panel later (AD-9). The migration also
+// adds CHECK (maxWeightGrams > 0) and CHECK (fee >= 0), which Prisma can't
+// express.
+model ShippingRate {
+  id             String       @id @default(cuid())
+  zone           ShippingZone
+  maxWeightGrams Int?
+  fee            Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // NULLs are distinct in a unique index, so a zone's single open-ended tier
+  // needs the partial index; the first covers the bounded tiers
+  @@unique([zone, maxWeightGrams])
+  @@unique([zone], where: { maxWeightGrams: null })
+}
+
+// The store's one settings row (id is always 1). The seed creates it only when
+// it is missing, so it never overwrites what Admin sets. The migration also
+// adds CHECK (id = 1), CHECK (freeShippingThreshold > 0) and
+// CHECK (orderExpiryHours >= 1). COD limits come with FR-25.
+model StoreSettings {
+  id                    Int      @id @default(1)
+  // Centavos; null turns free shipping off
+  freeShippingThreshold Int?
+  pickupEnabled         Boolean  @default(true)
+  storeAddress          String
+  storeHours            String
+  storeInfo             String
+  // Unpaid online orders auto-cancel after this many hours (FR-24)
+  orderExpiryHours      Int      @default(24)
+  updatedAt             DateTime @updatedAt
+}

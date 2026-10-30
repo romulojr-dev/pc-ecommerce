@@ -265,7 +265,7 @@ This story adds no storefront copy. These strings exist:
 | --- | --- |
 | Seed output, rates | "Shipping rates: 20 added." or "Shipping rates: kept (already set)." |
 | Seed output, settings | "Store settings: created." or "Store settings: kept (already set)." |
-| Seed validation errors | "Shipping seed: {zone} has two open-ended tiers.", "…is missing an open-ended tier.", "…tier limits must rise: {previous} then {next}.", "…fee must be a whole number of centavos, 0 or more." |
+| Seed validation errors | "Shipping seed: {zone} has two open-ended tiers.", "…is missing an open-ended tier.", "…tier limits must rise: {previous} then {next}.", "…fee must be a whole number of centavos, 0 or more.", "…weight limit must be a whole number of grams above 0.", "Shipping seed: {zone} has no tiers.", and for the store: "…the free-shipping threshold must be null or a whole number of centavos above 0.", "…the order expiry must be a whole number of hours, 1 or more.", "…the store {address, hours, info} is empty." |
 | Converter | "PSGC {version}: wrote {regions} regions, {provinces} provinces, {cities} cities and municipalities, {barangays} barangays to {folder}." then "Largest file: {file}, {raw} bytes ({gzip} gzipped).", "Read {n} codes stored as numbers.", "Trimmed spaces from {n} names." and one line per other change, "Cleaned: {old} → {new}." Error: "PSGC: row {code} {name}: {problem}." |
 | Data route | A 404 has an empty body (no copy). |
 
