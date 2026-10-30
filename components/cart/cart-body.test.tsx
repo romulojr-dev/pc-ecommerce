@@ -65,6 +65,7 @@ const render = (props: Partial<Props> & { view: CartView }) =>
       status=""
       onQuantity={() => {}}
       onRemove={() => {}}
+      onRemoveGroup={() => {}}
       {...props}
     />
   )

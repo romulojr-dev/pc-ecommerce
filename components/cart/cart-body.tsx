@@ -1,7 +1,8 @@
 import { CartEmpty } from "@/components/cart/cart-empty"
+import { CartGroup } from "@/components/cart/cart-group"
 import { CartLine, type LineMessage } from "@/components/cart/cart-line"
 import { CartSummary } from "@/components/cart/cart-summary"
-import { type CartView, singleLines } from "@/lib/cart/types"
+import type { CartView } from "@/lib/cart/types"
 
 type CartBodyProps = {
   view: CartView
@@ -12,6 +13,7 @@ type CartBodyProps = {
   status: string
   onQuantity: (lineId: string, quantity: number) => void
   onRemove: (lineId: string) => void
+  onRemoveGroup: (buildId: string) => void
 }
 
 // The cart page's content (docs/specs/025-cart-single-items, Behavior 17–23):
@@ -25,6 +27,7 @@ export function CartBody({
   status,
   onQuantity,
   onRemove,
+  onRemoveGroup,
 }: CartBodyProps) {
   return (
     <>
@@ -36,17 +39,26 @@ export function CartBody({
       ) : (
         <div className="grid items-start gap-8 lg:grid-cols-[1fr_20rem]">
           <ul className="divide-y border-y">
-            {/* Build groups are listed by the next task (spec 026, T6) */}
-            {singleLines(view).map((line) => (
-              <CartLine
-                key={line.id}
-                line={line}
-                busy={busy.has(line.id)}
-                message={messages[line.id] ?? null}
-                onQuantity={(quantity) => onQuantity(line.id, quantity)}
-                onRemove={() => onRemove(line.id)}
-              />
-            ))}
+            {view.entries.map((entry) =>
+              entry.kind === "build" ? (
+                <CartGroup
+                  key={entry.buildId}
+                  group={entry}
+                  busy={busy.has(entry.buildId)}
+                  message={messages[entry.buildId] ?? null}
+                  onRemove={() => onRemoveGroup(entry.buildId)}
+                />
+              ) : (
+                <CartLine
+                  key={entry.id}
+                  line={entry}
+                  busy={busy.has(entry.id)}
+                  message={messages[entry.id] ?? null}
+                  onQuantity={(quantity) => onQuantity(entry.id, quantity)}
+                  onRemove={() => onRemove(entry.id)}
+                />
+              )
+            )}
           </ul>
           <CartSummary count={view.count} subtotal={view.subtotal} />
         </div>

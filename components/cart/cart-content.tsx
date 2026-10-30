@@ -3,15 +3,26 @@
 import { useEffect, useRef, useState } from "react"
 
 import {
+  removeBuildFromCartAction,
   removeFromCartAction,
   setCartQuantityAction,
 } from "@/app/(store)/cart/actions"
 import { CartBody } from "@/components/cart/cart-body"
 import { EMPTY_HEADING_ID } from "@/components/cart/cart-empty"
 import { type LineMessage, removeButtonId } from "@/components/cart/cart-line"
-import { capNoteText, CART_COPY, removedText } from "@/lib/cart/copy"
+import {
+  capNoteText,
+  CART_COPY,
+  removedGroupText,
+  removedText,
+} from "@/lib/cart/copy"
 import { cartCountStore } from "@/lib/cart/count-store"
-import { type CartResult, type CartView, singleLines } from "@/lib/cart/types"
+import {
+  type CartResult,
+  type CartView,
+  entryId,
+  singleLines,
+} from "@/lib/cart/types"
 
 // The cart page's state (docs/specs/025-cart-single-items, Behavior 19–23): it
 // sends each change to a server action, which answers with the new count for
@@ -30,7 +41,7 @@ export function CartContent({ view }: { view: CartView }) {
     const pending = refocus.current
     if (
       !pending ||
-      singleLines(view).some((line) => line.id === pending.removedId)
+      view.entries.some((entry) => entryId(entry) === pending.removedId)
     ) {
       return
     }
@@ -84,19 +95,47 @@ export function CartContent({ view }: { view: CartView }) {
     }
   }
 
+  // After a removal, focus goes to the next entry's Remove button, or the
+  // previous one's when it was the last, or to the empty state's heading
+  function focusAfterRemoving(entryIdRemoved: string) {
+    const entries = view.entries
+    const index = entries.findIndex(
+      (entry) => entryId(entry) === entryIdRemoved
+    )
+    const neighbour = entries[index + 1] ?? entries[index - 1]
+    refocus.current = {
+      removedId: entryIdRemoved,
+      focusId: neighbour
+        ? removeButtonId(entryId(neighbour))
+        : EMPTY_HEADING_ID,
+    }
+  }
+
   async function remove(lineId: string) {
-    const lines = singleLines(view)
-    const index = lines.findIndex((line) => line.id === lineId)
-    const neighbour = lines[index + 1] ?? lines[index - 1]
+    const line = singleLines(view).find((found) => found.id === lineId)
     const result = await change(lineId, () => removeFromCartAction({ lineId }))
-    if (result?.ok) {
-      setStatus(removedText(lines[index].name))
-      refocus.current = {
-        removedId: lineId,
-        focusId: neighbour ? removeButtonId(neighbour.id) : EMPTY_HEADING_ID,
-      }
+    if (result?.ok && line) {
+      setStatus(removedText(line.name))
+      focusAfterRemoving(lineId)
     } else {
       explain(lineId, result)
+    }
+  }
+
+  // A build group is removed whole (docs/specs/026-add-build-to-cart,
+  // Behavior 17): its parts can't be removed one by one
+  async function removeGroup(buildId: string) {
+    const group = view.entries.find(
+      (entry) => entry.kind === "build" && entry.buildId === buildId
+    )
+    const result = await change(buildId, () =>
+      removeBuildFromCartAction({ buildId })
+    )
+    if (result?.ok && group?.kind === "build") {
+      setStatus(removedGroupText(group.number))
+      focusAfterRemoving(buildId)
+    } else {
+      explain(buildId, result)
     }
   }
 
@@ -108,6 +147,7 @@ export function CartContent({ view }: { view: CartView }) {
       status={status}
       onQuantity={setQuantity}
       onRemove={remove}
+      onRemoveGroup={removeGroup}
     />
   )
 }

@@ -70,6 +70,11 @@ export type CartView = {
   count: number
 }
 
+// The id the cart page and its actions use for an entry: a line's id, or a
+// group's build id
+export const entryId = (entry: CartEntry): string =>
+  entry.kind === "single" ? entry.id : entry.buildId
+
 // The single-item lines of a view
 export const singleLines = (view: CartView): CartLineView[] =>
   view.entries.filter((entry): entry is CartLineView => entry.kind === "single")
