@@ -24,7 +24,7 @@ This story lets a shopper turn their build into a link. **Share build** on `/bui
 
 10. **Per request** (`await connection()`, ADR 0003): the page reads the snapshot's items and loads their parts from the database on every request, so prices, stock, specs and a part's status are current. Nothing about the snapshot is cached.
 11. **Unknown slug** → the app's standard 404 page with HTTP status 404. A slug that isn't shaped like a share slug is a 404 too, without touching the database. A snapshot with no items (see D9) is also a 404. The page has no route-level loading skeleton, so the 404 keeps its status (CLAUDE.md, related products: same reason).
-12. **Layout:** heading "Shared PC build" with a short intro (Messages), then the eight slots in `builderCategories` order, beside a summary panel that stays in view from 1024 px up (sticky, as on `/builder`). Read-only: no Remove, Change, quantity stepper or "Choose" buttons, and no Add build to cart (#62).
+12. **Layout:** heading "Shared PC build" with a short intro (Messages), then the eight slots in `builderCategories` order, beside a summary panel that stays in view from 1024 px up (sticky, as on `/builder`). Read-only: no Remove, Change, quantity stepper or "Choose" buttons, and no Add build to cart (#62). *Changed by spec 026 (#62): Add build to cart on this page moved to #72; #62 adds it on `/builder` only.*
 13. **Slot rows** show an available part the way `/builder` does: image (`ProductImage`), name linked to its product page, brand, the price the shopper pays (`effectivePrice`, regular price struck through when on sale), its current stock label, and an "Error" / "Warning" marker when an issue names it. A quantity above 1 shows "{unit price} × {quantity}" and the line total. An empty slot shows its category name and "No part chosen". Storage drives are listed by name, A to Z (D7).
 14. **Parts that can't be bought** (active, but out of stock or a pre-order — spec 020's "buyable" rule): listed in place with their stock label and the note "Not available to buy right now." They still count in the total, the power estimate and the checks, as on `/builder` (spec 020 D19).
 15. **Parts that are no longer sold** (their product is not active any more, or it is no longer a valid builder part, D4): listed in place **by name** (decided in review), with their brand and the label "No longer sold" plus the note "This part isn't sold anymore, so the total and the checks leave it out." No price, no link. They are **not** counted in the total, the power estimate or the checks (D4). Nothing is dropped silently.
@@ -75,7 +75,6 @@ Prices and stock are seed values. **Build A** is spec 001's compatible build (`b
 | E17 | A storage item whose id is the Ryzen 5 7600 | `unavailable` (wrong slot). Nothing written |
 | E18 | Items with an extra `contentHash: "x"` property | The extra property is ignored; the stored hash is the one the server computes |
 | E19 | The database fails while writing the items | `error`. No `Build` row without its items is left behind |
-
 ### Data rules
 
 | # | Check | Expected |
@@ -338,7 +337,7 @@ No `userId` or `name` (saved builds come in Sprint 7 as `SavedBuild(userId, name
 | Item | Owner |
 | --- | --- |
 | Rate limiting for the share action | #64 |
-| Add build to cart, including on the shared page; reusing the snapshot row for carts | #62 |
+| Add build to cart on `/builder`; reusing the snapshot row for carts | #62 (spec 026). *Changed by spec 026 (#62): Add build to cart on the shared page is #72.* |
 | Saved builds in an account (`SavedBuild`), naming a build, listing "my shared links" | Accounts epic / Sprint 7 (FR-19) |
 | Unsharing, deleting or expiring a link; editing a shared build in place (it is immutable) | Not planned |
 | Showing who shared a build, when, or a build name | Saved builds / not planned |

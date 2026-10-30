@@ -40,7 +40,7 @@ This story turns `/builder` from a "coming soon" placeholder into a working buil
     - **Status:** from `buildStatus(checkBuild(build))`: "OK", "Warnings" or "Errors", each with its own icon so color isn't the only signal. An empty build shows "Add parts to check compatibility." in place of a status.
     - **Issues:** every issue message in `checkBuild` order (errors first), each marked "Error" or "Warning". With parts and no issues: "No compatibility issues found."
     - **Availability:** when one or more parts aren't buyable, a line under the status says the build can't be added to cart until they're replaced, naming the part (one) or counting them (several). It is separate from the compatibility status: a build can be "OK" and still not buyable.
-    - **Add build to cart:** a disabled button with a visible "coming soon" line, linked through `aria-describedby` (same pattern as spec 010). The availability line above is the rule the Checkout epic enforces when it enables the button.
+    - **Add build to cart:** a disabled button with a visible "coming soon" line, linked through `aria-describedby` (same pattern as spec 010). The availability line above is the rule the Checkout epic enforces when it enables the button. *Changed by spec 026 (#62): the button is enabled when the build has parts, no errors and every part is buyable; its "coming soon" line is gone, and the disabled reasons are visible text (spec 026 Behavior 1–2).*
 16. **Error state:** when the parts request fails (network or server error), the slots keep their skeletons and the summary shows "We couldn't load your build's prices and stock." with a "Try again" button that repeats the request. The saved build is untouched.
 17. **Metadata:** title "PC Builder", a description, the canonical `/builder`, and `noindex` (kept from the placeholder). `/builder` stays out of the sitemap.
 
@@ -241,7 +241,7 @@ Prices and stock are seed values. "Build A" is spec 001's compatible build (`bui
 | No issues | No compatibility issues found. |
 | Availability, one part | The {part} isn't available to buy right now. Replace it to add this build to cart. |
 | Availability, several | {n} parts in this build aren't available to buy right now. Replace them to add this build to cart. |
-| Cart button | Add build to cart (disabled) |
+| Cart button | Add build to cart (disabled). *Changed by spec 026 (#62): see spec 026 §5.* |
 | Cart note | Adding a whole build to the cart is coming soon. |
 | Removed, one | A part in your saved build is no longer available, so we removed it: {slot}. |
 | Removed, several | Some parts in your saved build are no longer available, so we removed them: {slot}, {slot}. |

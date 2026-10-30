@@ -40,7 +40,7 @@ This story gives the store a cart. A shopper without an account adds a part from
 ### The cart page `/cart`
 
 16. **Per request** (`await connection()`): it reads the cookie's cart, its lines and their products fresh, so prices, stock and status are current. Nothing is cached. It has a `loading.tsx` skeleton (no 404 to protect). Title "Cart", `noindex`, its own canonical `/cart`, not in the sitemap.
-17. **Lines** are listed oldest first (the order they were added; quantity changes don't move a line; D10). Each single-item line shows:
+17. *Changed by spec 026 (#62): build groups are listed here too, as one grouped line each, ordered with the single lines by when they were added.* **Lines** are listed oldest first (the order they were added; quantity changes don't move a line; D10). Each single-item line shows:
     - the product image (`ProductImage`, with `sizes`), the name linked to its product page, and the brand;
     - the **current unit price** the shopper pays (`effectivePrice`), with the regular price struck through when on sale (`ProductPrice`'s style);
     - a **quantity stepper** (minus, number field, plus), from 1 up; plus is disabled when the product's total in the cart has reached its cap (Rules › Stock cap);
