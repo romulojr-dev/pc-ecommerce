@@ -63,3 +63,34 @@ export async function normalizeAddress(
     },
   }
 }
+
+export type AddressLevel = "region" | "province" | "city" | "barangay"
+
+type Codes = {
+  regionCode: string
+  provinceCode: string
+  cityCode: string
+  barangayCode: string
+}
+
+// The first level of a chain resolveAddress refused that doesn't hold, so the
+// form can say which dropdown to choose again (Behavior 17, I10, I11). Each
+// level is checked against its parent's file, in the order the form fills
+// them in; "barangay" is the last resort.
+export async function failingLevel(codes: Codes): Promise<AddressLevel> {
+  const regions = await readPsgcJson<Place[]>({ kind: "regions" })
+  if (!regions?.some((r) => r.code === codes.regionCode)) return "region"
+
+  const provinces = await readPsgcJson<Province[]>({
+    kind: "provinces",
+    code: codes.regionCode,
+  })
+  if (!provinces?.some((p) => p.code === codes.provinceCode)) return "province"
+
+  const cities = await readPsgcJson<{ code: string }[]>({
+    kind: "cities",
+    code: codes.provinceCode,
+  })
+  if (!cities?.some((c) => c.code === codes.cityCode)) return "city"
+  return "barangay"
+}

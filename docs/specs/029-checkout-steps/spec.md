@@ -108,7 +108,7 @@ Addresses (PSGC 2026Q3): **QC** = NCR 1300000000 / Metro Manila 1300000000 / Que
 | R5 | Build A group + Ryzen 5 7600 × 1 single | Delivery, QC | Subtotal (2 items) ₱80,555.00; 16,310 g; Shipping "Free" (≥ ₱75,000.00); Total ₱80,555.00; no threshold note |
 | R6 | LANCOOL 216 × 3 | Delivery, Davao | ₱17,385.00 + ₱1,450.00 (27,000 g, open-ended tier) = ₱18,835.00 |
 | R7 | Build B group | Delivery, QC | ₱74,560.00 + ₱450.00 = ₱75,010.00 (the threshold compares the subtotal, ₱74,560.00 < ₱75,000.00). **Not blocked**; under the group, expanded, "This build may still work. Check these warnings before you order." and the BIOS warning |
-| R8 | [2] Ryzen 5 7600 × 3 (the stock fell after it was added) | Delivery, QC | Blocked. Problem: "AMD Ryzen 5 7600: Only 2 in stock, 3 in your cart". Link Back to cart. Totals shown (₱34,485.00 + ₱120.00 = ₱34,605.00) |
+| R8 | [2] Ryzen 5 7600 × 3 (the stock fell after it was added) | Delivery, QC | Blocked. Problem: "AMD Ryzen 5 7600: Only 2 in stock, 3 in your cart". Link Back to cart. Totals shown (₱34,485.00 + ₱180.00 = ₱34,665.00: 1,350 g is in the 3 kg tier) |
 | R9 | [1] Ryzen 5 7600 × 1 single + Build A group | Delivery, QC | Blocked: the single line and Custom PC build both carry "Only 1 in stock, 2 in your cart"; two problems, "AMD Ryzen 5 7600: …" and "Custom PC build: AMD Ryzen 5 7600: …" |
 | R10 | [0] LANCOOL 216 × 1 | Delivery, QC | Blocked: "Lian Li LANCOOL 216 Black: Out of stock" |
 | R11 | Build A group, then the RTX 4060 retired (status not ACTIVE) | Delivery, QC | Blocked: "Custom PC build: ASUS Dual GeForce RTX 4060 OC Edition 8GB: No longer sold"; the group reads "Incomplete"; its total leaves the GPU out (₱51,065.00) |

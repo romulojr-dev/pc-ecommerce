@@ -22,6 +22,11 @@ export const CHECKOUT_COPY = {
   barangay: "Choose your barangay.",
   streetMissing: "Enter your street address.",
   streetLong: "Use 200 characters or fewer.",
+  // The server's answer when the chain of places doesn't hold
+  regionAgain: "Choose your region again.",
+  provinceAgain: "Choose your province again.",
+  cityAgain: "Choose your city or municipality again.",
+  barangayAgain: "Choose your barangay again.",
 } as const
 
 const code = (message: string) =>
