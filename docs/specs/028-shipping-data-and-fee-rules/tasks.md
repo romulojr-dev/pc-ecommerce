@@ -5,7 +5,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md)
 Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm typecheck` and `pnpm test` passing. Commit after each one with a subject-only Conventional Commit; the PR is squash-merged.
 
 - [x] **T0. Docs.** Spec 028 (approved with the review changes), this plan and task list.
-- [ ] **T1. Preview proof (first, D20).**
+- [x] **T1. Preview proof (first, D20).**
   - Stub dataset by hand at the final paths: `manifest.json`, `regions.json` (NCR only), `provinces/1300000000.json`, `cities/1300000000.json` (Quezon City with 2 barangays).
   - `lib/psgc/{version,types,files}.ts`, `lib/shipping/zones.ts` (the full map), `lib/psgc/address.ts` (first version: the chain check and the zone, no independent cities), the data route, the proof route, `outputFileTracingIncludes` in `next.config.ts`.
   - Unit tests: `parsePsgcPath` (R4, R5 shapes), `resolveAddress` on the stub (V1, V3, V5, V6).
