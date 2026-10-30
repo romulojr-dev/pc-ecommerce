@@ -113,6 +113,11 @@ a 10-minute delay (tag `products`, [spec 016](docs/specs/016-home-page/spec.md))
 after a re-seed, its prices, stock labels and picks can be up to 10 minutes old.
 Product pages, listings and search always show current prices and stock.
 
+## Payments
+
+Checkout pays through PayMongo's test mode. The keys, webhooks, tunnel, cron
+and preview setup are in [docs/setup/payments.md](docs/setup/payments.md).
+
 ## AI agent skills
 
 The Prisma agent skills used by Claude Code are not committed. `.agents/` holds

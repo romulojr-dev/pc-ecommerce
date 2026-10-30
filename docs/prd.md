@@ -96,7 +96,7 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 - **FR-12** Cart supports single items and whole builds (a build shows as one grouped line that can be expanded).
 - **FR-13** Stock is re-checked at checkout; out-of-stock lines are flagged before payment.
-- **FR-14** Checkout in 3 steps: shipping method (delivery or store pickup) and address → shipping → payment. Guest checkout allowed; account creation offered after.
+- **FR-14** Checkout in 3 steps: contact and delivery (delivery or store pickup, address) → review (fee, stock and build checks) → payment (gateway-hosted). Guest checkout allowed; account creation offered after.
 - **FR-15** PH address form: region → province → city/municipality → barangay dropdowns, plus street and ZIP.
 - **FR-16** Shipping fee by zone (Metro Manila, Luzon, Visayas, Mindanao) and weight; free shipping threshold configurable.
 - **FR-17** Voucher codes: fixed or % off, min spend, expiry, usage limit.
@@ -272,12 +272,14 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
 | `SavedBuild` | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
 | `Cart` / `CartItem` | cartId (cookie or userId), productId, quantity, buildId (nullable, for grouping) |
-| `Order` | id, orderNumber, userId / guestEmail, status, subtotal, shippingFee, discount, total, paymentMethod, shippingAddress (snapshot), courier, trackingNumber |
-| `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity |
-| `Payment` | orderId, provider, providerRef, method, amount, status, rawEvent, createdAt |
+| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the token is only in the order link), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, total, paymentMethod, shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), refundRequired (a payment arrived after cancellation), idempotencyKey, courier, trackingNumber |
+| `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
+| `Payment` | orderId, provider, providerRef, method, amount, status, rawEvent, createdAt. One row per payment attempt |
+| `PaymentEvent` | eventId (unique), type, payload, receivedAt. Each gateway webhook event, so the same event is processed once (FR-23) |
 | `Voucher` | code, type, value, minSpend, startsAt, endsAt, usageLimit, usedCount |
-| `ShippingRate` | zone, maxWeightGrams, fee |
-| `StockMovement` | productId, change, reason, actorId, createdAt |
+| `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
+| `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25). Seeded until the admin settings screen (AD-9) |
+| `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |
 | `AuditLog` | actorId, entity, entityId, action, before, after, createdAt |
 
 Order items and addresses are **snapshots**, so later price or address edits never change past orders. Products are retired through `status`, never deleted, so builds, carts and orders that point at them stay valid.
@@ -318,6 +320,7 @@ The MVP is built incrementally in vertical slices, one user story at a time, usi
 - GitHub Actions on every pull request: lint, type check, migrations against a throwaway Postgres, unit and integration tests, build. Branch protection requires it to pass.
 - Vercel deploys a preview per branch and production on merge to `main`.
 - Separate databases for local, preview and production; secrets only in `.env.local`, GitHub secrets and Vercel environment settings; `.env.example` lists every variable; env vars validated at startup.
+- Preview deployments sit behind Vercel Deployment Protection, so they don't receive real gateway webhooks: previews and CI use a fake payment adapter and signed replayed events. Real PayMongo webhooks are tested locally (through a tunnel) and on production. Setup steps: [docs/setup/payments.md](setup/payments.md).
 
 ### Testing strategy
 
