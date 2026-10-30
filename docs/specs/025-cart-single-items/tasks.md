@@ -19,4 +19,4 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
 - [x] **T6. Actions, count route, header.** Server actions, `cookie.ts`, `GET /api/cart/count` and its test (E51), `CartLink` in the header.
 - [x] **T7. Product page.** `StockLine` extraction, controlled `QuantitySelector`, `Purchase`, `AddToCart`, markup tests; E2E E33, E37.
 - [x] **T8. Cart page.** Page, loading, lines, quantity, summary, empty and retired states, markup tests; E2E E34–E36, E38.
-- [ ] **T9. Docs.** CLAUDE.md cart bullet, README (routes, `db:drift`, the CI step).
+- [x] **T9. Docs.** CLAUDE.md cart bullet, README (routes, `db:drift`, the CI step).
