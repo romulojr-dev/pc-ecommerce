@@ -18,7 +18,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - Integrity tests on the committed files: A1–A10, A12–A17 (City of Manila 897, the size ceiling).
   - *Verify:* run the converter twice; `git status` is clean (A11).
 - [x] **T3. Address validation and zones.** Full `resolveAddress` (independent cities, V9–V11), `zipSchema` (V7, V8), zone-map coverage tests against `regions.json` (Z1–Z6), V1–V11.
-- [ ] **T4. Weight and fee, test-first.** `lib/shipping/weight.ts` and `fee.ts`: W1–W6, F1–F17.
+- [x] **T4. Weight and fee, test-first.** `lib/shipping/weight.ts` and `fee.ts`: W1–W6, F1–F17.
 - [ ] **T5. Tables and seed.**
   - Schema and `pnpm db:migrate --name shipping` with the appended `CHECK`s; a second `migrate dev --create-only` is empty (delete it); `pnpm db:drift` exits 0.
   - `prisma/seed/data/shipping.ts`, `validate-shipping.ts` and its unit test (S7, S8), the `writeSeed` steps and reset names, `resetCatalog()`, the seed output lines, `lib/shipping/config.ts`.
