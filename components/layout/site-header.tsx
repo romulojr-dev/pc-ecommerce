@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { CircleUserIcon, ShoppingCartIcon, WrenchIcon } from "lucide-react"
+import { CircleUserIcon, WrenchIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { CartLink } from "@/components/layout/cart-link"
 import { CategoryMenu } from "@/components/layout/category-menu"
 import { Logo } from "@/components/layout/logo"
 import { siteConfig } from "@/lib/site"
@@ -49,9 +50,7 @@ function SiteHeader({ search }: SiteHeaderProps) {
           <WrenchIcon aria-hidden="true" data-icon="inline-start" />
           PC Builder
         </Link>
-        <Link href="/cart" aria-label="Cart" className={iconLink}>
-          <ShoppingCartIcon aria-hidden="true" />
-        </Link>
+        <CartLink className={iconLink} />
         <Link href="/login" aria-label="Account" className={iconLink}>
           <CircleUserIcon aria-hidden="true" />
         </Link>
