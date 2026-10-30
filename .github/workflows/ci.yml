@@ -68,6 +68,17 @@ jobs:
       - name: Apply migrations
         run: pnpm db:deploy
 
+      # Fails when schema.prisma and the migrations disagree (an index Prisma
+      # would drop, a model with no migration). It replays the migrations in a
+      # scratch database, which is created here, empty. Only reads.
+      - name: Create shadow database
+        run: psql "postgresql://postgres:postgres@localhost:5432/postgres" -c 'CREATE DATABASE pcsilicon_shadow'
+
+      - name: Check schema drift
+        run: pnpm db:drift
+        env:
+          SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pcsilicon_shadow
+
       # Catalog fixtures for the E2E tests (spec 004)
       - name: Seed database
         run: pnpm db:seed

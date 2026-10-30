@@ -1,6 +1,8 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  // Partial unique index on CartItem (docs/specs/025-cart-single-items, D1)
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -38,10 +40,10 @@ model Brand {
 }
 
 model Product {
-  id              String         @id @default(cuid())
+  id              String                   @id @default(cuid())
   name            String
-  slug            String         @unique
-  sku             String         @unique
+  slug            String                   @unique
+  sku             String                   @unique
   description     String?
   price           Int // in centavos: ₱12,999.00 = 1299900
   salePrice       Int? // in centavos
@@ -49,25 +51,25 @@ model Product {
   // trigger on every insert and update (docs/specs/012-common-filters), so
   // the app never writes it and the default is only a placeholder. Filters
   // and price sorts use it.
-  effectivePrice  Int            @default(0)
-  stock           Int            @default(0)
-  lowStockAt      Int            @default(5)
+  effectivePrice  Int                      @default(0)
+  stock           Int                      @default(0)
+  lowStockAt      Int                      @default(5)
   specs           Json // shape defined and validated by lib/specs (docs/adr/0002)
   weightGrams     Int
-  warrantyMonths  Int            @default(12)
+  warrantyMonths  Int                      @default(12)
   // What ships in the retail box, one line per item, in display order
-  boxContents     String[]       @default([])
+  boxContents     String[]                 @default([])
   // Expected ship date while on pre-order; null when not a pre-order. A
   // passed date ends the pre-order (lib/stock.ts, docs/specs/010-product-page).
-  preorderShipsOn DateTime?      @db.Date
-  status          ProductStatus  @default(DRAFT)
+  preorderShipsOn DateTime?                @db.Date
+  status          ProductStatus            @default(DRAFT)
   // Shown in the home page's "Featured products" (docs/specs/016-home-page),
   // in place of best sellers until there is order data
-  isFeatured      Boolean        @default(false)
+  isFeatured      Boolean                  @default(false)
   categoryId      String
-  category        Category       @relation(fields: [categoryId], references: [id])
+  category        Category                 @relation(fields: [categoryId], references: [id])
   brandId         String
-  brand           Brand          @relation(fields: [brandId], references: [id])
+  brand           Brand                    @relation(fields: [brandId], references: [id])
   images          ProductImage[]
   // Keyword search: name, brand, SKU, string spec values and category name,
   // weighted. Set by database triggers (docs/specs/014-search, ADR 0005), so
@@ -75,8 +77,9 @@ model Product {
   // field would remove create() from Prisma Client; it is never null.
   searchVector    Unsupported("tsvector")?
   buildItems      BuildItem[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  cartItems       CartItem[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
 
   @@index([categoryId])
   @@index([brandId])
@@ -108,6 +111,7 @@ model Build {
   // SHA-256 hex of the canonical items; only the server makes it
   contentHash String      @unique
   items       BuildItem[]
+  cartItems   CartItem[]
   createdAt   DateTime    @default(now())
 }
 
@@ -127,4 +131,42 @@ model BuildItem {
 
   @@unique([buildId, slot, productId])
   @@index([productId])
+}
+
+// A guest cart (docs/specs/025-cart-single-items). The id is 128 random bits,
+// held in the httpOnly __Host-cart cookie and nowhere else, so it is a bearer
+// token and not a cuid. Stores products and quantities only: prices are
+// always current and lock when an order is placed. userId waits for the
+// Accounts epic (#65). The app never deletes a cart; abandoned ones are
+// cleaned up later.
+model Cart {
+  id        String     @id
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// One line of a cart: a single item (buildId null) or a part of a build
+// group (buildId set, added by #62). The migration also adds
+// CHECK (quantity >= 1), which Prisma can't express.
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  // Restrict: products are retired through status, never deleted
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  // Restrict: builds are immutable snapshots the app never deletes (ADR 0007)
+  buildId   String?
+  build     Build?   @relation(fields: [buildId], references: [id], onDelete: Restrict)
+  // Cart lines are listed in the order they were added
+  createdAt DateTime @default(now())
+
+  // NULLs are distinct in a unique index, so the one-single-line rule needs
+  // the partial index; the second covers the build groups
+  @@unique([cartId, productId], where: { buildId: null })
+  @@unique([cartId, productId, buildId])
+  @@index([productId])
+  @@index([buildId])
 }

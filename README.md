@@ -61,6 +61,26 @@ The image's major version matches the Neon project and CI. Check Neon's with
 update `docker-compose.yml` and `.github/workflows/ci.yml` together if it ever
 changes.
 
+## Schema drift
+
+CI fails when `prisma/schema.prisma` and the migrations disagree: a model or an
+index (such as the cart's partial unique index) that no migration creates, or a
+migration that changes something the schema doesn't say. It replays the
+migrations in an empty scratch database and compares the result with the schema
+(`pnpm db:drift`, [spec 025](docs/specs/025-cart-single-items/spec.md)). To run
+it yourself, point `SHADOW_DATABASE_URL` at an empty database that is not the
+app's, for example one more database on the Docker Postgres:
+
+```bash
+docker exec pc-silicon-test-db psql -U postgres -c 'CREATE DATABASE pcsilicon_shadow'
+SHADOW_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/pcsilicon_shadow pnpm db:drift
+```
+
+It prints "No difference detected." and exits 0 when they agree, and lists the
+difference and exits 2 when they don't. It only reads; it never changes the
+app's database. `CHECK` constraints and triggers live only in the migrations
+(Prisma can't express them), so the check doesn't compare those.
+
 ## Cached data
 
 The header's category menu is cached for up to an hour

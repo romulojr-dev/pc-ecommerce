@@ -203,7 +203,7 @@ test("parts that can't be bought now can't be added", async ({ page }) => {
     const button = page.getByRole("button", { name: "Add to build" })
     await expect(button).toBeDisabled()
     await expect(button).toHaveAccessibleDescription(
-      "Only parts in stock can be added to a build."
+      "Only parts in stock can be added to your cart or build."
     )
   }
 })

@@ -1,11 +1,4 @@
-import {
-  AlertTriangleIcon,
-  CalendarClockIcon,
-  CheckCircle2Icon,
-  type LucideIcon,
-  ShieldCheckIcon,
-  XCircleIcon,
-} from "lucide-react"
+import { ShieldCheckIcon } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
@@ -18,12 +11,14 @@ import { FitWithBuild } from "@/components/product/fit-with-build"
 import { ProductFit } from "@/components/product/product-fit"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { ProductPrice } from "@/components/product/product-price"
-import { QuantitySelector } from "@/components/product/quantity-selector"
+import { Purchase } from "@/components/product/purchase"
+import { PURCHASE_NOTE_ID } from "@/components/product/purchase-view"
 import {
   RelatedProducts,
   RelatedProductsSkeleton,
 } from "@/components/product/related-products"
 import { SpecTable } from "@/components/product/spec-table"
+import { StockLine } from "@/components/product/stock-line"
 import { JsonLd } from "@/components/seo/json-ld"
 import {
   Breadcrumb,
@@ -36,19 +31,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { fitPartOf } from "@/lib/build-state/fit"
 import { env } from "@/lib/env"
-import { formatDate, formatWarranty } from "@/lib/format"
+import { formatWarranty } from "@/lib/format"
 import { getProductPage, type ProductPageData } from "@/lib/products"
 import { type Crumb, breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld"
 import { socialMetadata } from "@/lib/seo/metadata"
 import { categoryHref, productHref, siteConfig } from "@/lib/site"
 import { isBuilderCategory, validateSpecs } from "@/lib/specs"
-import {
-  getStockStatus,
-  isBuyable,
-  manilaToday,
-  type StockStatus,
-  stockStatusLabel,
-} from "@/lib/stock"
+import { getStockStatus, isBuyable, manilaToday } from "@/lib/stock"
 import { cn } from "@/lib/utils"
 
 const META_DESCRIPTION_MAX = 155
@@ -94,7 +83,6 @@ export default async function ProductPage({
 
   const today = manilaToday()
   const status = getStockStatus(product, today)
-  const outOfStock = status === "out-of-stock"
   const buyable = isBuyable(status)
   const builderSlot = isBuilderCategory(product.category.slug)
     ? product.category.slug
@@ -155,57 +143,40 @@ export default async function ProductPage({
               </h1>
             </div>
             <ProductPrice price={product.price} salePrice={product.salePrice} />
-            <StockLine status={status} product={product} />
-            <QuantitySelector max={product.stock} disabled={outOfStock} />
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="lg"
-                  disabled
-                  aria-describedby="cart-coming-soon"
-                  className="h-10 px-6 text-sm"
-                >
-                  Add to cart
-                </Button>
-                {/* Only buyable parts can be added to a build
-                  (docs/specs/020-builder-page, Behavior 18) */}
-                {builderSlot &&
-                  (buyable ? (
-                    <AddToBuild
-                      productId={product.id}
-                      name={product.name}
-                      slot={builderSlot}
-                      stock={product.stock}
-                    />
-                  ) : (
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      disabled
-                      aria-describedby="build-unavailable"
-                      className="h-10 px-6 text-sm"
-                    >
-                      Add to build
-                    </Button>
-                  ))}
-              </div>
-              {/* Visible text, not a tooltip: disabled buttons can't be
-                focused or hovered */}
-              <p
-                id="cart-coming-soon"
-                className="text-sm text-muted-foreground"
-              >
-                Cart is coming soon.
-              </p>
-              {builderSlot && !buyable && (
-                <p
-                  id="build-unavailable"
-                  className="text-sm text-muted-foreground"
-                >
-                  Only parts in stock can be added to a build.
-                </p>
-              )}
-            </div>
+            <StockLine
+              status={status}
+              preorderShipsOn={product.preorderShipsOn}
+            />
+            {/* Quantity, Add to cart and its result; Add to build is passed
+                in because it is only for parts in stock
+                (docs/specs/025-cart-single-items, Behavior 7–8) */}
+            <Purchase
+              productId={product.id}
+              stock={product.stock}
+              buyable={buyable}
+              builderPart={builderSlot !== null}
+              addToBuild={
+                builderSlot &&
+                (buyable ? (
+                  <AddToBuild
+                    productId={product.id}
+                    name={product.name}
+                    slot={builderSlot}
+                    stock={product.stock}
+                  />
+                ) : (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    disabled
+                    aria-describedby={PURCHASE_NOTE_ID}
+                    className="h-10 px-6 text-sm"
+                  >
+                    Add to build
+                  </Button>
+                ))
+              }
+            />
             <p className="flex items-center gap-2 text-sm">
               <ShieldCheckIcon
                 aria-hidden="true"
@@ -255,37 +226,6 @@ export default async function ProductPage({
         <RelatedProducts source={product} today={today} />
       </Suspense>
     </Container>
-  )
-}
-
-const statusIcon: Record<StockStatus, LucideIcon> = {
-  "in-stock": CheckCircle2Icon,
-  "low-stock": AlertTriangleIcon,
-  "out-of-stock": XCircleIcon,
-  "pre-order": CalendarClockIcon,
-}
-
-// The status as text with an icon, never color alone
-function StockLine({
-  status,
-  product,
-}: {
-  status: StockStatus
-  product: ProductPageData
-}) {
-  const Icon = statusIcon[status]
-  return (
-    <p
-      className={cn(
-        "flex items-center gap-2 text-sm font-medium",
-        status === "out-of-stock" && "text-destructive"
-      )}
-    >
-      <Icon aria-hidden="true" className="size-4" />
-      {status === "pre-order" && product.preorderShipsOn
-        ? `Pre-order: ships ${formatDate(product.preorderShipsOn)}`
-        : stockStatusLabel[status]}
-    </p>
   )
 }
 
