@@ -1,6 +1,6 @@
 # 028 — Shipping data and fee rules
 
-Status: **Approved** (review changes applied) · Issue: #76 (Sprint 6, Checkout epic; depends on none) · PRD refs: FR-15 (address data), FR-16 (shipping fee by zone and weight, free-shipping threshold); Payments and fulfillment › Fulfillment; AD-9 (seeded now, edited by Admin in Sprint 8); Technical architecture › Data model (`ShippingRate`, `StoreSettings`)
+Status: **Implemented** · Issue: #76 (Sprint 6, Checkout epic; depends on none) · PRD refs: FR-15 (address data), FR-16 (shipping fee by zone and weight, free-shipping threshold); Payments and fulfillment › Fulfillment; AD-9 (seeded now, edited by Admin in Sprint 8); Technical architecture › Data model (`ShippingRate`, `StoreSettings`)
 
 ## 1. Summary
 

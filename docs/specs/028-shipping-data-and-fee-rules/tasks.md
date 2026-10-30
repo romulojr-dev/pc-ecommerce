@@ -24,5 +24,5 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `prisma/seed/data/shipping.ts`, `validate-shipping.ts` and its unit test (S7, S8), the `writeSeed` steps and reset names, `resetCatalog()`, the seed output lines, `lib/shipping/config.ts`.
   - DB tests: S1–S6, the `getShippingConfig` mapping; `reset-catalog.db.test.ts` and `write.db.test.ts` updated.
 - [x] **T6. Data route E2E.** `e2e/psgc.spec.ts`: R1–R6.
-- [ ] **T7. Docs and cleanup.** ADR 0008; CLAUDE.md shipping and PSGC bullet, `db:seed` and scripts lines; README (seed notes, `psgc:convert`); delete the proof route and its tracing key; spec 028 status to Implemented.
+- [x] **T7. Docs and cleanup.** ADR 0008; CLAUDE.md shipping and PSGC bullet, `db:seed` and scripts lines; README (seed notes, `psgc:convert`); delete the proof route and its tracing key; spec 028 status to Implemented.
 - [ ] **T8. PR.** Open the PR from the repo template; wait for `ci`; on the final preview URL request R1 again (Definition of done).

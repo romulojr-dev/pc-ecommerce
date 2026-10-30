@@ -4,13 +4,13 @@ import type { NextConfig } from "next"
 import "./lib/env"
 
 const nextConfig: NextConfig = {
-  // The address files are read with fs at request time, which file tracing
-  // can't see, so every route that reads them lists them
-  // (docs/specs/028-shipping-data-and-fee-rules, D12). Add the checkout routes
-  // that call resolveAddress here.
+  // The address files are read with fs at request time. Turbopack happens to
+  // trace the plain path.join(process.cwd(), …) call, but that is an accident
+  // of the analysis, so every route that reads the files lists them
+  // explicitly (docs/specs/028-shipping-data-and-fee-rules, D12; ADR 0008).
+  // Every route that calls resolveAddress must be listed here too (#77, #78).
   outputFileTracingIncludes: {
     "/api/psgc/*": ["./data/psgc/json/**/*"],
-    "/api/psgc-proof": ["./data/psgc/json/**/*"],
   },
 }
 

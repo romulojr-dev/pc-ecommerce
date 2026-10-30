@@ -113,6 +113,25 @@ a 10-minute delay (tag `products`, [spec 016](docs/specs/016-home-page/spec.md))
 after a re-seed, its prices, stock labels and picks can be up to 10 minutes old.
 Product pages, listings and search always show current prices and stock.
 
+## Shipping data
+
+The shipping rates and the store settings (address, hours, free-shipping
+threshold, order expiry) are **demo values**: a fictional store and made-up
+courier rates. `pnpm db:seed` creates the settings row only when it is missing
+and inserts the rates only when the table is empty, so it never overwrites what
+Admin sets later; a second run prints "kept (already set)." for each
+([spec 028](docs/specs/028-shipping-data-and-fee-rules/spec.md)). With
+`--reset`, the seed clears both tables along with the catalog and refills the
+demo values.
+
+The PH address data (regions, provinces, cities, barangays) comes from the PSA's
+PSGC publication. `pnpm psgc:convert` turns `data/psgc/2026Q3.xlsx` into the JSON
+files in `data/psgc/json/2026Q3/`, which are committed; the app serves them at
+`/api/psgc/2026Q3/…` and validates addresses against the same files
+([ADR 0008](docs/adr/0008-serve-address-data-as-versioned-json-through-a-route-handler.md)).
+For a new quarter, put the workbook in `data/psgc/`, change `PSGC_VERSION` in
+`lib/psgc/version.ts`, run `pnpm psgc:convert`, and fix what the tests name.
+
 ## AI agent skills
 
 The Prisma agent skills used by Claude Code are not committed. `.agents/` holds
