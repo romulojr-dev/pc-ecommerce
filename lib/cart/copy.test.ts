@@ -2,14 +2,20 @@ import { describe, expect, test } from "vitest"
 
 import {
   addOutcomeLines,
+  bannerText,
   BUILD_COPY,
   buildQuantityText,
   capNoteText,
+  flagText,
+  groupFlagText,
   groupLabel,
   groupName,
   notBuyableText,
   removedGroupText,
   removedText,
+  setToAriaLabel,
+  setToLabel,
+  setToStatusText,
   shortageText,
   subtotalLabel,
   unavailableText,
@@ -206,6 +212,81 @@ describe("other build copy", () => {
     )
     expect(buildQuantityText(99)).toBe(
       "You can add up to 99 of one part in a build."
+    )
+  })
+})
+
+// docs/specs/027-cart-stock-flags, §5
+describe("flagText", () => {
+  test("the three unavailable labels", () => {
+    expect(flagText({ kind: "retired" })).toBe("No longer sold")
+    expect(flagText({ kind: "out-of-stock" })).toBe("Out of stock")
+    expect(flagText({ kind: "pre-order" })).toBe("Pre-order only")
+  })
+
+  test("over stock names the stock and the whole cart's total", () => {
+    expect(flagText({ kind: "over-stock", stock: 2, total: 3 })).toBe(
+      "Only 2 in stock, 3 in your cart"
+    )
+  })
+})
+
+describe("groupFlagText", () => {
+  test("one part is named", () => {
+    expect(
+      groupFlagText([
+        {
+          productId: "p",
+          name: "AMD Ryzen 5 7600",
+          flag: { kind: "over-stock", stock: 2, total: 3 },
+        },
+      ])
+    ).toBe("AMD Ryzen 5 7600: Only 2 in stock, 3 in your cart")
+    expect(
+      groupFlagText([
+        {
+          productId: "p",
+          name: "AMD Ryzen 5 7600",
+          flag: { kind: "out-of-stock" },
+        },
+      ])
+    ).toBe("AMD Ryzen 5 7600: Out of stock")
+  })
+
+  test("several are counted", () => {
+    const part = {
+      productId: "p",
+      name: "A",
+      flag: { kind: "retired" },
+    } as const
+    expect(groupFlagText([part, { ...part, productId: "q" }])).toBe(
+      "2 parts need attention"
+    )
+  })
+})
+
+describe("bannerText", () => {
+  test("one line", () => {
+    expect(bannerText(1)).toBe(
+      "1 line needs attention. Fix or remove it before you check out."
+    )
+  })
+
+  test("several lines", () => {
+    expect(bannerText(2)).toBe(
+      "2 lines need attention. Fix or remove them before you check out."
+    )
+  })
+})
+
+describe("Set to", () => {
+  test("label, accessible name and status text", () => {
+    expect(setToLabel(1)).toBe("Set to 1")
+    expect(setToAriaLabel("AMD Ryzen 5 7600", 1)).toBe(
+      "Set AMD Ryzen 5 7600 to 1"
+    )
+    expect(setToStatusText("AMD Ryzen 5 7600", 1)).toBe(
+      "Set AMD Ryzen 5 7600 to 1."
     )
   })
 })
