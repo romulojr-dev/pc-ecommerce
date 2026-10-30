@@ -101,4 +101,5 @@ export type BuildCartResult =
   | { ok: false; reason: "confirm"; warnings: Issue[] }
   | { ok: false; reason: "unavailable"; parts: UnavailablePart[] }
   | { ok: false; reason: "stock"; shortages: Shortage[] }
-  | Exclude<ShareFailure, { reason: "unavailable" }>
+  | { ok: false; reason: "invalid" | "empty" | "too-many-parts" | "error" }
+  | Extract<ShareFailure, { reason: "quantity-too-high" }>

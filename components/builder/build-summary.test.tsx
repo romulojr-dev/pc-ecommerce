@@ -7,6 +7,7 @@ import {
   checkBuild,
   estimateWattage,
 } from "@/lib/builder"
+import { buildCartButton } from "@/lib/build-state/cart-button"
 import { buildA, nb, seed } from "@/test-support/seed-parts"
 
 import { BuildSummary, type BuildSummaryProps } from "./build-summary"
@@ -16,17 +17,30 @@ import { BuildSummary, type BuildSummaryProps } from "./build-summary"
 
 function propsFor(build: Build, total: number): BuildSummaryProps {
   const issues = checkBuild(build)
+  const isEmpty = Object.values(build).every((entries) => !entries?.length)
+  const status = buildStatus(issues)
   return {
     state: "ready",
-    isEmpty: Object.values(build).every((entries) => !entries?.length),
+    isEmpty,
     total,
     power: estimateWattage(build),
-    status: buildStatus(issues),
+    status,
     issues,
     availability: null,
     onRetry: () => {},
     canShare: true,
     onShare: () => {},
+    cart: {
+      button: buildCartButton({
+        state: "ready",
+        isEmpty,
+        status,
+        hasUnavailable: false,
+      }),
+      sending: false,
+      result: null,
+      onClick: () => {},
+    },
   }
 }
 
@@ -106,13 +120,145 @@ describe("BuildSummary", () => {
     expect(html).not.toContain("₱")
   })
 
-  test("Add build to cart is disabled, and says why", () => {
-    const html = render(propsFor(buildA(), 6_906_000))
-    expect(html).toMatch(
-      /<button[^>]*disabled[^>]*aria-describedby="build-cart-note"[^>]*>Add build to cart|<button[^>]*aria-describedby="build-cart-note"[^>]*disabled[^>]*>Add build to cart/
+  describe("Add build to cart (docs/specs/026-add-build-to-cart, Behavior 1–5; E40–E45)", () => {
+    const cartButton = /<button[^>]*>(Add build to cart|Adding…)<\/button>/
+    // The disabled attribute, not Tailwind's "disabled:" classes
+    const isDisabled = (button: string) => /\sdisabled(=|\s|>)/.test(button)
+    const errorsBuild = {
+      cpu: [{ part: seed.i5_14400f, quantity: 1 }],
+      motherboard: [{ part: seed.strixB650a, quantity: 1 }],
+    }
+
+    test("E44: is enabled for a compatible build, with no note", () => {
+      const html = render(propsFor(buildA(), 6_906_000))
+      const button = html.match(cartButton)![0]
+      expect(isDisabled(button)).toBe(false)
+      expect(button).not.toContain("aria-describedby")
+      expect(html).not.toContain("coming soon")
+      expect(html).not.toContain("build-cart-note")
+    })
+
+    test("is enabled with warnings: the click asks first", () => {
+      const build = { cpu: [{ part: seed.i5_14400f, quantity: 1 }] }
+      const html = render(propsFor(build, 929_500))
+      expect(isDisabled(html.match(cartButton)![0])).toBe(false)
+    })
+
+    test("E40: an empty build says to add parts", () => {
+      const html = render(propsFor({}, 0))
+      const button = html.match(cartButton)![0]
+      expect(isDisabled(button)).toBe(true)
+      expect(button).toContain('aria-describedby="build-cart-note-empty"')
+      expect(html).toContain('id="build-cart-note-empty"')
+      expect(html).toContain("Add parts to add your build to cart.")
+    })
+
+    test.each(["loading", "error"] as const)(
+      "E41: %s → disabled, with no note",
+      (state) => {
+        const props = propsFor(buildA(), 6_906_000)
+        const html = render({
+          ...props,
+          state,
+          cart: { ...props.cart, button: { enabled: false, reasons: [] } },
+        })
+        const button = html.match(cartButton)![0]
+        expect(isDisabled(button)).toBe(true)
+        expect(button).not.toContain("aria-describedby")
+        expect(html).not.toContain("build-cart-note")
+      }
     )
-    expect(html).toContain("Adding a whole build to the cart is coming soon.")
+
+    test("E42: errors say to fix them", () => {
+      const html = render(propsFor(errorsBuild, 0))
+      const button = html.match(cartButton)![0]
+      expect(isDisabled(button)).toBe(true)
+      expect(button).toContain('aria-describedby="build-cart-note-errors"')
+      expect(html).toContain("Fix the errors to add this build to cart.")
+    })
+
+    test("E43: a part that can't be bought points at the availability line", () => {
+      const props = propsFor(buildA(), 6_906_000)
+      const html = render({
+        ...props,
+        availability:
+          "The ASUS Dual GeForce RTX 4060 OC Edition 8GB isn’t available to buy right now. Replace it to add this build to cart.",
+        cart: {
+          ...props.cart,
+          button: { enabled: false, reasons: ["unavailable"] },
+        },
+      })
+      const button = html.match(cartButton)![0]
+      expect(isDisabled(button)).toBe(true)
+      expect(button).toContain('aria-describedby="build-availability"')
+      expect(html).toContain('id="build-availability"')
+      // No second sentence: the availability line is the reason
+      expect(html).not.toContain("build-cart-note")
+    })
+
+    test("errors and unavailable parts point at both, errors first", () => {
+      const props = propsFor(errorsBuild, 0)
+      const html = render({
+        ...props,
+        availability: "The X isn’t available to buy right now.",
+        cart: {
+          ...props.cart,
+          button: { enabled: false, reasons: ["errors", "unavailable"] },
+        },
+      })
+      expect(html.match(cartButton)![0]).toContain(
+        'aria-describedby="build-cart-note-errors build-availability"'
+      )
+    })
+
+    test("while sending: Adding…, busy and disabled", () => {
+      const props = propsFor(buildA(), 6_906_000)
+      const html = render({ ...props, cart: { ...props.cart, sending: true } })
+      const button = html.match(cartButton)![0]
+      expect(button).toContain("Adding…")
+      expect(button).toContain('aria-busy="true"')
+      expect(isDisabled(button)).toBe(true)
+    })
+
+    test("the result region is always in the page, and isn't a status role", () => {
+      const html = render(propsFor(buildA(), 6_906_000))
+      expect(html).toContain('aria-live="polite"')
+      expect(html).not.toContain('role="status"')
+    })
+
+    test("E44: added shows the line and View cart", () => {
+      const props = propsFor(buildA(), 6_906_000)
+      const html = render({
+        ...props,
+        cart: {
+          ...props.cart,
+          result: { kind: "success", text: "Added your build to your cart." },
+        },
+      })
+      expect(html).toContain("Added your build to your cart.")
+      expect(html).toMatch(/<a[^>]*href="\/cart"[^>]*>View cart<\/a>/)
+    })
+
+    test("E48: a refusal is an alert with its lead and lines", () => {
+      const props = propsFor(buildA(), 6_906_000)
+      const html = render({
+        ...props,
+        cart: {
+          ...props.cart,
+          result: {
+            kind: "alert",
+            lead: "This build can’t be added to your cart:",
+            lines: ["Not enough stock for AMD Ryzen 5 7600: 1 in stock."],
+          },
+        },
+      })
+      expect(html).toContain('role="alert"')
+      expect(html).toContain("This build can’t be added to your cart:")
+      expect(html).toContain("Not enough stock for AMD Ryzen 5 7600")
+      expect(html).not.toContain("View cart")
+    })
   })
+
   describe("Share build (docs/specs/022-share-build, Behavior 1; E39, E44)", () => {
     const shareButton = /<button[^>]*>Share build<\/button>/
     // The disabled attribute, not Tailwind's "disabled:" classes

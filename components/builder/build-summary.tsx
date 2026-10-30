@@ -1,3 +1,6 @@
+import type { Ref } from "react"
+
+import { BuildCartResult } from "@/components/builder/build-cart-result"
 import {
   IssueList,
   PowerLine,
@@ -6,6 +9,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { BuildStatus, Issue, PowerEstimate } from "@/lib/builder"
+import {
+  type BuildCartButton,
+  cartButtonReasonText,
+} from "@/lib/build-state/cart-button"
+import type { BuildResultView } from "@/lib/cart/build-result"
 import { formatPeso } from "@/lib/format"
 
 export type BuildSummaryProps = {
@@ -25,12 +33,27 @@ export type BuildSummaryProps = {
   // (docs/specs/022-share-build, Behavior 1)
   canShare: boolean
   onShare: () => void
+  // Add build to cart (docs/specs/026-add-build-to-cart, Behavior 1–5)
+  cart: {
+    button: BuildCartButton
+    sending: boolean
+    // What the line under the button says, or null
+    result: BuildResultView | null
+    onClick: () => void
+  }
+  // For the warnings dialog to return focus to
+  cartButtonRef?: Ref<HTMLButtonElement>
 }
+
+// The id of the availability line, which the button points at when a part
+// can't be bought
+const AVAILABILITY_ID = "build-availability"
+const noteId = (reason: string) => `build-cart-note-${reason}`
 
 // The builder's summary (docs/specs/020-builder-page, Behavior 15–16): total,
 // estimated power, compatibility status and issues, availability, and the
-// Add build to cart button that is coming with the Checkout epic. It shows
-// no figure until the build has loaded.
+// Add build to cart button with its result. It shows no figure until the
+// build has loaded.
 export function BuildSummary(props: BuildSummaryProps) {
   return (
     <aside
@@ -41,22 +64,51 @@ export function BuildSummary(props: BuildSummaryProps) {
         Your build
       </h2>
       <SummaryBody {...props} />
-      <div className="flex flex-col gap-2 border-t pt-4">
-        <Button
-          size="lg"
-          disabled
-          aria-describedby="build-cart-note"
-          className="h-10 text-sm"
-        >
-          Add build to cart
-        </Button>
-        {/* Visible text, not a tooltip: disabled buttons can't be focused */}
-        <p id="build-cart-note" className="text-sm text-muted-foreground">
-          Adding a whole build to the cart is coming soon.
-        </p>
-      </div>
+      <CartButton {...props} />
       <ShareButton {...props} />
     </aside>
+  )
+}
+
+// Add build to cart. Disabled with its reasons as visible text (a disabled
+// button can't be focused, so a tooltip would never be read): empty and
+// errors have a line of their own, and a part that can't be bought points at
+// the availability line above, which already names it (D12).
+function CartButton({ cart, cartButtonRef }: BuildSummaryProps) {
+  const { button, sending } = cart
+  const texts = button.reasons.flatMap((reason) => {
+    const text = cartButtonReasonText(reason)
+    return text ? [{ reason, text }] : []
+  })
+  const describedBy = button.reasons
+    .map((reason) =>
+      cartButtonReasonText(reason) ? noteId(reason) : AVAILABILITY_ID
+    )
+    .join(" ")
+  return (
+    <div className="flex flex-col gap-2 border-t pt-4">
+      <Button
+        ref={cartButtonRef}
+        size="lg"
+        disabled={!button.enabled || sending}
+        aria-busy={sending || undefined}
+        aria-describedby={describedBy || undefined}
+        className="h-10 text-sm"
+        onClick={cart.onClick}
+      >
+        {sending ? "Adding…" : "Add build to cart"}
+      </Button>
+      {texts.map(({ reason, text }) => (
+        <p
+          key={reason}
+          id={noteId(reason)}
+          className="text-sm text-muted-foreground"
+        >
+          {text}
+        </p>
+      ))}
+      <BuildCartResult view={cart.result} />
+    </div>
   )
 }
 
@@ -142,7 +194,10 @@ function SummaryBody({
       )}
 
       {availability && (
-        <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive dark:bg-destructive/20">
+        <p
+          id={AVAILABILITY_ID}
+          className="rounded-md bg-destructive/10 p-3 text-sm text-destructive dark:bg-destructive/20"
+        >
           {availability}
         </p>
       )}
