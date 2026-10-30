@@ -54,8 +54,10 @@ describe("a part that can be bought", () => {
     )
   })
 
-  test("the status region is there before anything is said", () => {
-    expect(render()).toContain('role="status"')
+  test("the live region is there before anything is said, and is not a second status role", () => {
+    const html = render()
+    expect(html).toContain('aria-live="polite"')
+    expect(html).not.toContain('role="status"')
   })
 })
 

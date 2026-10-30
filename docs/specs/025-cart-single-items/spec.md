@@ -22,7 +22,7 @@ This story gives the store a cart. A shopper without an account adds a part from
 7. The product page's "Cart is coming soon." note and the always-disabled button go away. **Add to cart** is enabled when the product is **buyable** (`isBuyable`: In stock or Low stock, the `inStock` meaning; spec 020 D7). It sits where it is now, before Add to build.
 8. A product that isn't buyable (Out of stock, Pre-order) shows Add to cart **disabled**, with visible text linked by `aria-describedby` (Messages). The quantity selector is disabled too (D9). For builder parts this one note replaces "Only parts in stock can be added to a build." (one sentence covers both buttons).
 9. Clicking Add to cart sends the product id and the **selected quantity** (the quantity selector's value, clamped 1 to stock as today) to the add action. While it runs the button shows "Adding…", is disabled and has `aria-busy`. The selected quantity stays as it was afterwards.
-10. **Result** (in one `role="status"` region under the buttons, replaced by the next result):
+10. **Result** (in one polite live region under the buttons, replaced by the next result; it is `aria-live="polite"` and not `role="status"`, so the product page keeps a single status role, Add to build's, which existing tests and tools find by role):
    - Everything was added: "Added to your cart." with a **View cart** link to `/cart`.
    - Fewer were added because of the cap (Rules › Stock cap): "Added {n} to your cart." then the cap note on its own line, and View cart.
    - Nothing was added because the cart already holds the cap: the cap note alone, and View cart.

@@ -13,8 +13,11 @@ export type AddOutcome =
   | { kind: "unavailable" }
   | { kind: "error" }
 
-// The status region is always in the page so a screen reader announces what
-// is put into it; an error is announced at once as an alert. No client hooks.
+// The live region is always in the page so a screen reader announces what is
+// put into it; an error is announced at once as an alert. The region is
+// aria-live rather than role="status" so the product page keeps one status
+// role, Add to build's, which its tests and the shopper's tools find by role
+// (docs/specs/025-cart-single-items, Behavior 10). No client hooks.
 export function AddToCartResult({ outcome }: { outcome: AddOutcome | null }) {
   const lines =
     outcome?.kind === "added"
@@ -25,7 +28,7 @@ export function AddToCartResult({ outcome }: { outcome: AddOutcome | null }) {
 
   return (
     <>
-      <div role="status" className="text-sm">
+      <div aria-live="polite" aria-atomic="true" className="text-sm">
         {lines.map((line) => (
           <p key={line}>{line}</p>
         ))}
