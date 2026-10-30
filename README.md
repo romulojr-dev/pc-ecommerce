@@ -132,6 +132,11 @@ files in `data/psgc/json/2026Q3/`, which are committed; the app serves them at
 For a new quarter, put the workbook in `data/psgc/`, change `PSGC_VERSION` in
 `lib/psgc/version.ts`, run `pnpm psgc:convert`, and fix what the tests name.
 
+## Payments
+
+Checkout pays through PayMongo's test mode. The keys, webhooks, tunnel, cron
+and preview setup are in [docs/setup/payments.md](docs/setup/payments.md).
+
 ## AI agent skills
 
 The Prisma agent skills used by Claude Code are not committed. `.agents/` holds
