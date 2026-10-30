@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   // Every route that calls resolveAddress must be listed here too (#77, #78).
   outputFileTracingIncludes: {
     "/api/psgc/*": ["./data/psgc/json/**/*"],
+    // The review's server action runs resolveAddress in this page's function
+    // (docs/specs/029-checkout-steps)
+    "/checkout": ["./data/psgc/json/**/*"],
   },
 }
 

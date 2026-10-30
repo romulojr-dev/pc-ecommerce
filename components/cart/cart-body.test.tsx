@@ -98,16 +98,30 @@ describe("a cart with lines (E27)", () => {
     expect(html).toContain("₱33,985.00")
   })
 
-  test("Checkout is disabled, and says why in visible text", () => {
-    const checkout = /<button[^>]*>Checkout<\/button>/.exec(html)?.[0] ?? ""
-    expect(isDisabled(checkout)).toBe(true)
-    expect(checkout).toContain('aria-describedby="checkout-coming-soon"')
-    expect(html).toContain(">Checkout is coming soon.<")
+  test("Checkout is a link to /checkout (spec 029, Behavior 1)", () => {
+    expect(html).toMatch(/<a [^>]*href="\/checkout"[^>]*>Checkout<\/a>/)
+    expect(html).not.toContain("coming soon")
     expect(html).toContain("Shipping and vouchers are calculated at checkout.")
   })
 
   test("is not the empty state", () => {
     expect(html).not.toContain("Your cart is empty")
+  })
+})
+
+describe("Checkout while the cart can't be checked out (spec 029, N7)", () => {
+  const html = render({
+    view: view([{ ...ryzen, flag: { kind: "out-of-stock" } }], 2_299_000, 2),
+  })
+
+  test("is disabled and says why in visible text", () => {
+    const checkout = /<button[^>]*>Checkout<\/button>/.exec(html)?.[0] ?? ""
+    expect(isDisabled(checkout)).toBe(true)
+    expect(checkout).toContain('aria-describedby="checkout-blocked"')
+    expect(html).toContain(
+      ">Fix or remove the lines marked above to check out.<"
+    )
+    expect(html).not.toMatch(/<a [^>]*href="\/checkout"/)
   })
 })
 

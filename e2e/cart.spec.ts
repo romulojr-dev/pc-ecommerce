@@ -100,8 +100,10 @@ test("add two, change to one, remove: the cart and the header agree (E33–E36)"
   const summary = page.getByRole("complementary", { name: "Order summary" })
   await expect(summary.getByText("Subtotal (2 items)")).toBeVisible()
   await expect(summary.getByText("₱22,990.00")).toBeVisible()
-  await expect(summary.getByRole("button", { name: "Checkout" })).toBeDisabled()
-  await expect(summary.getByText("Checkout is coming soon.")).toBeVisible()
+  await expect(summary.getByRole("link", { name: "Checkout" })).toHaveAttribute(
+    "href",
+    "/checkout"
+  )
 
   // Down to one: the line, the subtotal and the header follow
   await page
