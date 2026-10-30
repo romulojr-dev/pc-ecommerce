@@ -10,7 +10,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - CI: create `pcsilicon_shadow` beside `pcsilicon_test`, and a "Check schema drift" step after "Apply migrations".
   - *Verify:* on the Docker Postgres with an inline shadow URL, the current migrations give exit 0. If today's triggers or CHECKs show as drift, stop and report.
 - [x] **T3. Pure logic, test-first.** `lib/cart/` `id`, `cap`, `count`, `input`, `copy`, `types`, and `count-store`, with unit tests (E3–E7, E10, E15, E17–E21, E32, E39–E44).
-- [ ] **T4. Schema.**
+- [x] **T4. Schema.**
   - `partialIndexes` preview feature; `Cart` and `CartItem`; `pnpm db:migrate --name cart`, plus `CHECK ("quantity" >= 1)` appended to the migration.
   - Check the generated partial unique index; a second `migrate dev --create-only` is empty (delete it); `pnpm db:drift` exits 0.
   - `Cart` named in the reset in `prisma/seed/write.ts` and `test-support/db.ts`.

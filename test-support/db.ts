@@ -17,9 +17,10 @@ function assertTestDatabase() {
   }
 }
 
-// Empties the catalog, like `pnpm db:seed --reset`. "Build" is named too:
-// CASCADE from "Product" empties "BuildItem" but not "Build", which would be
-// left pointing at nothing (docs/specs/022-share-build, D9).
+// Empties the catalog, like `pnpm db:seed --reset`. "Build" and "Cart" are
+// named too: CASCADE from "Product" empties "BuildItem" and "CartItem" but
+// not their parents, which would be left pointing at nothing (docs/specs/022-
+// share-build, D9; docs/specs/025-cart-single-items).
 //
 // The production guard runs first, as a second lock beside assertTestDatabase
 // (docs/specs/022-share-build, Rules › Production safety). It doesn't need
@@ -27,7 +28,7 @@ function assertTestDatabase() {
 export async function resetCatalog() {
   assertResetAllowed(process.env)
   assertTestDatabase()
-  await db.$executeRaw`TRUNCATE TABLE "Build", "ProductImage", "Product", "Brand", "Category" CASCADE`
+  await db.$executeRaw`TRUNCATE TABLE "Build", "Cart", "ProductImage", "Product", "Brand", "Category" CASCADE`
 }
 
 // One category and one brand, for tests that only need somewhere to put products
