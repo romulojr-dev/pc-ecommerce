@@ -11,6 +11,14 @@ import {
 
 import { capQuantity, MAX_CART_QUANTITY } from "./cap"
 import { cartCount } from "./count"
+import {
+  type FlagProduct,
+  flaggedCount,
+  groupPartFlags,
+  isUnavailable,
+  productFlags,
+  setToQuantity,
+} from "./flags"
 import { newCartId } from "./id"
 import { addInputSchema, removeInputSchema, setInputSchema } from "./input"
 import {
@@ -244,7 +252,7 @@ export async function getCartView(
   cartId: string | null,
   today: string = manilaToday()
 ): Promise<CartView> {
-  if (!cartId) return { entries: [], subtotal: 0, count: 0 }
+  if (!cartId) return { entries: [], subtotal: 0, count: 0, flagged: 0 }
 
   const rows = await db.cartItem.findMany({
     where: { cartId },
@@ -286,6 +294,19 @@ export async function getCartView(
     )
   }
 
+  // Stock flags (spec 027): a product's state from the whole cart's lines,
+  // shown on every line that holds it
+  const products = new Map<string, FlagProduct>()
+  for (const { productId, product } of rows) {
+    if (products.has(productId)) continue
+    products.set(productId, {
+      active: product.status === "ACTIVE",
+      status: stockStatusOf(product, today),
+      stock: product.stock,
+    })
+  }
+  const flags = productFlags(rows, products)
+
   const groups = await loadGroups(
     [...new Set(rows.flatMap((row) => (row.buildId ? [row.buildId] : [])))],
     today
@@ -299,11 +320,17 @@ export async function getCartView(
       const group = groups.get(buildId)
       if (group && !seenGroups.has(buildId)) {
         seenGroups.add(buildId)
-        entries.push({ kind: "build", number: null, ...group })
+        entries.push({
+          kind: "build",
+          number: null,
+          ...group,
+          flags: groupPartFlags(group.slots, flags),
+        })
       }
       continue
     }
     const sold = product.status === "ACTIVE"
+    const flag = flags.get(productId) ?? null
     const room =
       Math.min(product.stock, MAX_CART_QUANTITY) -
       (inGroups.get(productId) ?? 0)
@@ -324,7 +351,10 @@ export async function getCartView(
       status: stockStatusOf(product, today),
       preorderShipsOn: toDateString(product.preorderShipsOn),
       sold,
-      max: sold ? Math.max(quantity, room) : quantity,
+      // An unavailable line can't be raised, even when stock is left
+      max: sold && !isUnavailable(flag) ? Math.max(quantity, room) : quantity,
+      flag,
+      setTo: setToQuantity(flag, quantity),
     } satisfies CartLineView)
   }
 
@@ -345,5 +375,6 @@ export async function getCartView(
       0
     ),
     count: cartCount(rows),
+    flagged: flaggedCount(entries),
   }
 }

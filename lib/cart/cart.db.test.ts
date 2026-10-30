@@ -645,6 +645,7 @@ describe("reading the cart", () => {
         entries: [],
         subtotal: 0,
         count: 0,
+        flagged: 0,
       })
       expect(await getCartCount(cartId)).toBe(0)
     }

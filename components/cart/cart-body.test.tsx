@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, test } from "vitest"
 
+import { flaggedCount } from "@/lib/cart/flags"
 import type { CartLineView, CartView } from "@/lib/cart/types"
 
 import { CartBody } from "./cart-body"
@@ -27,6 +28,8 @@ const ryzen: CartLineView = {
   preorderShipsOn: null,
   sold: true,
   max: 12,
+  flag: null,
+  setTo: null,
 }
 
 const ryzen7600x: CartLineView = {
@@ -51,10 +54,16 @@ const retired: CartLineView = {
   quantity: 2,
   sold: false,
   max: 2,
+  flag: { kind: "retired" },
 }
 
 const view = (lines: CartLineView[], subtotal: number, count: number) =>
-  ({ entries: lines, subtotal, count }) satisfies CartView
+  ({
+    entries: lines,
+    subtotal,
+    count,
+    flagged: flaggedCount(lines),
+  }) satisfies CartView
 
 type Props = Parameters<typeof CartBody>[0]
 const render = (props: Partial<Props> & { view: CartView }) =>

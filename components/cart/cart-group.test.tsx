@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest"
 
 import { sharedBuildView } from "@/lib/build-state/shared"
 import type { AnyBuildPart } from "@/lib/builder"
+import { groupPartFlags } from "@/lib/cart/flags"
 import type { CartGroupView, CartLineView, CartView } from "@/lib/cart/types"
 import {
   partsOf,
@@ -34,6 +35,7 @@ function groupOf(
     status: view.status,
     issues: view.issues,
     slots,
+    flags: groupPartFlags(slots, new Map()),
   }
 }
 
@@ -224,11 +226,14 @@ describe("in the cart (E35)", () => {
     preorderShipsOn: null,
     sold: true,
     max: 12,
+    flag: null,
+    setTo: null,
   }
   const view: CartView = {
     entries: [groupOf(buildAParts()), single],
     subtotal: 9_205_000,
     count: 3,
+    flagged: 0,
   }
   const html = renderToStaticMarkup(
     <CartBody
@@ -256,7 +261,12 @@ describe("in the cart (E35)", () => {
   test("a cart with only a group isn't the empty state", () => {
     const only = renderToStaticMarkup(
       <CartBody
-        view={{ entries: [view.entries[0]], subtotal: 6_906_000, count: 1 }}
+        view={{
+          entries: [view.entries[0]],
+          subtotal: 6_906_000,
+          count: 1,
+          flagged: 0,
+        }}
         busy={new Set()}
         messages={{}}
         status=""
