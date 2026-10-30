@@ -10,6 +10,7 @@ import { CartLine } from "./cart-line"
 // checks without a DOM
 
 const ryzen: CartLineView = {
+  kind: "single",
   id: "l1",
   productId: "p1",
   name: "AMD Ryzen 5 7600",
@@ -53,7 +54,7 @@ const retired: CartLineView = {
 }
 
 const view = (lines: CartLineView[], subtotal: number, count: number) =>
-  ({ lines, subtotal, count }) satisfies CartView
+  ({ entries: lines, subtotal, count }) satisfies CartView
 
 type Props = Parameters<typeof CartBody>[0]
 const render = (props: Partial<Props> & { view: CartView }) =>

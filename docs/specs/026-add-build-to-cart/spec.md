@@ -90,7 +90,7 @@ Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,
 | E12 | — | Build A; [0] RTX 4060 | `unavailable` naming "ASUS Dual GeForce RTX 4060 OC Edition 8GB" (can't be bought now). Nothing written |
 | E13 | — | Build A; the LANCOOL 216 set to draft | `unavailable` naming "Lian Li LANCOOL 216 Black" (no longer sold) |
 | E14 | [1] Ryzen 5 7600 × 1 single | Build A | `stock`: "Not enough stock for AMD Ryzen 5 7600: 1 in stock, 1 already in your cart." Nothing written (issue example 1) |
-| E15 | [3] 990 PRO; a Build A group | Build A with the AMD Ryzen 7 9800X3D in place of the 7600 | `added`: the 990 PRO is 2 of 3 (issue example 2) |
+| E15 | [3] 990 PRO; a Build A group | Build A with the AMD Ryzen 7 9800X3D in place of the 7600 (it carries a `bios-update` warning, spec 019 E57, so the shopper confirms it first) | `added`: the 990 PRO is 2 of 3 (issue example 2) |
 | E16 | [2] Vengeance; empty cart | Build A with Vengeance × 2 | `added` (2 of 2) (issue example 3) |
 | E17 | [2] Vengeance × 1 single | Build A with Vengeance × 2 | `stock`: "Not enough stock for Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30: 2 in stock, 1 already in your cart." (issue example 3) |
 | E18 | [1] Vengeance; empty cart | Build A with Vengeance × 2 | `stock`: "Not enough stock for Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30: 1 in stock, your build needs 2." |
@@ -100,7 +100,7 @@ Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,
 | E22 | No cookie | Build A plus an extra `cartId` of another cart | Ignored: a new cart; the other cart unchanged |
 | E23 | Cookie names a cart that doesn't exist | Build A | `added` to a new cart; the cookie replaced |
 | E24 | Empty cart, two adds of Build A at the same moment | — | One group. One result `added`, the other `already-in-cart` |
-| E25 | [1] 990 PRO, empty cart; Build A and Build A with the 9800X3D added at the same moment | — | One `added`; the other `stock` ("…1 in stock, 1 already in your cart.") |
+| E25 | [1] 990 PRO, empty cart; Build A and Build A with the 9800X3D (warning acknowledged) added at the same moment | — | One `added`; the other `stock` ("…1 in stock, 1 already in your cart.") |
 | E26 | Two different carts add the same never-shared contents at the same moment | — | Both `added`; one `Build` row, used by both carts |
 | E27 | [12] a Build A group | add Ryzen 5 7600 × 11 single (spec 025's action) | Single × 11 (12 − 1 in the group): spec 025's cap, unchanged |
 

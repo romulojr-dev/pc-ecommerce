@@ -11,7 +11,7 @@ import { EMPTY_HEADING_ID } from "@/components/cart/cart-empty"
 import { type LineMessage, removeButtonId } from "@/components/cart/cart-line"
 import { capNoteText, CART_COPY, removedText } from "@/lib/cart/copy"
 import { cartCountStore } from "@/lib/cart/count-store"
-import type { CartResult, CartView } from "@/lib/cart/types"
+import { type CartResult, type CartView, singleLines } from "@/lib/cart/types"
 
 // The cart page's state (docs/specs/025-cart-single-items, Behavior 19–23): it
 // sends each change to a server action, which answers with the new count for
@@ -28,12 +28,15 @@ export function CartContent({ view }: { view: CartView }) {
 
   useEffect(() => {
     const pending = refocus.current
-    if (!pending || view.lines.some((line) => line.id === pending.removedId)) {
+    if (
+      !pending ||
+      singleLines(view).some((line) => line.id === pending.removedId)
+    ) {
       return
     }
     refocus.current = null
     document.getElementById(pending.focusId)?.focus()
-  }, [view.lines])
+  }, [view])
 
   const setMessage = (lineId: string, message: LineMessage | null) =>
     setMessages((current) => ({ ...current, [lineId]: message ?? undefined }))
@@ -82,11 +85,12 @@ export function CartContent({ view }: { view: CartView }) {
   }
 
   async function remove(lineId: string) {
-    const index = view.lines.findIndex((line) => line.id === lineId)
-    const neighbour = view.lines[index + 1] ?? view.lines[index - 1]
+    const lines = singleLines(view)
+    const index = lines.findIndex((line) => line.id === lineId)
+    const neighbour = lines[index + 1] ?? lines[index - 1]
     const result = await change(lineId, () => removeFromCartAction({ lineId }))
     if (result?.ok) {
-      setStatus(removedText(view.lines[index].name))
+      setStatus(removedText(lines[index].name))
       refocus.current = {
         removedId: lineId,
         focusId: neighbour ? removeButtonId(neighbour.id) : EMPTY_HEADING_ID,

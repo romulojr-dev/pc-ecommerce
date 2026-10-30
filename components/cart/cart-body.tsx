@@ -1,7 +1,7 @@
 import { CartEmpty } from "@/components/cart/cart-empty"
 import { CartLine, type LineMessage } from "@/components/cart/cart-line"
 import { CartSummary } from "@/components/cart/cart-summary"
-import type { CartView } from "@/lib/cart/types"
+import { type CartView, singleLines } from "@/lib/cart/types"
 
 type CartBodyProps = {
   view: CartView
@@ -31,12 +31,13 @@ export function CartBody({
       <p role="status" className="min-h-5 text-sm text-muted-foreground">
         {status}
       </p>
-      {view.lines.length === 0 ? (
+      {view.entries.length === 0 ? (
         <CartEmpty />
       ) : (
         <div className="grid items-start gap-8 lg:grid-cols-[1fr_20rem]">
           <ul className="divide-y border-y">
-            {view.lines.map((line) => (
+            {/* Build groups are listed by the next task (spec 026, T6) */}
+            {singleLines(view).map((line) => (
               <CartLine
                 key={line.id}
                 line={line}

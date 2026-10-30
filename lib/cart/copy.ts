@@ -1,6 +1,6 @@
 import type { Shortage } from "./build-stock"
 import { MAX_CART_QUANTITY } from "./cap"
-import type { CartNote } from "./types"
+import type { CartNote, UnavailablePart } from "./types"
 
 // Shopper copy for the cart (docs/specs/025-cart-single-items, §5)
 export const CART_COPY = {
@@ -61,8 +61,6 @@ export function shortageText(short: Shortage): string {
       : `your build needs ${short.needs}`
   return `Not enough stock for ${short.name}: ${short.stock} in stock, ${held}.`
 }
-
-export type UnavailablePart = { name: string; why: "not-buyable" | "retired" }
 
 // Parts the server won't add: named when there is one, counted when several
 export function unavailableText(parts: readonly UnavailablePart[]): string {
