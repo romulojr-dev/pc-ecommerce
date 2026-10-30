@@ -377,3 +377,67 @@ describe("a flagged line", () => {
     expect(line({ flag: over, setTo: 1 })).toContain('id="quantity-l1"')
   })
 })
+
+// docs/specs/027-cart-stock-flags, Behavior 14–15: the banner
+describe("the banner", () => {
+  const over = { kind: "over-stock", stock: 2, total: 3 } as const
+  const flaggedLine = (
+    id: string,
+    flag: CartLineView["flag"]
+  ): CartLineView => ({
+    ...ryzen,
+    id,
+    productId: `p-${id}`,
+    flag,
+    setTo: null,
+  })
+
+  test("E1: counts the flagged lines", () => {
+    const html = render({
+      view: view(
+        [flaggedLine("a", over), flaggedLine("b", over), ryzen7600x],
+        0,
+        4
+      ),
+    })
+    expect(html).toContain(
+      "2 lines need attention. Fix or remove them before you check out."
+    )
+  })
+
+  test("E3, E10: one line", () => {
+    const html = render({
+      view: view([flaggedLine("a", { kind: "out-of-stock" })], 0, 2),
+    })
+    expect(html).toContain(
+      "1 line needs attention. Fix or remove it before you check out."
+    )
+  })
+
+  test("the three unavailable labels get the same banner", () => {
+    const text = (flag: CartLineView["flag"]) =>
+      /\d lines? needs? attention[^<]*/.exec(
+        render({ view: view([flaggedLine("a", flag)], 0, 2) })
+      )?.[0]
+    expect(text({ kind: "retired" })).toBeDefined()
+    expect(text({ kind: "retired" })).toBe(text({ kind: "out-of-stock" }))
+    expect(text({ kind: "pre-order" })).toBe(text({ kind: "out-of-stock" }))
+  })
+
+  test("E18: nothing flagged, no banner; the live region is already there", () => {
+    const html = render({ view: view([ryzen, ryzen7600x], 3_398_500, 3) })
+    expect(html).not.toContain("need attention")
+    expect(html).not.toContain("needs attention")
+    expect(html).toContain('<div aria-live="polite"></div>')
+  })
+
+  test("E19: an empty cart has none", () => {
+    expect(render({ view: view([], 0, 0) })).not.toContain("attention")
+  })
+
+  test("it is a live region, and the page keeps its one status role", () => {
+    const html = render({ view: view([flaggedLine("a", over)], 0, 2) })
+    expect(html).toMatch(/<div aria-live="polite"><p[^>]*>.*1 line needs/)
+    expect(html.match(/role="status"/g)).toHaveLength(1)
+  })
+})
