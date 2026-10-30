@@ -69,7 +69,7 @@ This story turns on **Add build to cart** on `/builder`. One click sends the bui
 
 ## 3. Examples
 
-Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,495.00 [12], ASUS ROG Strix B650-A Gaming WiFi ₱14,995.00 [8], Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30 ₱6,495.00 [25], Samsung 990 PRO 1TB NVMe SSD ₱6,995.00 [30], ASUS Dual GeForce RTX 4060 OC Edition 8GB ₱17,995.00 [10], Lian Li LANCOOL 216 Black ₱5,795.00 [7], Cooler Master MWE 550 Bronze V2 ₱2,995.00 [15], Thermalright Peerless Assassin 120 SE ₱2,295.00 [20]; 8 parts, total **₱69,060.00**, status OK. **Build B** (spec 001): Intel Core i5-14400F, MSI PRO B760M-A WiFi DDR4, Kingston FURY Beast DDR4-3200 16 GB, Crucial MX500 1TB, Gigabyte GeForce RTX 5070 Windforce OC SFF 12G, Cooler Master MasterBox Q300L, Corsair RM850e (2023) 850W, Peerless Assassin; total ₱70,060.00, status OK. **Build B′**: Build B with the MWE 550 in place of the RM850e; total ₱65,560.00; one warning (spec 019 E12): "The Intel Core i5-14400F and the Gigabyte GeForce RTX 5070 Windforce OC SFF 12G need an estimated 517 W, 94% of the 550 W the Cooler Master MWE 550 Bronze V2 supplies, close to its limit." **Build A×**: Build A with the MSI PRO B760M-A WiFi DDR4 in place of the Strix: errors socket-match ("The AMD Ryzen 5 7600 (AM5) doesn't fit the LGA1700 socket on the MSI PRO B760M-A WiFi DDR4.") and memory-type. "[n]" sets a product's stock to n in the test database first. Keys are written `rule:slot/id,…` (D1).
+Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,495.00 [12], ASUS ROG Strix B650-A Gaming WiFi ₱14,995.00 [8], Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30 ₱6,495.00 [25], Samsung 990 PRO 1TB NVMe SSD ₱6,995.00 [30], ASUS Dual GeForce RTX 4060 OC Edition 8GB ₱17,995.00 [10], Lian Li LANCOOL 216 Black ₱5,795.00 [7], Cooler Master MWE 550 Bronze V2 ₱2,995.00 [15], Thermalright Peerless Assassin 120 SE ₱2,295.00 [20]; 8 parts, total **₱69,060.00**, status OK. **Build B** (spec 001): Intel Core i5-14400F ₱9,295.00, MSI PRO B760M-A WiFi DDR4 ₱8,495.00, Kingston FURY Beast DDR4-3200 16 GB (2×8 GB) CL16 ₱2,495.00, Crucial MX500 1TB ₱4,495.00, Gigabyte GeForce RTX 5070 Windforce OC SFF 12G ₱36,995.00, Cooler Master MasterBox Q300L ₱2,995.00, Corsair RM850e (2023) 850W ₱7,495.00, Thermalright Peerless Assassin 120 SE ₱2,295.00; 8 parts, total **₱74,560.00**, status **Warnings**: the one warning is `bios-update` (spec 019 E10), "The MSI PRO B760M-A WiFi DDR4 may need a BIOS update to run the Intel Core i5-14400F: its launch BIOS supports Alder Lake (12th gen) and Raptor Lake (13th gen), not Raptor Lake Refresh (14th gen)." **Build B′**: Build B with the MWE 550 in place of the RM850e; total ₱70,060.00; two warnings, `psu-wattage` ("The Intel Core i5-14400F and the Gigabyte GeForce RTX 5070 Windforce OC SFF 12G need an estimated 517 W, 94% of the 550 W the Cooler Master MWE 550 Bronze V2 supplies, close to its limit.") and `bios-update`. **Build A×**: Build A with the MSI PRO B760M-A WiFi DDR4 in place of the Strix: errors socket-match ("The AMD Ryzen 5 7600 (AM5) doesn't fit the LGA1700 socket on the MSI PRO B760M-A WiFi DDR4.") and memory-type. "[n]" sets a product's stock to n in the test database first. Keys are written `rule:slot/id,…` (D1).
 
 ### Adding (`addBuildToCart`)
 
@@ -82,10 +82,11 @@ Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,
 | E5 | Ryzen 5 7600 × 1 single | Build A | `added`. The 7600 is on two lines (single × 1, group × 1); `count: 2` |
 | E6 | No cookie | Build A×, ack `[]` | `errors` with both errors, errors first. No cart, no cookie, no `Build`, no lines |
 | E7 | No cookie | Build A× with extra fields `status: "ok"`, `issues: []`, ack `["socket-match:cpu/…,motherboard/…"]` | Same as E6: the extra fields are ignored, and errors can't be acknowledged |
-| E8 | No cookie | Build B′, ack `[]` | `confirm` with the PSU warning. Nothing written |
-| E9 | No cookie | Build B′, ack `["psu-wattage:cpu/<i5>,gpu/<5070>,psu/<MWE>"]` | `added`, `count: 1` |
-| E10 | No cookie | Build B′, ack `["integrated-graphics:cpu/<i5>"]` (a key it doesn't have) | `confirm` with the PSU warning |
-| E11 | No cookie; the test sets the RM850e's `wattageW` to 600 after the client loaded Build B as OK | Build B, ack `[]` | `confirm` with "…need an estimated 517 W, 87% of the 600 W the Corsair RM850e (2023) 850W supplies, close to its limit." Nothing written |
+| E8 | No cookie | Build B, ack `[]` | `confirm` with the BIOS warning. Nothing written |
+| E9 | No cookie | Build B, ack `["bios-update:cpu/<i5>,motherboard/<B760M>"]` | `added`, `count: 1` |
+| E10 | No cookie | Build B, ack `["integrated-graphics:cpu/<i5>"]` (a key it doesn't have) | `confirm` with the BIOS warning |
+| E10b | No cookie | Build B′, ack with the BIOS key only | `confirm` with **both** warnings, PSU then BIOS (the order `checkBuild` gives): the PSU key is missing, and the server returns all of the build's warnings so the shopper confirms the whole set (Behavior 7). Nothing written |
+| E11 | No cookie; the test sets the MWE 550's `wattageW` to 300 after the client loaded Build A as OK | Build A, ack `[]` | `confirm` with "The AMD Ryzen 5 7600 and the ASUS Dual GeForce RTX 4060 OC Edition 8GB need an estimated 264 W, 88% of the 300 W the Cooler Master MWE 550 Bronze V2 supplies, close to its limit." Nothing written |
 | E12 | — | Build A; [0] RTX 4060 | `unavailable` naming "ASUS Dual GeForce RTX 4060 OC Edition 8GB" (can't be bought now). Nothing written |
 | E13 | — | Build A; the LANCOOL 216 set to draft | `unavailable` naming "Lian Li LANCOOL 216 Black" (no longer sold) |
 | E14 | [1] Ryzen 5 7600 × 1 single | Build A | `stock`: "Not enough stock for AMD Ryzen 5 7600: 1 in stock, 1 already in your cart." Nothing written (issue example 1) |
@@ -94,7 +95,7 @@ Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,
 | E17 | [2] Vengeance × 1 single | Build A with Vengeance × 2 | `stock`: "Not enough stock for Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30: 2 in stock, 1 already in your cart." (issue example 3) |
 | E18 | [1] Vengeance; empty cart | Build A with Vengeance × 2 | `stock`: "Not enough stock for Corsair Vengeance DDR5-6000 32 GB (2×16 GB) CL30: 1 in stock, your build needs 2." |
 | E19 | [1] Ryzen 5 7600 and [1] 990 PRO, each × 1 single | Build A | `stock` with two lines, in slot order (CPU, then storage) |
-| E20 | [500] Ryzen 5 7600 × 98 single | Build A | `stock`: "Not enough room for AMD Ryzen 5 7600: you can have up to 99 of one part in your cart, and 98 are already in it." |
+| E20 | [500] Ryzen 5 7600 × 99 single | Build A | `stock`: "Not enough room for AMD Ryzen 5 7600: you can have up to 99 of one part in your cart, and 99 are already in it." |
 | E21 | — | items not a list; `[]`; 21 items; two CPUs (a repair); a quantity of 100; ack not a list, 51 entries, or an entry of 201 characters | `invalid` / `empty` / `too-many-parts` / `invalid` / `quantity-too-high` / `invalid`. Nothing written |
 | E22 | No cookie | Build A plus an extra `cartId` of another cart | Ignored: a new cart; the other cart unchanged |
 | E23 | Cookie names a cart that doesn't exist | Build A | `added` to a new cart; the cookie replaced |
@@ -118,9 +119,9 @@ Seed values (stock in the seed): **Build A** (spec 001): AMD Ryzen 5 7600 ₱11,
 | --- | --- | --- |
 | E32 | A Build A group | One line "Custom PC build · 8 parts", ₱69,060.00, "OK", collapsed. Show parts → CPU AMD Ryzen 5 7600 ₱11,495.00, Motherboard ASUS ROG Strix B650-A Gaming WiFi ₱14,995.00, … in builder slot order, each "In stock". View build → `/builds/<slug>`. "Subtotal (1 item)" ₱69,060.00; header "Cart, 1 item" |
 | E33 | Build A with Vengeance × 2 as a group | "8 parts"; the kit row "₱6,495.00 × 2", line ₱12,990.00; group total ₱75,555.00 |
-| E34 | A Build B′ group | Status "Warnings"; expanded, the PSU warning message under the parts |
+| E34 | A Build B group | Status "Warnings"; expanded, the BIOS warning message under the parts |
 | E35 | A Build A group, then Ryzen 5 7600 × 2 single | Group first, then the single line. "Subtotal (3 items)" ₱92,050.00 |
-| E36 | Two groups (Build A, then Build B) | "Custom PC build 1 · 8 parts", "Custom PC build 2 · 8 parts"; buttons "Remove Custom PC build 1", "… 2"; "Subtotal (2 items)" ₱139,120.00 |
+| E36 | Two groups (Build A, then Build B) | "Custom PC build 1 · 8 parts", "Custom PC build 2 · 8 parts"; buttons "Remove Custom PC build 1", "… 2"; "Subtotal (2 items)" ₱143,620.00 |
 | E37 | A Build A group, then the LANCOOL 216 set to draft | Its row: name, brand, "No longer sold", no price, no link. Group total ₱63,265.00, status "Incomplete". Count still 1 |
 | E38 | A Build A group, then [0] RTX 4060 | The GPU row "Out of stock"; total and status unchanged (flags are #63) |
 | E39 | A Build A group, then the 7600's price set to ₱10,000.00 | Group total ₱67,565.00 on the next request: prices are never stored in the cart |
@@ -147,8 +148,8 @@ Spec 025 D7 already counts the units of single items **plus 1 per build group** 
 | E43 | Build A with [0] RTX 4060 | Disabled, described by the availability line "The ASUS Dual GeForce RTX 4060 OC Edition 8GB isn't available to buy right now. Replace it to add this build to cart." |
 | E44 | Build A | Enabled → "Adding…" → "Added your build to your cart." with View cart; header "Cart, 1 item" without a page load; the builder still shows Build A |
 | E45 | Build A, after E44 | Click again → "This build is already in your cart." |
-| E46 | Build B′ | Click → the dialog lists the PSU warning. Cancel → nothing sent, focus on Add build to cart. Again → Add to cart → added |
-| E47 | Build B, the server finds the new warning of E11 | The dialog opens with "Something in your build changed since it loaded. Check this warning before adding it:" and the message; the summary now shows "Warnings" |
+| E46 | Build B | Click → the dialog lists the BIOS warning. Cancel → nothing sent, focus on Add build to cart. Again → Add to cart → added |
+| E47 | Build A, the server finds the new warning of E11 | The dialog opens with "Something in your build changed since it loaded. Check this warning before adding it:" and the message; the summary now shows "Warnings" |
 | E48 | Build A, server returns `stock` (E14) | Alert "This build can't be added to your cart:" and the stock line; the build unchanged |
 | E49 | Build A, the request fails (offline) | "Couldn't add your build to your cart. Try again." |
 | E50 | After E44, the shopper changes the GPU | The result line is cleared |
@@ -157,10 +158,10 @@ Spec 025 D7 already counts the units of single items **plus 1 per build group** 
 
 | # | Steps | Expected |
 | --- | --- | --- |
-| E51 | Fresh context; save Build B′ with the ASUS ROG Strix B650-A in place of the PRO B760M-A → `/builder` | Status "Errors" (socket, memory type and form factor: the Strix is ATX, the Q300L takes Micro-ATX); Add build to cart disabled with "Fix the errors to add this build to cart." |
-| E52 | Change the motherboard to the MSI PRO B760M-A WiFi DDR4 | Status "Warnings" (the PSU message); the button enabled |
-| E53 | Add build to cart → the dialog names the PSU warning → Add to cart | "Added your build to your cart."; header "Cart, 1 item" without a page load |
-| E54 | View cart | "Custom PC build · 8 parts", ₱65,560.00, "Warnings"; Show parts lists the 8 parts; "Subtotal (1 item)" |
+| E51 | Fresh context; save Build B with the ASUS ROG Strix B650-A in place of the PRO B760M-A → `/builder` | Status "Errors" (socket, memory type and form factor: the Strix is ATX, the Q300L takes Micro-ATX); Add build to cart disabled with "Fix the errors to add this build to cart." |
+| E52 | Change the motherboard to the MSI PRO B760M-A WiFi DDR4 | Status "Warnings" (the BIOS message); the button enabled |
+| E53 | Add build to cart → the dialog names the BIOS warning → Add to cart | "Added your build to your cart."; header "Cart, 1 item" without a page load |
+| E54 | View cart | "Custom PC build · 8 parts", ₱74,560.00, "Warnings"; Show parts lists the 8 parts; "Subtotal (1 item)" |
 | E55 | Remove Custom PC build | "Removed Custom PC build from your cart.", empty state, header "Cart" |
 
 ## 4. Rules and edge cases
@@ -295,7 +296,7 @@ The E2E uses spec 025's "no page load" mark. A data-changed case (E47) is covere
 
 ## 9. Decisions
 
-- **D1 — A warning's key is its rule plus its parts (`slot/id`), not its message.** Messages carry figures (PSU load) that move with small data changes; asking again for 94% → 96% would be noise, while a new rule or part is a real change. *Rejected:* the message text as the key; one hash of the whole warning list. *Review decision (open question 4):* accepted. A PSU warning that rises from 94% to 99% between load and click isn't confirmed again; the shopper already confirmed "close to its limit", and over 100% is an error, which blocks.
+- **D1 — A warning's key is its rule plus its parts (`slot/id`), not its message.** Messages carry figures (a PSU load) that move with small data changes; asking again for 94% → 96% would be noise, while a new rule or part is a real change. *Rejected:* the message text as the key; one hash of the whole warning list. *Review decision (open question 4):* accepted. A PSU warning that rises from 94% to 99% between load and click isn't confirmed again; the shopper already confirmed "close to its limit", and over 100% is an error, which blocks.
 - **D2 — Server check order: input, parts, errors, already in cart, stock, warnings, write.** Every reason to refuse comes before the confirmation, so the shopper never confirms warnings for an add that then fails; "already in cart" comes before stock so a re-click on a group that's in the cart isn't reported as short of stock. *Rejected:* warnings before stock.
 - **D3 — A group is its `Build` row; a changed build is a new group.** There is no link between a browser's build and a cart group, and a shopper may buy two different PCs. *Rejected:* replacing the last group added from this browser (needs state the issue doesn't ask for); a builder note "An earlier version of this build is in your cart" (the client would need to know which group came from it). *Review decision (open question 2):* kept for the MVP. A shopper who changes the GPU and adds again has two groups, numbered (D9), each with its own Remove.
 - **D4 — Stock is all or nothing, listing every short product.** The issue rules out partial groups and silent capping; listing all shortfalls saves round trips. *Rejected:* stopping at the first short product.

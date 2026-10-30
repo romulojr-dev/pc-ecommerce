@@ -71,8 +71,8 @@ components/builder/builder.tsx    useAddBuildToCart flow: click → warnings? di
 components/cart/cart-group.tsx    collapsed line + disclosure (aria-expanded/controls), rows, issues, View build,
                                   Remove; cart-body.tsx renders entries; cart-content.tsx removeGroup (status,
                                   refocus, not-found, error)
-e2e/cart-build.spec.ts            epic E51–E55 (Build B′ with Strix → fix via picker → dialog → cart → remove)
-e2e/build-fixtures.ts             itemsFor(request, list) generalizing buildAItems; BUILD_B_PRIME list
+e2e/cart-build.spec.ts            epic E51–E55 (Build B with the Strix → fix via picker → dialog → cart → remove)
+e2e/build-fixtures.ts             itemsFor(request, list) generalizing buildAItems; BUILD_B list
 docs                              plan.md, tasks.md; spec 020 + 025 "Changed by spec 026" notes; ADR 0007 dated
                                   note; CLAUDE.md cart and share bullets; README if it lists cart behavior
 ```
@@ -91,5 +91,5 @@ docs                              plan.md, tasks.md; spec 020 + 025 "Changed by 
 
 - `pnpm lint`, `pnpm typecheck`, `pnpm test` per task; `pnpm test:db:up` then `TEST_DATABASE_URL=… pnpm test:db` (inline URL, Docker Postgres) for T2/T4.
 - `pnpm test:e2e` against `pnpm dev` (key-warning guard) for E51–E55 and the existing builder/cart/share specs.
-- Manual on `pnpm dev`: Build A → Add build to cart → header 1 → `/cart` group expands, View build opens `/builds/<slug>`, Remove keeps the shared link working; Build B′ dialog; same build again → "already in your cart".
+- Manual on `pnpm dev`: Build A → Add build to cart → header 1 → `/cart` group expands, View build opens `/builds/<slug>`, Remove keeps the shared link working; Build B dialog; same build again → "already in your cart".
 - The preview URL checks from the issue's definition of done happen after the PR.
