@@ -242,6 +242,7 @@ describe("in the cart (E35)", () => {
       messages={{}}
       status=""
       onQuantity={() => {}}
+      onSetTo={() => {}}
       onRemove={() => {}}
       onRemoveGroup={() => {}}
     />
@@ -271,6 +272,7 @@ describe("in the cart (E35)", () => {
         messages={{}}
         status=""
         onQuantity={() => {}}
+        onSetTo={() => {}}
         onRemove={() => {}}
         onRemoveGroup={() => {}}
       />

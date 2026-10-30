@@ -16,6 +16,7 @@ import {
   setToAriaLabel,
   setToLabel,
   setToStatusText,
+  shipsText,
   shortageText,
   subtotalLabel,
   unavailableText,
@@ -280,6 +281,10 @@ describe("bannerText", () => {
 })
 
 describe("Set to", () => {
+  test("a pre-order line says when it ships", () => {
+    expect(shipsText("February 1, 2027")).toBe("Ships February 1, 2027")
+  })
+
   test("label, accessible name and status text", () => {
     expect(setToLabel(1)).toBe("Set to 1")
     expect(setToAriaLabel("AMD Ryzen 5 7600", 1)).toBe(

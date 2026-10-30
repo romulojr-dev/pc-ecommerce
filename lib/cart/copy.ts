@@ -128,6 +128,11 @@ export function bannerText(count: number): string {
     : `${count} lines need attention. Fix or remove them before you check out.`
 }
 
+// Under "Pre-order only", where the stock line's ship date would have been
+export function shipsText(date: string): string {
+  return `Ships ${date}`
+}
+
 export function setToLabel(quantity: number): string {
   return `Set to ${quantity}`
 }

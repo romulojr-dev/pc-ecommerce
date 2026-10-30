@@ -73,6 +73,7 @@ const render = (props: Partial<Props> & { view: CartView }) =>
       messages={{}}
       status=""
       onQuantity={() => {}}
+      onSetTo={() => {}}
       onRemove={() => {}}
       onRemoveGroup={() => {}}
       {...props}
@@ -177,6 +178,7 @@ describe("a line", () => {
         busy={false}
         message={null}
         onQuantity={() => {}}
+        onSetTo={() => {}}
         onRemove={() => {}}
         {...props}
       />
@@ -268,5 +270,110 @@ describe("a line", () => {
     ).toMatch(
       /<p role="alert"[^>]*>Couldn&#x27;t update your cart\. Try again\.<\/p>/
     )
+  })
+})
+
+// docs/specs/027-cart-stock-flags, Behavior 5–9: a single line's flag
+describe("a flagged line", () => {
+  const line = (
+    props: Partial<CartLineView>,
+    extra: Partial<Parameters<typeof CartLine>[0]> = {}
+  ) =>
+    renderToStaticMarkup(
+      <CartLine
+        line={{ ...ryzen, ...props }}
+        busy={false}
+        message={null}
+        onQuantity={() => {}}
+        onSetTo={() => {}}
+        onRemove={() => {}}
+        {...extra}
+      />
+    )
+
+  const over = { kind: "over-stock", stock: 2, total: 3 } as const
+  const button = (html: string) =>
+    /<button[^>]*aria-label="Set [^"]*"[^>]*>[^<]*<\/button>/.exec(html)?.[0] ??
+    ""
+  const plus = (html: string) =>
+    /<button[^>]*aria-label="Increase quantity[^"]*"[^>]*>/.exec(html)?.[0] ??
+    ""
+
+  test("E1, E5: over stock names the stock and the cart, and offers Set to", () => {
+    const html = line({ flag: over, setTo: 1, max: 2 })
+    expect(html).toContain("Only 2 in stock, 3 in your cart")
+    expect(html).toContain("In stock")
+    expect(button(html)).toContain('aria-label="Set AMD Ryzen 5 7600 to 1"')
+    expect(button(html)).toContain(">Set to 1<")
+  })
+
+  test("E6: when no quantity helps there is the flag and no button", () => {
+    const html = line({ flag: over, setTo: null, max: 2 })
+    expect(html).toContain("Only 2 in stock, 3 in your cart")
+    expect(button(html)).toBe("")
+    expect(html).toContain('aria-label="Remove AMD Ryzen 5 7600"')
+  })
+
+  test("Set to is disabled while a change runs", () => {
+    expect(
+      isDisabled(button(line({ flag: over, setTo: 1 }, { busy: true })))
+    ).toBe(true)
+    expect(isDisabled(button(line({ flag: over, setTo: 1 })))).toBe(false)
+  })
+
+  test("E10: out of stock is the label, in place of the stock line", () => {
+    const html = line({
+      flag: { kind: "out-of-stock" },
+      status: "out-of-stock",
+      max: 2,
+    })
+    expect(html.match(/Out of stock/g)).toHaveLength(1)
+    expect(html).toContain("₱11,495.00")
+    expect(html).toContain("₱22,990.00")
+    expect(html).toContain('aria-label="Remove AMD Ryzen 5 7600"')
+    expect(isDisabled(plus(html))).toBe(true)
+    expect(button(html)).toBe("")
+  })
+
+  test("E11: a pre-order says so and when it ships", () => {
+    const html = line({
+      flag: { kind: "pre-order" },
+      status: "pre-order",
+      preorderShipsOn: "2027-02-01",
+      max: 2,
+    })
+    expect(html).toContain("Pre-order only")
+    expect(html).toContain("Ships February 1, 2027")
+    expect(html).not.toContain("Pre-order: ships")
+    expect(isDisabled(plus(html))).toBe(true)
+  })
+
+  test("E12: no longer sold is shown once, as before", () => {
+    const html = line({
+      flag: { kind: "retired" },
+      sold: false,
+      max: 2,
+    })
+    expect(html.match(/No longer sold/g)).toHaveLength(1)
+    expect(html).toContain("Not included in the subtotal.")
+  })
+
+  test("the three unavailable labels share one style", () => {
+    const style = (flag: CartLineView["flag"]) =>
+      /<p class="([^"]*text-destructive[^"]*)"[^>]*><svg/.exec(
+        line({ flag, max: 2 })
+      )?.[1]
+    expect(style({ kind: "out-of-stock" })).toBe(style({ kind: "pre-order" }))
+    expect(style({ kind: "out-of-stock" })).toBeDefined()
+  })
+
+  test("a clean line has no flag", () => {
+    const html = line({})
+    expect(html).not.toContain("Only ")
+    expect(html).not.toContain("Set to")
+  })
+
+  test("the quantity field has an id, for focus after Set to", () => {
+    expect(line({ flag: over, setTo: 1 })).toContain('id="quantity-l1"')
   })
 })

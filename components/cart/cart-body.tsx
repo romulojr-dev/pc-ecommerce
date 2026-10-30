@@ -12,6 +12,7 @@ type CartBodyProps = {
   // What the page announces after a removal or a missing line
   status: string
   onQuantity: (lineId: string, quantity: number) => void
+  onSetTo: (lineId: string, quantity: number) => void
   onRemove: (lineId: string) => void
   onRemoveGroup: (buildId: string) => void
 }
@@ -26,6 +27,7 @@ export function CartBody({
   messages,
   status,
   onQuantity,
+  onSetTo,
   onRemove,
   onRemoveGroup,
 }: CartBodyProps) {
@@ -55,6 +57,7 @@ export function CartBody({
                   busy={busy.has(entry.id)}
                   message={messages[entry.id] ?? null}
                   onQuantity={(quantity) => onQuantity(entry.id, quantity)}
+                  onSetTo={(quantity) => onSetTo(entry.id, quantity)}
                   onRemove={() => onRemove(entry.id)}
                 />
               )

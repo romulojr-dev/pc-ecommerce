@@ -1,12 +1,15 @@
 import { Trash2Icon, XCircleIcon } from "lucide-react"
 import Link from "next/link"
 
+import { FlagLine } from "@/components/cart/cart-flag"
 import { CartQuantity } from "@/components/cart/cart-quantity"
 import { ProductImage } from "@/components/product/product-image"
 import { StockLine } from "@/components/product/stock-line"
 import { Button } from "@/components/ui/button"
+import { setToAriaLabel, setToLabel, shipsText } from "@/lib/cart/copy"
+import { isUnavailable } from "@/lib/cart/flags"
 import type { CartLineView } from "@/lib/cart/types"
-import { formatPeso } from "@/lib/format"
+import { formatDate, formatPeso } from "@/lib/format"
 import { productHref } from "@/lib/site"
 import { cn, focusRing } from "@/lib/utils"
 
@@ -17,12 +20,16 @@ export type LineMessage = { kind: "note" | "error"; text: string }
 // The Remove button's id, so focus can move to a neighbour after a removal
 export const removeButtonId = (lineId: string) => `remove-${lineId}`
 
+// The quantity field's id, where focus goes after "Set to"
+export const quantityInputId = (lineId: string) => `quantity-${lineId}`
+
 type CartLineProps = {
   line: CartLineView
   // A change for this line is running
   busy: boolean
   message: LineMessage | null
   onQuantity: (quantity: number) => void
+  onSetTo: (quantity: number) => void
   onRemove: () => void
 }
 
@@ -35,6 +42,7 @@ export function CartLine({
   busy,
   message,
   onQuantity,
+  onSetTo,
   onRemove,
 }: CartLineProps) {
   return (
@@ -64,10 +72,41 @@ export function CartLine({
         {line.sold ? (
           <>
             <UnitPrice line={line} />
-            <StockLine
-              status={line.status}
-              preorderShipsOn={line.preorderShipsOn}
-            />
+            {isUnavailable(line.flag) ? (
+              // The label says what the stock line would, so it takes its place
+              <>
+                <FlagLine flag={line.flag} />
+                {line.flag.kind === "pre-order" && line.preorderShipsOn && (
+                  <p className="text-sm text-muted-foreground">
+                    {shipsText(formatDate(line.preorderShipsOn))}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <StockLine
+                  status={line.status}
+                  preorderShipsOn={line.preorderShipsOn}
+                />
+                {line.flag && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <FlagLine flag={line.flag} />
+                    {line.setTo !== null && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label={setToAriaLabel(line.name, line.setTo)}
+                        disabled={busy}
+                        onClick={() => onSetTo(line.setTo!)}
+                      >
+                        {setToLabel(line.setTo)}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </>
         ) : (
           <>
@@ -103,6 +142,7 @@ export function CartLine({
               quantity={line.quantity}
               max={line.max}
               disabled={busy}
+              inputId={quantityInputId(line.id)}
               onChange={onQuantity}
             />
             <p className="font-semibold tabular-nums">
