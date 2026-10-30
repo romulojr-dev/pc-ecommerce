@@ -1,7 +1,7 @@
 "use client"
 
 import { MinusIcon, PlusIcon } from "lucide-react"
-import { useId, useState } from "react"
+import { useId } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,21 +9,26 @@ import { Label } from "@/components/ui/label"
 import { clampQuantity } from "@/lib/stock"
 
 type QuantitySelectorProps = {
-  // Units available: the stock, or a pre-order's allocation
+  // Units available: the stock, or a pre-order's allocation, at most 99
   max: number
-  // Out of stock: nothing to choose
+  // The field's text, kept as typed: the parent owns it and reads the
+  // quantity with clampQuantity
+  text: string
+  onTextChange: (text: string) => void
+  // Nothing to choose: out of stock, or not buyable
   disabled?: boolean
 }
 
-// How many units to buy, from 1 to max (docs/specs/010-product-page). Local
-// state only until the cart reads it. The text is kept as typed and clamped
-// on blur, so clearing the field to type a new number works.
+// How many units to buy, from 1 to max (docs/specs/010-product-page; the
+// cart reads it, docs/specs/025-cart-single-items). The text is clamped on
+// blur, so clearing the field to type a new number works.
 export function QuantitySelector({
   max,
+  text,
+  onTextChange,
   disabled = false,
 }: QuantitySelectorProps) {
   const id = useId()
-  const [text, setText] = useState("1")
   const quantity = clampQuantity(Number(text), max)
 
   return (
@@ -36,7 +41,7 @@ export function QuantitySelector({
           size="icon-lg"
           aria-label="Decrease quantity"
           disabled={disabled || quantity <= 1}
-          onClick={() => setText(String(quantity - 1))}
+          onClick={() => onTextChange(String(quantity - 1))}
         >
           <MinusIcon aria-hidden="true" />
         </Button>
@@ -48,8 +53,8 @@ export function QuantitySelector({
           max={max}
           value={disabled ? "" : text}
           disabled={disabled}
-          onChange={(event) => setText(event.target.value)}
-          onBlur={() => setText(String(quantity))}
+          onChange={(event) => onTextChange(event.target.value)}
+          onBlur={() => onTextChange(String(quantity))}
           className="h-8 w-16 text-center tabular-nums"
         />
         <Button
@@ -58,7 +63,7 @@ export function QuantitySelector({
           size="icon-lg"
           aria-label="Increase quantity"
           disabled={disabled || quantity >= max}
-          onClick={() => setText(String(quantity + 1))}
+          onClick={() => onTextChange(String(quantity + 1))}
         >
           <PlusIcon aria-hidden="true" />
         </Button>

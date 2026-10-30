@@ -17,6 +17,6 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - `lib/cart/schema.db.test.ts`: both indexes in `pg_indexes`, a second single line refused, quantity 0 refused, deleting a carted product refused.
 - [x] **T5. Cart server logic.** `lib/cart/cart.ts` and `cart.db.test.ts`: add, merge, cap across lines, set, remove, other-cart ids, retired products, fresh prices, concurrency (E1–E9, E11–E18, E22–E26, E28, E29, E45–E50).
 - [x] **T6. Actions, count route, header.** Server actions, `cookie.ts`, `GET /api/cart/count` and its test (E51), `CartLink` in the header.
-- [ ] **T7. Product page.** `StockLine` extraction, controlled `QuantitySelector`, `Purchase`, `AddToCart`, markup tests; E2E E33, E37.
+- [x] **T7. Product page.** `StockLine` extraction, controlled `QuantitySelector`, `Purchase`, `AddToCart`, markup tests; E2E E33, E37.
 - [ ] **T8. Cart page.** Page, loading, lines, quantity, summary, empty and retired states, markup tests; E2E E34–E36, E38.
 - [ ] **T9. Docs.** CLAUDE.md cart bullet, README (routes, `db:drift`, the CI step).
