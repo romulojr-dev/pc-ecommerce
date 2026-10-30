@@ -128,7 +128,7 @@ Rates are the demo rates unless an example says otherwise; the tests pass them a
 | A14 | The 17 independent cities | Each appears as its own pseudo-province and once as a short entry in its geographic province (the map in Rules and edge cases). City of Bacolod (1830200000) is also listed in Negros Occidental (1804500000); City of Davao (1130700000) in Davao del Sur (1102400000) |
 | A15 | City of Isabela, the Special Geographic Area, the NCR cities | Not listed in any other province |
 | A16 | The independent-city map against the dataset | Fails when a pseudo-province city outside NCR, Isabela and the Special Geographic Area has no entry; when an entry names a city or province that isn't in the dataset; or when the province is in a different region from the city |
-| A17 | Largest generated file | The converter prints the largest `cities/` file (name, raw and gzipped bytes). Measured on the 2026Q3 workbook with the planned shape: Metro Manila, 75,468 bytes raw, 10,985 gzipped; Iloilo is the largest gzipped, 72,351 raw, 13,678 gzipped (D1). The integrity test fails above 120,000 bytes raw so a future quarter can't quietly grow a file |
+| A17 | Largest generated file | The converter prints the largest `cities/` file (name, raw and gzipped bytes). Measured by the converter on the 2026Q3 workbook: the largest is Metro Manila's, 75,469 bytes raw, 11,507 gzipped (Node's default gzip level); Iloilo is the largest gzipped, 72,417 raw, 14,211 gzipped (D1). The integrity test fails above 120,000 bytes raw so a future quarter can't quietly grow a file |
 
 ### Converter (unit, on a small fixture sheet in the workbook's row shape, plus the real workbook where noted)
 
@@ -141,7 +141,8 @@ Rates are the demo rates unless an example says otherwise; the tests pass them a
 | C5 | A fixture region with a city and no province row (NCR shape) | One pseudo-province for the region ("Metro Manila" for NCR), holding the city |
 | C6 | A fixture independent city (no province row with its prefix) | Its own pseudo-province, plus a short entry in the geographic province the map names |
 | C7 | A barangay with no parent city; a row with an unknown level; a duplicate code | The converter stops, naming the code and name, and writes nothing |
-| C8 | Every name changed by cleaning | Listed in the converter's output (old → new), so a review can see them |
+| C8 | Every name changed by cleaning | Each change beyond trimming spaces is listed in the converter's output (old → new); names that only lost spaces are counted (there are about 2,850 in the raw sheet, so listing them would bury the real changes) |
+| C9 | A code cell stored as a number (730600000), a text code ("0702200000"), a footnote, a blank | "0730600000", "0702200000", and null for the footnote and the blank: the leading zero is restored, and a non-code row is never mistaken for a place |
 
 ### Address validation (`resolveAddress`, `zipSchema`, unit)
 
@@ -205,7 +206,8 @@ This is the issue's map: 1 + 7 + 4 + 6 = 18 regions. MIMAROPA includes Palawan a
 - A city or municipality belongs to the province whose code shares its first five digits. If no province row has that prefix, it is independent: NCR cities and Pateros (prefix 13…), 17 highly urbanized cities elsewhere (Baguio, Angeles, Olongapo, Lucena, Puerto Princesa, Iloilo, Bacolod, Cebu, Lapu-Lapu, Mandaue, Tacloban, Zamboanga, Cagayan de Oro, Iligan, Davao, General Santos, Butuan), the City of Isabela and the Special Geographic Area's 8 municipalities. Dagupan, Santiago, Naga, Ormoc and Cotabato share their province's prefix and stay in it.
 - Two rows have no level and are PSA's own "not a province" parents: `0990100000` "City of Isabela (Not a Province)" and `1999900000` "Special Geographic Area".
 - Barangays follow their city or district in the sheet; a district's barangays belong to the City of Manila.
-- About 2,850 names have trailing spaces; one city name ends in a footnote marker. Cleaning trims spaces and removes **only a trailing lowercase letter followed by `/`** (the PSA's footnote style), so a name with a `/` inside, like "Tondo I/II", is untouched. The converter lists every name it changed (C8).
+- About 2,850 names have trailing spaces in the raw sheet (the workbook reader already trims them, so the converter's own trim changes nothing today and stays as a guard); one city name ends in a footnote marker.
+- 84 codes are stored as numbers in the sheet, which loses a leading zero (Puerto Princesa, many Iligan barangays). The converter reads them back as 10-digit text (C9). Skipping them would have left holes: the first run stopped on a missing province (Maguindanao del Norte). Cleaning trims spaces and removes **only a trailing lowercase letter followed by `/`** (the PSA's footnote style), so a name with a `/` inside, like "Tondo I/II", is untouched. The converter lists every name it changed (C8).
 - Any row the converter can't place (unknown level, no parent, duplicate code) stops it with the code and name. It never writes half a dataset.
 
 ### Independent cities and their geographic province (`independentCityProvinces`)
@@ -264,7 +266,7 @@ This story adds no storefront copy. These strings exist:
 | Seed output, rates | "Shipping rates: 20 added." or "Shipping rates: kept (already set)." |
 | Seed output, settings | "Store settings: created." or "Store settings: kept (already set)." |
 | Seed validation errors | "Shipping seed: {zone} has two open-ended tiers.", "…is missing an open-ended tier.", "…tier limits must rise: {previous} then {next}.", "…fee must be a whole number of centavos, 0 or more." |
-| Converter | "PSGC {version}: wrote {regions} regions, {provinces} provinces, {cities} cities and municipalities, {barangays} barangays to {folder}." then "Largest file: {file}, {raw} bytes ({gzip} gzipped)." and one line per cleaned name, "Cleaned: {old} → {new}." Error: "PSGC: row {code} {name}: {problem}." |
+| Converter | "PSGC {version}: wrote {regions} regions, {provinces} provinces, {cities} cities and municipalities, {barangays} barangays to {folder}." then "Largest file: {file}, {raw} bytes ({gzip} gzipped).", "Read {n} codes stored as numbers.", "Trimmed spaces from {n} names." and one line per other change, "Cleaned: {old} → {new}." Error: "PSGC: row {code} {name}: {problem}." |
 | Data route | A 404 has an empty body (no copy). |
 
 The **demo store** below is stored in `StoreSettings` and will appear on the pickup screens (#77) and emails. It is fictional on purpose and says so. Settled in review.
@@ -338,7 +340,7 @@ Limits are 1,000 / 3,000 / 10,000 / 20,000 grams.
 | Unit (Vitest) | `shippingFee`: pickup, threshold boundary and off, every tier boundary, every zone, open-ended tier, no rates, order-independence, invalid input | F1–F17 |
 | Unit | `orderWeightGrams` | W1–W6 |
 | Unit | Zone map and its coverage test against the committed `regions.json` | Z1–Z6 |
-| Unit | Converter transform on a small fixture sheet (rows in the workbook's shape): Manila keeps all its barangays, trimmed names, footnote markers removed (`"City of Lucenaa/"`, trailing-space case), NCR and independent-city pseudo-provinces, dangling parent | C1–C8 |
+| Unit | Converter transform on a small fixture sheet (rows in the workbook's shape): Manila keeps all its barangays, trimmed names, footnote markers removed (`"City of Lucenaa/"`, trailing-space case), NCR and independent-city pseudo-provinces, dangling parent | C1–C9 |
 | Unit | Dataset integrity on the committed files: counts against the manifest, City of Manila has 897 barangays, unique codes, parents exist, no untrimmed name or footnote marker, file size ceiling, spot checks on real places | A1–A10, A12, A17, C1 |
 | Unit | Independent-city map against the dataset, and the short entries in the geographic provinces | A13–A16 |
 | Unit | `resolveAddress` and `zipSchema` | V1–V11 |
@@ -368,7 +370,7 @@ There is no UI to test. The checkout stories (#77, #78) cover the form and the f
 
 ## 9. Decisions
 
-- **D1 — One folder per PSGC version, one file per province for cities and barangays.** Measured on the 2026Q3 workbook with the planned shape (`{ code, name, barangays: [{ code, name }] }`, compact JSON): 102 `cities/` files, 1.81 MB raw in total (about 348 KB gzipped, summed per file). The **largest is Metro Manila's: 75,468 bytes raw, 10,985 gzipped** (1,715 barangays). Iloilo is the largest gzipped: 72,351 raw, 13,678 gzipped (1,721 barangays). A shopper loads at most three small files. *Rejected:* one file for everything (1.8 MB for every checkout); one barangay file per city (1,655 files and an extra request for every city choice).
+- **D1 — One folder per PSGC version, one file per province for cities and barangays.** Measured on the 2026Q3 workbook with the planned shape (`{ code, name, barangays: [{ code, name }] }`, compact JSON): 102 `cities/` files, 1.81 MB raw in total. The **largest is Metro Manila's: 75,469 bytes raw, 11,507 gzipped** (1,715 barangays). Iloilo is the largest gzipped: 72,417 raw, 14,211 gzipped (1,721 barangays). A shopper loads at most three small files. *Rejected:* one file for everything (1.8 MB for every checkout); one barangay file per city (1,655 files and an extra request for every city choice).
 - **D2 — Every region has a province step, using pseudo-provinces.** The form, the stored address and `resolveAddress` have one shape of four levels. *Rejected:* skipping the step for NCR and independent cities (two address shapes, `provinceCode` sometimes null). Independent cities are their own pseudo-province entries (for example "City of Cebu"), the way the PSA lists them, and are also listed in their geographic province (D19), so the form can offer either.
 - **D3 — Pseudo-province codes are real PSGC codes.** A city that is its own pseudo-province reuses its own code; Isabela and the Special Geographic Area use the PSA's own parent rows; NCR's "Metro Manila" reuses the region's code. A code is unique within its level, and the validator checks each level in its own file, so reuse across levels is safe. *Rejected:* invented codes that appear in no PSA table.
 - **D4 — Manila's districts are left out.** PSA says they aren't official municipalities (Notes 1) and a shopper picks a barangay of the City of Manila. *Rejected:* a district step only for Manila.

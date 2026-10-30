@@ -11,7 +11,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - Unit tests: `parsePsgcPath` (R4, R5 shapes), `resolveAddress` on the stub (V1, V3, V5, V6).
   - *Verify locally:* `pnpm build`; the `.nft.json` of both routes lists the stub files; `pnpm start` and `curl -i` show 200 with the immutable header and a 404 with `no-store`.
   - *Verify on Vercel:* push the branch; on the preview URL, `/api/psgc/2026Q3/regions.json` and `/api/psgc-proof` both succeed. If either fails, stop, fix tracing (or change the layout), and update spec D12 and D20 before continuing.
-- [ ] **T2. Converter and dataset.**
+- [x] **T2. Converter and dataset.**
   - Commit `data/psgc/2026Q3.xlsx`; add the devDependency and `pnpm psgc:convert`.
   - `scripts/psgc/transform.ts`, test-first on fixture rows: C1 (Manila districts), C2 (trailing spaces), C3 (`"City of Lucenaa/"`; `"Tondo I/II"` untouched), C4–C8. `lib/psgc/independent-cities.ts` (17 pairs).
   - Run the converter on the real workbook, replace the stub, commit the JSON. Report counts, the largest file (raw and gzip) and the cleaned names.
