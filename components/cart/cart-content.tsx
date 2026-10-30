@@ -9,12 +9,17 @@ import {
 } from "@/app/(store)/cart/actions"
 import { CartBody } from "@/components/cart/cart-body"
 import { EMPTY_HEADING_ID } from "@/components/cart/cart-empty"
-import { type LineMessage, removeButtonId } from "@/components/cart/cart-line"
+import {
+  type LineMessage,
+  quantityInputId,
+  removeButtonId,
+} from "@/components/cart/cart-line"
 import {
   capNoteText,
   CART_COPY,
   removedGroupText,
   removedText,
+  setToStatusText,
 } from "@/lib/cart/copy"
 import { cartCountStore } from "@/lib/cart/count-store"
 import {
@@ -36,6 +41,10 @@ export function CartContent({ view }: { view: CartView }) {
   const [status, setStatus] = useState("")
   // After a removal: where focus goes once the removed line has left the page
   const refocus = useRef<{ removedId: string; focusId: string } | null>(null)
+  // After "Set to": the quantity field to focus once its line is idle again
+  // (the button that had focus is gone, docs/specs/027-cart-stock-flags,
+  // Behavior 8)
+  const refocusQuantity = useRef<{ lineId: string } | null>(null)
 
   useEffect(() => {
     const pending = refocus.current
@@ -48,6 +57,15 @@ export function CartContent({ view }: { view: CartView }) {
     refocus.current = null
     document.getElementById(pending.focusId)?.focus()
   }, [view])
+
+  useEffect(() => {
+    const pending = refocusQuantity.current
+    if (!pending || busy.has(pending.lineId)) return
+    const field = document.getElementById(quantityInputId(pending.lineId))
+    if (!field) return
+    refocusQuantity.current = null
+    field.focus()
+  }, [view, busy])
 
   const setMessage = (lineId: string, message: LineMessage | null) =>
     setMessages((current) => ({ ...current, [lineId]: message ?? undefined }))
@@ -92,6 +110,19 @@ export function CartContent({ view }: { view: CartView }) {
       )
     } else {
       explain(lineId, result)
+    }
+    return result?.ok === true
+  }
+
+  // "Set to n" on a line over stock: a quantity change that lowers the line to
+  // what clears the flag (Behavior 6, 8)
+  async function setTo(lineId: string, quantity: number) {
+    const line = singleLines(view).find((found) => found.id === lineId)
+    refocusQuantity.current = { lineId }
+    if (await setQuantity(lineId, quantity)) {
+      if (line) setStatus(setToStatusText(line.name, quantity))
+    } else {
+      refocusQuantity.current = null
     }
   }
 
@@ -146,6 +177,7 @@ export function CartContent({ view }: { view: CartView }) {
       messages={messages}
       status={status}
       onQuantity={setQuantity}
+      onSetTo={setTo}
       onRemove={remove}
       onRemoveGroup={removeGroup}
     />

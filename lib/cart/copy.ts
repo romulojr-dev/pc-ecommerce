@@ -1,5 +1,6 @@
 import type { Shortage } from "./build-stock"
 import { MAX_CART_QUANTITY } from "./cap"
+import type { GroupPartFlag, ProductFlag } from "./flags"
 import type { CartNote, UnavailablePart } from "./types"
 
 // Shopper copy for the cart (docs/specs/025-cart-single-items, §5)
@@ -97,4 +98,49 @@ export function groupLabel(number: number | null, partCount: number): string {
 
 export function removedGroupText(number: number | null): string {
   return `Removed ${groupName(number)} from your cart.`
+}
+
+// Stock flags (docs/specs/027-cart-stock-flags, §5). The three unavailable
+// labels share one treatment; "No longer sold" is also what spec 025 shows.
+export function flagText(flag: ProductFlag): string {
+  switch (flag.kind) {
+    case "retired":
+      return "No longer sold"
+    case "out-of-stock":
+      return "Out of stock"
+    case "pre-order":
+      return "Pre-order only"
+    case "over-stock":
+      return `Only ${flag.stock} in stock, ${flag.total} in your cart`
+  }
+}
+
+// The flag under a group's label, also when it is collapsed: one part is
+// named, several are counted
+export function groupFlagText(parts: readonly GroupPartFlag[]): string {
+  if (parts.length === 1) return `${parts[0].name}: ${flagText(parts[0].flag)}`
+  return `${parts.length} parts need attention`
+}
+
+export function bannerText(count: number): string {
+  return count === 1
+    ? "1 line needs attention. Fix or remove it before you check out."
+    : `${count} lines need attention. Fix or remove them before you check out.`
+}
+
+// Under "Pre-order only", where the stock line's ship date would have been
+export function shipsText(date: string): string {
+  return `Ships ${date}`
+}
+
+export function setToLabel(quantity: number): string {
+  return `Set to ${quantity}`
+}
+
+export function setToAriaLabel(name: string, quantity: number): string {
+  return `Set ${name} to ${quantity}`
+}
+
+export function setToStatusText(name: string, quantity: number): string {
+  return `Set ${name} to ${quantity}.`
 }

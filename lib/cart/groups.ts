@@ -10,7 +10,8 @@ import type { CartGroupView } from "./types"
 // shared page uses. A part that is no longer active is listed by name and
 // brand alone, and left out of the total and the checks.
 
-export type GroupData = Omit<CartGroupView, "kind" | "number">
+// The flags are added by getCartView, which sees the whole cart
+export type GroupData = Omit<CartGroupView, "kind" | "number" | "flags">
 
 export async function loadGroups(
   buildIds: readonly string[],

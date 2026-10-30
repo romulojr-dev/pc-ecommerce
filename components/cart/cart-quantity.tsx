@@ -15,6 +15,9 @@ type CartQuantityProps = {
   max: number
   // A change for this line is running
   disabled: boolean
+  // The field's id, so focus can move to it (docs/specs/027-cart-stock-flags,
+  // Behavior 8)
+  inputId?: string
   // Sends an absolute quantity. The server caps it and answers with what it
   // kept, which comes back as `quantity`.
   onChange: (quantity: number) => void
@@ -30,6 +33,7 @@ export function CartQuantity({
   quantity,
   max,
   disabled,
+  inputId,
   onChange,
 }: CartQuantityProps) {
   const [text, setText] = useState(String(quantity))
@@ -64,6 +68,7 @@ export function CartQuantity({
         <MinusIcon aria-hidden="true" />
       </Button>
       <Input
+        id={inputId}
         type="number"
         inputMode="numeric"
         min={1}

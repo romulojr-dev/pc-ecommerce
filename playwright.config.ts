@@ -1,6 +1,14 @@
 import { defineConfig, devices } from "@playwright/test"
+import { config } from "dotenv"
 
 const baseURL = "http://localhost:3000"
+
+// The specs that change stock (e2e/stock.ts) reach the database the app uses,
+// so they need its URL here too. Next reads .env.local itself for the server;
+// CI has no file and sets the variables on the job. Variables already set
+// (an inline DATABASE_URL) win.
+config({ path: ".env.local", quiet: true })
+
 // Test tooling, not app code, so it reads process.env directly
 const isCI = !!process.env.CI
 

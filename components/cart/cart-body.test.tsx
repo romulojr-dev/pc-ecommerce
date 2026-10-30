@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, test } from "vitest"
 
+import { flaggedCount } from "@/lib/cart/flags"
 import type { CartLineView, CartView } from "@/lib/cart/types"
 
 import { CartBody } from "./cart-body"
@@ -27,6 +28,8 @@ const ryzen: CartLineView = {
   preorderShipsOn: null,
   sold: true,
   max: 12,
+  flag: null,
+  setTo: null,
 }
 
 const ryzen7600x: CartLineView = {
@@ -51,10 +54,16 @@ const retired: CartLineView = {
   quantity: 2,
   sold: false,
   max: 2,
+  flag: { kind: "retired" },
 }
 
 const view = (lines: CartLineView[], subtotal: number, count: number) =>
-  ({ entries: lines, subtotal, count }) satisfies CartView
+  ({
+    entries: lines,
+    subtotal,
+    count,
+    flagged: flaggedCount(lines),
+  }) satisfies CartView
 
 type Props = Parameters<typeof CartBody>[0]
 const render = (props: Partial<Props> & { view: CartView }) =>
@@ -64,6 +73,7 @@ const render = (props: Partial<Props> & { view: CartView }) =>
       messages={{}}
       status=""
       onQuantity={() => {}}
+      onSetTo={() => {}}
       onRemove={() => {}}
       onRemoveGroup={() => {}}
       {...props}
@@ -168,6 +178,7 @@ describe("a line", () => {
         busy={false}
         message={null}
         onQuantity={() => {}}
+        onSetTo={() => {}}
         onRemove={() => {}}
         {...props}
       />
@@ -259,5 +270,174 @@ describe("a line", () => {
     ).toMatch(
       /<p role="alert"[^>]*>Couldn&#x27;t update your cart\. Try again\.<\/p>/
     )
+  })
+})
+
+// docs/specs/027-cart-stock-flags, Behavior 5–9: a single line's flag
+describe("a flagged line", () => {
+  const line = (
+    props: Partial<CartLineView>,
+    extra: Partial<Parameters<typeof CartLine>[0]> = {}
+  ) =>
+    renderToStaticMarkup(
+      <CartLine
+        line={{ ...ryzen, ...props }}
+        busy={false}
+        message={null}
+        onQuantity={() => {}}
+        onSetTo={() => {}}
+        onRemove={() => {}}
+        {...extra}
+      />
+    )
+
+  const over = { kind: "over-stock", stock: 2, total: 3 } as const
+  const button = (html: string) =>
+    /<button[^>]*aria-label="Set [^"]*"[^>]*>[^<]*<\/button>/.exec(html)?.[0] ??
+    ""
+  const plus = (html: string) =>
+    /<button[^>]*aria-label="Increase quantity[^"]*"[^>]*>/.exec(html)?.[0] ??
+    ""
+
+  test("E1, E5: over stock names the stock and the cart, and offers Set to", () => {
+    const html = line({ flag: over, setTo: 1, max: 2 })
+    expect(html).toContain("Only 2 in stock, 3 in your cart")
+    expect(html).toContain("In stock")
+    expect(button(html)).toContain('aria-label="Set AMD Ryzen 5 7600 to 1"')
+    expect(button(html)).toContain(">Set to 1<")
+  })
+
+  test("E6: when no quantity helps there is the flag and no button", () => {
+    const html = line({ flag: over, setTo: null, max: 2 })
+    expect(html).toContain("Only 2 in stock, 3 in your cart")
+    expect(button(html)).toBe("")
+    expect(html).toContain('aria-label="Remove AMD Ryzen 5 7600"')
+  })
+
+  test("Set to is disabled while a change runs", () => {
+    expect(
+      isDisabled(button(line({ flag: over, setTo: 1 }, { busy: true })))
+    ).toBe(true)
+    expect(isDisabled(button(line({ flag: over, setTo: 1 })))).toBe(false)
+  })
+
+  test("E10: out of stock is the label, in place of the stock line", () => {
+    const html = line({
+      flag: { kind: "out-of-stock" },
+      status: "out-of-stock",
+      max: 2,
+    })
+    expect(html.match(/Out of stock/g)).toHaveLength(1)
+    expect(html).toContain("₱11,495.00")
+    expect(html).toContain("₱22,990.00")
+    expect(html).toContain('aria-label="Remove AMD Ryzen 5 7600"')
+    expect(isDisabled(plus(html))).toBe(true)
+    expect(button(html)).toBe("")
+  })
+
+  test("E11: a pre-order says so and when it ships", () => {
+    const html = line({
+      flag: { kind: "pre-order" },
+      status: "pre-order",
+      preorderShipsOn: "2027-02-01",
+      max: 2,
+    })
+    expect(html).toContain("Pre-order only")
+    expect(html).toContain("Ships February 1, 2027")
+    expect(html).not.toContain("Pre-order: ships")
+    expect(isDisabled(plus(html))).toBe(true)
+  })
+
+  test("E12: no longer sold is shown once, as before", () => {
+    const html = line({
+      flag: { kind: "retired" },
+      sold: false,
+      max: 2,
+    })
+    expect(html.match(/No longer sold/g)).toHaveLength(1)
+    expect(html).toContain("Not included in the subtotal.")
+  })
+
+  test("the three unavailable labels share one style", () => {
+    const style = (flag: CartLineView["flag"]) =>
+      /<p class="([^"]*text-destructive[^"]*)"[^>]*><svg/.exec(
+        line({ flag, max: 2 })
+      )?.[1]
+    expect(style({ kind: "out-of-stock" })).toBe(style({ kind: "pre-order" }))
+    expect(style({ kind: "out-of-stock" })).toBeDefined()
+  })
+
+  test("a clean line has no flag", () => {
+    const html = line({})
+    expect(html).not.toContain("Only ")
+    expect(html).not.toContain("Set to")
+  })
+
+  test("the quantity field has an id, for focus after Set to", () => {
+    expect(line({ flag: over, setTo: 1 })).toContain('id="quantity-l1"')
+  })
+})
+
+// docs/specs/027-cart-stock-flags, Behavior 14–15: the banner
+describe("the banner", () => {
+  const over = { kind: "over-stock", stock: 2, total: 3 } as const
+  const flaggedLine = (
+    id: string,
+    flag: CartLineView["flag"]
+  ): CartLineView => ({
+    ...ryzen,
+    id,
+    productId: `p-${id}`,
+    flag,
+    setTo: null,
+  })
+
+  test("E1: counts the flagged lines", () => {
+    const html = render({
+      view: view(
+        [flaggedLine("a", over), flaggedLine("b", over), ryzen7600x],
+        0,
+        4
+      ),
+    })
+    expect(html).toContain(
+      "2 lines need attention. Fix or remove them before you check out."
+    )
+  })
+
+  test("E3, E10: one line", () => {
+    const html = render({
+      view: view([flaggedLine("a", { kind: "out-of-stock" })], 0, 2),
+    })
+    expect(html).toContain(
+      "1 line needs attention. Fix or remove it before you check out."
+    )
+  })
+
+  test("the three unavailable labels get the same banner", () => {
+    const text = (flag: CartLineView["flag"]) =>
+      /\d lines? needs? attention[^<]*/.exec(
+        render({ view: view([flaggedLine("a", flag)], 0, 2) })
+      )?.[0]
+    expect(text({ kind: "retired" })).toBeDefined()
+    expect(text({ kind: "retired" })).toBe(text({ kind: "out-of-stock" }))
+    expect(text({ kind: "pre-order" })).toBe(text({ kind: "out-of-stock" }))
+  })
+
+  test("E18: nothing flagged, no banner; the live region is already there", () => {
+    const html = render({ view: view([ryzen, ryzen7600x], 3_398_500, 3) })
+    expect(html).not.toContain("need attention")
+    expect(html).not.toContain("needs attention")
+    expect(html).toContain('<div aria-live="polite"></div>')
+  })
+
+  test("E19: an empty cart has none", () => {
+    expect(render({ view: view([], 0, 0) })).not.toContain("attention")
+  })
+
+  test("it is a live region, and the page keeps its one status role", () => {
+    const html = render({ view: view([flaggedLine("a", over)], 0, 2) })
+    expect(html).toMatch(/<div aria-live="polite"><p[^>]*>.*1 line needs/)
+    expect(html.match(/role="status"/g)).toHaveLength(1)
   })
 })

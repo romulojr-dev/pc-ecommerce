@@ -4,6 +4,7 @@ import type { ShareFailure } from "@/lib/build-state/share"
 import type { StockStatus } from "@/lib/stock"
 
 import type { Shortage } from "./build-stock"
+import type { GroupPartFlag, ProductFlag } from "./flags"
 
 // What the cart actions return (docs/specs/025-cart-single-items, §6). The
 // cart id never appears here: it lives in the cookie and nowhere else.
@@ -35,8 +36,15 @@ export type CartLineView = {
   // has no price, no stepper and no place in the subtotal
   sold: boolean
   // The most this line can be raised to: min(stock, 99) less the product's
-  // quantity in the cart's other lines, never below the line itself
+  // quantity in the cart's other lines, never below the line itself. An
+  // unavailable line can't be raised: its own quantity.
   max: number
+  // Why the line can't be bought as it is (docs/specs/027-cart-stock-flags),
+  // or null
+  flag: ProductFlag | null
+  // What "Set to …" sets the line to; null when the flag is not over stock or
+  // no quantity clears it
+  setTo: number | null
 }
 
 // One build group of /cart (docs/specs/026-add-build-to-cart, Behavior 13–16):
@@ -57,6 +65,8 @@ export type CartGroupView = {
   issues: readonly Issue[]
   // The slots that hold parts, in builder order
   slots: { slot: Slot; rows: SharedRow[] }[]
+  // The flagged parts, in builder order (docs/specs/027-cart-stock-flags)
+  flags: GroupPartFlag[]
 }
 
 export type CartEntry = CartLineView | CartGroupView
@@ -68,6 +78,9 @@ export type CartView = {
   subtotal: number
   // cartCount of every line, build groups included
   count: number
+  // Lines that need attention: flagged single lines, and groups with a
+  // flagged part (a group counts once)
+  flagged: number
 }
 
 // The id the cart page and its actions use for an entry: a line's id, or a
