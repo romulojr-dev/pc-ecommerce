@@ -27,6 +27,11 @@ export type ResolvedAddress = {
 
 const place = ({ code, name }: Place): Place => ({ code, name })
 
+type FullCity = Extract<City, { barangays: Barangay[] }>
+
+const ownCities = (cityCode: string) =>
+  readPsgcJson<City[]>({ kind: "cities", code: cityCode })
+
 // Anything that isn't a valid chain (unknown code, malformed value, a barangay
 // in another city, …) gives null
 export async function resolveAddress(
@@ -54,9 +59,14 @@ export async function resolveAddress(
     kind: "cities",
     code: provinceCode,
   })
-  const city = cities?.find(
-    (c): c is Extract<City, { barangays: Barangay[] }> =>
-      c.code === cityCode && "barangays" in c
+  const listed = cities?.find((c) => c.code === cityCode)
+  if (!listed) return null
+
+  // An independent city is listed in its geographic province as a short entry;
+  // its barangays are in its own file (D19)
+  const owner = "barangays" in listed ? cities : await ownCities(cityCode)
+  const city = owner?.find(
+    (c): c is FullCity => c.code === cityCode && "barangays" in c
   )
   if (!city) return null
 

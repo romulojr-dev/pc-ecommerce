@@ -17,7 +17,7 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
   - Run the converter on the real workbook, replace the stub, commit the JSON. Report counts, the largest file (raw and gzip) and the cleaned names.
   - Integrity tests on the committed files: A1–A10, A12–A17 (City of Manila 897, the size ceiling).
   - *Verify:* run the converter twice; `git status` is clean (A11).
-- [ ] **T3. Address validation and zones.** Full `resolveAddress` (independent cities, V9–V11), `zipSchema` (V7, V8), zone-map coverage tests against `regions.json` (Z1–Z6), V1–V11.
+- [x] **T3. Address validation and zones.** Full `resolveAddress` (independent cities, V9–V11), `zipSchema` (V7, V8), zone-map coverage tests against `regions.json` (Z1–Z6), V1–V11.
 - [ ] **T4. Weight and fee, test-first.** `lib/shipping/weight.ts` and `fee.ts`: W1–W6, F1–F17.
 - [ ] **T5. Tables and seed.**
   - Schema and `pnpm db:migrate --name shipping` with the appended `CHECK`s; a second `migrate dev --create-only` is empty (delete it); `pnpm db:drift` exits 0.

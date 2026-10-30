@@ -88,3 +88,96 @@ describe("resolveAddress", () => {
     expect(result?.city.name).toBe("Quezon City")
   })
 })
+
+// Independent cities (D19): valid under their own pseudo-province and under
+// the geographic province the map names
+async function firstBarangayOf(fileCode: string, cityCode: string) {
+  const cities = await readPsgcJson<City[]>({ kind: "cities", code: fileCode })
+  const city = cities!.find((c) => c.code === cityCode)!
+  if (!("barangays" in city)) throw new Error(`${cityCode} has no barangays`)
+  return city.barangays[0]
+}
+
+describe("resolveAddress: independent cities", () => {
+  const mandaue = async () => ({
+    regionCode: "0700000000",
+    provinceCode: "0702200000", // Cebu
+    cityCode: "0731300000",
+    barangayCode: (await firstBarangayOf("0731300000", "0731300000")).code,
+  })
+
+  it("V2: City of Davao as its own pseudo-province is in Mindanao", async () => {
+    const barangay = await firstBarangayOf("1130700000", "1130700000")
+    expect(
+      await resolveAddress({
+        regionCode: "1100000000",
+        provinceCode: "1130700000",
+        cityCode: "1130700000",
+        barangayCode: barangay.code,
+      })
+    ).toEqual({
+      region: expect.objectContaining({ code: "1100000000" }),
+      province: { code: "1130700000", name: "City of Davao" },
+      city: { code: "1130700000", name: "City of Davao" },
+      barangay,
+      zone: "mindanao",
+    })
+  })
+
+  it("V9: City of Mandaue under Cebu province names the province as chosen", async () => {
+    const input = await mandaue()
+    const result = await resolveAddress(input)
+    expect(result).toMatchObject({
+      province: { code: "0702200000", name: "Cebu" },
+      city: { code: "0731300000", name: "City of Mandaue" },
+      zone: "visayas",
+    })
+    expect(result?.barangay.code).toBe(input.barangayCode)
+  })
+
+  it("V10: the same city under its own pseudo-province", async () => {
+    const input = { ...(await mandaue()), provinceCode: "0731300000" }
+    expect(await resolveAddress(input)).toMatchObject({
+      province: { code: "0731300000", name: "City of Mandaue" },
+      city: { code: "0731300000" },
+    })
+  })
+
+  it("V11: refuses an independent city under a province the map doesn't name", async () => {
+    // Bohol (0701200000) with Mandaue; Cebu with the City of Davao
+    expect(
+      await resolveAddress({ ...(await mandaue()), provinceCode: "0701200000" })
+    ).toBeNull()
+    expect(
+      await resolveAddress({
+        regionCode: "0700000000",
+        provinceCode: "0702200000",
+        cityCode: "1130700000",
+        barangayCode: (await firstBarangayOf("1130700000", "1130700000")).code,
+      })
+    ).toBeNull()
+  })
+
+  it("refuses a barangay of another city under an independent city", async () => {
+    expect(
+      await resolveAddress({
+        ...(await mandaue()),
+        barangayCode: (await firstBarangayOf("0731100000", "0731100000")).code,
+      })
+    ).toBeNull()
+  })
+
+  it("accepts City of Bacolod under Negros Occidental, in the Negros Island Region", async () => {
+    const result = await resolveAddress({
+      regionCode: "1800000000",
+      provinceCode: "1804500000",
+      cityCode: "1830200000",
+      barangayCode: (await firstBarangayOf("1830200000", "1830200000")).code,
+    })
+    expect(result).toMatchObject({
+      province: { name: "Negros Occidental" },
+      city: { name: "City of Bacolod" },
+      zone: "visayas",
+    })
+  })
+})

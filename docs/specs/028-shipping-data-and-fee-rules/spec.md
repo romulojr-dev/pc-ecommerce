@@ -155,7 +155,7 @@ Rates are the demo rates unless an example says otherwise; the tests pass them a
 | V5 | An unknown code, a 9-digit code, `""`, a number instead of text, a missing field | `null`. Extra fields are ignored |
 | V6 | Names sent by the client | Ignored; the result carries the dataset's names |
 | V7 | ZIP `"1100"`, `"0900"` | Valid ("0900" keeps its zero) |
-| V8 | ZIP `"110"`, `"11000"`, `"11 00"`, `"abcd"`, `""` | Invalid |
+| V8 | ZIP `"110"`, `"11000"`, `"11 00"`, `"abcd"`, `""`, `" 1100"`, the number `1100` | Invalid. The check does not trim: the form trims what the shopper types before it checks |
 | V9 | Region VII, province Cebu (0702200000), city City of Mandaue (0731300000), a barangay of Mandaue | Valid: names for the four places (province "Cebu"), zone `visayas` |
 | V10 | The same with province City of Mandaue (0731300000) | Valid: province named "City of Mandaue" |
 | V11 | Province Bohol with City of Mandaue; province Cebu with City of Davao | `null` (the map says Cebu, not Bohol; Davao belongs to Davao del Sur) |
