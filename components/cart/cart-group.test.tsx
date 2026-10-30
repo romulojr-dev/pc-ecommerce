@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest"
 
 import { sharedBuildView } from "@/lib/build-state/shared"
 import type { AnyBuildPart } from "@/lib/builder"
-import { groupPartFlags } from "@/lib/cart/flags"
+import { groupPartFlags, type ProductFlag } from "@/lib/cart/flags"
 import type { CartGroupView, CartLineView, CartView } from "@/lib/cart/types"
 import {
   partsOf,
@@ -279,5 +279,113 @@ describe("in the cart (E35)", () => {
     )
     expect(only).not.toContain("Your cart is empty")
     expect(only).toContain("Subtotal (1 item)")
+  })
+})
+
+// docs/specs/027-cart-stock-flags, Behavior 10–13: a group's flags
+describe("a group with flagged parts", () => {
+  const flagged = (
+    group: CartGroupView,
+    entries: [AnyBuildPart, ProductFlag][]
+  ): CartGroupView => ({
+    ...group,
+    flags: groupPartFlags(
+      group.slots,
+      new Map(entries.map(([part, flag]) => [part.id, flag]))
+    ),
+  })
+  const over: ProductFlag = { kind: "over-stock", stock: 2, total: 3 }
+  const out: ProductFlag = { kind: "out-of-stock" }
+
+  test("E1: one flagged part is named, also when the group is collapsed", () => {
+    const html = render(
+      flagged(groupOf(buildAParts()), [[seed.ryzen5_7600, over]])
+    )
+    expect(html).toContain(
+      `${seed.ryzen5_7600.name}: Only 2 in stock, 3 in your cart`
+    )
+    expect(html).toMatch(/<button[^>]*aria-expanded="false"/)
+    // The row isn't in the page until it is opened
+    expect(html.match(/Only 2 in stock/g)).toHaveLength(1)
+  })
+
+  test("E3: out of stock, flag and row; the total and status are unchanged", () => {
+    const base = groupOf(buildAParts(), {
+      status: { [seed.ryzen5_7600.id]: "out-of-stock" },
+    })
+    const group = flagged(base, [[seed.ryzen5_7600, out]])
+    expect(render(group)).toContain(`${seed.ryzen5_7600.name}: Out of stock`)
+    const open = render(group, { defaultExpanded: true })
+    expect(open.match(/Out of stock/g)).toHaveLength(2)
+    expect(open).toContain("₱69,060.00")
+    expect(open).not.toContain("Incomplete")
+  })
+
+  test("E14: several flagged parts are counted, and each row says why", () => {
+    const group = flagged(
+      groupOf(buildAParts(), {
+        status: {
+          [seed.ryzen5_7600.id]: "out-of-stock",
+          [seed.rtx4060.id]: "out-of-stock",
+        },
+      }),
+      [
+        [seed.ryzen5_7600, out],
+        [seed.rtx4060, out],
+      ]
+    )
+    expect(render(group)).toContain("2 parts need attention")
+    const open = render(group, { defaultExpanded: true })
+    expect(open.match(/Out of stock/g)).toHaveLength(2)
+  })
+
+  test("E15: a part no longer sold is flagged by its row alone", () => {
+    const group = groupOf(buildAParts(), { retired: [seed.lancool216] })
+    expect(render(group)).toContain(`${seed.lancool216.name}: No longer sold`)
+    expect(render(group, { defaultExpanded: true })).toContain(
+      "1 part is no longer sold"
+    )
+  })
+
+  test("E16: an over-stock part keeps its stock line and adds the text", () => {
+    const group = flagged(groupOf(buildAParts()), [[seed.pro990, over]])
+    const open = render(group, { defaultExpanded: true })
+    expect(open).toContain("In stock")
+    expect(open.match(/Only 2 in stock, 3 in your cart/g)).toHaveLength(2)
+  })
+
+  test("E20: three reasons are one flag, with the three labels in the rows", () => {
+    const group = flagged(
+      groupOf(buildAParts(), {
+        retired: [seed.ryzen5_7600],
+        status: {
+          [seed.rtx4060.id]: "out-of-stock",
+          [seed.peerless.id]: "pre-order",
+        },
+      }),
+      [
+        [seed.rtx4060, out],
+        [seed.peerless, { kind: "pre-order" }],
+      ]
+    )
+    expect(render(group)).toContain("3 parts need attention")
+    const open = render(group, { defaultExpanded: true })
+    for (const label of ["No longer sold", "Out of stock", "Pre-order only"]) {
+      expect(open).toContain(label)
+    }
+  })
+
+  test("a group has no Set to; Remove is still there", () => {
+    const html = render(
+      flagged(groupOf(buildAParts()), [[seed.ryzen5_7600, over]]),
+      { defaultExpanded: true }
+    )
+    expect(html).not.toContain("Set to")
+    expect(html).toContain('aria-label="Remove Custom PC build"')
+  })
+
+  test("a clean group has no flag", () => {
+    expect(render(groupOf(buildAParts()))).not.toContain("need attention")
+    expect(render(groupOf(buildAParts()))).not.toContain("Only ")
   })
 })

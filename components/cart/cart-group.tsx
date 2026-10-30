@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useId, useState } from "react"
 
 import { IssueList, StatusLine } from "@/components/builder/summary-parts"
+import { FlagLine, GroupFlagLine } from "@/components/cart/cart-flag"
 import type { LineMessage } from "@/components/cart/cart-line"
 import { removeButtonId } from "@/components/cart/cart-line"
 import { ProductImage } from "@/components/product/product-image"
@@ -13,6 +14,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { SLOT_COPY } from "@/lib/build-state/slots"
 import { retiredBanner, type SharedRow } from "@/lib/build-state/shared"
 import { groupLabel, groupName } from "@/lib/cart/copy"
+import { isUnavailable, type ProductFlag } from "@/lib/cart/flags"
 import type { CartGroupView } from "@/lib/cart/types"
 import { formatPeso } from "@/lib/format"
 import { productHref } from "@/lib/site"
@@ -46,6 +48,7 @@ export function CartGroup({
     rows.map((row) => ({ slot, row }))
   )
   const retired = rows.filter(({ row }) => row.kind === "retired").length
+  const flags = new Map(group.flags.map((part) => [part.productId, part.flag]))
 
   return (
     <li aria-busy={busy} className="flex flex-col gap-4 py-5">
@@ -55,6 +58,7 @@ export function CartGroup({
             {groupLabel(group.number, group.partCount)}
           </h3>
           <StatusLine status={group.status} />
+          {group.flags.length > 0 && <GroupFlagLine parts={group.flags} />}
         </div>
         <p className="shrink-0 font-semibold tabular-nums">
           <span className="sr-only">Build total: </span>
@@ -125,6 +129,11 @@ export function CartGroup({
                   key={row.kind === "part" ? row.data.part.id : row.id}
                   slotName={SLOT_COPY[slot].name}
                   row={row}
+                  flag={
+                    row.kind === "part"
+                      ? (flags.get(row.data.part.id) ?? null)
+                      : null
+                  }
                 />
               ))}
             </ul>
@@ -138,7 +147,15 @@ export function CartGroup({
 
 // One part of an expanded group: the category, image, name, price and stock.
 // A part that is no longer sold keeps its name and brand and nothing to buy.
-function GroupRow({ slotName, row }: { slotName: string; row: SharedRow }) {
+function GroupRow({
+  slotName,
+  row,
+  flag,
+}: {
+  slotName: string
+  row: SharedRow
+  flag: ProductFlag | null
+}) {
   if (row.kind === "retired") {
     return (
       <li className="flex flex-col gap-1 py-3">
@@ -184,7 +201,15 @@ function GroupRow({ slotName, row }: { slotName: string; row: SharedRow }) {
           )}
           {quantity > 1 && <span className="ml-2">× {quantity}</span>}
         </p>
-        <StockLine status={data.stockStatus} preorderShipsOn={null} />
+        {isUnavailable(flag) ? (
+          // The label says what the stock line would, so it takes its place
+          <FlagLine flag={flag} />
+        ) : (
+          <>
+            <StockLine status={data.stockStatus} preorderShipsOn={null} />
+            {flag && <FlagLine flag={flag} />}
+          </>
+        )}
       </div>
       <p className="shrink-0 text-sm font-medium tabular-nums">
         <span className="sr-only">Line total: </span>

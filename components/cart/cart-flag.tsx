@@ -5,8 +5,12 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { flagText } from "@/lib/cart/copy"
-import type { ProductFlag } from "@/lib/cart/flags"
+import { flagText, groupFlagText } from "@/lib/cart/copy"
+import {
+  type GroupPartFlag,
+  isUnavailable,
+  type ProductFlag,
+} from "@/lib/cart/flags"
 import { cn } from "@/lib/utils"
 
 const flagIcon: Record<ProductFlag["kind"], LucideIcon> = {
@@ -22,9 +26,12 @@ const flagIcon: Record<ProductFlag["kind"], LucideIcon> = {
 // No client hooks.
 export function FlagLine({
   flag,
+  text = flagText(flag),
   className,
 }: {
   flag: ProductFlag
+  // Replaces the flag's own text (a group's line names the part)
+  text?: string
   className?: string
 }) {
   const Icon = flagIcon[flag.kind]
@@ -39,7 +46,27 @@ export function FlagLine({
       )}
     >
       <Icon aria-hidden="true" className="size-4 shrink-0" />
-      {flagText(flag)}
+      {text}
     </p>
+  )
+}
+
+// A group's flag under its label, also when it is collapsed (Behavior 10):
+// one part is named, several are counted. It looks like an unavailable flag
+// when any part is, since that is the stronger reason.
+export function GroupFlagLine({
+  parts,
+  className,
+}: {
+  parts: readonly GroupPartFlag[]
+  className?: string
+}) {
+  const lead = parts.find(({ flag }) => isUnavailable(flag)) ?? parts[0]
+  return (
+    <FlagLine
+      flag={lead.flag}
+      text={groupFlagText(parts)}
+      className={className}
+    />
   )
 }
