@@ -1,6 +1,8 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client"
+import { toDbZone } from "@/lib/shipping/zone-enum"
 import { builderCategories } from "@/lib/specs"
 
+import type { ShippingSeed } from "./data/shipping"
 import type { ValidPart, ValidSeedFile } from "./validate"
 
 // What a re-seed refreshes on a product that already exists (spec.md, "Which
@@ -29,6 +31,10 @@ export type SeedCounts = {
   updated: number
   // ProductImage rows added
   images: number
+  // ShippingRate rows added (0 when the table already had rows)
+  shippingRates: number
+  // Whether the StoreSettings row was created (false when it already existed)
+  settingsCreated: boolean
 }
 
 export class SeedWriteError extends Error {}
@@ -38,7 +44,7 @@ export class SeedWriteError extends Error {}
 export function writeSeed(
   db: PrismaClient,
   files: ValidSeedFile[],
-  { reset }: { reset: boolean }
+  { reset, shipping }: { reset: boolean; shipping: ShippingSeed }
 ): Promise<SeedCounts> {
   return db.$transaction(
     async (tx) => {
@@ -48,8 +54,11 @@ export function writeSeed(
         // and "Cart" are named too: nothing in them points at a product, so
         // CASCADE from "Product" would leave them behind with no items
         // (docs/specs/022-share-build, D9; docs/specs/025-cart-single-items).
-        // Add each new table of that kind here.
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // Add each new table of that kind here. "ShippingRate" and
+        // "StoreSettings" point at no product either; they are named so a
+        // reset clears the demo shipping values for the seed to refill
+        // (docs/specs/028-shipping-data-and-fee-rules).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)
@@ -109,12 +118,15 @@ export function writeSeed(
         }
       }
 
+      const shippingWritten = await writeShipping(tx, shipping)
+
       return {
         categories: categoryIds.size,
         brands: brandIds.size,
         created: newParts.length,
         updated: parts.length - newParts.length,
         images: imagesAdded,
+        ...shippingWritten,
       }
     },
     // Prisma's default is 5 s; ~150 sequential writes to a remote database
@@ -122,6 +134,30 @@ export function writeSeed(
     // take about 75 s)
     { maxWait: 10_000, timeout: 180_000 }
   )
+}
+
+// The store settings row only when it is missing, and the rates only when the
+// table is empty, so a re-seed never overwrites what Admin has set (D10)
+async function writeShipping(
+  tx: Prisma.TransactionClient,
+  shipping: ShippingSeed
+) {
+  const settings = await tx.storeSettings.createMany({
+    data: [{ id: 1, ...shipping.store }],
+    skipDuplicates: true,
+  })
+  let shippingRates = 0
+  if ((await tx.shippingRate.count()) === 0) {
+    const created = await tx.shippingRate.createMany({
+      data: shipping.rates.map((rate) => ({
+        zone: toDbZone[rate.zone],
+        maxWeightGrams: rate.maxWeightGrams,
+        fee: rate.fee,
+      })),
+    })
+    shippingRates = created.count
+  }
+  return { shippingRates, settingsCreated: settings.count === 1 }
 }
 
 // Category rows come from the registry, so names and order match the code

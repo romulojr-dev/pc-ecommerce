@@ -48,6 +48,20 @@ describe("resetCatalog", () => {
     expect(await counts()).toEqual({ builds: 0, items: 0, products: 0 })
   })
 
+  it("empties the shipping rates and the store settings too (spec 028, S4)", async () => {
+    await db.shippingRate.create({
+      data: { zone: "LUZON", maxWeightGrams: 1_000, fee: 100 },
+    })
+    await db.storeSettings.create({
+      data: { storeAddress: "a", storeHours: "b", storeInfo: "c" },
+    })
+
+    await resetCatalog()
+
+    expect(await db.shippingRate.count()).toBe(0)
+    expect(await db.storeSettings.count()).toBe(0)
+  })
+
   it("refuses when VERCEL_ENV is production, before deleting anything (E69)", async () => {
     process.env.VERCEL_ENV = "production"
 

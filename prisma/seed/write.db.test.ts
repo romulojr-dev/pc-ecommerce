@@ -6,6 +6,7 @@ import { itemsWithIds, partsOfBuild } from "@/test-support/build-fixtures"
 import { buildA } from "@/test-support/seed-parts"
 
 import { seedFiles } from "./data"
+import { shippingSeed } from "./data/shipping"
 import { validateSeed } from "./validate"
 import { writeSeed } from "./write"
 
@@ -55,7 +56,7 @@ const snapshotOf = async () => ({
 describe("a re-seed (reset: false)", () => {
   beforeAll(async () => {
     await resetCatalog()
-    await writeSeed(db, files, { reset: false })
+    await writeSeed(db, files, { reset: false, shipping: shippingSeed })
   }, 180_000)
 
   it("keeps shared builds and the products they point at (E70)", async () => {
@@ -72,8 +73,8 @@ describe("a re-seed (reset: false)", () => {
     expect(before.builds).toHaveLength(1)
     expect(before.items).toHaveLength(8)
 
-    await writeSeed(db, files, { reset: false })
-    await writeSeed(db, files, { reset: false })
+    await writeSeed(db, files, { reset: false, shipping: shippingSeed })
+    await writeSeed(db, files, { reset: false, shipping: shippingSeed })
 
     expect(await snapshotOf()).toEqual(before)
     expect(
@@ -92,11 +93,11 @@ describe("a re-seed (reset: false)", () => {
 describe("a reset (reset: true)", () => {
   it("empties shared builds along with the catalog (E23)", async () => {
     await resetCatalog()
-    await writeSeed(db, files, { reset: false })
+    await writeSeed(db, files, { reset: false, shipping: shippingSeed })
     await shareBuild(await buildAItems(), { today: FIXTURE_TODAY })
     expect(await db.build.count()).toBe(1)
 
-    await writeSeed(db, files, { reset: true })
+    await writeSeed(db, files, { reset: true, shipping: shippingSeed })
 
     expect(await db.build.count()).toBe(0)
     expect(await db.buildItem.count()).toBe(0)
