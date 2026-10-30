@@ -11,4 +11,4 @@ Work top to bottom and stop after each task. Each task leaves `pnpm lint`, `pnpm
 - [x] **T4. Server.** Move the cart's transaction helpers to `lib/cart/tx.ts`; `lib/cart/build.ts` `addBuildToCart` and `removeBuildFromCart`; `getCartView` groups with `toSharedItems` extracted from `lib/shared-build.ts`. `build.db.test.ts`: E1–E31, E56–E60, including two concurrent adds of the same build (one group, no error).
 - [x] **T5. Builder UI.** Server actions, `reload()` in `useBuildParts`, the summary button and result region, the warnings dialog; markup tests (E40–E50).
 - [x] **T6. Cart page groups.** Group line (collapsed, expanded), body, removal, focus; markup tests (E32–E38, E36 numbering).
-- [ ] **T7. E2E and docs.** `e2e/cart-build.spec.ts` (E51–E55), CLAUDE.md cart and share bullets, README.
+- [x] **T7. E2E and docs.** `e2e/cart-build.spec.ts` (E51–E55), CLAUDE.md cart and share bullets, README.
