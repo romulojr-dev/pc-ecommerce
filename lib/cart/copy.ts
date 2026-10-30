@@ -1,3 +1,5 @@
+import type { Shortage } from "./build-stock"
+import { MAX_CART_QUANTITY } from "./cap"
 import type { CartNote } from "./types"
 
 // Shopper copy for the cart (docs/specs/025-cart-single-items, §5)
@@ -36,4 +38,65 @@ export function notBuyableText(builderPart: boolean): string {
 
 export function subtotalLabel(count: number): string {
   return `Subtotal (${count} ${count === 1 ? "item" : "items"})`
+}
+
+// Add build to cart (docs/specs/026-add-build-to-cart, §5)
+export const BUILD_COPY = {
+  added: "Added your build to your cart.",
+  already: "This build is already in your cart.",
+  refused: "This build can't be added to your cart:",
+  failed: "Couldn't add your build to your cart. Try again.",
+  dialogTitle: "Add a build with warnings?",
+} as const
+
+// One short product: what the shopper has to fix
+export function shortageText(short: Shortage): string {
+  if (short.limit === "max") {
+    const are = short.inCart === 1 ? "1 is" : `${short.inCart} are`
+    return `Not enough room for ${short.name}: you can have up to ${MAX_CART_QUANTITY} of one part in your cart, and ${are} already in it.`
+  }
+  const held =
+    short.inCart > 0
+      ? `${short.inCart} already in your cart`
+      : `your build needs ${short.needs}`
+  return `Not enough stock for ${short.name}: ${short.stock} in stock, ${held}.`
+}
+
+export type UnavailablePart = { name: string; why: "not-buyable" | "retired" }
+
+// Parts the server won't add: named when there is one, counted when several
+export function unavailableText(parts: readonly UnavailablePart[]): string {
+  if (parts.length === 1) {
+    const [{ name, why }] = parts
+    const what =
+      why === "retired" ? "is no longer sold" : "can't be bought right now"
+    return `The ${name} ${what}. Replace it in the builder to add this build to cart.`
+  }
+  return `${parts.length} parts in this build can't be bought right now or are no longer sold. Replace them in the builder to add this build to cart.`
+}
+
+// The line above the warnings in the dialog. `changed` is for warnings the
+// server found that the shopper hadn't seen.
+export function warningsLead(count: number, changed: boolean): string {
+  const noun = count === 1 ? "this warning" : "these warnings"
+  return changed
+    ? `Something in your build changed since it loaded. Check ${noun} before adding it:`
+    : `Your build may still work, but check ${noun} first:`
+}
+
+export function buildQuantityText(max: number, name?: string): string {
+  return `You can add up to ${max} of ${name ? `the ${name}` : "one part"} in a build.`
+}
+
+// A group's name; numbered (from 1) only when the cart has two or more
+export function groupName(number: number | null): string {
+  return number === null ? "Custom PC build" : `Custom PC build ${number}`
+}
+
+export function groupLabel(number: number | null, partCount: number): string {
+  return `${groupName(number)} · ${partCount} ${partCount === 1 ? "part" : "parts"}`
+}
+
+export function removedGroupText(number: number | null): string {
+  return `Removed ${groupName(number)} from your cart.`
 }
