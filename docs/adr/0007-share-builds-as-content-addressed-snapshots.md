@@ -42,3 +42,7 @@ A shopper can share a build by link, with no account. The link has to show what 
 - **The share action is an open write.** Anyone can create rows with real product ids. Validation bounds each request, and rate limiting is #64.
 - **`--reset` needs `PRODUCTION_DATABASE_HOST` in `.env.local`.** One line, once. It isn't needed for plain `pnpm db:seed`, for the app, or in CI.
 - **Not covered:** `prisma migrate reset`, the Neon console and hand-written migrations can still empty a database. `Restrict` stops a delete of a used product, not a `TRUNCATE`.
+
+## Note, 2026-10-30 (story #62, spec 026)
+
+"One writer path" now means one snapshot write function, `upsertBuildSnapshot(tx, items)`, with two callers: `shareBuild` and Add build to cart, which writes the snapshot and the cart lines in one transaction. Postgres aborts a transaction after any error, so catching `P2002` and reading the row back can't work there. The function inserts with `INSERT … ON CONFLICT DO NOTHING RETURNING`, with no conflict target so a random `shareSlug` collision is absorbed too, selects the existing row by `contentHash` when nothing came back, and inserts the items only for a new row. The canonical form, the hash and the slug rules are unchanged, so this is a note and not a new decision.

@@ -12,6 +12,7 @@ import {
   setCartQuantity,
 } from "./cart"
 import { isCartId, newCartId } from "./id"
+import { singleLines } from "./types"
 
 // The cart (docs/specs/025-cart-single-items): adding, merging, the stock cap
 // across lines, setting, removing, the cookie's cart, and concurrent adds.
@@ -597,8 +598,11 @@ describe("reading the cart", () => {
 
     const view = await getCartView(cart, FIXTURE_TODAY)
 
-    expect(view.lines.map((line) => line.productId)).toEqual([ryzen, r5600])
-    expect(view.lines[0]).toMatchObject({
+    expect(singleLines(view).map((line) => line.productId)).toEqual([
+      ryzen,
+      r5600,
+    ])
+    expect(singleLines(view)[0]).toMatchObject({
       unitPrice: 1_149_500,
       lineTotal: 2_299_000,
       price: 1_149_500,
@@ -606,7 +610,7 @@ describe("reading the cart", () => {
       status: "in-stock",
       sold: true,
     })
-    expect(view.lines[1]).toMatchObject({
+    expect(singleLines(view)[1]).toMatchObject({
       unitPrice: 1_099_500,
       price: 1_249_500,
       salePrice: 1_099_500,
@@ -628,7 +632,7 @@ describe("reading the cart", () => {
     })
 
     const view = await getCartView(cart, FIXTURE_TODAY)
-    expect(view.lines[0]).toMatchObject({
+    expect(singleLines(view)[0]).toMatchObject({
       unitPrice: 1_000_000,
       lineTotal: 2_000_000,
     })
@@ -638,7 +642,7 @@ describe("reading the cart", () => {
   it("E29: no cart, or an unknown one, is empty and makes nothing", async () => {
     for (const cartId of [null, newCartId()]) {
       expect(await getCartView(cartId, FIXTURE_TODAY)).toEqual({
-        lines: [],
+        entries: [],
         subtotal: 0,
         count: 0,
       })
@@ -650,7 +654,7 @@ describe("reading the cart", () => {
   it("E29: a cart with no lines is empty", async () => {
     const cart = await emptyCart()
 
-    expect((await getCartView(cart, FIXTURE_TODAY)).lines).toEqual([])
+    expect(singleLines(await getCartView(cart, FIXTURE_TODAY))).toEqual([])
     expect(await getCartCount(cart)).toBe(0)
   })
 
@@ -659,7 +663,7 @@ describe("reading the cart", () => {
     const cart = await emptyCart()
     await lineOf(cart, x3d, 1)
 
-    expect((await getCartView(cart, FIXTURE_TODAY)).lines[0].status).toBe(
+    expect(singleLines(await getCartView(cart, FIXTURE_TODAY))[0].status).toBe(
       "low-stock"
     )
   })
@@ -673,8 +677,8 @@ describe("reading the cart", () => {
 
     const view = await getCartView(cart, FIXTURE_TODAY)
 
-    expect(view.lines).toHaveLength(2)
-    expect(view.lines[1]).toMatchObject({ sold: false, max: 2 })
+    expect(singleLines(view)).toHaveLength(2)
+    expect(singleLines(view)[1]).toMatchObject({ sold: false, max: 2 })
     expect(view.subtotal).toBe(1_149_500)
     expect(view.count).toBe(3)
   })
@@ -689,7 +693,7 @@ describe("reading the cart", () => {
 
     const view = await getCartView(cart, FIXTURE_TODAY)
 
-    expect(view.lines).toHaveLength(1)
+    expect(singleLines(view)).toHaveLength(1)
     expect(view.count).toBe(2)
     expect(await getCartCount(cart)).toBe(2)
   })
@@ -700,6 +704,6 @@ describe("reading the cart", () => {
     await groupLine(cart, ryzen, 2)
     await lineOf(cart, ryzen, 1)
 
-    expect((await getCartView(cart, FIXTURE_TODAY)).lines[0].max).toBe(3)
+    expect(singleLines(await getCartView(cart, FIXTURE_TODAY))[0].max).toBe(3)
   })
 })

@@ -12,9 +12,12 @@ import {
 } from "@/components/builder/slot-section"
 import { ShareDialog } from "@/components/builder/share-dialog"
 import { type PickerTarget, SlotPicker } from "@/components/builder/slot-picker"
+import { WarningsDialog } from "@/components/builder/warnings-dialog"
+import { useAddBuildToCart } from "@/hooks/use-add-build-to-cart"
 import { useBuild } from "@/hooks/use-build"
 import { useBuildParts } from "@/hooks/use-build-parts"
 import type { BuilderCandidate } from "@/lib/build-state/candidates"
+import { buildCartButton } from "@/lib/build-state/cart-button"
 import { buildStore } from "@/lib/build-state/store"
 import {
   availabilityMessage,
@@ -30,7 +33,7 @@ import { buildStatus, checkBuild, estimateWattage, SLOTS } from "@/lib/builder"
 // skeletons, as the server rendered them. Each slot's buttons open the slot
 // picker (docs/specs/021-slot-picker).
 export function Builder() {
-  const { status, build, loaded, retry, addLoaded } = useBuildParts()
+  const { status, build, loaded, retry, reload, addLoaded } = useBuildParts()
   const noticeChanges = useBuild((state) => state.noticeChanges)
   const sharedGone = useBuild((state) => state.sharedGone)
   const ready = status === "ready"
@@ -48,6 +51,21 @@ export function Builder() {
   }, [build, loaded])
 
   const { remove, setQuantity, dismissNotice } = buildStore.getState()
+
+  // Add build to cart (docs/specs/026-add-build-to-cart). The server checks
+  // the build again; this only decides the button and asks about warnings.
+  const cartButtonRef = useRef<HTMLButtonElement>(null)
+  const addToCart = useAddBuildToCart({
+    warnings: summary.issues,
+    reload,
+    nameOf: (id) => loaded.get(id)?.part.name,
+  })
+  const cartButton = buildCartButton({
+    state: status,
+    isEmpty: summary.isEmpty,
+    status: summary.status,
+    hasUnavailable: summary.availability !== null,
+  })
 
   // Share build's dialog (docs/specs/022-share-build). `opening` changes on
   // each click, so each opening asks the server again.
@@ -148,8 +166,23 @@ export function Builder() {
               opening: previous.opening + 1,
             }))
           }
+          cart={{
+            button: cartButton,
+            sending: addToCart.sending,
+            result: addToCart.result,
+            onClick: addToCart.click,
+          }}
+          cartButtonRef={cartButtonRef}
         />
       </div>
+      <WarningsDialog
+        request={addToCart.dialog}
+        onOpenChange={(open) => {
+          if (!open) addToCart.closeDialog()
+        }}
+        onConfirm={addToCart.confirm}
+        finalFocus={cartButtonRef}
+      />
       <ShareDialog
         open={share.open}
         opening={share.opening}

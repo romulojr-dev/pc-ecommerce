@@ -33,6 +33,47 @@ export type SharedItem = { slot: Slot; quantity: number } & (
   | { state: "retired"; id: string; name: string; brand: string }
 )
 
+// A snapshot's item as the database holds it, with its product's name and
+// status (the cart and the shared page both read this shape)
+export type SnapshotItemRow = {
+  slot: string
+  quantity: number
+  product: {
+    id: string
+    name: string
+    status: string
+    brand: { name: string }
+  }
+}
+
+// The snapshot's items, each as an available part (it was loaded in `parts`:
+// active and a valid builder part) or a retired one, which carries only a
+// name and a brand. A row whose slot isn't a builder slot is skipped; the
+// builder writes only real slots, so this guards a hand-made row.
+export function toSharedItems(
+  rows: readonly SnapshotItemRow[],
+  parts: ReadonlyMap<string, BuilderPartData>
+): SharedItem[] {
+  const items: SharedItem[] = []
+  for (const { slot, quantity, product } of rows) {
+    if (!(SLOTS as readonly string[]).includes(slot)) continue
+    const data = parts.get(product.id)
+    items.push(
+      data
+        ? { slot: slot as Slot, quantity, state: "available", data }
+        : {
+            slot: slot as Slot,
+            quantity,
+            state: "retired",
+            id: product.id,
+            name: product.name,
+            brand: product.brand.name,
+          }
+    )
+  }
+  return items
+}
+
 export type SharedRow =
   | {
       kind: "part"

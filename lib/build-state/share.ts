@@ -28,9 +28,12 @@ export type ShareFailure =
 
 export type ShareResult = { ok: true; slug: string } | ShareFailure
 
+// What shareInput can say: the database steps' reasons ("unavailable",
+// "error") are not among them
 export type ShareInputResult =
   | { ok: true; items: BuildItem[] }
-  | Exclude<ShareFailure, { reason: "unavailable" | "error" }>
+  | { ok: false; reason: "empty" | "invalid" | "too-many-parts" }
+  | Extract<ShareFailure, { reason: "quantity-too-high" }>
 
 // In order: a list, at most MAX_BUILD_PRODUCTS items (a canonical build has
 // one item per product, so this is the same as 20 different products), not

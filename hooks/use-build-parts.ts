@@ -14,6 +14,15 @@ import { buildStore } from "@/lib/build-state/store"
 
 export type PartsStatus = "loading" | "ready" | "error"
 
+async function fetchParts(ids: string): Promise<BuilderPartData[]> {
+  const response = await fetch(
+    `/api/builder/parts?ids=${encodeURIComponent(ids)}`,
+    { cache: "no-store" }
+  )
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return ((await response.json()) as { parts: BuilderPartData[] }).parts
+}
+
 // The saved build with its parts, loaded fresh from the server
 // (docs/specs/020-builder-page, Behavior 5–8). A request is made only when
 // an id isn't loaded yet; an older response is ignored once a newer request
@@ -43,14 +52,8 @@ export function useBuildParts({ readOnly = false } = {}) {
   useEffect(() => {
     if (request === null || request === failed) return
     let current = true
-    fetch(`/api/builder/parts?ids=${encodeURIComponent(request)}`, {
-      cache: "no-store",
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return (await response.json()) as { parts: BuilderPartData[] }
-      })
-      .then(({ parts }) => {
+    fetchParts(request)
+      .then((parts) => {
         if (!current) return
         const next = new Map(parts.map((data) => [data.part.id, data]))
         const requested = new Set(request.split(","))
@@ -75,6 +78,46 @@ export function useBuildParts({ readOnly = false } = {}) {
     }
   }, [request, failed, readOnly])
 
+  // A reload asks for every saved part again, though they are all loaded,
+  // and swaps the answers in without leaving "ready" (docs/specs/026-add-
+  // build-to-cart, D14). A failed reload changes nothing: the parts the
+  // page already shows stay.
+  const [reloads, setReloads] = useState(0)
+  useEffect(() => {
+    if (reloads === 0) return
+    const ids = [
+      ...new Set(buildStore.getState().items.map((item) => item.productId)),
+    ]
+    if (ids.length === 0) return
+    let current = true
+    fetchParts(ids.join(","))
+      .then((parts) => {
+        if (!current) return
+        const next = new Map(parts.map((data) => [data.part.id, data]))
+        const requested = new Set(ids)
+        setLoaded((previous) => {
+          const merged = new Map(previous)
+          for (const id of requested) merged.delete(id)
+          for (const [id, data] of next) merged.set(id, data)
+          return merged
+        })
+        if (readOnly) {
+          setGone(
+            (previous) =>
+              new Set([...previous, ...unreturnedIds(requested, next)])
+          )
+        } else {
+          buildStore
+            .getState()
+            .drop(goneChanges(buildStore.getState().items, next, requested))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      current = false
+    }
+  }, [reloads, readOnly])
+
   const build = useMemo(
     () => assembleLoaded(items, loaded).build,
     [items, loaded]
@@ -94,6 +137,7 @@ export function useBuildParts({ readOnly = false } = {}) {
     build,
     loaded,
     retry: () => setFailed(null),
+    reload: () => setReloads((count) => count + 1),
     // A part the slot picker has just loaded fresh: call it before adding
     // the part to the store, so the slot shows it with no request
     // (docs/specs/021-slot-picker, D11)

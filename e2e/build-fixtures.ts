@@ -18,19 +18,33 @@ export const BUILD_A: readonly (readonly [string, string])[] = [
   ["cpu-cooler", "Thermalright Peerless Assassin 120 SE"],
 ]
 
+// Spec 001's Build B (docs/specs/026-add-build-to-cart): one warning, a BIOS
+// update the i5-14400F may need on the B760M board
+export const BUILD_B: readonly (readonly [string, string])[] = [
+  ["cpu", "Intel Core i5-14400F"],
+  ["motherboard", "MSI PRO B760M-A WiFi DDR4"],
+  ["memory", "Kingston FURY Beast DDR4-3200 16 GB (2×8 GB) CL16"],
+  ["storage", 'Crucial MX500 1TB 2.5" SATA SSD'],
+  ["gpu", "Gigabyte GeForce RTX 5070 Windforce OC SFF 12G"],
+  ["case", "Cooler Master MasterBox Q300L"],
+  ["psu", "Corsair RM850e (2023) 850W"],
+  ["cpu-cooler", "Thermalright Peerless Assassin 120 SE"],
+]
+
 export type SavedItem = { slot: string; productId: string; quantity: number }
 
 type Candidates = {
   candidates: { data: { part: { id: string; name: string } } }[]
 }
 
-// The saved items for Build A, with the real product ids: the slot picker's
-// candidates route lists every active part of a slot
-export async function buildAItems(
-  request: APIRequestContext
+// The saved items for a list of parts, with the real product ids: the slot
+// picker's candidates route lists every active part of a slot
+export async function itemsFor(
+  request: APIRequestContext,
+  parts: readonly (readonly [string, string])[]
 ): Promise<SavedItem[]> {
   return Promise.all(
-    BUILD_A.map(async ([slot, name]) => {
+    parts.map(async ([slot, name]) => {
       const response = await request.get(`/api/builder/candidates?slot=${slot}`)
       const { candidates } = (await response.json()) as Candidates
       const found = candidates.find(({ data }) => data.part.name === name)
@@ -39,6 +53,10 @@ export async function buildAItems(
     })
   )
 }
+
+// The saved items for Build A
+export const buildAItems = (request: APIRequestContext) =>
+  itemsFor(request, BUILD_A)
 
 // Saves the items for the page's origin, then reloads so the page reads them
 export async function saveBuild(page: Page, items: SavedItem[]) {

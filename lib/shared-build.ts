@@ -1,7 +1,6 @@
 import { cache } from "react"
 
-import type { SharedItem } from "@/lib/build-state/shared"
-import { SLOTS } from "@/lib/builder"
+import { type SharedItem, toSharedItems } from "@/lib/build-state/shared"
 import { getBuilderParts } from "@/lib/builder-parts"
 import { db } from "@/lib/db"
 import { manilaToday } from "@/lib/stock"
@@ -57,29 +56,7 @@ async function load(
     ).map((data) => [data.part.id, data])
   )
 
-  const items: SharedItem[] = []
-  for (const { slot, quantity, product } of build.items) {
-    // Written from the builder's slots, so this only guards a hand-made row
-    if (!(SLOTS as readonly string[]).includes(slot)) continue
-    const data = parts.get(product.id)
-    items.push(
-      data
-        ? {
-            slot: slot as SharedItem["slot"],
-            quantity,
-            state: "available",
-            data,
-          }
-        : {
-            slot: slot as SharedItem["slot"],
-            quantity,
-            state: "retired",
-            id: product.id,
-            name: product.name,
-            brand: product.brand.name,
-          }
-    )
-  }
+  const items = toSharedItems(build.items, parts)
   return items.length > 0 ? { slug: build.shareSlug, items } : null
 }
 

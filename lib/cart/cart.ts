@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto"
 
-import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
 import { toDateString } from "@/lib/products"
 import {
@@ -14,7 +13,19 @@ import { capQuantity, MAX_CART_QUANTITY } from "./cap"
 import { cartCount } from "./count"
 import { newCartId } from "./id"
 import { addInputSchema, removeInputSchema, setInputSchema } from "./input"
-import type { CartFailure, CartLineView, CartResult, CartView } from "./types"
+import {
+  type CartOutcome,
+  failed,
+  logFailure,
+  lockCart,
+  quantityInGroups,
+  touch,
+  type Tx,
+} from "./tx"
+import { loadGroups } from "./groups"
+import type { CartEntry, CartLineView, CartView } from "./types"
+
+export type { CartOutcome } from "./tx"
 
 // The cart (docs/specs/025-cart-single-items). The server actions only forward
 // to these functions, and the integration tests call them directly with a
@@ -22,39 +33,12 @@ import type { CartFailure, CartLineView, CartResult, CartView } from "./types"
 // input, and the cart always comes from the cookie's id, never from the
 // request body.
 
-type Tx = Prisma.TransactionClient
-
 type Options = {
   // The id from the cookie, or null when there is none or it isn't shaped
   // like one
   cartId: string | null
   // Manila's date, for pre-order status; tests pass a fixed one
   today?: string
-}
-
-// What an action hands back: the result for the client, and what to do with
-// the cookie. Only a result that changed the cart renews it (Behavior 3).
-export type CartOutcome = {
-  result: CartResult
-  // The cart's id: the existing one, or the one just made. Set the cookie to
-  // it when renewCookie is true.
-  cartId: string | null
-  renewCookie: boolean
-}
-
-const failed = (reason: CartFailure): CartOutcome => ({
-  result: { ok: false, reason },
-  cartId: null,
-  renewCookie: false,
-})
-
-// Locks the cart row until the transaction ends, so two writes to one cart
-// run one after the other and the stock cap is computed on the cart as it is
-// (Rules › Concurrency). False when there is no such cart.
-async function lockCart(tx: Tx, cartId: string): Promise<boolean> {
-  const rows = await tx.$queryRaw<{ id: string }[]>`
-    SELECT "id" FROM "Cart" WHERE "id" = ${cartId} FOR UPDATE`
-  return rows.length > 0
 }
 
 const productFacts = (tx: Tx, productId: string) =>
@@ -84,35 +68,6 @@ function stockStatusOf(product: Facts, today: string): StockStatus {
 // Active and buyable now: the only parts that can be added (spec 020 D7)
 const isSold = (product: Facts, today: string) =>
   product.status === "ACTIVE" && isBuyable(stockStatusOf(product, today))
-
-// What the product's quantity in the cart's build groups is: the cap counts
-// it, but a single line can't change it
-async function quantityInGroups(
-  tx: Tx,
-  cartId: string,
-  productId: string
-): Promise<number> {
-  const { _sum } = await tx.cartItem.aggregate({
-    where: { cartId, productId, buildId: { not: null } },
-    _sum: { quantity: true },
-  })
-  return _sum.quantity ?? 0
-}
-
-// Marks the cart as in use and returns its count
-async function touch(tx: Tx, cartId: string): Promise<number> {
-  await tx.$executeRaw`
-    UPDATE "Cart" SET "updatedAt" = now() WHERE "id" = ${cartId}`
-  return cartCount(
-    await tx.cartItem.findMany({
-      where: { cartId },
-      select: { quantity: true, buildId: true },
-    })
-  )
-}
-
-const logFailure = (action: string, error: unknown) =>
-  console.error(`${action} failed:`, error)
 
 // Adds units of a product to the cart (Behavior 7–10, Rules › Stock cap). The
 // cart is made here, on the first add, or when the cookie's cart is gone.
@@ -283,13 +238,13 @@ export async function getCartCount(cartId: string | null): Promise<number> {
 }
 
 // What /cart shows (Behavior 17–25): every single-item line with its product
-// read fresh, oldest first. Build-group lines are counted but not listed (#62
-// lists them). Prices come from the products, never from the cart.
+// read fresh, and every build group (spec 026), oldest first. Prices come
+// from the products, never from the cart.
 export async function getCartView(
   cartId: string | null,
   today: string = manilaToday()
 ): Promise<CartView> {
-  if (!cartId) return { lines: [], subtotal: 0, count: 0 }
+  if (!cartId) return { entries: [], subtotal: 0, count: 0 }
 
   const rows = await db.cartItem.findMany({
     where: { cartId },
@@ -331,37 +286,62 @@ export async function getCartView(
     )
   }
 
-  const lines: CartLineView[] = rows
-    .filter((row) => row.buildId === null)
-    .map(({ id, productId, quantity, product }) => {
-      const sold = product.status === "ACTIVE"
-      const room =
-        Math.min(product.stock, MAX_CART_QUANTITY) -
-        (inGroups.get(productId) ?? 0)
-      return {
-        id,
-        productId,
-        name: product.name,
-        slug: product.slug,
-        categorySlug: product.category.slug,
-        brand: product.brand.name,
-        image: product.images[0] ?? null,
-        price: product.price,
-        salePrice: product.salePrice,
-        unitPrice: product.effectivePrice,
-        quantity,
-        lineTotal: product.effectivePrice * quantity,
-        status: stockStatusOf(product, today),
-        preorderShipsOn: toDateString(product.preorderShipsOn),
-        sold,
-        max: sold ? Math.max(quantity, room) : quantity,
+  const groups = await loadGroups(
+    [...new Set(rows.flatMap((row) => (row.buildId ? [row.buildId] : [])))],
+    today
+  )
+
+  // Rows are oldest first, so a group sits where its first line was added
+  const entries: CartEntry[] = []
+  const seenGroups = new Set<string>()
+  for (const { id, productId, quantity, buildId, product } of rows) {
+    if (buildId !== null) {
+      const group = groups.get(buildId)
+      if (group && !seenGroups.has(buildId)) {
+        seenGroups.add(buildId)
+        entries.push({ kind: "build", number: null, ...group })
       }
-    })
+      continue
+    }
+    const sold = product.status === "ACTIVE"
+    const room =
+      Math.min(product.stock, MAX_CART_QUANTITY) -
+      (inGroups.get(productId) ?? 0)
+    entries.push({
+      kind: "single",
+      id,
+      productId,
+      name: product.name,
+      slug: product.slug,
+      categorySlug: product.category.slug,
+      brand: product.brand.name,
+      image: product.images[0] ?? null,
+      price: product.price,
+      salePrice: product.salePrice,
+      unitPrice: product.effectivePrice,
+      quantity,
+      lineTotal: product.effectivePrice * quantity,
+      status: stockStatusOf(product, today),
+      preorderShipsOn: toDateString(product.preorderShipsOn),
+      sold,
+      max: sold ? Math.max(quantity, room) : quantity,
+    } satisfies CartLineView)
+  }
+
+  // Groups are told apart by number only when there are two or more
+  const builds = entries.filter((entry) => entry.kind === "build")
+  if (builds.length > 1)
+    builds.forEach((group, index) => (group.number = index + 1))
 
   return {
-    lines,
-    subtotal: lines.reduce(
-      (sum, line) => (line.sold ? sum + line.lineTotal : sum),
+    entries,
+    subtotal: entries.reduce(
+      (sum, entry) =>
+        entry.kind === "build"
+          ? sum + entry.total
+          : entry.sold
+            ? sum + entry.lineTotal
+            : sum,
       0
     ),
     count: cartCount(rows),

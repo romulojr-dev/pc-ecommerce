@@ -349,7 +349,7 @@ describe("shareBuild", () => {
   it("answers error, not an exception, when the database fails (E19)", async () => {
     const { items } = await setupBuildA()
     const create = vi
-      .spyOn(db.build, "create")
+      .spyOn(db, "$transaction")
       .mockRejectedValue(new Error("connection lost"))
     const errors = vi.spyOn(console, "error").mockImplementation(() => {})
 

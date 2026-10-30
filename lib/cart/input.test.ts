@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest"
 
-import { addInputSchema, removeInputSchema, setInputSchema } from "./input"
+import {
+  addBuildInputSchema,
+  addInputSchema,
+  removeBuildInputSchema,
+  removeInputSchema,
+  setInputSchema,
+} from "./input"
 
 // docs/specs/025-cart-single-items, Rules › Input, E10, E11, E21
 const accepts =
@@ -60,5 +66,83 @@ describe("setInputSchema and removeInputSchema", () => {
     expect(ok({ lineId: "l1" })).toBe(true)
     expect(ok({ lineId: "" })).toBe(false)
     expect(ok({})).toBe(false)
+  })
+})
+
+// docs/specs/026-add-build-to-cart, Behavior 9.1, E7, E21, E22
+describe("addBuildInputSchema", () => {
+  const ok = accepts(addBuildInputSchema)
+  const items = [{ slot: "cpu", productId: "p1", quantity: 1 }]
+
+  test("accepts items and a list of acknowledged keys", () => {
+    expect(ok({ items, acknowledgedWarnings: [] })).toBe(true)
+    expect(ok({ items, acknowledgedWarnings: ["psu-wattage:psu/p1"] })).toBe(
+      true
+    )
+  })
+
+  test("E7, E22: drops everything else the client sends", () => {
+    expect(
+      addBuildInputSchema.parse({
+        items,
+        acknowledgedWarnings: [],
+        status: "ok",
+        issues: [],
+        cartId: "other",
+        contentHash: "forged",
+      })
+    ).toEqual({ items, acknowledgedWarnings: [] })
+  })
+
+  test("a missing list means nothing was acknowledged", () => {
+    expect(addBuildInputSchema.parse({ items }).acknowledgedWarnings).toEqual(
+      []
+    )
+  })
+
+  test("leaves the items for shareInput to check", () => {
+    expect(ok({ items: "not a list", acknowledgedWarnings: [] })).toBe(true)
+  })
+
+  test.each([
+    "x",
+    5,
+    { 0: "a" },
+    [1],
+    [null],
+    Array.from({ length: 51 }, () => "k"),
+    ["x".repeat(201)],
+  ])("E21: rejects acknowledgedWarnings %j", (acknowledgedWarnings) =>
+    expect(ok({ items, acknowledgedWarnings })).toBe(false)
+  )
+
+  test("accepts exactly 50 keys of exactly 200 characters", () => {
+    expect(
+      ok({
+        items,
+        acknowledgedWarnings: Array.from({ length: 50 }, () => "k".repeat(200)),
+      })
+    ).toBe(true)
+  })
+
+  test.each([null, "x", 5, []])("rejects %j", (input) =>
+    expect(ok(input)).toBe(false)
+  )
+})
+
+describe("removeBuildInputSchema", () => {
+  const ok = accepts(removeBuildInputSchema)
+
+  test("needs a build id", () => {
+    expect(ok({ buildId: "b1" })).toBe(true)
+    expect(ok({ buildId: "" })).toBe(false)
+    expect(ok({ buildId: "x".repeat(65) })).toBe(false)
+    expect(ok({})).toBe(false)
+  })
+
+  test("drops a cart id", () => {
+    expect(
+      removeBuildInputSchema.parse({ buildId: "b1", cartId: "other" })
+    ).toEqual({ buildId: "b1" })
   })
 })
