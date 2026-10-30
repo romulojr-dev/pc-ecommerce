@@ -46,7 +46,7 @@ This story turns `/builder` from a "coming soon" placeholder into a working buil
 
 ### Add to build on the product page
 
-18. **One rule everywhere: a part can be added to a build only if it is buyable** (in stock or low stock, Behavior 13). The product page's "Add to build" is enabled when the product's category is a builder category and the product is buyable. Out-of-stock and pre-order parts show it disabled, with a visible line explaining why (spec 010's disabled state for both stays as is). #54's picker follows the same rule (D7). A product outside the builder categories doesn't show the button. The MVP catalog has none yet.
+18. **One rule everywhere: a part can be added to a build only if it is buyable** (in stock or low stock, Behavior 13). The product page's "Add to build" is enabled when the product's category is a builder category and the product is buyable. Out-of-stock and pre-order parts show it disabled, with a visible line explaining why (spec 010's disabled state for both stays as is). *Changed by spec 025 (#60): on the product page that line is now "Only parts in stock can be added to your cart or build.", one note for both disabled buttons; the picker keeps its own line.* #54's picker follows the same rule (D7). A product outside the builder categories doesn't show the button. The MVP catalog has none yet.
 19. Clicking it always adds **one** unit. By the slot's state:
 
     | Slot state | Result |
@@ -126,7 +126,7 @@ Prices and stock are seed values. "Build A" is spec 001's compatible build (`bui
 | E31 | Build A | Samsung 990 PRO 1TB again | Storage: 990 PRO × 2. "Added to your build." |
 | E32 | Build A, 990 PRO × 30 (stock 30) | 990 PRO again | No change. "Your build already has all 30 we have in stock." |
 | E33 | Build A's 7 other parts + 13 different drives (20 products) | A 14th drive | No change. "Your build has the most parts it can hold. Remove a drive to add another." |
-| E34 | Any | ASUS ROG Astral GeForce RTX 5090 (stock 0) | Add to build disabled, with "Only parts in stock can be added to a build." |
+| E34 | Any | ASUS ROG Astral GeForce RTX 5090 (stock 0) | Add to build disabled, with "Only parts in stock can be added to a build." *Changed by spec 025 (#60): "Only parts in stock can be added to your cart or build."* |
 | E35 | Any | Intel Core Ultra 7 265K (pre-order) | Add to build disabled, with the same line. The stock line still says "Pre-order: ships February 1, 2027" (spec 010, unchanged) |
 | E36 | Empty | AMD Ryzen 7 9800X3D (low stock, 4 left) | Enabled. Adds the CPU |
 
@@ -254,8 +254,8 @@ Prices and stock are seed values. "Build A" is spec 001's compatible build (`bui
 | Product page, at stock | Your build already has all {stock} we have in stock. |
 | Product page, build full | Your build has the most parts it can hold. Remove a drive to add another. |
 | Product page, link | View build |
-| Product page, not buyable | Only parts in stock can be added to a build. |
-| Product page, cart note | Cart is coming soon. |
+| Product page, not buyable | Only parts in stock can be added to a build. *(Changed by spec 025 (#60): "Only parts in stock can be added to your cart or build.")* |
+| Product page, cart note | Cart is coming soon. *(Changed by spec 025 (#60): removed; Add to cart works)* |
 | Product page, pending | Checking your build… *(Changed by spec 024 (#68): added)* |
 | Replace dialog title | Replace the {slot noun} in your build? |
 | Replace dialog body | This replaces the {slot noun} you picked with the {part}. |
