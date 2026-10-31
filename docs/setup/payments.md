@@ -33,6 +33,14 @@ Add each to `.env.local`, the Vercel environments named, and `.env.example`
 | Payment adapter switch | `paymongo` (or `fake`) | `fake` | `paymongo` (`fake` is refused) | `fake` | [#79](https://github.com/romulojr-dev/pc-ecommerce/issues/79) |
 | `PAYMONGO_WEBHOOK_SECRET` | the local webhook's secret | any random value (used by the fake pay page) | the production webhook's secret | any random value | [#80](https://github.com/romulojr-dev/pc-ecommerce/issues/80) |
 | `CRON_SECRET` | any random value | not needed | random, at least 16 characters | not needed | [#81](https://github.com/romulojr-dev/pc-ecommerce/issues/81) |
+| `ORDERS_ENABLED` | `true` | `true` | leave unset (off) until #81 is deployed | `true` | [#78](https://github.com/romulojr-dev/pc-ecommerce/issues/78) |
+
+`ORDERS_ENABLED` is `true` or `false`; unset means off, and any other value
+stops the app at startup. Off, the review shows "Placing orders is coming soon."
+and the server refuses to place an order. Existing orders stay viewable. A
+placed order holds its stock until it is paid or cancelled, and nothing
+cancels it before #81, so Production keeps it off. Changing it on Vercel needs a
+redeploy.
 
 Each PayMongo webhook has its own secret, so local and production never share
 one.
@@ -69,6 +77,12 @@ environment would avoid this, but aren't needed.
 - [ ] Nothing to register. Leave Vercel Authentication on for previews; don't
   enable Protection Bypass for Automation for webhooks.
 - [ ] Set the payment adapter switch to `fake` for the Preview environment.
+
+### Orders switch (#78)
+
+- [ ] Set `ORDERS_ENABLED=true` in Vercel → Preview, and in `.env.local`.
+- [ ] After #81 is merged and deployed, set `ORDERS_ENABLED=true` in Vercel →
+  Production and redeploy.
 
 ### Cron (auto-cancel, #81)
 

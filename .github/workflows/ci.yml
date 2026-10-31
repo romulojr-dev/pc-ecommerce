@@ -43,6 +43,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pcsilicon
       DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/pcsilicon
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      # The E2E places orders (docs/specs/030-place-an-order, D13)
+      ORDERS_ENABLED: "true"
 
     steps:
       - uses: actions/checkout@v7
