@@ -28,26 +28,26 @@ export type ShippingConfig = {
 export async function getShippingConfig(
   client: DbClient = db
 ): Promise<ShippingConfig> {
-  const [rows, settings] = await Promise.all([
-    client.shippingRate.findMany({
-      orderBy: [
-        { zone: "asc" },
-        { maxWeightGrams: { sort: "asc", nulls: "last" } },
-      ],
-      select: { zone: true, maxWeightGrams: true, fee: true },
-    }),
-    client.storeSettings.findUnique({
-      where: { id: 1 },
-      select: {
-        freeShippingThreshold: true,
-        pickupEnabled: true,
-        storeAddress: true,
-        storeHours: true,
-        storeInfo: true,
-        orderExpiryHours: true,
-      },
-    }),
-  ])
+  // One after the other: inside a placement's transaction both share one
+  // connection, and pg deprecates a second query while one is running
+  const rows = await client.shippingRate.findMany({
+    orderBy: [
+      { zone: "asc" },
+      { maxWeightGrams: { sort: "asc", nulls: "last" } },
+    ],
+    select: { zone: true, maxWeightGrams: true, fee: true },
+  })
+  const settings = await client.storeSettings.findUnique({
+    where: { id: 1 },
+    select: {
+      freeShippingThreshold: true,
+      pickupEnabled: true,
+      storeAddress: true,
+      storeHours: true,
+      storeInfo: true,
+      orderExpiryHours: true,
+    },
+  })
   if (!settings) {
     throw new Error("Store settings are missing. Run `pnpm db:seed`.")
   }
