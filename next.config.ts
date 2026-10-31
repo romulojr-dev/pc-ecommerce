@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
     // (docs/specs/029-checkout-steps)
     "/checkout": ["./data/psgc/json/**/*"],
   },
+  // An order's link carries its secret key (docs/specs/030-place-an-order,
+  // Behavior 16): never cached, and never sent on as a referrer
+  async headers() {
+    return [
+      {
+        source: "/orders/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig
