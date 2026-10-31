@@ -52,6 +52,9 @@ model Product {
   // the app never writes it and the default is only a placeholder. Filters
   // and price sorts use it.
   effectivePrice  Int                      @default(0)
+  // The migration also adds CHECK (stock >= 0), which Prisma can't express: a
+  // backstop behind the conditional update that places an order
+  // (docs/specs/030-place-an-order)
   stock           Int                      @default(0)
   lowStockAt      Int                      @default(5)
   specs           Json // shape defined and validated by lib/specs (docs/adr/0002)
@@ -78,6 +81,8 @@ model Product {
   searchVector    Unsupported("tsvector")?
   buildItems      BuildItem[]
   cartItems       CartItem[]
+  orderItems      OrderItem[]
+  stockMovements  StockMovement[]
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
 
@@ -112,6 +117,7 @@ model Build {
   contentHash String      @unique
   items       BuildItem[]
   cartItems   CartItem[]
+  orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
 }
 
@@ -214,4 +220,142 @@ model StoreSettings {
   // Unpaid online orders auto-cancel after this many hours (FR-24)
   orderExpiryHours      Int      @default(24)
   updatedAt             DateTime @updatedAt
+}
+
+// The order's lifecycle (FR-20, docs/specs/030-place-an-order). Only
+// PENDING_PAYMENT is reached by placing; PAID and CANCELLED come with #80 and
+// #81, the rest with Admin. COD_CONFIRMED is Sprint 7 (FR-25).
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  COD_CONFIRMED
+  PROCESSING
+  SHIPPED
+  READY_FOR_PICKUP
+  DELIVERED
+  PICKED_UP
+  CANCELLED
+  REFUNDED
+}
+
+enum Fulfillment {
+  DELIVERY
+  PICKUP
+}
+
+// Why stock moved. Only ORDER_RESERVED is written so far; the stories that
+// release stock (#81) or adjust it (Admin) add their values.
+enum StockMovementReason {
+  ORDER_RESERVED
+}
+
+// A placed order (docs/specs/030-place-an-order, ADR 0009). Everything on it
+// is a snapshot: later price, name or address edits never change it. Found by
+// its short random number plus a secret access token; only the token's hash
+// is stored, and the cart id is stored hashed too. Orders are never
+// hard-deleted. The migration also adds CHECKs Prisma can't express: amounts
+// are not negative, total = subtotal + shippingFee - discount, and a delivery
+// order has an address and zone while a pickup order has neither.
+model Order {
+  id              String      @id @default(cuid())
+  // "PCS-" and 8 Crockford base32 characters
+  orderNumber     String      @unique
+  // SHA-256 hex of a 256-bit random token that only the order link holds
+  accessTokenHash String      @unique
+  // The review's random key: a retry or double submit returns this order
+  idempotencyKey  String      @unique
+  // SHA-256 hex of the cart id it was placed from; the key only replays for
+  // that cart
+  cartIdHash      String
+  status          OrderStatus @default(PENDING_PAYMENT)
+  fulfillment     Fulfillment
+
+  // Contact
+  guestEmail    String
+  contactName   String
+  // +639XXXXXXXXX
+  contactMobile String
+
+  // Delivery address, as the dataset names it (all null for pickup).
+  // provinceCode is null for independent cities and the pseudo-provinces,
+  // which the PSA gives no province (docs/specs/029-checkout-steps, D14).
+  regionCode           String?
+  regionName           String?
+  provinceCode         String?
+  provinceName         String?
+  provinceIsGeographic Boolean       @default(false)
+  cityCode             String?
+  cityName             String?
+  barangayCode         String?
+  barangayName         String?
+  street               String?
+  zip                  String?
+  // The PSGC release the codes belong to
+  psgcVersion          String?
+  // Null for pickup
+  zone                 ShippingZone?
+  weightGrams          Int
+
+  // Centavos
+  subtotal    Int
+  shippingFee Int
+  discount    Int @default(0)
+  total       Int
+
+  // When an unpaid order auto-cancels (FR-24)
+  expiresAt      DateTime
+  items          OrderItem[]
+  stockMovements StockMovement[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([cartIdHash])
+}
+
+// One line of an order: a single item (buildId null) or a part of a build
+// group (buildId and slot set). Names and prices are snapshots. The migration
+// also adds CHECK (quantity >= 1) and CHECK ((buildId IS NULL) = (slot IS
+// NULL)).
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  // Restrict: products are retired through status, never deleted
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  nameSnapshot  String
+  // effectivePrice at placement, in centavos
+  priceSnapshot Int
+  quantity      Int
+  // Restrict: builds are immutable snapshots the app never deletes (ADR 0007)
+  buildId       String?
+  build         Build?  @relation(fields: [buildId], references: [id], onDelete: Restrict)
+  slot          String?
+  // The line's place in the order: cart order, and slot order inside a group
+  position      Int
+
+  // Like CartItem: NULLs are distinct in a unique index, so the one-single-
+  // line rule needs the partial index
+  @@unique([orderId, productId], where: { buildId: null })
+  @@unique([orderId, productId, buildId])
+  @@index([productId])
+  @@index([buildId])
+}
+
+// One change to a product's stock. change is negative for a reservation.
+// actorId waits for the User table (Accounts, #65); until then it is plain
+// text and always null.
+model StockMovement {
+  id        String              @id @default(cuid())
+  productId String
+  product   Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  change    Int
+  reason    StockMovementReason
+  orderId   String?
+  order     Order?              @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actorId   String?
+  createdAt DateTime            @default(now())
+
+  @@index([productId])
+  @@index([orderId])
 }
