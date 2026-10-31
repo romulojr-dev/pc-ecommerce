@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest"
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { warningKey } from "@/lib/build-state/warnings"
 import type { BuildItem } from "@/lib/builder"
@@ -414,6 +414,8 @@ describe("it only reads", () => {
       lines: await db.cartItem.findMany({ orderBy: { id: "asc" } }),
       builds: await db.build.count(),
       products: await db.product.findMany({ orderBy: { id: "asc" } }),
+      orders: await db.order.count(),
+      movements: await db.stockMovement.count(),
     })
     const before = await snapshot()
 
@@ -422,5 +424,100 @@ describe("it only reads", () => {
     await reviewCheckout(cart, delivery({ ...QC, cityCode: "1380300000" }))
 
     expect(await snapshot()).toEqual(before)
+  })
+})
+
+// docs/specs/030-place-an-order: the review's new fields (D1, D5, D6) and the
+// log that leaks nothing (P36)
+describe("what Place order needs from the review", () => {
+  it("D1: the same digest every time, a new key and token each time", async () => {
+    const { id } = await setup()
+    const cart = await emptyCart()
+    await single(cart, id(seed.ryzen5_7600), 2)
+
+    const first = await ok(cart, delivery())
+    const second = await ok(cart, delivery())
+
+    expect(first.digest).toMatch(/^[0-9a-f]{64}$/)
+    expect(second.digest).toBe(first.digest)
+    expect(first.idempotencyKey).toMatch(/^[A-Za-z0-9_-]{22}$/)
+    expect(first.accessToken).toMatch(/^[A-Za-z0-9_-]{43}$/)
+    expect(second.idempotencyKey).not.toBe(first.idempotencyKey)
+    expect(second.accessToken).not.toBe(first.accessToken)
+    expect(first.holdHours).toBe(24)
+  })
+
+  it("D1: the digest follows the money", async () => {
+    const { id } = await setup()
+    const cart = await emptyCart()
+    const line = await single(cart, id(seed.ryzen5_7600), 2)
+    const before = (await ok(cart, delivery())).digest
+
+    await db.cartItem.update({ where: { id: line.id }, data: { quantity: 3 } })
+    const quantity = (await ok(cart, delivery())).digest
+    expect(quantity).not.toBe(before)
+
+    await db.cartItem.update({ where: { id: line.id }, data: { quantity: 2 } })
+    await db.product.update({
+      where: { id: id(seed.ryzen5_7600) },
+      data: { salePrice: 1_099_500 },
+    })
+    expect((await ok(cart, delivery())).digest).not.toBe(before)
+  })
+
+  it("D5: a review with problems still has a digest", async () => {
+    const { id } = await setup()
+    const cart = await emptyCart()
+    await single(cart, id(seed.ryzen5_7600), 3)
+    await stockOf(id(seed.ryzen5_7600), 2)
+
+    const result = await ok(cart, delivery())
+
+    expect(result.review.canPlace).toBe(false)
+    expect(result.digest).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it("hands out the hold time from the settings", async () => {
+    const { id } = await setup()
+    const cart = await emptyCart()
+    await single(cart, id(seed.ryzen5_7600), 1)
+    await db.storeSettings.update({
+      where: { id: 1 },
+      data: { orderExpiryHours: 48 },
+    })
+
+    expect((await ok(cart, pickup)).holdHours).toBe(48)
+  })
+})
+
+describe("P36: a failing review logs no detail", () => {
+  it("logs the error's name only", async () => {
+    const { id } = await setup()
+    const cart = await emptyCart()
+    await single(cart, id(seed.ryzen5_7600), 1)
+    await db.storeSettings.deleteMany()
+    const spies = (["error", "warn", "info", "log", "debug"] as const).map(
+      (method) => vi.spyOn(console, method).mockImplementation(() => {})
+    )
+
+    try {
+      const result = await reviewCheckout(cart, delivery())
+      expect(result).toEqual({ ok: false, reason: "error" })
+
+      const logged = JSON.stringify(spies.flatMap((spy) => spy.mock.calls))
+      expect(logged).toContain("Checkout review failed: Error")
+      for (const secret of [
+        "ana@example.com",
+        "Ana Santos",
+        "+639171234567",
+        "0917",
+        "12 Mabini St",
+        cart,
+      ]) {
+        expect(logged).not.toContain(secret)
+      }
+    } finally {
+      spies.forEach((spy) => spy.mockRestore())
+    }
   })
 })

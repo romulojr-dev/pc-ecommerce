@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 import type { BuilderPartData } from "@/lib/build-state/parts"
 import { db } from "@/lib/db"
+import type { DbClient } from "@/lib/db-client"
 import { toDateString } from "@/lib/products"
 import { isBuilderCategory, validateSpecs } from "@/lib/specs"
 import { getStockStatus } from "@/lib/stock"
@@ -74,9 +75,10 @@ export function toBuilderPartData(
 // simply absent; the page works out what's missing with assembleBuild.
 export async function getBuilderParts(
   ids: readonly string[],
-  today: string
+  today: string,
+  client: DbClient = db
 ): Promise<BuilderPartData[]> {
-  const rows = await db.product.findMany({
+  const rows = await client.product.findMany({
     where: { id: { in: [...ids] }, status: "ACTIVE" },
     select: builderPartSelect,
   })

@@ -6,7 +6,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #78. One commit p
 - [x] 2. `ORDERS_ENABLED` switch (env, `.env.example`, CI, `docs/setup/payments.md`)
 - [x] 3. Pure primitives: order number, token and key, Manila time, timeline, digest, input schema
 - [x] 4. Schema and migration: orders, items, movements, CHECKs, narrowed search trigger, reset lists
-- [ ] 5. Review changes: client parameter, shared review core, digest, key and token, quieter log
+- [x] 5. Review changes: client parameter, shared review core, digest, key and token, quieter log
 - [ ] 6. `placeOrder` and `placeOrderAction`, with the integration tests
 - [ ] 7. Review UI: enabled Place order and its outcomes
 - [ ] 8. Order page: access, view, headers
