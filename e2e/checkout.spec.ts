@@ -116,9 +116,14 @@ test("cart → details → review with the fee and total (N2, N3, N4, A1, R1)", 
     page.getByText("Alicia, Quezon City, Metro Manila, National Capital Region")
   ).toBeVisible()
 
-  // Place order waits for #78 (N11)
-  await expect(page.getByRole("button", { name: "Place order" })).toBeDisabled()
-  await expect(page.getByText("Placing orders is coming soon.")).toBeVisible()
+  // Place order works now (docs/specs/030-place-an-order; the E2E runs with
+  // ORDERS_ENABLED on). This test doesn't click it: place-order.spec.ts does.
+  await expect(page.getByRole("button", { name: "Place order" })).toBeEnabled()
+  await expect(
+    page.getByText(
+      "Your parts are held for 24 hours after you place your order."
+    )
+  ).toBeVisible()
 
   // Back and Forward move between the steps and keep the details (N4, N17)
   await page.goBack()
@@ -283,7 +288,11 @@ test("a cart over its stock shows on step 1 and blocks the review (N13, R8, N9, 
     await expect(
       page.getByRole("button", { name: "Check again" })
     ).toBeFocused()
-    await expect(page.getByText("Placing orders is coming soon.")).toBeVisible()
+    await expect(
+      page.getByText(
+        "Your parts are held for 24 hours after you place your order."
+      )
+    ).toBeVisible()
   } finally {
     await setStock(GX1000, GX1000_STOCK)
   }

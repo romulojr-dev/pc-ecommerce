@@ -25,6 +25,9 @@ export type CheckoutDraftState = {
   update: (patch: Partial<CheckoutDraft>) => void
   // Replaces the whole draft (clearing a level and its children)
   replace: (draft: CheckoutDraft) => void
+  // Forgets the details and removes them from the tab's storage, once an
+  // order exists (docs/specs/030-place-an-order, Behavior 4; spec 029 D4)
+  clear: () => void
 }
 
 // Storage errors (blocked, private mode, quota) are swallowed: the details
@@ -61,7 +64,7 @@ export function createCheckoutDraftStore(
 ) {
   return createStore<CheckoutDraftState>()(
     persist(
-      (set, get) => ({
+      (set, get, api) => ({
         draft: emptyDraft(),
         hydrated: false,
         // Every change waits for the read, so it can't overwrite the saved
@@ -71,6 +74,10 @@ export function createCheckoutDraftStore(
         },
         replace: (draft) => {
           if (get().hydrated) set({ draft })
+        },
+        clear: () => {
+          set({ draft: emptyDraft() })
+          api.persist.clearStorage()
         },
       }),
       {

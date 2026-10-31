@@ -12,8 +12,10 @@ import { ReviewStep } from "@/components/checkout/review-step"
 import { TestModeBanner } from "@/components/checkout/test-mode-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCheckoutDraft } from "@/hooks/use-checkout-draft"
+import { cartCountStore } from "@/lib/cart/count-store"
 import { STEP_COPY } from "@/lib/checkout/copy"
 import { clearFrom, isComplete } from "@/lib/checkout/draft"
+import { checkoutDraftStore } from "@/lib/checkout/draft-store"
 import type { ReviewProblem } from "@/lib/checkout/problems"
 
 export const STEP_HEADING_ID = "checkout-heading"
@@ -45,21 +47,24 @@ export function CheckoutFlow({
   const replace = useCheckoutDraft((state) => state.replace)
   // Errors the form shows: its own, or the server's after a review
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // The order exists and the page is on its way to it. The saved details are
+  // gone by then, which must not send the flow back to step 1.
+  const [placed, setPlaced] = useState(false)
 
   const method = pickupEnabled ? draft.method : "delivery"
   const complete = hydrated && isComplete({ ...draft, method })
   // Step 2 needs saved, valid details: a new tab or a bookmark goes to step 1
   const step: CheckoutStep = !hydrated
     ? urlStep
-    : urlStep === "review" && complete
+    : placed || (urlStep === "review" && complete)
       ? "review"
       : "details"
 
   useEffect(() => {
-    if (hydrated && urlStep === "review" && !complete) {
+    if (hydrated && !placed && urlStep === "review" && !complete) {
       window.history.replaceState(null, "", "/checkout")
     }
-  }, [hydrated, urlStep, complete])
+  }, [hydrated, placed, urlStep, complete])
 
   // A step change moves focus to the new step's heading, and step 1 reloads
   // the page's cart data first (Behavior 9, 33). The first page load moves
@@ -73,6 +78,16 @@ export function CheckoutFlow({
     if (step === "details") router.refresh()
     document.getElementById(STEP_HEADING_ID)?.focus()
   }, [hydrated, step, router])
+
+  // Place order succeeded (docs/specs/030-place-an-order, Behavior 4): forget
+  // the details, zero the header's count, and replace this page with the
+  // order's, so Back doesn't return to a stale review
+  function goToOrder(link: string) {
+    setPlaced(true)
+    checkoutDraftStore.getState().clear()
+    cartCountStore.getState().fromAction(0)
+    router.replace(link)
+  }
 
   function showErrorsFrom(fields: Record<string, string>) {
     let next = { ...draft, method }
@@ -122,6 +137,7 @@ export function CheckoutFlow({
           draft={draft}
           onInvalid={showErrorsFrom}
           onEmpty={() => router.replace("/cart")}
+          onPlaced={goToOrder}
         />
       )}
     </div>
