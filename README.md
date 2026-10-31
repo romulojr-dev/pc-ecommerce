@@ -36,13 +36,17 @@ Unit tests are `*.test.ts` next to the code they test. Integration tests are
 `*.db.test.ts`; they run real queries against Postgres. E2E tests live in `e2e/`.
 
 E2E runs against the database the app server uses (`DATABASE_URL`: locally the
-Neon dev branch, in CI a throwaway Postgres). Two specs, `e2e/cart-flags.spec.ts`
-and `e2e/checkout.spec.ts`, change a product's stock there through
-`e2e/stock.ts` and restore it; the helper refuses to run on the production
+Neon dev branch, in CI a throwaway Postgres). Three specs, `e2e/cart-flags.spec.ts`,
+`e2e/checkout.spec.ts` and `e2e/place-order.spec.ts`, change a product's stock
+there through `e2e/stock.ts` and restore it (the last one also places orders,
+which stay, and needs `ORDERS_ENABLED="true"`); the helper refuses to run on the production
 database, and locally it needs `PRODUCTION_DATABASE_HOST` in `.env.local`
 ([spec 027](docs/specs/027-cart-stock-flags/spec.md),
-[spec 029](docs/specs/029-checkout-steps/spec.md)).
-Running local E2E on the Docker Postgres instead is
+[spec 029](docs/specs/029-checkout-steps/spec.md),
+[spec 030](docs/specs/030-place-an-order/spec.md)).
+To keep the Neon dev branch clean, point the E2E at an empty database in the
+Docker Postgres by setting `DATABASE_URL` and `DATABASE_URL_UNPOOLED` inline,
+after `pnpm db:deploy` and `pnpm db:seed` against it. Making that the default is
 [#74](https://github.com/romulojr-dev/pc-ecommerce/issues/74).
 
 ### Integration test database
@@ -138,6 +142,11 @@ For a new quarter, put the workbook in `data/psgc/`, change `PSGC_VERSION` in
 
 Checkout pays through PayMongo's test mode. The keys, webhooks, tunnel, cron
 and preview setup are in [docs/setup/payments.md](docs/setup/payments.md).
+
+Placing an order is behind `ORDERS_ENABLED` (`"true"` or `"false"`; unset means
+off). Set it to `true` in `.env.local` to place orders locally. It is on in
+Preview and CI and stays off in Production until unpaid orders release their
+stock (#81).
 
 ## AI agent skills
 

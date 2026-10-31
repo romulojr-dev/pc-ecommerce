@@ -52,7 +52,7 @@ This story turns the cart's disabled Checkout button into the first two of FR-14
     - **Contact**: email, name, mobile number; **Delivery**: the address as the dataset names it (street, barangay, city, province, region, ZIP; the names come from `resolveAddress`, never from the browser) or "Store pickup" with the store address and hours. Each has an **Edit** link to step 1.
     - **Items**: the cart's entries in cart order, as on `/cart` but read-only (no stepper, no Remove, no Set to): single lines with image, name, unit price, quantity, line total and flag; build groups collapsed with their label, total, status and flags, expandable to their parts and issues (spec 026).
     - **Summary**: "Subtotal ({n} items)", **Shipping** (the fee, "Free" or "Free (pickup)"), **Total**. Under Shipping, when the free-shipping threshold is set and was not reached by a delivery order: "Free shipping on orders of {threshold} or more."
-    - **Place order**: disabled. When the review has no problems, the text under it is "Placing orders is coming soon." When it has problems, the problems list (Behavior 20) explains why.
+    - **Place order**: disabled. *(Changed by spec 030: enabled when `ORDERS_ENABLED` is on and the review has no problems; the text below stays when it is off.)* When the review has no problems, the text under it is "Placing orders is coming soon." When it has problems, the problems list (Behavior 20) explains why.
 20. **The server re-checks on every request** (FR-13), in this order, and collects **every** problem (it doesn't stop at the first):
     1. **Unavailable**: each product in any line must be active and buyable (`isSold`). A product that isn't is a problem on every line that holds it: "No longer sold", "Out of stock" or "Pre-order only" (spec 027 labels).
     2. **Over stock**: each product's total across the single line and every group must be at most its stock. A product above it is a problem on every line that holds it: "Only N in stock, M in your cart".
@@ -72,7 +72,7 @@ This story turns the cart's disabled Checkout button into the first two of FR-14
 
 ### Privacy and storage
 
-28. Nothing from checkout is written to the database or a cookie in this story. The server receives the details only to build the review and keeps nothing (no log of the payload; a failure log names the reason, not the values). `sessionStorage` is per tab and cleared when the tab closes. **#78 must clear `pc-silicon-checkout` as soon as the order is created** (D4); this story only reads and writes the draft, and #78's spec and E2E must say and test it, so a finished order's personal details don't stay in the tab.
+28. *(Spec 030 clears the draft once an order exists, as this asked.)* Nothing from checkout is written to the database or a cookie in this story. The server receives the details only to build the review and keeps nothing (no log of the payload; a failure log names the reason, not the values). `sessionStorage` is per tab and cleared when the tab closes. **#78 must clear `pc-silicon-checkout` as soon as the order is created** (D4); this story only reads and writes the draft, and #78's spec and E2E must say and test it, so a finished order's personal details don't stay in the tab.
 29. The form asks only for what an order needs (NFR Privacy): email (order link and, in Sprint 7, emails), name and mobile number (courier), and the address. No birthday, no account, no marketing consent.
 
 ### The address the review returns (the snapshot #78 will store)
@@ -189,7 +189,7 @@ Province code `null` means no official parent (Behavior 31). Names are the datas
 | N8 | `/cart` with a group whose status is Errors and no flags | Checkout disabled; "A build in your cart has errors. Fix it in the builder or remove it to check out." |
 | N9 | Review open for Ryzen 5 7600 × 3; the test sets its stock to [2] → Check again | The review now blocks with R8's problem |
 | N10 | Pickup flow (the issue's E2E) | Choosing Store pickup skips the address; Continue → review shows "Store pickup", Shipping "Free (pickup)" |
-| N11 | The review's Place order | Disabled, "Placing orders is coming soon."; no order or request beyond the review |
+| N11 | The review's Place order | Disabled, "Placing orders is coming soon."; no order or request beyond the review. *(Changed by spec 030: with `ORDERS_ENABLED` on it works; `e2e/place-order.spec.ts` covers placing.)* |
 | N12 | Every step | Exactly one Test mode banner; no extra `role="status"` from checkout; the step indicator has exactly one `aria-current="step"` |
 | N13 | A cart with Ryzen 5 7600 × 3 and its stock set to [2]; open `/checkout` | Step 1 renders, and at the top the problems box: "1 problem to fix before you can order", "AMD Ryzen 5 7600: Only 2 in stock, 3 in your cart", link **Back to cart**. The form works; Continue still goes to the review, which blocks (R8) |
 | N14 | A cart with a build group with errors (R12's), open `/checkout` | Step 1 shows "Custom PC build has errors:" with the messages and Back to cart; no delivery problem appears |

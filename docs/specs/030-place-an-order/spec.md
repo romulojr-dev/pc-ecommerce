@@ -1,6 +1,6 @@
 # 030 — Place an order
 
-Status: **Approved** (review changes applied) · Issue: #78 (Sprint 6, Checkout epic #4; depends on #77, merged as spec 029, and #76, merged as spec 028) · PRD refs: FR-13 (stock re-checked at checkout), FR-20 (order status timeline), FR-24 (the reservation half: stock is held while the order waits for payment); NFR Reliability (stock decremented in a transaction; orders never hard-deleted); Data model › `Order`, `OrderItem`, `StockMovement`
+Status: **Implemented** · Issue: #78 (Sprint 6, Checkout epic #4; depends on #77, merged as spec 029, and #76, merged as spec 028) · PRD refs: FR-13 (stock re-checked at checkout), FR-20 (order status timeline), FR-24 (the reservation half: stock is held while the order waits for payment); NFR Reliability (stock decremented in a transaction; orders never hard-deleted); Data model › `Order`, `OrderItem`, `StockMovement`
 
 ## 1. Summary
 
@@ -452,3 +452,15 @@ None left. The review resolved the six that were open:
 4. Q4 (merging before #79 and #81): resolved by the `ORDERS_ENABLED` switch instead of accepting unreleased reservations or holding deploys (D13).
 5. Q5 (ADR 0009): **yes**, now also covering the safeguards and the switch (§6 Docs).
 6. Q6 ("Paying online is coming soon." until #79): **yes** (Behavior 18).
+
+## 11. Notes from building it
+
+Things that came up while implementing, none of which change the behavior above:
+
+- **`searchVector` stays in the trigger's `UPDATE OF` list** (D11): a spec 014 test needed it.
+- **The checks run through the transaction client.** `getCartView`, `loadGroups`, `getBuilderParts` and `getShippingConfig` take an optional `client` (default `db`). A read through `db` inside a transaction holds a second pooled connection, so 13 concurrent placements (P9) would starve a pool of 10.
+- **`getShippingConfig` runs its two queries one after the other.** Inside a transaction they share a connection.
+- **pg 8's deprecation notice** ("Calling client.query() when the client is already executing a query") is printed when `getCartView` runs through a transaction client, because Prisma issues its nested reads in parallel. They still run in order. Check it before upgrading to pg 9 (ADR 0009).
+- **`placeOrderAction` returns the link and a count of 0**; `orderLink` lives in `lib/orders/link.ts` because a `"use server"` file can only export async functions.
+- **The review view's `ReviewOk` type** is the action's success result, which adds `ordersEnabled`.
+- **The E2E** uses the Fractal Design Ridge Black (₱6,995.00, 5,000 g, seed stock 2), and compares the shopper-visible text of the 404s, because the raw HTML carries each request's own URL.
