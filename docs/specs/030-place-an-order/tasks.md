@@ -10,5 +10,5 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #78. One commit p
 - [x] 6. `placeOrder` and `placeOrderAction`, with the integration tests
 - [x] 7. Review UI: enabled Place order and its outcomes
 - [x] 8. Order page: access, view, headers
-- [ ] 9. E2E
+- [x] 9. E2E
 - [ ] 10. Docs close-out: CLAUDE.md, spec 029 notes, ADR 0009, status
