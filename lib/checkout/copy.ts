@@ -21,10 +21,22 @@ export const STEP_COPY = {
   checkedClean: "Checked just now. No problems found.",
   placeOrder: "Place order",
   placeSoon: "Placing orders is coming soon.",
+  // Place order (docs/specs/030-place-an-order, §5)
+  placing: "Placing your order…",
+  placeChanged: "Your order changed. Review it again.",
+  placeError: "We couldn't place your order. Nothing was ordered. Try again.",
+  placeNetwork:
+    "We couldn't confirm your order. Try again: if it went through, you'll go straight to it.",
+  placeDuplicate: "This order was already placed.",
   warningsLead:
     "This build may still work. Check these warnings before you order.",
   pickupOff: "Store pickup isn't available right now. Choose delivery.",
 } as const
+
+// How long an unpaid order's parts are held, under Place order
+export function holdText(hours: number): string {
+  return `Your parts are held for ${hours === 1 ? "1 hour" : `${hours} hours`} after you place your order.`
+}
 
 export const CART_BUTTON_COPY = {
   flagged: "Fix or remove the lines marked above to check out.",

@@ -12,7 +12,8 @@ import { assertResetAllowed, ResetRefusedError } from "../lib/reset-guard"
 // PRODUCTION_DATABASE_HOST in .env.local; CI's throwaway database doesn't.
 // Specs set a known stock first and restore it in a `finally`, because
 // `pnpm db:seed` keeps the stock of products that exist.
-export async function setStock(productName: string, stock: number) {
+// The guard and a connection to the app's database, for the helpers below
+async function withPool<T>(run: (pool: Pool) => Promise<T>): Promise<T> {
   try {
     assertResetAllowed(process.env, { requireProductionHost: !process.env.CI })
   } catch (error) {
@@ -28,6 +29,14 @@ export async function setStock(productName: string, stock: number) {
 
   const pool = new Pool({ connectionString: url })
   try {
+    return await run(pool)
+  } finally {
+    await pool.end()
+  }
+}
+
+export async function setStock(productName: string, stock: number) {
+  await withPool(async (pool) => {
     const { rowCount } = await pool.query(
       'UPDATE "Product" SET "stock" = $1 WHERE "name" = $2',
       [stock, productName]
@@ -37,7 +46,22 @@ export async function setStock(productName: string, stock: number) {
         `Expected one product named ${productName}, changed ${rowCount}.`
       )
     }
-  } finally {
-    await pool.end()
-  }
+  })
+}
+
+// A product's stock now, for the specs that place orders
+// (docs/specs/030-place-an-order)
+export async function readStock(productName: string): Promise<number> {
+  return withPool(async (pool) => {
+    const { rows } = await pool.query<{ stock: number }>(
+      'SELECT "stock" FROM "Product" WHERE "name" = $1',
+      [productName]
+    )
+    if (rows.length !== 1) {
+      throw new Error(
+        `Expected one product named ${productName}, found ${rows.length}.`
+      )
+    }
+    return rows[0].stock
+  })
 }

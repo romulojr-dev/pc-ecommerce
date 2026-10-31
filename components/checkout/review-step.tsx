@@ -3,23 +3,28 @@
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
-import { reviewCheckoutAction } from "@/app/(store)/checkout/actions"
-import { DETAILS_HREF, ReviewView } from "@/components/checkout/review-view"
+import {
+  placeOrderAction,
+  type ReviewActionResult,
+  reviewCheckoutAction,
+} from "@/app/(store)/checkout/actions"
 import { PROBLEMS_HEADING_ID } from "@/components/checkout/problems-box"
+import {
+  DETAILS_HREF,
+  type ReviewOk,
+  ReviewView,
+} from "@/components/checkout/review-view"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { STEP_COPY } from "@/lib/checkout/copy"
 import { type CheckoutDraft, draftPayload } from "@/lib/checkout/draft"
-import type { ReviewResult } from "@/lib/checkout/review-checkout"
 import { cn, focusRing } from "@/lib/utils"
-
-type Ok = Extract<ReviewResult, { ok: true }>
 
 type Phase =
   | { kind: "loading" }
   | { kind: "error" }
   // `source` is what asked: the step opening, or the Check again button
-  | { kind: "ready"; result: Ok; source: "arrival" | "again" }
+  | { kind: "ready"; result: ReviewOk; source: "arrival" | "again" }
 
 type Props = {
   draft: CheckoutDraft
@@ -27,16 +32,26 @@ type Props = {
   onInvalid: (fields: Record<string, string>) => void
   // The cart is gone
   onEmpty: () => void
+  // The order exists: the flow clears the saved details, zeroes the header
+  // count and goes to the order's link
+  onPlaced: (link: string) => void
 }
 
 // Step 2 (docs/specs/029-checkout-steps, Behavior 15–23): sends the saved
 // details to the server every time it shows, and shows what comes back. The
-// server action only reads (D1).
-export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
+// review action only reads (D1). Place order (docs/specs/030-place-an-order,
+// Behavior 3–5) sends them again with the digest, key and token this review
+// handed out.
+export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
   const [phase, setPhase] = useState<Phase>({ kind: "loading" })
   // Check again keeps the review on screen (and focus on its button) while
   // the new answer is on its way
   const [checking, setChecking] = useState(false)
+  // Place order is in flight, or has succeeded and the page is on its way to
+  // the order. Either way a second click does nothing.
+  const [placing, setPlacing] = useState(false)
+  // What the last Place order answered, when the shopper should read it
+  const [notice, setNotice] = useState<string | null>(null)
   // Only the latest request may answer
   const latest = useRef(0)
 
@@ -44,7 +59,7 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
   // step in its loading state
   async function request(source: "arrival" | "again") {
     const mine = ++latest.current
-    let result: ReviewResult | null = null
+    let result: ReviewActionResult | null = null
     try {
       result = await reviewCheckoutAction(draftPayload(draft))
     } catch {
@@ -74,6 +89,60 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
     void request(source)
   }
 
+  // Reloads the review under the notice, keeping the old one on screen until
+  // the new one arrives
+  function reload() {
+    setChecking(true)
+    void request("arrival")
+  }
+
+  // Place order: sends exactly what this review handed out. After a refusal
+  // that left the order unplaced the same pair is sent again on a retry; after
+  // `changed` the review reloads and brings a new pair.
+  async function place() {
+    if (phase.kind !== "ready" || placing || checking) return
+    const { digest, idempotencyKey, accessToken } = phase.result
+    setPlacing(true)
+    setNotice(null)
+    let answer: Awaited<ReturnType<typeof placeOrderAction>> | null = null
+    try {
+      answer = await placeOrderAction({
+        details: draftPayload(draft),
+        digest,
+        idempotencyKey,
+        accessToken,
+      })
+    } catch {
+      // No answer: it may have gone through. A retry with the same key and
+      // token returns the order if it did.
+    }
+    if (!answer) {
+      setNotice(STEP_COPY.placeNetwork)
+      setPlacing(false)
+    } else if (answer.ok) {
+      // Stay busy: the page is leaving for the order
+      onPlaced(answer.link)
+    } else if (answer.reason === "invalid") {
+      setPlacing(false)
+      onInvalid(answer.fields)
+    } else if (answer.reason === "empty") {
+      onEmpty()
+    } else if (answer.reason === "changed") {
+      setNotice(STEP_COPY.placeChanged)
+      setPlacing(false)
+      reload()
+    } else if (answer.reason === "disabled") {
+      setPlacing(false)
+      reload()
+    } else if (answer.reason === "duplicate") {
+      setNotice(STEP_COPY.placeDuplicate)
+      setPlacing(false)
+    } else {
+      setNotice(STEP_COPY.placeError)
+      setPlacing(false)
+    }
+  }
+
   useEffect(() => {
     // Once, when the step opens; the details can't change while it shows
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the answer arrives after an await; the step opens already in its loading state
@@ -97,8 +166,9 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
   const clean =
     phase.kind === "ready" && phase.result.review.problems.length === 0
   // One polite live region (Behavior 34), not role="status"
-  const live =
-    phase.kind === "loading" || checking
+  const live = placing
+    ? STEP_COPY.placing
+    : phase.kind === "loading" || checking
       ? STEP_COPY.loading
       : phase.kind === "error"
         ? STEP_COPY.loadFailed
@@ -111,6 +181,14 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
       <p aria-live="polite" className="min-h-5 text-sm text-muted-foreground">
         {live}
       </p>
+      {notice && (
+        <p
+          aria-live="polite"
+          className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm dark:bg-amber-500/15"
+        >
+          {notice}
+        </p>
+      )}
       {phase.kind === "loading" && <ReviewSkeleton />}
       {phase.kind === "error" && (
         <div>
@@ -120,7 +198,12 @@ export function ReviewStep({ draft, onInvalid, onEmpty }: Props) {
         </div>
       )}
       {phase.kind === "ready" && (
-        <ReviewView result={phase.result} onCheckAgain={() => run("again")} />
+        <ReviewView
+          result={phase.result}
+          placing={placing}
+          onPlace={() => void place()}
+          onCheckAgain={() => run("again")}
+        />
       )}
       <div>
         <Link

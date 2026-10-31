@@ -1,6 +1,8 @@
 import { createEnv } from "@t3-oss/env-nextjs"
 import { z } from "zod"
 
+import { ordersEnabledSchema } from "./orders/orders-enabled-schema"
+
 const postgresUrl = () =>
   z.url({
     protocol: /^postgres(ql)?$/,
@@ -20,6 +22,10 @@ export const env = createEnv({
     // to run against it (docs/specs/022-share-build, ADR 0007). Only that
     // script reads it, so the app doesn't need it.
     PRODUCTION_DATABASE_HOST: z.string().min(1).optional(),
+    // Whether Place order works (docs/specs/030-place-an-order, D13): "true"
+    // or "false", unset means off. Off in Production until #81 releases unpaid
+    // orders' stock. Read through ordersEnabled().
+    ORDERS_ENABLED: ordersEnabledSchema,
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.url({

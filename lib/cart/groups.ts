@@ -1,6 +1,7 @@
 import { sharedBuildView, toSharedItems } from "@/lib/build-state/shared"
 import { getBuilderParts } from "@/lib/builder-parts"
 import { db } from "@/lib/db"
+import type { DbClient } from "@/lib/db-client"
 
 import type { CartGroupView } from "./types"
 
@@ -15,11 +16,12 @@ export type GroupData = Omit<CartGroupView, "kind" | "number" | "flags">
 
 export async function loadGroups(
   buildIds: readonly string[],
-  today: string
+  today: string,
+  client: DbClient = db
 ): Promise<Map<string, GroupData>> {
   if (buildIds.length === 0) return new Map()
 
-  const builds = await db.build.findMany({
+  const builds = await client.build.findMany({
     where: { id: { in: [...buildIds] } },
     select: {
       id: true,
@@ -49,7 +51,7 @@ export async function loadGroups(
     )
   )
   const parts = new Map(
-    (await getBuilderParts([...activeIds], today)).map((data) => [
+    (await getBuilderParts([...activeIds], today, client)).map((data) => [
       data.part.id,
       data,
     ])

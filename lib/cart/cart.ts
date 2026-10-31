@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 
 import { db } from "@/lib/db"
+import type { DbClient } from "@/lib/db-client"
 import { toDateString } from "@/lib/products"
 import {
   getStockStatus,
@@ -250,11 +251,13 @@ export async function getCartCount(cartId: string | null): Promise<number> {
 // from the products, never from the cart.
 export async function getCartView(
   cartId: string | null,
-  today: string = manilaToday()
+  today: string = manilaToday(),
+  // A placement reads inside its transaction (docs/specs/030-place-an-order)
+  client: DbClient = db
 ): Promise<CartView> {
   if (!cartId) return { entries: [], subtotal: 0, count: 0, flagged: 0 }
 
-  const rows = await db.cartItem.findMany({
+  const rows = await client.cartItem.findMany({
     where: { cartId },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: {
@@ -309,7 +312,8 @@ export async function getCartView(
 
   const groups = await loadGroups(
     [...new Set(rows.flatMap((row) => (row.buildId ? [row.buildId] : [])))],
-    today
+    today,
+    client
   )
 
   // Rows are oldest first, so a group sits where its first line was added

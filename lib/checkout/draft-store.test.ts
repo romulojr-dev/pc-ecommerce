@@ -128,6 +128,23 @@ describe("the draft store", () => {
     expect(broken.getState().hydrated).toBe(true)
   })
 
+  it("forgets the details and removes them from storage once an order exists (X2)", async () => {
+    const storage = memory()
+    const store = createCheckoutDraftStore(storage)
+    await store.persist.rehydrate()
+    store.getState().update({ email: "ana@example.com", street: "12 Mabini" })
+    expect(storage.data[CHECKOUT_STORAGE_KEY]).toBeDefined()
+
+    store.getState().clear()
+
+    expect(store.getState().draft).toEqual(emptyDraft())
+    expect(storage.data[CHECKOUT_STORAGE_KEY]).toBeUndefined()
+    // Nothing is left for another read
+    const again = createCheckoutDraftStore(storage)
+    await again.persist.rehydrate()
+    expect(again.getState().draft).toEqual(emptyDraft())
+  })
+
   it("keeps working in memory when storage is blocked", async () => {
     const blocked: RawStorage = {
       getItem: () => {

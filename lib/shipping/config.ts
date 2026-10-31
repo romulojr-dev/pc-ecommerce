@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import type { DbClient } from "@/lib/db-client"
 
 import type { ShippingRateTier } from "./fee"
 import { fromDbZone } from "./zone-enum"
@@ -24,27 +25,29 @@ export type ShippingConfig = {
 
 // No rates is a valid state (every zone is then "no-rate"). A missing settings
 // row is a setup error, not something a shopper can reach, so it throws.
-export async function getShippingConfig(): Promise<ShippingConfig> {
-  const [rows, settings] = await Promise.all([
-    db.shippingRate.findMany({
-      orderBy: [
-        { zone: "asc" },
-        { maxWeightGrams: { sort: "asc", nulls: "last" } },
-      ],
-      select: { zone: true, maxWeightGrams: true, fee: true },
-    }),
-    db.storeSettings.findUnique({
-      where: { id: 1 },
-      select: {
-        freeShippingThreshold: true,
-        pickupEnabled: true,
-        storeAddress: true,
-        storeHours: true,
-        storeInfo: true,
-        orderExpiryHours: true,
-      },
-    }),
-  ])
+export async function getShippingConfig(
+  client: DbClient = db
+): Promise<ShippingConfig> {
+  // One after the other: inside a placement's transaction both share one
+  // connection, and pg deprecates a second query while one is running
+  const rows = await client.shippingRate.findMany({
+    orderBy: [
+      { zone: "asc" },
+      { maxWeightGrams: { sort: "asc", nulls: "last" } },
+    ],
+    select: { zone: true, maxWeightGrams: true, fee: true },
+  })
+  const settings = await client.storeSettings.findUnique({
+    where: { id: 1 },
+    select: {
+      freeShippingThreshold: true,
+      pickupEnabled: true,
+      storeAddress: true,
+      storeHours: true,
+      storeInfo: true,
+      orderExpiryHours: true,
+    },
+  })
   if (!settings) {
     throw new Error("Store settings are missing. Run `pnpm db:seed`.")
   }

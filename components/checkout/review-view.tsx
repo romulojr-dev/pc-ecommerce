@@ -5,17 +5,18 @@ import { CartLine } from "@/components/cart/cart-line"
 import { ProblemsBox } from "@/components/checkout/problems-box"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { subtotalLabel } from "@/lib/cart/copy"
+import type { ReviewActionResult } from "@/app/(store)/checkout/actions"
 import {
   addressLines,
+  holdText,
   shippingValue,
   STEP_COPY,
   thresholdNote,
 } from "@/lib/checkout/copy"
-import type { ReviewResult } from "@/lib/checkout/review-checkout"
 import { formatPeso } from "@/lib/format"
 import { cn, focusRing } from "@/lib/utils"
 
-type Ok = Extract<ReviewResult, { ok: true }>
+export type ReviewOk = Extract<ReviewActionResult, { ok: true }>
 
 const noop = () => {}
 const PLACE_NOTE_ID = "checkout-place-note"
@@ -35,18 +36,30 @@ function EditLink({ label }: { label: string }) {
 
 // The review's content (docs/specs/029-checkout-steps, Behavior 19–23):
 // contact, delivery, the cart's lines as they are, and the totals. Place
-// order is always disabled in this story. Presentational: ReviewStep owns the
-// request and the focus.
+// order works when the server says placing is on and nothing blocks the order
+// (docs/specs/030-place-an-order, Behavior 1); otherwise it is disabled.
+// Presentational: ReviewStep owns the requests and the focus.
 export function ReviewView({
   result,
+  placing = false,
+  onPlace = noop,
   onCheckAgain,
 }: {
-  result: Ok
+  result: ReviewOk
+  placing?: boolean
+  onPlace?: () => void
   onCheckAgain: () => void
 }) {
   const { review, contact, address, store } = result
   const warned = new Set(review.warnings.map((w) => w.buildId))
   const { shipping, problems } = review
+  // The line under Place order: why it can't be used, or what placing does
+  const placeNote =
+    problems.length > 0
+      ? null
+      : result.ordersEnabled
+        ? holdText(result.holdHours)
+        : STEP_COPY.placeSoon
   const lines = address
     ? addressLines({
         street: address.street,
@@ -162,18 +175,25 @@ export function ReviewView({
             <Button
               type="button"
               size="lg"
-              disabled
-              aria-describedby={problems.length > 0 ? undefined : PLACE_NOTE_ID}
+              disabled={!result.ordersEnabled || !review.canPlace || placing}
+              aria-busy={placing}
+              aria-describedby={placeNote ? PLACE_NOTE_ID : undefined}
+              onClick={onPlace}
               className="h-10 w-full text-sm"
             >
-              {STEP_COPY.placeOrder}
+              {placing ? STEP_COPY.placing : STEP_COPY.placeOrder}
             </Button>
-            {problems.length === 0 && (
+            {placeNote && (
               <p id={PLACE_NOTE_ID} className="text-muted-foreground">
-                {STEP_COPY.placeSoon}
+                {placeNote}
               </p>
             )}
-            <Button type="button" variant="outline" onClick={onCheckAgain}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={placing}
+              onClick={onCheckAgain}
+            >
               {STEP_COPY.checkAgain}
             </Button>
           </div>

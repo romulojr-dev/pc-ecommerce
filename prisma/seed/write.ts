@@ -57,8 +57,10 @@ export function writeSeed(
         // Add each new table of that kind here. "ShippingRate" and
         // "StoreSettings" point at no product either; they are named so a
         // reset clears the demo shipping values for the seed to refill
-        // (docs/specs/028-shipping-data-and-fee-rules).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // (docs/specs/028-shipping-data-and-fee-rules). "Order" is named too:
+        // CASCADE from "Product" empties "OrderItem" and "StockMovement" but
+        // not their parent order (docs/specs/030-place-an-order).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)
