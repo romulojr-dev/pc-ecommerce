@@ -52,10 +52,32 @@ describe("paymentView", () => {
     )
   })
 
-  it("is past due at expiresAt (V6)", () => {
-    expect(paymentView("PENDING_PAYMENT", expiresAt, "return", expiresAt)).toBe(
-      "past-due"
-    )
+  // docs/specs/033-release-unpaid-orders, V2 and V2a
+  it.each([null, "return", "cancelled", "error"] as const)(
+    "is expired at expiresAt, whatever the value (V6; %s)",
+    (param) => {
+      expect(paymentView("PENDING_PAYMENT", expiresAt, param, expiresAt)).toBe(
+        "expired"
+      )
+    }
+  )
+
+  it("is expired after an expired session too (spec 033 V2c)", () => {
+    expect(
+      paymentView("PENDING_PAYMENT", expiresAt, null, expiresAt, {
+        latest: "expired",
+        needsCheck: false,
+      })
+    ).toBe("expired")
+  })
+
+  it("keeps needs-check past expiresAt (spec 033 V5)", () => {
+    expect(
+      paymentView("PENDING_PAYMENT", expiresAt, null, expiresAt, {
+        latest: "paid",
+        needsCheck: true,
+      })
+    ).toBe("needs-check")
   })
 
   it.each([

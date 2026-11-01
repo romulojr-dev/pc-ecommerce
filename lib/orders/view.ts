@@ -45,6 +45,8 @@ export type OrderPageData = {
   paymentMethod: string | null
   // A late or second payment to refund (FR-26)
   refundRequired: boolean
+  // Why it was cancelled (docs/specs/033-release-unpaid-orders)
+  cancelReason: "EXPIRED" | null
   payments: PaymentsSummary
 }
 

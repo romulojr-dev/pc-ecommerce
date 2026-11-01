@@ -9,8 +9,10 @@ export const ORDER_COPY = {
   pickupHeading: "Pick up at",
   pickupNote:
     "Bring your order number and a valid ID when you collect your order.",
-  pastDue:
-    "The time to pay has passed. This order will be cancelled and its parts released.",
+  // Pending past expiresAt, or cancelled for it (docs/specs/033-release-
+  // unpaid-orders, behavior 31)
+  cancelledExpired:
+    "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts.",
   saveLink:
     "Save this link: it's the only way to see your order until order emails arrive.",
   linkLabel: "Your order link",

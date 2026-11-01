@@ -88,9 +88,13 @@ export function OrderView({
   order: OrderPageData
   payment: OrderPayment
 }) {
-  const timeline = orderTimeline(order)
-  const entries = orderEntries(order.items)
   const { view } = payment
+  // Past expiresAt the order reads as cancelled, released or not yet
+  // (docs/specs/033-release-unpaid-orders, behavior 31–32)
+  const expired = view === "expired" || order.cancelReason === "EXPIRED"
+  const status = view === "expired" ? "CANCELLED" : order.status
+  const timeline = orderTimeline({ ...order, status })
+  const entries = orderEntries(order.items)
   const lines = order.address ? addressLines({ ...order.address }) : null
 
   return (
@@ -100,7 +104,7 @@ export function OrderView({
           {orderHeading(order.orderNumber)}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {placedOnText(order.createdAt)} · {statusLabel(order.status)}
+          {placedOnText(order.createdAt)} · {statusLabel(status)}
         </p>
       </header>
 
@@ -109,14 +113,15 @@ export function OrderView({
           {ORDER_COPY.statusHeading}
         </h2>
         <OrderTimeline timeline={timeline} />
-        {(order.paidAt || order.refundRequired) && (
+        {(expired || order.paidAt || order.refundRequired) && (
           <div className="flex flex-col gap-1 text-sm">
+            {expired && <p>{ORDER_COPY.cancelledExpired}</p>}
             {order.paidAt && (
               <p>{paidLine(order.paidAt, order.paymentMethod)}</p>
             )}
             {order.refundRequired && (
               <p className="font-medium">
-                {order.status === "CANCELLED" || order.status === "REFUNDED"
+                {status === "CANCELLED" || status === "REFUNDED"
                   ? PAY_COPY.latePayment
                   : PAY_COPY.secondPayment}
               </p>
@@ -126,21 +131,15 @@ export function OrderView({
         {view === "needs-check" && (
           <p className="text-sm font-medium">{PAY_COPY.needsCheck}</p>
         )}
-        {view !== "none" && view !== "needs-check" && (
+        {view !== "none" && view !== "needs-check" && view !== "expired" && (
           <div className="flex flex-col gap-3 text-sm">
             <TestModeBanner instructions={payment.instructions} />
-            <p className="font-medium">
-              {view === "past-due"
-                ? ORDER_COPY.pastDue
-                : payByText(order.expiresAt)}
-            </p>
-            {view !== "past-due" && (
-              <PaymentPanel
-                orderNumber={order.orderNumber}
-                view={view}
-                gatewayName={payment.gatewayName}
-              />
-            )}
+            <p className="font-medium">{payByText(order.expiresAt)}</p>
+            <PaymentPanel
+              orderNumber={order.orderNumber}
+              view={view}
+              gatewayName={payment.gatewayName}
+            />
           </div>
         )}
       </section>
