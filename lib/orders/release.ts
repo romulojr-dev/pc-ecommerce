@@ -1,4 +1,5 @@
 import { revalidateTag } from "next/cache"
+import { after } from "next/server"
 
 import { db } from "@/lib/db"
 import { PRODUCTS_TAG } from "@/lib/home"
@@ -355,6 +356,13 @@ export async function sweepExpiredOrders(
     logSafeFailure("Releasing unpaid orders", error)
     return { released: 0, skipped: 0, tried: [], failed: true }
   }
+}
+
+// The sweep after a server-rendered page or route (behavior 22–23): `now` is
+// read during the request, and the work runs after the response, so the page
+// never waits. Inside after() revalidateTag is allowed and flushed.
+export function sweepAfterResponse(now = new Date()): void {
+  after(() => sweepExpiredOrders(now).then(() => undefined))
 }
 
 // A purchase's release (behavior 17–20), in three calls around its own

@@ -7,6 +7,7 @@ import { Container } from "@/components/layout/container"
 import { getCartView } from "@/lib/cart/cart"
 import { readCartId } from "@/lib/cart/cookie"
 import { cartProblems } from "@/lib/checkout/problems"
+import { sweepAfterResponse } from "@/lib/orders/release"
 import { gateway } from "@/lib/payments/gateway"
 import { socialMetadata } from "@/lib/seo/metadata"
 import { getShippingConfig } from "@/lib/shipping/config"
@@ -34,6 +35,9 @@ export default async function CheckoutPage() {
 
   const view = await getCartView(await readCartId())
   if (view.entries.length === 0) redirect("/cart")
+  // Expired orders give their parts back after the response (docs/specs/033-
+  // release-unpaid-orders); the review reads fresh stock
+  sweepAfterResponse()
   const { settings } = await getShippingConfig()
 
   return (

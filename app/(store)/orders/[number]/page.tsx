@@ -6,6 +6,7 @@ import { Container } from "@/components/layout/container"
 import { OrderView } from "@/components/orders/order-view"
 import { orderTitle } from "@/lib/orders/copy"
 import { loadOrder } from "@/lib/orders/get-order"
+import { sweepAfterResponse } from "@/lib/orders/release"
 import { gateway } from "@/lib/payments/gateway"
 import { parsePaymentParam, paymentView } from "@/lib/payments/payment-view"
 
@@ -50,6 +51,11 @@ export default async function OrderPage({
   const { key, payment } = await searchParams
   const order = await loadOrder(number, keyOf(key))
   if (!order) notFound()
+  // Expired orders, this one included, are released after the response
+  // (docs/specs/033-release-unpaid-orders); the page already shows a past-due
+  // order as cancelled
+  const now = new Date()
+  sweepAfterResponse(now)
 
   // What the payment area shows (docs/specs/031-pay-with-xendit, Behavior
   // 4–12): `payment=` only chooses the view, and never changes data
@@ -58,7 +64,7 @@ export default async function OrderPage({
     order.status,
     order.expiresAt,
     parsePaymentParam(payment),
-    new Date(),
+    now,
     order.payments
   )
 
