@@ -11,5 +11,5 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #80. One commit p
 - [x] 7. Handler, route, fake page, `XENDIT_WEBHOOK_TOKEN` required with both gateways
 - [x] 8. Order page states and `needs-check` in `startPayment`
 - [x] 9. `pnpm webhook:replay`
-- [x] 10. E2E (X5–X8) (written; the local run needs PRODUCTION_DATABASE_HOST in .env.local, so CI runs them)
+- [x] 10. E2E (X5–X8) (all 11 tests in place-order.spec.ts pass locally)
 - [x] 11. Docs close-out: setup doc, CLAUDE.md, PRD data model, spec status
