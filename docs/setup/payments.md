@@ -203,10 +203,8 @@ On Xendit's test pages:
 - Cancelling an active session answers `200` with `CANCELED`; cancelling it
   again answers `422 INVALID_SESSION_STATUS` ("Session status is CANCELED,
   expecting ACTIVE").
-
-## To confirm in test mode (spec 032, Q3)
-
-- [ ] Whether `GET /v3/payments/{payment_id}` answers for a paid session's
-  `payment_id`: `pnpm payments:check --keep`, pay the printed link with
-  4000 0000 0000 1000, then `pnpm payments:check --read <ps-…>`. If it doesn't,
-  only the Xendit adapter's `getPayment` changes.
+- A paid session's `payment_id` (`py-…`) opens its payment: after paying a
+  `--keep` session with GCash, `pnpm payments:check --read <ps-…>` read the
+  session `COMPLETED` and `GET /v3/payments/{payment_id}` answered `200` with
+  `SUCCEEDED`, `channel_code` `GCASH`, `request_amount` `19.99`, `PHP`
+  (spec 032, Q3).

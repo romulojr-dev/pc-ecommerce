@@ -403,7 +403,7 @@ Before releasing an order, #81 calls **`reconcileSession`** for each of the orde
 
 - **Q1 — Issue #80:** fully edited: renamed "Payment webhooks (Xendit)", acceptance criteria rewritten in Xendit terms, with a link to this spec.
 - **Q2 — `metadata` in session webhooks:** checked on one real webhook on Production after deploy; nothing depends on it.
-- **Q3 — `GET /v3/payments/{payment_id}`:** confirmed during planning with `pnpm payments:check` (read the session and its payment after paying a test session by card).
+- **Q3 — `GET /v3/payments/{payment_id}`:** confirmed during planning with `pnpm payments:check` (read the session and its payment after paying a test session by card). **Answered** (owner, 2026-11-01, paid with GCash since the test page offered no card): the session read `COMPLETED` with a `py-…` `payment_id`, and `GET /v3/payments/{payment_id}` answered `200`, `SUCCEEDED`, `GCASH`, `19.99`, `PHP`. The adapter is unchanged.
 - **Q4 — Method copy:** "Paid … with a card." / "with GCash" / "with Maya".
 - **Q5 — Mismatch:** shown ("We received a payment that needs checking. We'll contact you."), Retry hidden (D6).
 
@@ -430,4 +430,4 @@ Before releasing an order, #81 calls **`reconcileSession`** for each of the orde
 - `reconcileSession` reads the order named by the session's metadata in phase 1 (no lock), then locks it in phase 2; an unknown order never opens a transaction.
 - `reconcileSession` logs its own `payment.reconcile` line only when called without an event; with one, the handler's `payment.webhook` line is the call's one line.
 - The fake gateway gained a `paymentStatus` test seam for H12c (`getPayment` reading failed or pending).
-- `pnpm payments:check --read <ps-…>` was added for Q3; the answer waits on a paid test session (`docs/setup/payments.md`, "To confirm in test mode").
+- `pnpm payments:check --read <ps-…>` was added for Q3 (answered: §10).
