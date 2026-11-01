@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ORDER_COPY } from "@/lib/orders/copy"
+import { savedOrderLink } from "@/lib/orders/link"
 
 type State = "idle" | "copied" | "failed"
 
 // "Save this link" with the link and a Copy link button (docs/specs/030-place-
 // an-order, Behavior 18). It copies window.location.href, so the key is
-// exactly what the browser has. The server render and the first client render
+// exactly what the browser has, less the `payment=` value a return from the
+// gateway adds (docs/specs/031-pay-with-xendit). The server render and the first client render
 // both show an empty field, which is filled after mounting (no hydration
 // mismatch). A refused clipboard selects the field so the shopper can copy by
 // hand.
@@ -22,12 +24,12 @@ export function CopyLink() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the address is only known in the browser
-    setHref(window.location.href)
+    setHref(savedOrderLink(window.location.href))
   }, [])
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      await navigator.clipboard.writeText(savedOrderLink(window.location.href))
       setState("copied")
     } catch {
       setState("failed")

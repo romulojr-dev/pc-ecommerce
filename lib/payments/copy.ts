@@ -11,9 +11,6 @@ export const PAY_COPY = {
     "This order expires in a few minutes and can't be paid. Place a new order.",
   centavosRefused:
     "This order can't be paid online because its total includes centavos. Contact us.",
-  banner: "Test mode.",
-  bannerLead:
-    "This is a demo store: no real payment is taken and no order is shipped.",
   // The fake payment page
   fakeTitle: "Test payment",
   fakeHeading: "Test payment, not Xendit",

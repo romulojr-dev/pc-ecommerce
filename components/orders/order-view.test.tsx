@@ -1,13 +1,25 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import type { OrderStatusName } from "@/lib/orders/timeline"
 import type { OrderPageData, OrderPageItem } from "@/lib/orders/view"
+import { FAKE_INSTRUCTIONS, XENDIT_INSTRUCTIONS } from "@/lib/payments/copy"
+import { paymentView } from "@/lib/payments/payment-view"
+import type { PaymentParam } from "@/lib/payments/session-request"
 
 import { OrderView } from "./order-view"
 
 // docs/specs/030-place-an-order: V1, V7–V11, V16 as markup (the access rules
-// are in lib/orders/get-order.db.test.ts)
+// are in lib/orders/get-order.db.test.ts); docs/specs/031-pay-with-xendit:
+// V1–V9 of the payment area, computed as the page does
+
+// The payment panel is a client component; the server render needs no router
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {}, replace: () => {} }),
+}))
+vi.mock("@/app/(store)/orders/[number]/actions", () => ({
+  startPaymentAction: async () => ({ ok: false, reason: "error" }),
+}))
 
 const NOW = new Date("2026-10-31T08:00:00Z")
 
@@ -57,8 +69,22 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
   }
 }
 
-const render = (o: OrderPageData, now = NOW) =>
-  renderToStaticMarkup(<OrderView order={o} now={now} />)
+const render = (
+  o: OrderPageData,
+  now = NOW,
+  param: PaymentParam | null = null,
+  instructions = XENDIT_INSTRUCTIONS
+) =>
+  renderToStaticMarkup(
+    <OrderView
+      order={o}
+      payment={{
+        view: paymentView(o.status, o.expiresAt, param, now),
+        instructions,
+        gatewayName: "Xendit",
+      }}
+    />
+  )
 
 const text = (html: string) =>
   html
@@ -81,9 +107,10 @@ describe("V1: a delivery order awaiting payment", () => {
     expect(html).toContain('aria-label="Order status"')
   })
 
-  it("shows the pay-by time and the coming-soon line", () => {
+  it("shows the pay-by time and Pay now (spec 031, V1)", () => {
     expect(text(html)).toContain("Pay by Sun 1 Nov 2026, 3:42 PM")
-    expect(text(html)).toContain("Paying online is coming soon.")
+    expect(html).toMatch(/<button[^>]*>Pay now<\/button>/)
+    expect(text(html)).not.toContain("Paying online is coming soon.")
   })
 
   it("shows the save-the-link prompt with the copy button", () => {
@@ -251,5 +278,86 @@ describe("V16b: a deadline that crosses midnight in Manila", () => {
     )
     expect(t).toContain("Placed on Sun 1 Nov 2026")
     expect(t).toContain("Pay by Mon 2 Nov 2026, 1:30 AM")
+  })
+})
+
+// docs/specs/031-pay-with-xendit: the payment area. NOW is 2026-10-31 08:00
+// UTC; the order expires 2026-11-01 07:42 UTC.
+// Pay now or Retry payment (Copy link is a button too)
+const PAY_BUTTON = /<button[^>]*>(Pay now|Retry payment)<\/button>/
+
+describe("the payment area (spec 031)", () => {
+  const pending = order()
+  const banner = "Test mode. This is a demo store"
+
+  it("V1: shows the Test mode banner with the gateway's instructions", () => {
+    const t = text(render(pending))
+    expect(t).toContain(banner)
+    expect(t).toContain("4000 0000 0000 1000")
+    expect(text(render(pending, NOW, null, FAKE_INSTRUCTIONS))).toContain(
+      "choose Pay or Cancel"
+    )
+  })
+
+  it("V2: a return only confirms, with no button", () => {
+    const html = render(pending, NOW, "return")
+    expect(text(html)).toContain("Confirming your payment…")
+    expect(html).not.toMatch(PAY_BUTTON)
+    expect(html).toContain('aria-live="polite"')
+  })
+
+  it("V3: a cancel offers Retry payment", () => {
+    const html = render(pending, NOW, "cancelled")
+    expect(text(html)).toContain(
+      "Payment not completed. You haven't been charged."
+    )
+    expect(html).toMatch(/<button[^>]*>Retry payment<\/button>/)
+    expect(text(html)).toContain(banner)
+  })
+
+  it("V4: a failed open says so above Pay now", () => {
+    const html = render(pending, NOW, "error")
+    expect(text(html)).toContain(
+      "We couldn't open the payment page. Try again."
+    )
+    expect(html).toMatch(/<button[^>]*>Pay now<\/button>/)
+  })
+
+  it("V5: under 10 minutes left, no button and the place-a-new-order text", () => {
+    const html = render(pending, new Date("2026-11-01T07:32:01Z"))
+    expect(text(html)).toContain(
+      "This order expires in a few minutes and can't be paid. Place a new order."
+    )
+    expect(html).not.toMatch(PAY_BUTTON)
+    expect(text(html)).toContain(banner)
+  })
+
+  it("V5a: exactly 10 minutes left is payable", () => {
+    const html = render(pending, new Date("2026-11-01T07:32:00Z"))
+    expect(html).toMatch(/<button[^>]*>Pay now<\/button>/)
+  })
+
+  it("V5b: the open error gives way to the too-late text", () => {
+    const t = text(render(pending, new Date("2026-11-01T07:33:00Z"), "error"))
+    expect(t).toContain("This order expires in a few minutes")
+    expect(t).not.toContain("We couldn't open the payment page.")
+  })
+
+  it("V6: past the deadline, the past-due text and no button", () => {
+    const html = render(pending, new Date("2026-11-01T07:42:00Z"), "cancelled")
+    expect(text(html)).toContain("The time to pay has passed.")
+    expect(html).not.toMatch(PAY_BUTTON)
+  })
+
+  it.each([
+    ["PAID", "return"],
+    ["CANCELLED", "cancelled"],
+  ] as const)("V7, V8: a %s order shows no payment area", (status, param) => {
+    const t = text(render(order({ status }), NOW, param))
+    expect(t).not.toContain(banner)
+    expect(t).not.toContain("Confirming your payment")
+    expect(t).not.toContain("Payment not completed")
+    expect(t).not.toContain("Pay now")
+    expect(t).not.toContain("Retry payment")
   })
 })

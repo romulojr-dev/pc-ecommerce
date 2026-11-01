@@ -26,6 +26,8 @@ type Props = {
   // The cart's problems that need no address, from the server render
   problems: readonly ReviewProblem[]
   summary: { count: number; subtotal: number }
+  // The payment gateway's test instructions, for the banner (FR-27)
+  testInstructions: string
 }
 
 // The checkout's steps (docs/specs/029-checkout-steps, Behavior 6–8, 15,
@@ -38,6 +40,7 @@ export function CheckoutFlow({
   store,
   problems,
   summary,
+  testInstructions,
 }: Props) {
   const router = useRouter()
   const urlStep: CheckoutStep =
@@ -105,7 +108,7 @@ export function CheckoutFlow({
 
   return (
     <div className="flex flex-col gap-6">
-      <TestModeBanner />
+      <TestModeBanner instructions={testInstructions} />
       <CheckoutSteps current={step} />
       <h2
         id={STEP_HEADING_ID}
