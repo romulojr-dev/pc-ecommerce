@@ -3,9 +3,10 @@ import type { Page } from "@playwright/test"
 import { readStock, setStock } from "./stock"
 import { expect, test } from "./test"
 
-// Place an order and land on its page (docs/specs/030-place-an-order, X1–X7).
+// Place an order and land on its page (docs/specs/030-place-an-order, X1–X7),
+// by way of the fake payment page (docs/specs/031-pay-with-xendit, X1–X4).
 // Needs a seeded database (the demo shipping rates and store included) and
-// ORDERS_ENABLED=true for the app server. These tests take real stock and
+// ORDERS_ENABLED=true and PAYMENT_GATEWAY=fake for the app server. These tests take real stock and
 // leave their orders behind (moving local E2E off the Neon dev branch is #74),
 // so they use one part no other spec uses, set a known stock first and restore
 // the seed's in a `finally`/afterAll. The specs of this file run one after
@@ -16,7 +17,7 @@ const RIDGE_PAGE = "/case/fractal-design-ridge-black"
 // What `pnpm db:seed` gives it (prisma/seed/data/cases.ts); it keeps the stock
 // of existing products, so the specs put it back
 const SEED_STOCK = 2
-const STOCK = 8
+const STOCK = 12
 const CHECKOUT_STORAGE = "pc-silicon-checkout"
 
 test.describe.configure({ mode: "serial" })
@@ -86,12 +87,28 @@ async function reviewDelivery(page: Page) {
 }
 
 const ORDER_URL = /\/orders\/PCS-[0-9A-HJKMNP-TV-Z]{8}\?key=[A-Za-z0-9_-]{43}$/
+const FAKE_PAY_URL = /\/test-payment\/ps-[0-9a-f]{24}\?key=[A-Za-z0-9_-]{43}$/
+
+// Place order goes straight to the payment page (spec 031, Behavior 1)
+async function placeToPayment(page: Page, click = true) {
+  if (click) await page.getByRole("button", { name: "Place order" }).click()
+  await expect(page).toHaveURL(FAKE_PAY_URL)
+  await expect(
+    page.getByRole("heading", { name: "Test payment, not Xendit" })
+  ).toBeVisible()
+}
+
+// ...and Back from it lands on the order, not on the checkout (spec 031, X1)
+async function placeAndGoBack(page: Page) {
+  await placeToPayment(page)
+  await page.goBack()
+  await expect(page).toHaveURL(ORDER_URL)
+}
 
 test("place an order and land on its page (X1, X2)", async ({ page }) => {
   await reviewDelivery(page)
 
-  await page.getByRole("button", { name: "Place order" }).click()
-  await expect(page).toHaveURL(ORDER_URL)
+  await placeAndGoBack(page)
 
   // X1: the order, from its snapshots
   const number = /PCS-[0-9A-HJKMNP-TV-Z]{8}/.exec(page.url())![0]
@@ -142,7 +159,7 @@ test("a double click on Place order makes one order (X3)", async ({ page }) => {
 
   const place = page.getByRole("button", { name: "Place order" })
   await place.dblclick()
-  await expect(page).toHaveURL(ORDER_URL)
+  await placeToPayment(page, false)
 
   // One order, one unit gone: the second click did nothing
   await page.goto("/cart")
@@ -185,8 +202,7 @@ test("a wrong key is the same 404 as an unknown order (X5)", async ({
   page,
 }) => {
   await reviewDelivery(page)
-  await page.getByRole("button", { name: "Place order" }).click()
-  await expect(page).toHaveURL(ORDER_URL)
+  await placeAndGoBack(page)
   const url = new URL(page.url())
   const key = "A".repeat(43)
 
@@ -221,8 +237,7 @@ test("a wrong key is the same 404 as an unknown order (X5)", async ({
 test("Copy link copies the order's address (X6)", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"])
   await reviewDelivery(page)
-  await page.getByRole("button", { name: "Place order" }).click()
-  await expect(page).toHaveURL(ORDER_URL)
+  await placeAndGoBack(page)
 
   await page.getByRole("button", { name: "Copy link" }).click()
 
@@ -243,8 +258,7 @@ test("a pickup order shows the store (X7)", async ({ page }) => {
     page.getByRole("heading", { name: "Review your order", level: 2 })
   ).toBeVisible()
 
-  await page.getByRole("button", { name: "Place order" }).click()
-  await expect(page).toHaveURL(ORDER_URL)
+  await placeAndGoBack(page)
 
   await expect(page.getByRole("heading", { name: "Pick up at" })).toBeVisible()
   await expect(page.getByText("PC Silicon Demo Store")).toBeVisible()
@@ -255,4 +269,64 @@ test("a pickup order shows the store (X7)", async ({ page }) => {
   ).toBeVisible()
   await expect(page.getByText("Free (pickup)")).toBeVisible()
   await expect(page.getByText("Delivery address")).toHaveCount(0)
+})
+
+// docs/specs/031-pay-with-xendit, X2–X4: the fake gateway stands in for
+// Xendit; nothing marks Paid before #80
+
+test("cancel on the payment page, then retry (X2, X3)", async ({ page }) => {
+  await reviewDelivery(page)
+  await placeToPayment(page)
+  const first = new URL(page.url()).pathname
+
+  await page.getByRole("button", { name: "Cancel" }).click()
+  await expect(page).toHaveURL(/&payment=cancelled$/)
+  await expect(
+    page.getByText("Payment not completed. You haven't been charged.")
+  ).toBeVisible()
+  await expect(page.getByText(/^Test mode\./)).toBeVisible()
+  await expect(page.getByText(/test page, not Xendit/)).toBeVisible()
+
+  // X3: a new session, and a second cancel offers Retry again
+  await page.getByRole("button", { name: "Retry payment" }).click()
+  await expect(page).toHaveURL(FAKE_PAY_URL)
+  expect(new URL(page.url()).pathname).not.toBe(first)
+  await page.getByRole("button", { name: "Cancel" }).click()
+  await expect(
+    page.getByRole("button", { name: "Retry payment" })
+  ).toBeVisible()
+
+  // The first session is closed: its page says so
+  const key = new URL(page.url()).searchParams.get("key")
+  await page.goto(`${first}?key=${key}`)
+  await expect(page.getByText("This test payment is closed.")).toBeVisible()
+  await expect(
+    page.getByRole("link", { name: "Back to your order" })
+  ).toBeVisible()
+})
+
+test("paying shows Confirming and never marks Paid by itself (X4)", async ({
+  page,
+}) => {
+  await reviewDelivery(page)
+  await placeToPayment(page)
+
+  await page.getByRole("button", { name: "Pay", exact: true }).click()
+
+  await expect(page).toHaveURL(/&payment=return$/)
+  await expect(page.getByText("Confirming your payment…")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Pay now" })).toHaveCount(0)
+  await expect(
+    page
+      .getByRole("navigation", { name: "Order status" })
+      .locator('[aria-current="step"]')
+  ).toHaveText("Pending payment")
+})
+
+test("Pay now opens a payment from the order page", async ({ page }) => {
+  await reviewDelivery(page)
+  await placeAndGoBack(page)
+
+  await page.getByRole("button", { name: "Pay now" }).click()
+  await expect(page).toHaveURL(FAKE_PAY_URL)
 })

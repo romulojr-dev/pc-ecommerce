@@ -6,6 +6,8 @@ import { Container } from "@/components/layout/container"
 import { OrderView } from "@/components/orders/order-view"
 import { orderTitle } from "@/lib/orders/copy"
 import { loadOrder } from "@/lib/orders/get-order"
+import { gateway } from "@/lib/payments/gateway"
+import { parsePaymentParam, paymentView } from "@/lib/payments/payment-view"
 
 // A shopper's own order, found by its number and opened with a secret key in
 // the link (docs/specs/030-place-an-order, Behavior 16–19; ADR 0009). Not
@@ -45,13 +47,26 @@ export default async function OrderPage({
   await connection()
 
   const { number } = await params
-  const { key } = await searchParams
+  const { key, payment } = await searchParams
   const order = await loadOrder(number, keyOf(key))
   if (!order) notFound()
 
+  // What the payment area shows (docs/specs/031-pay-with-xendit, Behavior
+  // 4–12): `payment=` only chooses the view, and never changes data
+  const { testInstructions, name } = gateway()
+  const view = paymentView(
+    order.status,
+    order.expiresAt,
+    parsePaymentParam(payment),
+    new Date()
+  )
+
   return (
     <Container className="py-8">
-      <OrderView order={order} now={new Date()} />
+      <OrderView
+        order={order}
+        payment={{ view, instructions: testInstructions, gatewayName: name }}
+      />
     </Container>
   )
 }

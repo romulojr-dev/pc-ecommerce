@@ -2,6 +2,11 @@ import { createEnv } from "@t3-oss/env-nextjs"
 import { z } from "zod"
 
 import { ordersEnabledSchema } from "./orders/orders-enabled-schema"
+import {
+  paymentEnvIssues,
+  paymentGatewaySchema,
+  vercelEnvSchema,
+} from "./payments/env-schema"
 
 const postgresUrl = () =>
   z.url({
@@ -26,6 +31,19 @@ export const env = createEnv({
     // or "false", unset means off. Off in Production until #81 releases unpaid
     // orders' stock. Read through ordersEnabled().
     ORDERS_ENABLED: ordersEnabledSchema,
+    // The payment gateway (docs/specs/031-pay-with-xendit, ADR 0010):
+    // "xendit" or "fake", required; Production refuses the fake. The rules
+    // across these variables are in createFinalSchema below.
+    PAYMENT_GATEWAY: paymentGatewaySchema,
+    // Xendit's secret key, test mode only (xnd_development_…). Never logged.
+    XENDIT_SECRET_KEY: z.string().optional(),
+    // Xendit's webhook verification token (x-callback-token); the fake's
+    // payment page uses it too. Required with the fake (#79) and, from #80,
+    // with xendit.
+    XENDIT_WEBHOOK_TOKEN: z.string().optional(),
+    // Set by Vercel: production, preview or development. Unset locally and in
+    // CI, which count as development (lib/payments/gateway.ts).
+    VERCEL_ENV: vercelEnvSchema,
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.url({
@@ -39,6 +57,15 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,
+  // Rules across variables (spec 031, E1–E7). Only on the server: the browser
+  // has none of the server variables to check.
+  createFinalSchema: (shape, isServer) =>
+    z.object(shape).superRefine((values, ctx) => {
+      if (!isServer) return
+      for (const { variable, message } of paymentEnvIssues(values)) {
+        ctx.addIssue({ code: "custom", path: [variable], message })
+      }
+    }),
   // Escape hatch for tooling that loads this file without real env vars
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   onValidationError: (issues) => {

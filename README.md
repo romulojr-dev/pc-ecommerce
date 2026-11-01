@@ -39,7 +39,7 @@ E2E runs against the database the app server uses (`DATABASE_URL`: locally the
 Neon dev branch, in CI a throwaway Postgres). Three specs, `e2e/cart-flags.spec.ts`,
 `e2e/checkout.spec.ts` and `e2e/place-order.spec.ts`, change a product's stock
 there through `e2e/stock.ts` and restore it (the last one also places orders,
-which stay, and needs `ORDERS_ENABLED="true"`); the helper refuses to run on the production
+which stay, and needs `ORDERS_ENABLED="true"` and `PAYMENT_GATEWAY="fake"`); the helper refuses to run on the production
 database, and locally it needs `PRODUCTION_DATABASE_HOST` in `.env.local`
 ([spec 027](docs/specs/027-cart-stock-flags/spec.md),
 [spec 029](docs/specs/029-checkout-steps/spec.md),
@@ -140,8 +140,13 @@ For a new quarter, put the workbook in `data/psgc/`, change `PSGC_VERSION` in
 
 ## Payments
 
-Checkout pays through PayMongo's test mode. The keys, webhooks, tunnel, cron
-and preview setup are in [docs/setup/payments.md](docs/setup/payments.md).
+Checkout pays through Xendit's test mode ([ADR 0010](docs/adr/0010-payment-gateway-xendit-test-mode.md),
+[spec 031](docs/specs/031-pay-with-xendit/spec.md)). `PAYMENT_GATEWAY` is
+required: `fake` locally, in Preview and in CI (a labelled test payment page in
+the store itself), `xendit` in Production. The keys, webhooks, tunnel, cron and
+preview setup are in [docs/setup/payments.md](docs/setup/payments.md);
+`pnpm payments:check` checks the test key and a session against Xendit without
+printing the key.
 
 Placing an order is behind `ORDERS_ENABLED` (`"true"` or `"false"`; unset means
 off). Set it to `true` in `.env.local` to place orders locally. It is on in

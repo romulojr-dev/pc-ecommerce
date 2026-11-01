@@ -7,6 +7,7 @@ import { Container } from "@/components/layout/container"
 import { getCartView } from "@/lib/cart/cart"
 import { readCartId } from "@/lib/cart/cookie"
 import { cartProblems } from "@/lib/checkout/problems"
+import { gateway } from "@/lib/payments/gateway"
 import { socialMetadata } from "@/lib/seo/metadata"
 import { getShippingConfig } from "@/lib/shipping/config"
 
@@ -46,6 +47,7 @@ export default async function CheckoutPage() {
           store={{ address: settings.storeAddress, hours: settings.storeHours }}
           problems={cartProblems(view)}
           summary={{ count: view.count, subtotal: view.subtotal }}
+          testInstructions={gateway().testInstructions}
         />
       </div>
     </Container>

@@ -26,6 +26,8 @@ type Props = {
   // The cart's problems that need no address, from the server render
   problems: readonly ReviewProblem[]
   summary: { count: number; subtotal: number }
+  // The payment gateway's test instructions, for the banner (FR-27)
+  testInstructions: string
 }
 
 // The checkout's steps (docs/specs/029-checkout-steps, Behavior 6–8, 15,
@@ -38,6 +40,7 @@ export function CheckoutFlow({
   store,
   problems,
   summary,
+  testInstructions,
 }: Props) {
   const router = useRouter()
   const urlStep: CheckoutStep =
@@ -81,12 +84,20 @@ export function CheckoutFlow({
 
   // Place order succeeded (docs/specs/030-place-an-order, Behavior 4): forget
   // the details, zero the header's count, and replace this page with the
-  // order's, so Back doesn't return to a stale review
-  function goToOrder(link: string) {
+  // order's, so Back doesn't return to a stale review. With a payment session
+  // (docs/specs/031-pay-with-xendit, Behavior 1) this history entry becomes
+  // the order link first, so Back from the payment page lands on the order,
+  // then the browser leaves for the payment page.
+  function goToOrder(link: string, payUrl: string | null) {
     setPlaced(true)
     checkoutDraftStore.getState().clear()
     cartCountStore.getState().fromAction(0)
-    router.replace(link)
+    if (payUrl) {
+      window.history.replaceState(null, "", link)
+      window.location.assign(payUrl)
+    } else {
+      router.replace(link)
+    }
   }
 
   function showErrorsFrom(fields: Record<string, string>) {
@@ -105,7 +116,7 @@ export function CheckoutFlow({
 
   return (
     <div className="flex flex-col gap-6">
-      <TestModeBanner />
+      <TestModeBanner instructions={testInstructions} />
       <CheckoutSteps current={step} />
       <h2
         id={STEP_HEADING_ID}

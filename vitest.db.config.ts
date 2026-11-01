@@ -29,6 +29,11 @@ export default defineConfig({
       TEST_DATABASE_URL: url,
       NEXT_PUBLIC_SITE_URL:
         process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+      // Always the fake gateway: the tests never reach Xendit, whatever
+      // .env.local chooses (docs/specs/031-pay-with-xendit)
+      PAYMENT_GATEWAY: "fake",
+      XENDIT_WEBHOOK_TOKEN: "test-webhook-token",
+      VERCEL_ENV: "",
     },
   },
 })

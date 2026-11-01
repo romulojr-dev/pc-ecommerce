@@ -1,12 +1,14 @@
+import { TestModeBanner } from "@/components/checkout/test-mode-banner"
 import { CopyLink } from "@/components/orders/copy-link"
 import { OrderTimeline } from "@/components/orders/order-timeline"
+import { PaymentPanel } from "@/components/orders/payment-panel"
 import { SLOT_COPY } from "@/lib/build-state/slots"
 import type { Slot } from "@/lib/builder"
 import { groupName } from "@/lib/cart/copy"
 import { addressLines, shippingValue } from "@/lib/checkout/copy"
 import { formatPeso } from "@/lib/format"
 import { ORDER_COPY, orderHeading } from "@/lib/orders/copy"
-import { isPastDue, payByText, placedOnText } from "@/lib/orders/time"
+import { payByText, placedOnText } from "@/lib/orders/time"
 import { orderTimeline, statusLabel } from "@/lib/orders/timeline"
 import {
   type OrderEntry,
@@ -14,11 +16,22 @@ import {
   type OrderPageData,
   type OrderPageItem,
 } from "@/lib/orders/view"
+import type { PaymentView } from "@/lib/payments/payment-view"
 
 // The order page's content (docs/specs/030-place-an-order, Behavior 18), drawn
 // from the order's snapshots and nothing else. A server component: only
-// CopyLink needs the browser. `now` is passed in so the past-due text is a
-// pure function of the data.
+// CopyLink and the payment panel need the browser. The page computes the
+// payment view (docs/specs/031-pay-with-xendit, paymentView) from the order,
+// the URL's `payment=` value and the time, so this is a pure function of its
+// props.
+
+export type OrderPayment = {
+  view: PaymentView
+  // The gateway's test instructions, for the banner (FR-27)
+  instructions: string
+  // Who "Still confirming" waits for
+  gatewayName: string
+}
 
 const slotLabel = (slot: string | null): string =>
   slot === null ? "" : (SLOT_COPY[slot as Slot]?.name ?? slot)
@@ -67,11 +80,16 @@ function Entry({ entry }: { entry: OrderEntry }) {
   )
 }
 
-export function OrderView({ order, now }: { order: OrderPageData; now: Date }) {
+export function OrderView({
+  order,
+  payment,
+}: {
+  order: OrderPageData
+  payment: OrderPayment
+}) {
   const timeline = orderTimeline(order)
   const entries = orderEntries(order.items)
-  const pending = order.status === "PENDING_PAYMENT"
-  const pastDue = pending && isPastDue(order.expiresAt, now)
+  const { view } = payment
   const lines = order.address ? addressLines({ ...order.address }) : null
 
   return (
@@ -90,13 +108,20 @@ export function OrderView({ order, now }: { order: OrderPageData; now: Date }) {
           {ORDER_COPY.statusHeading}
         </h2>
         <OrderTimeline timeline={timeline} />
-        {pending && (
-          <div className="flex flex-col gap-1 text-sm">
+        {view !== "none" && (
+          <div className="flex flex-col gap-3 text-sm">
+            <TestModeBanner instructions={payment.instructions} />
             <p className="font-medium">
-              {pastDue ? ORDER_COPY.pastDue : payByText(order.expiresAt)}
+              {view === "past-due"
+                ? ORDER_COPY.pastDue
+                : payByText(order.expiresAt)}
             </p>
-            {!pastDue && (
-              <p className="text-muted-foreground">{ORDER_COPY.payingSoon}</p>
+            {view !== "past-due" && (
+              <PaymentPanel
+                orderNumber={order.orderNumber}
+                view={view}
+                gatewayName={payment.gatewayName}
+              />
             )}
           </div>
         )}

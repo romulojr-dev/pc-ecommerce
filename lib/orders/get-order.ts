@@ -81,3 +81,30 @@ export async function getOrderForPage(
 
 // One read per request: generateMetadata and the page both ask
 export const loadOrder = cache(getOrderForPage)
+
+// An order's id and status, opened by its number and key with the same checks
+// as the page (docs/specs/031-pay-with-xendit: Pay now, the status route and
+// the test payment page). `null` for every miss, so callers answer them alike.
+export async function findOrderByKey(
+  number: unknown,
+  key: unknown
+): Promise<{
+  id: string
+  orderNumber: string
+  status: OrderStatusName
+} | null> {
+  if (!orderNumberShape(number) || !tokenShape(key)) return null
+
+  const order = await db.order.findUnique({
+    where: { orderNumber: number },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      accessTokenHash: true,
+    },
+  })
+  const matches = tokenMatches(key, order?.accessTokenHash ?? DUMMY_TOKEN_HASH)
+  if (!order || !matches) return null
+  return { id: order.id, orderNumber: order.orderNumber, status: order.status }
+}
