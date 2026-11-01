@@ -13,7 +13,7 @@ import { assertResetAllowed, ResetRefusedError } from "../lib/reset-guard"
 // Specs set a known stock first and restore it in a `finally`, because
 // `pnpm db:seed` keeps the stock of products that exist.
 // The guard and a connection to the app's database, for the helpers below
-async function withPool<T>(run: (pool: Pool) => Promise<T>): Promise<T> {
+export async function withPool<T>(run: (pool: Pool) => Promise<T>): Promise<T> {
   try {
     assertResetAllowed(process.env, { requireProductionHost: !process.env.CI })
   } catch (error) {
