@@ -26,7 +26,7 @@ export const stillConfirmingText = (gatewayName: string): string =>
   `Still confirming. This page updates when we hear from ${gatewayName}.`
 
 export const XENDIT_INSTRUCTIONS =
-  "Pay with a test card: 4000 0000 0000 1000, any future expiry date, any CVV (4000 0000 0000 2503 shows a 3-D Secure step). For GCash or Maya, follow Xendit's test page."
+  "Pay with a test card: 4000 0000 0000 1000, any future expiry date, any CVV (4000 0000 0000 2503 shows a 3-D Secure step). For GCash or Maya, choose the wallet and continue: the test payment completes at once, with no wallet login."
 
 export const FAKE_INSTRUCTIONS =
   "Payments here use a test page, not Xendit: choose Pay or Cancel."

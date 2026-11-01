@@ -42,7 +42,7 @@ Where each environment gets its payments and payment events:
   whether the key has the test prefix (never the key), creates a ₱19.99 session
   that expires in 24 hours, prints Xendit's answer and cancels it; with
   `--keep` it leaves the session open so its link can be used to try GCash and
-  Maya. Record the answers under "To confirm in test mode" below.
+  Maya. The results so far are under "Confirmed in test mode" below.
 
 ### Environment variables
 
@@ -120,8 +120,9 @@ On Xendit's test pages:
   (Visa, with a 3-D Secure step); Mastercard 5200 0000 0000 1005 /
   5200 0000 0000 2151. Any future expiry date, any CVV
   ([Xendit](https://docs.xendit.co/docs/cards-simulate-card-scenarios.md)).
-- **GCash and Maya:** *to be written from the first test payment of each
-  (spec 031, Q4).*
+- **GCash and Maya:** choose the wallet on Xendit's page and continue; the test
+  payment completes at once, with no wallet login or OTP (checked 2026-11-01,
+  spec 031, Q4).
 
 ### Orders switch (#78)
 
@@ -173,7 +174,3 @@ On Xendit's test pages:
 - Cancelling an active session answers `200` with `CANCELED`; cancelling it
   again answers `422 INVALID_SESSION_STATUS` ("Session status is CANCELED,
   expecting ACTIVE").
-
-## To confirm in test mode
-
-- The GCash and Maya test steps, for the Test mode banner (Q4).

@@ -76,5 +76,5 @@ The return URLs are the order link (`/orders/{number}?key={token}`) plus a `paym
 - **Production needs its variables before the merge.** With `PAYMENT_GATEWAY` required, a deploy without it fails at startup, so `PAYMENT_GATEWAY=xendit` and `XENDIT_SECRET_KEY` are set on Vercel first ([setup](../setup/payments.md)).
 - **Real Xendit locally needs HTTPS:** a tunnel origin as `NEXT_PUBLIC_SITE_URL`.
 - **A session can be orphaned:** created at Xendit while our transaction fails. Its `metadata.order_id` lets #80 record a payment made on it.
-- **Checked in test mode** (`pnpm payments:check`, 2026-11-01; spec 031, Q2, Q6, Q8): test keys start `xnd_development_`; a session accepts `expires_at` 24 hours ahead; a PHP session accepts centavos (`amount: 19.99`), so every total can be paid online. The GCash and Maya test steps (Q4) are still to be written.
+- **Checked in test mode** (`pnpm payments:check`, 2026-11-01; spec 031, Q2, Q6, Q8): test keys start `xnd_development_`; a session accepts `expires_at` 24 hours ahead; a PHP session accepts centavos (`amount: 19.99`), so every total can be paid online. On the test page, GCash and Maya complete the payment as soon as the shopper picks one and continues (Q4).
 - **Switching gateways is an adapter**, plus the webhook route and the setup page: the rest of the app speaks `PaymentGateway`.

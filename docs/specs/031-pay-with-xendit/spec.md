@@ -1,6 +1,6 @@
 # 031 — Pay with a Xendit payment session
 
-Status: **Implemented** (test-mode check Q4 pending) · Approved in review 2026-11-01 · Issue: #79 (Sprint 6, Checkout epic #4; depends on #78, merged as spec 030) · PRD refs: Payments and fulfillment (method table), FR-22 (the redirect never marks Paid), FR-23 (a payment record per attempt), FR-27 (Test mode banner with test instructions); Data model › `Payment`; Risks (mock provider adapter behind the same interface)
+Status: **Implemented** · Approved in review 2026-11-01 · Issue: #79 (Sprint 6, Checkout epic #4; depends on #78, merged as spec 030) · PRD refs: Payments and fulfillment (method table), FR-22 (the redirect never marks Paid), FR-23 (a payment record per attempt), FR-27 (Test mode banner with test instructions); Data model › `Payment`; Risks (mock provider adapter behind the same interface)
 
 **Gateway decision (settled before this spec):** Xendit in test mode, not PayMongo. The PRD named Xendit as the fallback; the owner has a Xendit test account. Issue #79's text was written for PayMongo; this spec is the behavior, and D1 maps each PayMongo criterion to its Xendit equivalent.
 
@@ -195,7 +195,7 @@ Seed parts and values as in spec 030 (P1: AMD Ryzen 5 7600 × 2, delivery to QC,
 | Still confirming | "Still confirming. This page updates when we hear from Xendit." (fake: "…when we hear from the test payment page.") |
 | Cancelled | "Payment not completed. You haven't been charged." |
 | Under 10 minutes left | "This order expires in a few minutes and can't be paid. Place a new order." |
-| Banner (checkout and pending order page), Xendit | **"Test mode."** "This is a demo store: no real payment is taken and no order is shipped. Pay with a test card: 4000 0000 0000 1000, any future expiry date, any CVV (4000 0000 0000 2503 shows a 3-D Secure step). For GCash or Maya, follow Xendit's test page." (The wallet sentence is confirmed in Q4.) |
+| Banner (checkout and pending order page), Xendit | **"Test mode."** "This is a demo store: no real payment is taken and no order is shipped. Pay with a test card: 4000 0000 0000 1000, any future expiry date, any CVV (4000 0000 0000 2503 shows a 3-D Secure step). For GCash or Maya, choose the wallet and continue: the test payment completes at once, with no wallet login." (The wallet sentence comes from Q4.) |
 | Banner, fake | **"Test mode."** "This is a demo store: no real payment is taken and no order is shipped. Payments here use a test page, not Xendit: choose Pay or Cancel." |
 | Fake page title / heading | "Test payment, not Xendit" |
 | Fake page body | "Order {number}" · "Amount {₱…}" · "This page stands in for Xendit in tests and previews. Nothing is charged." |
@@ -285,7 +285,7 @@ The fake's metadata title is "Test payment" (`noindex`). The spec 030 line "Payi
 | Unit (Vitest, pure) | S1–S8 (`sessionRequest`, amount conversion), V1–V9 (`paymentView` and `OrderView` markup), T1–T4 (polling hook with fake timers), E1–E7 (env schema, imported as a schema like `ordersEnabledSchema`), the Xendit adapter's request/response mapping against recorded Xendit-shaped JSON (create 201, cancel 200, cancel 422 → read, get), with `fetch` stubbed; the log spy test (no key, token, URL or body in any console call) |
 | Integration (Vitest + Docker Postgres, fake adapter) | A1–A11, R1–R3, F2/F5 (fake state and event built), the partial unique index (a second PENDING insert fails), `Payment` `CHECK`, `resetCatalog()` empties the new tables |
 | E2E (Playwright, fake adapter, CI and local) | X1–X4. Uses spec 030's dedicated part and stock helper |
-| Manual (preview, then local with Xendit and a tunnel) | Preview: X1–X4. Local, real Xendit test mode: pay with 4000 0000 0000 1000 and land on "Confirming…"; cancel on Xendit's page and retry; GCash and Maya test flows (fills Q4). *Done with `pnpm payments:check`, 2026-11-01: the 24 h `expires_at` (Q2), the key prefix (Q6) and a ₱19.99 session (Q8).* |
+| Manual (preview, then local with Xendit and a tunnel) | Preview: X1–X4. Local, real Xendit test mode: pay with 4000 0000 0000 1000 and land on "Confirming…"; cancel on Xendit's page and retry; GCash and Maya test flows (Q4, done by the owner on 2026-11-01). *Done with `pnpm payments:check`, 2026-11-01: the 24 h `expires_at` (Q2), the key prefix (Q6) and a ₱19.99 session (Q8).* |
 
 ## 8. Out of scope
 
@@ -362,6 +362,6 @@ The fake's metadata title is "Test payment" (`noindex`). The spec 030 line "Payi
 
 ### Pending, answered during planning
 
-- **Q4 — GCash and Maya test steps.** The owner tries one of each and gives the steps; they replace "follow Xendit's test page" in the banner (§5) and go into `docs/setup/payments.md`.
+- **Q4 — GCash and Maya test steps.** **Answered** (owner, 2026-11-01, on a `pnpm payments:check --keep` session): Xendit's test page offers GCash and Maya; after choosing one and continuing, the test payment completes at once, with no wallet login or OTP. The banner's wallet sentence (§5) and `docs/setup/payments.md` say so.
 - **Q6 — Key prefix.** **Answered** (`pnpm payments:check`, 2026-11-01): the test key starts `xnd_development_`, so E3 stands.
 - **Q8 — Centavos in PHP sessions.** **Answered** (`pnpm payments:check`, 2026-11-01): a PHP session for `amount: 19.99` was created (HTTP 201) and returned `amount: 19.99`, so S3 stands and S3c (refuse totals with centavos) is dropped. Cancelling it answered 200 `CANCELED`, and cancelling again 422 `INVALID_SESSION_STATUS`, as documented.
