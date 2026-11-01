@@ -9,8 +9,6 @@ export const PAY_COPY = {
   cancelled: "Payment not completed. You haven't been charged.",
   tooLate:
     "This order expires in a few minutes and can't be paid. Place a new order.",
-  centavosRefused:
-    "This order can't be paid online because its total includes centavos. Contact us.",
   // The fake payment page
   fakeTitle: "Test payment",
   fakeHeading: "Test payment, not Xendit",

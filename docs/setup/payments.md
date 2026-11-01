@@ -164,12 +164,16 @@ On Xendit's test pages:
   ([handling-webhooks](https://docs.xendit.co/docs/handling-webhooks.md))
 - Channels: `GCASH`, `PAYMAYA` (PHP 1 to 100,000), `CARDS` (PHP 20 to 700,000).
 
+## Confirmed in test mode (2026-11-01, `pnpm payments:check`)
+
+- The test key starts with `xnd_development_` (spec 031, Q6).
+- A session accepts `expires_at` 24 hours ahead, unchanged (Q2).
+- A PHP session accepts centavos: `amount: 19.99` was created and returned as
+  `19.99` (Q8).
+- Cancelling an active session answers `200` with `CANCELED`; cancelling it
+  again answers `422 INVALID_SESSION_STATUS` ("Session status is CANCELED,
+  expecting ACTIVE").
+
 ## To confirm in test mode
 
-The planning of #79 checks these and updates this page:
-
-- the test key's prefix is `xnd_development_` (Q6)
-- a session accepts `expires_at` 24 hours ahead (Q2)
-- a PHP session accepts centavos (`amount: 19.99`); if not, totals with centavos
-  can't be paid online (Q8)
-- the GCash and Maya test steps, for the Test mode banner (Q4)
+- The GCash and Maya test steps, for the Test mode banner (Q4).
