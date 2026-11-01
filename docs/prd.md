@@ -161,7 +161,7 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 
 ### Requirements
 
-- **FR-22** Payment status is set only by verified gateway **webhooks**, never by the browser redirect.
+- **FR-22** Payment status is set only from the gateway (verified webhook or server-side status check), never from the browser redirect.
 - **FR-23** Idempotent webhook handler (same event processed once) and a payment record per attempt.
 - **FR-24** Unpaid online orders auto-cancel after a set time (default 24 h) and release reserved stock.
 - **FR-25** COD limits configurable by admin: max order value and allowed zones.
