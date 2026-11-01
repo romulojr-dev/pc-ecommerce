@@ -58,7 +58,8 @@ export default async function OrderPage({
     order.status,
     order.expiresAt,
     parsePaymentParam(payment),
-    new Date()
+    new Date(),
+    order.payments
   )
 
   return (

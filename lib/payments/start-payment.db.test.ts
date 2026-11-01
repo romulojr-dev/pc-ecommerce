@@ -290,3 +290,31 @@ describe("a failure after the gateway made a session (A11)", () => {
     expect(JSON.stringify(lines)).not.toContain(TOKEN)
   })
 })
+
+// docs/specs/032-payment-webhooks, S9
+describe("a payment that needs checking", () => {
+  it("refuses Pay now with no gateway call and nothing written (S9)", async () => {
+    const order = await newOrder()
+    const id = await started(order.id)
+    await db.payment.updateMany({
+      where: { providerRef: id },
+      data: {
+        status: "PAID",
+        paidAt: NOW,
+        problem: "AMOUNT_MISMATCH",
+        receivedAmount: 2_310_000,
+      },
+    })
+    const gateway = fakeGateway({ now: () => NOW })
+    const create = vi.spyOn(gateway, "createSession")
+    const close = vi.spyOn(gateway, "closeSession")
+
+    expect(await startPayment(order.id, TOKEN, options({ gateway }))).toEqual({
+      ok: false,
+      reason: "needs-check",
+    })
+    expect(create).not.toHaveBeenCalled()
+    expect(close).not.toHaveBeenCalled()
+    expect(await payments(order.id)).toHaveLength(1)
+  })
+})

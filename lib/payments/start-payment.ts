@@ -25,7 +25,13 @@ export type StartResult =
   | { ok: true; url: string }
   | {
       ok: false
-      reason: "confirming" | "expired" | "not-pending" | "not-found" | "error"
+      reason:
+        | "confirming"
+        | "expired"
+        | "not-pending"
+        | "needs-check"
+        | "not-found"
+        | "error"
     }
 
 export type StartStep = "lock" | "close" | "create" | "payment"
@@ -88,6 +94,12 @@ export async function startPayment(
       if (!order) throw refuse("not-found")
       if (order.status !== "PENDING_PAYMENT") throw refuse("not-pending")
       if (!canStartSession(order.expiresAt, now)) throw refuse("expired")
+      // A payment whose amount didn't match is being checked: no new one
+      // (docs/specs/032-payment-webhooks, behavior 24, S9)
+      const mismatch = await tx.payment.count({
+        where: { orderId, problem: "AMOUNT_MISMATCH" },
+      })
+      if (mismatch > 0) throw refuse("needs-check")
       await afterStep?.("lock")
 
       // 2. Close the open session. If it was paid first, a payment is on

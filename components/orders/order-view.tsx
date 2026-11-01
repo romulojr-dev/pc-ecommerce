@@ -16,6 +16,7 @@ import {
   type OrderPageData,
   type OrderPageItem,
 } from "@/lib/orders/view"
+import { PAY_COPY, paidLine } from "@/lib/payments/copy"
 import type { PaymentView } from "@/lib/payments/payment-view"
 
 // The order page's content (docs/specs/030-place-an-order, Behavior 18), drawn
@@ -108,7 +109,24 @@ export function OrderView({
           {ORDER_COPY.statusHeading}
         </h2>
         <OrderTimeline timeline={timeline} />
-        {view !== "none" && (
+        {(order.paidAt || order.refundRequired) && (
+          <div className="flex flex-col gap-1 text-sm">
+            {order.paidAt && (
+              <p>{paidLine(order.paidAt, order.paymentMethod)}</p>
+            )}
+            {order.refundRequired && (
+              <p className="font-medium">
+                {order.status === "CANCELLED" || order.status === "REFUNDED"
+                  ? PAY_COPY.latePayment
+                  : PAY_COPY.secondPayment}
+              </p>
+            )}
+          </div>
+        )}
+        {view === "needs-check" && (
+          <p className="text-sm font-medium">{PAY_COPY.needsCheck}</p>
+        )}
+        {view !== "none" && view !== "needs-check" && (
           <div className="flex flex-col gap-3 text-sm">
             <TestModeBanner instructions={payment.instructions} />
             <p className="font-medium">

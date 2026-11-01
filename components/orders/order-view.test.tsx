@@ -65,6 +65,10 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
     shippingFee: 12_000,
     discount: 0,
     total: 2_311_000,
+    paidAt: null,
+    paymentMethod: null,
+    refundRequired: false,
+    payments: { latest: null, needsCheck: false },
     ...over,
   }
 }
@@ -79,7 +83,7 @@ const render = (
     <OrderView
       order={o}
       payment={{
-        view: paymentView(o.status, o.expiresAt, param, now),
+        view: paymentView(o.status, o.expiresAt, param, now, o.payments),
         instructions,
         gatewayName: "Xendit",
       }}
@@ -359,5 +363,98 @@ describe("the payment area (spec 031)", () => {
     expect(t).not.toContain("Payment not completed")
     expect(t).not.toContain("Pay now")
     expect(t).not.toContain("Retry payment")
+  })
+})
+
+// docs/specs/032-payment-webhooks: V10–V16e as markup
+describe("after the gateway answered", () => {
+  const PAID_AT = new Date("2026-11-01T07:05:00Z")
+  const paid = (over: Partial<OrderPageData> = {}) =>
+    order({ status: "PAID", paidAt: PAID_AT, paymentMethod: "GCASH", ...over })
+
+  it("V10: says when and how a paid order was paid, with no payment area", () => {
+    const t = text(render(paid()))
+    expect(t).toContain("Paid on Sun 1 Nov 2026, 3:05 PM with GCash.")
+    expect(t).not.toContain("Test mode")
+    expect(t).not.toContain("Pay now")
+    expect(t).not.toContain("Pay by")
+  })
+
+  it("V11: leaves out a method it can't name", () => {
+    expect(text(render(paid({ paymentMethod: "QRPH" })))).toContain(
+      "Paid on Sun 1 Nov 2026, 3:05 PM."
+    )
+  })
+
+  it("V12: promises a refund for a payment after cancellation", () => {
+    const t = text(render(order({ status: "CANCELLED", refundRequired: true })))
+    expect(t).toContain(
+      "Payment received after this order was cancelled. We'll refund it."
+    )
+    expect(t).not.toContain("Paid on")
+  })
+
+  it("V13: promises a refund for a second payment", () => {
+    const t = text(render(paid({ refundRequired: true })))
+    expect(t).toContain(
+      "We received a second payment for this order. We'll refund it."
+    )
+    expect(t).toContain("Paid on Sun 1 Nov 2026, 3:05 PM with GCash.")
+  })
+
+  it("V14: offers Retry after the last session expired", () => {
+    const t = text(
+      render(order({ payments: { latest: "expired", needsCheck: false } }))
+    )
+    expect(t).toContain("Payment not completed. You haven't been charged.")
+    expect(t).toContain("Retry payment")
+  })
+
+  it("V15: offers Pay now while a session is open", () => {
+    const t = text(
+      render(order({ payments: { latest: "pending", needsCheck: false } }))
+    )
+    expect(t).toContain("Pay now")
+    expect(t).not.toContain("Payment not completed")
+  })
+
+  const check = { latest: "paid", needsCheck: true } as const
+  const NEEDS_CHECK =
+    "We received a payment that needs checking. We'll contact you."
+
+  it.each([null, "return", "cancelled", "error"] as const)(
+    "V16, V16a: needs checking, with no way to pay (payment=%s)",
+    (param) => {
+      const t = text(render(order({ payments: check }), NOW, param))
+      expect(t).toContain(NEEDS_CHECK)
+      for (const gone of [
+        "Pay now",
+        "Retry payment",
+        "Confirming your payment",
+        "Test mode",
+        "Pay by",
+      ]) {
+        expect(t).not.toContain(gone)
+      }
+    }
+  )
+
+  it("V16b: needs checking past the payment time too", () => {
+    const t = text(
+      render(order({ payments: check }), new Date("2026-11-01T08:00:00Z"))
+    )
+    expect(t).toContain(NEEDS_CHECK)
+    expect(t).not.toContain("The time to pay has passed")
+  })
+
+  it("V16d: says it under a cancelled order", () => {
+    const t = text(render(order({ status: "CANCELLED", payments: check })))
+    expect(t).toContain(NEEDS_CHECK)
+  })
+
+  it("V16e: a paid order with a mismatched second payment shows the refund only", () => {
+    const t = text(render(paid({ refundRequired: true, payments: check })))
+    expect(t).not.toContain(NEEDS_CHECK)
+    expect(t).toContain("We received a second payment")
   })
 })
