@@ -16,7 +16,10 @@ import type { PaymentView } from "@/lib/payments/payment-view"
 // and Retry payment are the same action. Messages sit in an aria-live
 // container, not role="status" (the page's one status role stays spec 030's).
 
-export type PanelView = Exclude<PaymentView, "none" | "past-due">
+export type PanelView = Exclude<
+  PaymentView,
+  "none" | "past-due" | "needs-check"
+>
 
 type Props = {
   orderNumber: string
@@ -53,6 +56,8 @@ export function PaymentPanel({
     if (result?.reason === "confirming") setView("confirming")
     else if (result?.reason === "expired") setView("too-late")
     else if (result?.reason === "not-pending") router.refresh()
+    // A payment arrived that needs checking: the page shows only that now
+    else if (result?.reason === "needs-check") router.refresh()
     else setView("error")
   }
 

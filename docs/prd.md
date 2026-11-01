@@ -161,7 +161,7 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 
 ### Requirements
 
-- **FR-22** Payment status is set only by verified gateway **webhooks**, never by the browser redirect.
+- **FR-22** Payment status is set only from the gateway (verified webhook or server-side status check), never from the browser redirect.
 - **FR-23** Idempotent webhook handler (same event processed once) and a payment record per attempt.
 - **FR-24** Unpaid online orders auto-cancel after a set time (default 24 h) and release reserved stock.
 - **FR-25** COD limits configurable by admin: max order value and allowed zones.
@@ -272,10 +272,10 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
 | `SavedBuild` | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
 | `Cart` / `CartItem` | cartId (cookie or userId), productId, quantity, buildId (nullable, for grouping) |
-| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the token is only in the order link), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, total, paymentMethod, shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), refundRequired (a payment arrived after cancellation), idempotencyKey, courier, trackingNumber |
+| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the token is only in the order link), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, total, paymentMethod, shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
-| `Payment` | orderId, provider, providerRef, method, amount, status, rawEvent, createdAt. One row per payment attempt |
-| `PaymentEvent` | eventId (unique), type, payload, receivedAt. Each gateway webhook event, so the same event is processed once (FR-23) |
+| `Payment` | orderId, provider, providerRef, method, amount, status, paidAt, received amount and currency, problem (amount mismatch, late, second payment), createdAt. One row per payment attempt; the webhook bodies are in `PaymentEvent` |
+| `PaymentEvent` | eventId (unique; Xendit sends none, so it is `{event}:{session id}`), type, payload, paymentId, receivedAt. Each processed gateway webhook event, so the same event is processed once (FR-23) |
 | `Voucher` | code, type, value, minSpend, startsAt, endsAt, usageLimit, usedCount |
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
 | `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25). Seeded until the admin settings screen (AD-9) |

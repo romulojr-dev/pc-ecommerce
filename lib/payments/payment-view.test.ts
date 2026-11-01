@@ -90,3 +90,76 @@ describe("isPayable", () => {
     expect(isPayable(status, expiresAt, at(now))).toBe(payable)
   })
 })
+
+// docs/specs/032-payment-webhooks: V14–V16e
+describe("paymentView with the order's payments", () => {
+  const expired = { latest: "expired", needsCheck: false } as const
+  const pending = { latest: "pending", needsCheck: false } as const
+  const check = { latest: "paid", needsCheck: true } as const
+
+  it("offers Retry when the latest session expired (V14)", () => {
+    expect(
+      paymentView("PENDING_PAYMENT", expiresAt, null, HOURS_LEFT_23, expired)
+    ).toBe("cancelled")
+  })
+
+  it("still confirms a return after an expired session (V14a)", () => {
+    expect(
+      paymentView(
+        "PENDING_PAYMENT",
+        expiresAt,
+        "return",
+        HOURS_LEFT_23,
+        expired
+      )
+    ).toBe("confirming")
+  })
+
+  it("is too late with 9 min left even after an expired session (V14b)", () => {
+    expect(
+      paymentView(
+        "PENDING_PAYMENT",
+        expiresAt,
+        null,
+        at("2026-11-02T06:51:00Z"),
+        expired
+      )
+    ).toBe("too-late")
+  })
+
+  it("offers Pay now with an open session (V15)", () => {
+    expect(
+      paymentView("PENDING_PAYMENT", expiresAt, null, HOURS_LEFT_23, pending)
+    ).toBe("pay")
+  })
+
+  it.each([null, "return", "cancelled", "error"] as const)(
+    "needs checking whatever the payment value (%s) (V16, V16a)",
+    (param) => {
+      expect(
+        paymentView("PENDING_PAYMENT", expiresAt, param, HOURS_LEFT_23, check)
+      ).toBe("needs-check")
+    }
+  )
+
+  it.each(["2026-11-02T06:51:00Z", "2026-11-02T08:00:00Z"])(
+    "needs checking at %s, near or past expiry (V16b)",
+    (now) => {
+      expect(
+        paymentView("PENDING_PAYMENT", expiresAt, null, at(now), check)
+      ).toBe("needs-check")
+    }
+  )
+
+  it("needs checking on a cancelled order (V16d)", () => {
+    expect(
+      paymentView("CANCELLED", expiresAt, null, HOURS_LEFT_23, check)
+    ).toBe("needs-check")
+  })
+
+  it("leaves a paid order's view alone (V16e)", () => {
+    expect(paymentView("PAID", expiresAt, null, HOURS_LEFT_23, check)).toBe(
+      "none"
+    )
+  })
+})

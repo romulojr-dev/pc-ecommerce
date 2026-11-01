@@ -90,10 +90,87 @@ describe("FakeGatewaySession", () => {
   })
 })
 
+// docs/specs/032-payment-webhooks, §6 Schema
+describe("paid payments and orders", () => {
+  const paid = { status: "PAID" as const, paidAt: new Date() }
+
+  it("accepts a paid payment with paidAt, and a pending one without", async () => {
+    const order = await newOrder()
+    await db.payment.create({ data: paymentData(order.id, paid) })
+    await db.payment.create({ data: paymentData(order.id) })
+  })
+
+  it("refuses PAID without paidAt, and paidAt without PAID", async () => {
+    const order = await newOrder()
+    await expect(
+      db.payment.create({ data: paymentData(order.id, { status: "PAID" }) })
+    ).rejects.toThrow()
+    await expect(
+      db.payment.create({
+        data: paymentData(order.id, { status: "EXPIRED", paidAt: new Date() }),
+      })
+    ).rejects.toThrow()
+  })
+
+  it.each([0, -1])("refuses a received amount of %i", async (amount) => {
+    const order = await newOrder()
+    await expect(
+      db.payment.create({
+        data: paymentData(order.id, { ...paid, receivedAmount: amount }),
+      })
+    ).rejects.toThrow()
+  })
+
+  it("refuses paidAt on a pending order, and allows it once Paid", async () => {
+    await expect(
+      db.order.create({ data: orderData({ paidAt: new Date() }) })
+    ).rejects.toThrow()
+    await db.order.create({
+      data: orderData({ status: "PAID", paidAt: new Date() }),
+    })
+  })
+})
+
+describe("PaymentEvent", () => {
+  const event = (eventId: string) => ({
+    eventId,
+    type: "payment_session.completed",
+    payload: { event: "payment_session.completed" },
+  })
+
+  it("refuses the same event id twice (FR-23)", async () => {
+    await db.paymentEvent.create({
+      data: event("payment_session.completed:ps-1"),
+    })
+    await expect(
+      db.paymentEvent.create({ data: event("payment_session.completed:ps-1") })
+    ).rejects.toThrow()
+  })
+
+  it("keeps a payment with events from being deleted", async () => {
+    const order = await newOrder()
+    const payment = await db.payment.create({ data: paymentData(order.id) })
+    await db.paymentEvent.create({
+      data: { ...event("e:1"), paymentId: payment.id },
+    })
+    await expect(
+      db.payment.delete({ where: { id: payment.id } })
+    ).rejects.toThrow()
+  })
+})
+
 describe("resetCatalog", () => {
   it("empties the payment tables", async () => {
     const order = await newOrder()
-    await db.payment.create({ data: paymentData(order.id) })
+    const payment = await db.payment.create({ data: paymentData(order.id) })
+    await db.paymentEvent.create({
+      data: {
+        eventId: "payment_session.completed:ps-x",
+        type: "payment_session.completed",
+        payload: {},
+        paymentId: payment.id,
+      },
+    })
     await db.fakeGatewaySession.create({
       data: {
         id: sessionId(),
@@ -107,6 +184,7 @@ describe("resetCatalog", () => {
     })
     await resetCatalog()
     expect(await db.payment.count()).toBe(0)
+    expect(await db.paymentEvent.count()).toBe(0)
     expect(await db.fakeGatewaySession.count()).toBe(0)
   })
 })

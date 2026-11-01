@@ -30,7 +30,8 @@
     "images:placeholders": "tsx scripts/generate-placeholders.tsx",
     "images:og": "tsx scripts/generate-og-image.tsx",
     "psgc:convert": "tsx scripts/convert-psgc.ts",
-    "payments:check": "tsx scripts/xendit-check.ts"
+    "payments:check": "tsx scripts/xendit-check.ts",
+    "webhook:replay": "tsx scripts/webhook-replay.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

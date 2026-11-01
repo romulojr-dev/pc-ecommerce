@@ -8,6 +8,37 @@ export function logGatewayFailure(event: string, code: string): void {
   console.error(`${event} failed: ${code}`)
 }
 
+// One line per webhook or reconcile (docs/specs/032-payment-webhooks, rule
+// Logging, L1–L9), the ignored ones included: JSON with only these fields,
+// those known at that point. Never the token, the body, the order's key, a URL
+// or a shopper's details.
+export type PaymentLogFields = {
+  event: "payment.webhook" | "payment.reconcile"
+  outcome: string
+  // Xendit's event name
+  type?: string
+  sessionId?: string
+  orderNumber?: string
+  // A gateway failure code, a session's environment, or "unknown-order"
+  code?: string
+}
+
+export function logPaymentEvent(fields: PaymentLogFields): void {
+  const line = JSON.stringify({
+    event: fields.event,
+    outcome: fields.outcome,
+    type: fields.type,
+    sessionId: fields.sessionId,
+    orderNumber: fields.orderNumber,
+    code: fields.code,
+  })
+  if (fields.outcome === "retry" || fields.outcome === "error") {
+    console.error(line)
+  } else {
+    console.info(line)
+  }
+}
+
 // A session the gateway made but no Payment row records (A11): #80 finds its
 // order through the session's metadata
 export function logOrphanedSession(provider: string, sessionId: string): void {

@@ -32,6 +32,11 @@ export type SessionDetails = {
   metadata: Record<string, unknown> | null
   // The captured payment, once there is one
   paymentId: string | null
+  // What the session was created with: an orphan session's Payment row is
+  // made from these (docs/specs/032-payment-webhooks, behavior 11)
+  referenceId: string
+  // null when the gateway doesn't say
+  expiresAt: Date | null
 }
 
 export type PaymentDetails = {

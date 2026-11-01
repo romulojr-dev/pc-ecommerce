@@ -25,7 +25,15 @@ export async function getOrderForPage(
 
   const order = await db.order.findUnique({
     where: { orderNumber: number },
-    include: { items: { orderBy: { position: "asc" } } },
+    include: {
+      items: { orderBy: { position: "asc" } },
+      // The newest first: its status picks Pay now or Retry (docs/specs/032-
+      // payment-webhooks, behavior 21 and 24)
+      payments: {
+        orderBy: { createdAt: "desc" },
+        select: { status: true, problem: true },
+      },
+    },
   })
   const matches = tokenMatches(key, order?.accessTokenHash ?? DUMMY_TOKEN_HASH)
   if (!order || !matches) return null
@@ -76,8 +84,25 @@ export async function getOrderForPage(
     shippingFee: order.shippingFee,
     discount: order.discount,
     total: order.total,
+    paidAt: order.paidAt,
+    paymentMethod: order.paymentMethod,
+    refundRequired: order.refundRequired,
+    payments: {
+      latest: LATEST[order.payments[0]?.status ?? "NONE"],
+      needsCheck: order.payments.some(
+        ({ problem }) => problem === "AMOUNT_MISMATCH"
+      ),
+    },
   }
 }
+
+const LATEST = {
+  NONE: null,
+  PENDING: "pending",
+  EXPIRED: "expired",
+  PAID: "paid",
+  FAILED: "failed",
+} as const
 
 // One read per request: generateMetadata and the page both ask
 export const loadOrder = cache(getOrderForPage)

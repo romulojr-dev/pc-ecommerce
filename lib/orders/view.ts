@@ -1,3 +1,5 @@
+import type { PaymentsSummary } from "@/lib/payments/payment-view"
+
 import type { FulfillmentName, OrderStatusName } from "./timeline"
 
 // What the order page shows (docs/specs/030-place-an-order, Behavior 18), as
@@ -37,6 +39,13 @@ export type OrderPageData = {
   shippingFee: number
   discount: number
   total: number
+  // docs/specs/032-payment-webhooks: set when the gateway confirmed a payment
+  paidAt: Date | null
+  // The gateway's channel code (GCASH, PAYMAYA, CARDS, FAKE)
+  paymentMethod: string | null
+  // A late or second payment to refund (FR-26)
+  refundRequired: boolean
+  payments: PaymentsSummary
 }
 
 export type OrderEntry =

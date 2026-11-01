@@ -2,7 +2,7 @@ import { env } from "@/lib/env"
 import { findOrderByKey } from "@/lib/orders/get-order"
 import { orderLink } from "@/lib/orders/link"
 
-import { CALLBACK_TOKEN_HEADER, deliverPaymentEvent } from "./events"
+import { CALLBACK_TOKEN_HEADER, handlePaymentEvent } from "./events"
 import {
   completeFakeSession,
   expireFakeSession,
@@ -11,7 +11,9 @@ import {
 } from "./fake"
 import { fakeSessionEvent, type FakeEventType } from "./fake-events"
 import { paymentEnvironment } from "./gateway"
+import type { PaymentGateway } from "./gateway-types"
 import type { PaymentEnvironment, PaymentParam } from "./session-request"
+import { SESSION_ID } from "./webhook"
 
 // The fake payment page's logic (docs/specs/031-pay-with-xendit, Behavior
 // 15–16, F1–F5). It stands in for Xendit's hosted page: Pay completes the
@@ -21,12 +23,12 @@ import type { PaymentEnvironment, PaymentParam } from "./session-request"
 // the gateway isn't the fake, the id is malformed or unknown, the key doesn't
 // open the session's order, or the session belongs to another environment.
 
-const SESSION_ID = /^ps-[0-9a-f]{24}$/
-
 export type FakePageContext = {
   gatewayIsFake?: boolean
   environment?: PaymentEnvironment
   now?: Date
+  // The gateway the webhook handler reads (tests pass the fake with a clock)
+  gateway?: PaymentGateway
 }
 
 export type FakePage = {
@@ -65,13 +67,30 @@ export async function openFakePage(
 const back = (page: FakePage, payment: PaymentParam) =>
   `${page.orderHref}&payment=${payment}`
 
-function send(type: FakeEventType, session: FakeSession, now: Date) {
-  deliverPaymentEvent(
+// Runs the webhook handler in process and waits for it, so the return page
+// already shows its result (docs/specs/032-payment-webhooks, behavior 25–26,
+// D10). Called after the fake session's own write, never inside a
+// transaction. A failed answer is in the handler's log line; the shopper
+// still goes back, as after a lost webhook.
+async function send(
+  type: FakeEventType,
+  session: FakeSession,
+  now: Date,
+  context: FakePageContext
+) {
+  await handlePaymentEvent(
     {
       headers: { [CALLBACK_TOKEN_HEADER]: env.XENDIT_WEBHOOK_TOKEN ?? "" },
       body: JSON.stringify(fakeSessionEvent(type, session, now)),
     },
-    env.XENDIT_WEBHOOK_TOKEN
+    env.XENDIT_WEBHOOK_TOKEN,
+    {
+      reconcileOptions: {
+        now,
+        environment: context.environment,
+        gateway: context.gateway,
+      },
+    }
   )
 }
 
@@ -93,13 +112,13 @@ export async function chooseOnFakePage(
   if (choice === "pay") {
     const paid = await completeFakeSession(sessionId, now)
     if (!paid) return page.orderHref
-    send("payment_session.completed", paid, now)
+    await send("payment_session.completed", paid, now, context)
     return back(page, "return")
   }
   if (choice === "expire") {
     const expired = await expireFakeSession(sessionId, now)
     if (!expired) return page.orderHref
-    send("payment_session.expired", expired, now)
+    await send("payment_session.expired", expired, now, context)
   }
   return back(page, "cancelled")
 }

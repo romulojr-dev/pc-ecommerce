@@ -1,10 +1,12 @@
 import type { Page } from "@playwright/test"
 
+import { setFakeSessionAmount } from "./payments"
 import { readStock, setStock } from "./stock"
 import { expect, test } from "./test"
 
 // Place an order and land on its page (docs/specs/030-place-an-order, X1–X7),
-// by way of the fake payment page (docs/specs/031-pay-with-xendit, X1–X4).
+// by way of the fake payment page (docs/specs/031-pay-with-xendit, X1–X3), and
+// pay for it (docs/specs/032-payment-webhooks, X5–X8).
 // Needs a seeded database (the demo shipping rates and store included) and
 // ORDERS_ENABLED=true and PAYMENT_GATEWAY=fake for the app server. These tests take real stock and
 // leave their orders behind (moving local E2E off the Neon dev branch is #74),
@@ -305,22 +307,78 @@ test("cancel on the payment page, then retry (X2, X3)", async ({ page }) => {
   ).toBeVisible()
 })
 
-test("paying shows Confirming and never marks Paid by itself (X4)", async ({
-  page,
-}) => {
+// docs/specs/032-payment-webhooks, X5–X8: the fake's Pay and Let it expire
+// run the webhook handler, which confirms through the fake gateway
+
+const currentStep = (page: Page) =>
+  page
+    .getByRole("navigation", { name: "Order status" })
+    .locator('[aria-current="step"]')
+
+test("checkout → paid: Pay marks the order Paid (X5)", async ({ page }) => {
   await reviewDelivery(page)
   await placeToPayment(page)
 
   await page.getByRole("button", { name: "Pay", exact: true }).click()
 
   await expect(page).toHaveURL(/&payment=return$/)
-  await expect(page.getByText("Confirming your payment…")).toBeVisible()
-  await expect(page.getByRole("button", { name: "Pay now" })).toHaveCount(0)
+  await expect(currentStep(page)).toHaveText("Paid")
   await expect(
-    page
-      .getByRole("navigation", { name: "Order status" })
-      .locator('[aria-current="step"]')
-  ).toHaveText("Pending payment")
+    page.getByText(
+      /^Paid on \w{3} \d{1,2} \w{3} \d{4}, .+ with the test payment page\.$/
+    )
+  ).toBeVisible()
+  await expect(page.getByText(/^Test mode\./)).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Pay now" })).toHaveCount(0)
+  await expect(page.getByText("Confirming your payment…")).toHaveCount(0)
+})
+
+test("an expired session offers Retry, then paying works (X6, X7)", async ({
+  page,
+}) => {
+  await reviewDelivery(page)
+  await placeToPayment(page)
+
+  await page.getByRole("button", { name: "Let it expire" }).click()
+
+  await expect(page).toHaveURL(/&payment=cancelled$/)
+  await expect(
+    page.getByText("Payment not completed. You haven't been charged.")
+  ).toBeVisible()
+  // X6: still Retry without the payment value, from the expired session
+  const url = new URL(page.url())
+  url.searchParams.delete("payment")
+  await page.goto(url.pathname + url.search)
+  await expect(
+    page.getByText("Payment not completed. You haven't been charged.")
+  ).toBeVisible()
+
+  // X7
+  await page.getByRole("button", { name: "Retry payment" }).click()
+  await expect(page).toHaveURL(FAKE_PAY_URL)
+  await page.getByRole("button", { name: "Pay", exact: true }).click()
+  await expect(currentStep(page)).toHaveText("Paid")
+})
+
+test("a payment of the wrong amount needs checking (X8)", async ({ page }) => {
+  await reviewDelivery(page)
+  await placeToPayment(page)
+
+  // One centavo short of the ₱7,295.00 total, as no real Xendit payment is
+  const session = /ps-[0-9a-f]{24}/.exec(page.url())![0]
+  await setFakeSessionAmount(session, 729_499)
+  await page.getByRole("button", { name: "Pay", exact: true }).click()
+
+  await expect(
+    page.getByText(
+      "We received a payment that needs checking. We'll contact you."
+    )
+  ).toBeVisible()
+  await expect(currentStep(page)).toHaveText("Pending payment")
+  await expect(page.getByRole("button", { name: "Pay now" })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Retry payment" })).toHaveCount(
+    0
+  )
 })
 
 test("Pay now opens a payment from the order page", async ({ page }) => {

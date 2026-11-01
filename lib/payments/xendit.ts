@@ -46,6 +46,7 @@ const STATUS: Record<string, SessionStatus> = {
 
 const sessionSchema = z.object({
   payment_session_id: z.string().min(1),
+  reference_id: z.string(),
   status: z.string(),
   amount: z.unknown(),
   currency: z.string(),
@@ -95,7 +96,16 @@ const toSession = (
     currency: data.currency,
     metadata: data.metadata ?? null,
     paymentId: data.payment_id ?? null,
+    referenceId: data.reference_id,
+    expiresAt: expiresAtOf(data.expires_at),
   }
+}
+
+// An instant, or null for a missing or unreadable one
+function expiresAtOf(text: string | undefined): Date | null {
+  if (!text) return null
+  const date = new Date(text)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 const toPayment = (data: z.infer<typeof paymentSchema>): PaymentDetails => ({

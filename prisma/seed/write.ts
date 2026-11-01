@@ -62,8 +62,9 @@ export function writeSeed(
         // not their parent order (docs/specs/030-place-an-order). "Payment"
         // and "FakeGatewaySession" are named for the reader: the first goes
         // with "Order" anyway, the second points at nothing
-        // (docs/specs/031-pay-with-xendit).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "FakeGatewaySession", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // (docs/specs/031-pay-with-xendit), and so is "PaymentEvent"
+        // (docs/specs/032-payment-webhooks).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "PaymentEvent", "FakeGatewaySession", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)

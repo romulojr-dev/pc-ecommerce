@@ -5,6 +5,7 @@ import type { Prisma } from "@/generated/prisma/client"
 
 import { FAKE_INSTRUCTIONS } from "./copy"
 import type {
+  PaymentDetails,
   PaymentGateway,
   SessionDetails,
   SessionStatus,
@@ -39,6 +40,9 @@ export const fakePaymentPath = (id: string, key: string): string =>
 export type FakeOptions = {
   // Test seams (A6, A7): make a call fail as a gateway error would
   fail?: { create?: boolean; close?: boolean; get?: boolean }
+  // Test seam (docs/specs/032-payment-webhooks, H12c): what a paid session's
+  // payment reads as. A real fake payment always succeeded.
+  paymentStatus?: PaymentDetails["status"]
   now?: () => Date
 }
 
@@ -71,12 +75,15 @@ const details = (
   currency: row.currency,
   metadata: row.metadata as Record<string, unknown>,
   paymentId: row.paymentId,
+  referenceId: row.referenceId,
+  expiresAt: row.expiresAt,
 })
 
 const failed = { ok: false, code: "http-500" } as const
 
 export function fakeGateway({
   fail = {},
+  paymentStatus = "succeeded",
   now = () => new Date(),
 }: FakeOptions = {}): PaymentGateway {
   return {
@@ -141,7 +148,7 @@ export function fakeGateway({
         payment: row
           ? {
               id,
-              status: "succeeded",
+              status: paymentStatus,
               amountCentavos: row.amount,
               currency: row.currency,
               method: "FAKE",
@@ -154,23 +161,14 @@ export function fakeGateway({
 
 // What the fake payment page does: the gateway's side, not the store's
 
-export type FakeSession = SessionDetails & {
-  referenceId: string
-  expiresAt: Date
-}
+export type FakeSession = SessionDetails & { expiresAt: Date }
 
 export async function readFakeSession(
   id: string,
   now = new Date()
 ): Promise<FakeSession | null> {
   const row = await read(id, now)
-  return row
-    ? {
-        ...details(row),
-        referenceId: row.referenceId,
-        expiresAt: row.expiresAt,
-      }
-    : null
+  return row ? { ...details(row), expiresAt: row.expiresAt } : null
 }
 
 // Pay: an active session completes, with a payment id. Null when it isn't
