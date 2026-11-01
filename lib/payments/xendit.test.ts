@@ -244,6 +244,8 @@ describe("getSession", () => {
         currency: "PHP",
         metadata: input.metadata,
         paymentId: "py-123",
+        referenceId: "PCS-7KQ2M9XD-1",
+        expiresAt: new Date("2026-11-02T07:00:00.000Z"),
       },
     })
   })
