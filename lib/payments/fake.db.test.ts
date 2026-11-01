@@ -78,28 +78,48 @@ describe("closeSession", () => {
     const { id } = await create()
     expect(await gateway.closeSession(id)).toEqual({
       ok: true,
-      outcome: "closed",
+      outcome: "cancelled",
     })
     expect((await readFakeSession(id, NOW))?.status).toBe("closed")
   })
 
-  it("says completed for a paid session and leaves it paid", async () => {
+  it("says not-active for a paid session and leaves it paid", async () => {
     const { id } = await create()
     await completeFakeSession(id, NOW)
     expect(await gateway.closeSession(id)).toEqual({
       ok: true,
-      outcome: "completed",
+      outcome: "not-active",
     })
     expect((await readFakeSession(id, NOW))?.status).toBe("completed")
   })
 
-  it("counts an expired session as closed (A5)", async () => {
+  it("says not-active for an expired or cancelled session (A5)", async () => {
     const { id } = await create()
     await expireFakeSession(id, NOW)
     expect(await gateway.closeSession(id)).toEqual({
       ok: true,
-      outcome: "closed",
+      outcome: "not-active",
     })
+    const other = await create()
+    await gateway.closeSession(other.id)
+    expect(await gateway.closeSession(other.id)).toEqual({
+      ok: true,
+      outcome: "not-active",
+    })
+  })
+
+  // docs/specs/033-release-unpaid-orders, S9 and S9a
+  it("fails with the chosen code, after the chosen delay", async () => {
+    const { id } = await create()
+    const slow = fakeGateway({
+      now: () => NOW,
+      fail: { close: true, code: "timeout" },
+      closeDelayMs: 30,
+    })
+    const started = Date.now()
+    expect(await slow.closeSession(id)).toEqual({ ok: false, code: "timeout" })
+    expect(Date.now() - started).toBeGreaterThanOrEqual(25)
+    expect((await readFakeSession(id, NOW))?.status).toBe("active")
   })
 
   it("expires a session whose time has passed", async () => {

@@ -48,10 +48,11 @@ export type PaymentDetails = {
   method: string | null
 }
 
-// Closing a session (spec 031, Behavior 14): `closed` when it is no longer
-// payable (cancelled now, or already expired or cancelled), `completed` when
-// it was paid first
-export type CloseOutcome = "closed" | "completed"
+// Cancelling a session: `cancelled` when the gateway cancelled it now, so
+// nothing more can be paid on it; `not-active` when it had already ended
+// (completed, expired or cancelled). A caller that needs to know how it ended
+// reads it, or reconciles it (docs/specs/033-release-unpaid-orders, D1).
+export type CloseOutcome = "cancelled" | "not-active"
 
 export interface PaymentGateway {
   readonly provider: ProviderName

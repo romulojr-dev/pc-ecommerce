@@ -219,21 +219,12 @@ export function xenditGateway({
         "POST",
         `/sessions/${encodeURIComponent(id)}/cancel`
       )
-      if (result.ok) return { ok: true, outcome: "closed" }
-      // Not ACTIVE: read it to learn whether it completed or just ended
-      if (!result.code.startsWith("http-422")) return result
-      const read = await readSession(id)
-      if (!read.ok) return read
-      if (!read.session) return { ok: false, code: "not-found" }
-      switch (read.session.status) {
-        case "completed":
-          return { ok: true, outcome: "completed" }
-        case "expired":
-        case "closed":
-          return { ok: true, outcome: "closed" }
-        default:
-          return { ok: false, code: "cancel-refused" }
+      if (result.ok) return { ok: true, outcome: "cancelled" }
+      // 422: only ACTIVE sessions can be cancelled, so it had already ended
+      if (result.code.startsWith("http-422")) {
+        return { ok: true, outcome: "not-active" }
       }
+      return result
     },
 
     getSession: readSession,

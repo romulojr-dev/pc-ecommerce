@@ -196,7 +196,8 @@ describe("payment_session.completed", () => {
     const { order, id } = await paidSession()
     await db.order.update({
       where: { id: order.id },
-      data: { status: "CANCELLED" },
+      // As the release leaves it (docs/specs/033-release-unpaid-orders)
+      data: { status: "CANCELLED", cancelledAt: NOW, cancelReason: "EXPIRED" },
     })
     await db.payment.updateMany({ data: { status: "EXPIRED" } })
 

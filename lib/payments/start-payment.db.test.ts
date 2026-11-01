@@ -216,7 +216,11 @@ describe("orders that can't be paid", () => {
   it.each(["CANCELLED", "PAID"] as const)(
     "refuses a %s order (A8)",
     async (status) => {
-      const order = await newOrder({ status })
+      const order = await newOrder(
+        status === "CANCELLED"
+          ? { status, cancelledAt: EXPIRES, cancelReason: "EXPIRED" }
+          : { status }
+      )
       expect(await startPayment(order.id, TOKEN, options())).toEqual({
         ok: false,
         reason: "not-pending",
