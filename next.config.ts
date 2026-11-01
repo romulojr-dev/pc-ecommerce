@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "no-referrer" },
         ],
       },
+      // The fake gateway's payment page carries the same key
+      // (docs/specs/031-pay-with-xendit, Behavior 15)
+      {
+        source: "/test-payment/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
     ]
   },
 }
