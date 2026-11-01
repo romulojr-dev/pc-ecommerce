@@ -17,11 +17,20 @@ import { placeOrderAction, reviewCheckoutAction } from "./actions"
 const state = vi.hoisted(() => ({
   cartId: null as string | null,
   enabled: true,
+  // The fake gateway refuses to create sessions (spec 031, Behavior 2)
+  gatewayFails: false,
 }))
 vi.mock("@/lib/cart/cookie", () => ({
   readCartId: async () => state.cartId,
 }))
 vi.mock("@/lib/orders/enabled", () => ({ ordersEnabled: () => state.enabled }))
+vi.mock("@/lib/payments/gateway", async (importOriginal) => {
+  const { fakeGateway } = await import("@/lib/payments/fake")
+  return {
+    ...(await importOriginal<typeof import("@/lib/payments/gateway")>()),
+    gateway: () => fakeGateway({ fail: { create: state.gatewayFails } }),
+  }
+})
 vi.mock("next/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/cache")>()),
   revalidateTag: vi.fn(),
@@ -31,6 +40,7 @@ beforeEach(async () => {
   await resetCatalog()
   await writeSeed(db, [], { reset: false, shipping: shippingSeed })
   state.enabled = true
+  state.gatewayFails = false
 })
 afterAll(() => db.$disconnect())
 
@@ -103,6 +113,53 @@ describe("placeOrderAction", () => {
     expect(result.link).toMatch(
       /^\/orders\/PCS-[0-9A-HJKMNP-TV-Z]{8}\?key=[A-Za-z0-9_-]{43}$/
     )
+  })
+
+  it("goes straight to a payment session (spec 031, Behavior 1, A1)", async () => {
+    const { cartId } = await cartWithRyzen()
+    const request = await freshRequest(cartId)
+
+    const result = await placeOrderAction(request)
+
+    if (!result.ok) throw new Error(result.reason)
+    const payment = await db.payment.findFirstOrThrow()
+    expect(result.payUrl).toBe(
+      `/test-payment/${payment.providerRef}?key=${request.accessToken}`
+    )
+    expect(payment).toMatchObject({ status: "PENDING", provider: "FAKE" })
+  })
+
+  it("closes the first session when Place order is replayed (spec 031, A10)", async () => {
+    const { cartId } = await cartWithRyzen()
+    const request = await freshRequest(cartId)
+
+    const first = await placeOrderAction(request)
+    const again = await placeOrderAction(request)
+
+    if (!first.ok || !again.ok) throw new Error("not placed")
+    expect(again.link).toBe(first.link)
+    expect(again.payUrl).not.toBe(first.payUrl)
+    expect(await db.order.count()).toBe(1)
+    const rows = await db.payment.findMany({ orderBy: { createdAt: "asc" } })
+    expect(rows.map((p) => [p.referenceId.slice(-2), p.status])).toEqual([
+      ["-1", "EXPIRED"],
+      ["-2", "PENDING"],
+    ])
+  })
+
+  it("lands on the order with payment=error when no session opens (spec 031, Behavior 2)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const { cartId } = await cartWithRyzen()
+    const request = await freshRequest(cartId)
+    state.gatewayFails = true
+
+    const result = await placeOrderAction(request)
+
+    if (!result.ok) throw new Error(result.reason)
+    expect(result.payUrl).toBeNull()
+    expect(result.link).toMatch(/\?key=[A-Za-z0-9_-]{43}&payment=error$/)
+    expect(await db.order.count()).toBe(1)
+    expect(await db.payment.count()).toBe(0)
   })
 
   it("takes the cart from the cookie, not from the request", async () => {
