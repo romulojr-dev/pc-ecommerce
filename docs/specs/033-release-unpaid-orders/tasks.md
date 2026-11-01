@@ -3,7 +3,7 @@
 Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #81. One commit per task.
 
 - [x] 1. Docs scaffold: spec, plan, tasks
-- [ ] 2. Schema and migration: `cancelledAt`, `cancelReason`, `ORDER_RELEASED`, the pending `expiresAt` partial index, CHECKs
+- [x] 2. Schema and migration: `cancelledAt`, `cancelReason`, `ORDER_RELEASED`, the pending `expiresAt` partial index, CHECKs
 - [ ] 3. Gateway: `closeSession` answers `cancelled` / `not-active`; fake failure code and delay seams; `startPayment` unchanged in behavior
 - [ ] 4. Pure pieces: `isDue`, `releaseDecision`, constants, `logReleaseEvent`, `secretMatches` / `bearerOf`
 - [ ] 5. Release core: `checkExpiredOrders`, `releaseExpiredOrders`, `afterRelease`, `sweepExpiredOrders`, `timedGateway`, with the integration tests (R1–R14, G1–G5)
