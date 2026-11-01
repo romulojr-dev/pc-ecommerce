@@ -29,8 +29,9 @@ export const env = createEnv({
     // script reads it, so the app doesn't need it.
     PRODUCTION_DATABASE_HOST: z.string().min(1).optional(),
     // Whether Place order works (docs/specs/030-place-an-order, D13): "true"
-    // or "false", unset means off. Off in Production until #81 releases unpaid
-    // orders' stock. Read through ordersEnabled().
+    // or "false", unset means off. Off in Production until #81 (unpaid orders
+    // release their stock, docs/specs/033-release-unpaid-orders) is deployed.
+    // Read through ordersEnabled().
     ORDERS_ENABLED: ordersEnabledSchema,
     // What Vercel's cron sends as `Authorization: Bearer …` to
     // GET /api/cron/release-orders (docs/specs/033-release-unpaid-orders).

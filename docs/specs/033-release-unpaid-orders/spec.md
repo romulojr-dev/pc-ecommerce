@@ -1,6 +1,6 @@
 # 033 — Auto-cancel unpaid orders and release stock
 
-Status: **Approved with changes** in review 2026-11-01 (§11) · Issue: #81 (Sprint 6, Checkout epic #4; depends on #78 = spec 030, #79 = spec 031, #80 = spec 032, all merged) · PRD refs: FR-24 (unpaid online orders auto-cancel after a set time and release reserved stock), FR-20 (Cancelled on the timeline), FR-22 (Paid only from the gateway); Risks › "Overselling on concurrent checkouts" (reservation with expiry); Data model › `Order`, `StockMovement`; ADR 0009, ADR 0010
+Status: **Implemented** · Approved with changes in review 2026-11-01 (§11) · Issue: #81 (Sprint 6, Checkout epic #4; depends on #78 = spec 030, #79 = spec 031, #80 = spec 032, all merged) · PRD refs: FR-24 (unpaid online orders auto-cancel after a set time and release reserved stock), FR-20 (Cancelled on the timeline), FR-22 (Paid only from the gateway); Risks › "Overselling on concurrent checkouts" (reservation with expiry); Data model › `Order`, `StockMovement`; ADR 0009, ADR 0010
 
 **Gateway: Xendit, not PayMongo.** Issue #81 says "PayMongo session" throughout. The gateway is Xendit (ADR 0010): a session is cancelled with `closeSession` (`POST /sessions/{id}/cancel`), which sends no webhook, so the release marks the `Payment` Expired itself. The issue's two comments from spec 032 (reconcile before releasing; skip orders with a flagged payment) are part of this spec, with one change from review: open sessions are **cancelled first** and only reconciled when the cancel is refused (D1).
 
@@ -401,3 +401,16 @@ The `after()` wiring on pages isn't unit-tested (Next's request scope); X1 cover
 3. **Cron limits** (D13): `maxDuration = 60` set explicitly (T7); Hobby with Fluid compute allows 300 s, confirmed in Vercel's docs; Fluid compute to be checked in the dashboard.
 4. **Copy:** "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts."
 5. **Order page** (D8, D11): it sweeps; Pending past `expiresAt` is shown as expired whatever the row says (V2–V2c), replacing the past-due text; flagged orders keep their view (V5); `startPayment` past `expiresAt` refuses with no gateway call (P1–P2). Q1 added for the last-seconds payment.
+
+### Changed while building
+
+- **A refusal a cart function returns keeps the release.** `addToCart`, `setCartQuantity` and `addBuildToCart` answer refusals as values, so their transaction commits and a release in it stands (it was due anyway). Only a thrown refusal (placement's `Refusal`) or an error rolls the release back, as behavior 18 and S4a describe.
+- **`addBuildToCart` checks its parts and errors inside its transaction**, after the cart lock and the release, through `tx`: spec 026 checked them before the transaction, which would have refused a part an expired order was holding before the release could free it (S3). The order of refusals is unchanged.
+- **The purchase API** is `prepareRelease(productIds, { now, gateway })` before the transaction, `releaseInPurchase(tx, pending)` after the cart lock and `finishRelease(pending, committed)` after it (§6 named `checkExpiredOrders` and `releaseExpiredOrders` only; both exist and these wrap them). `releaseExpiredOrders` returns `{ released, notLocked, noReservation }`.
+- **Purchase timeouts** are enforced by `timedGateway`, which answers `timeout` after 2.5 s whatever the adapter does. A reconcile outcome other than `paid` or `mismatch` also ends a purchase's check; orders left unchecked are skipped with code `budget`.
+- **`closeSession`** answers `cancelled` or `not-active` in both adapters. `startPayment` reads the session itself on `not-active` (`completed` → `confirming`; unknown or unreadable → `error`), so its behavior is unchanged.
+- **`callbackTokenMatches`** now calls `secretMatches` in `lib/secrets/compare.ts`, shared with the cron's `bearerOf` check.
+- **The cron's work** is `runReleaseCron` in `lib/orders/release-cron.ts`; the route exports `runtime = "nodejs"` and `maxDuration = 60` and no `dynamic` (a GET handler that reads headers is dynamic in Next 16). `vitest.db.config.ts` pins `CRON_SECRET` empty, so a local `.env.local` value can't change T3.
+- **Placement** may revalidate `PRODUCTS_TAG` twice (its own, and the release's when it released something).
+- **Pay now answered `expired`** sets the too-late view and refreshes the page, which shows behavior 31's view once the deadline has passed.
+- **E2E** X1 and X2 use a pickup order of the Fractal Design North Charcoal Black at stock 1 (no other spec uses it). `e2e/orders.ts` sends the deadline as UTC text: node-postgres sends a `Date` in the machine's zone, and `Order.expiresAt` is a column without one.

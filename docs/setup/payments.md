@@ -68,8 +68,9 @@ variable on Vercel needs a redeploy.
 `ORDERS_ENABLED` is `true` or `false`; unset means off, and any other value
 stops the app at startup. Off, the review shows "Placing orders is coming soon."
 and the server refuses to place an order. Existing orders stay viewable and
-payable. A placed order holds its stock until it is paid or cancelled, and
-nothing cancels it before #81, so Production keeps it off.
+payable. A placed order holds its stock until it is paid or cancelled at its
+deadline ([spec 033](../specs/033-release-unpaid-orders/spec.md)); Production
+keeps the switch off until that is deployed.
 
 `VERCEL_ENV` goes into each session's metadata as the environment, so the
 webhook ignores sessions created by another environment on the same test
@@ -161,10 +162,26 @@ On Xendit's test pages:
 
 ### Cron (auto-cancel, #81)
 
-- [ ] Set `CRON_SECRET` in Vercel → Production.
+`GET /api/cron/release-orders` cancels unpaid orders past their deadline and
+gives their stock back ([spec 033](../specs/033-release-unpaid-orders/spec.md)).
+`vercel.json` runs it at `0 16 * * *` (midnight Manila). Vercel sends
+`Authorization: Bearer ${CRON_SECRET}`; without the variable the route refuses
+every call. Purchases and a sweep after pages release orders too, so the cron
+is a backstop.
+
+- [ ] Set `CRON_SECRET` in Vercel → Production (random, at least 16
+  characters), then redeploy.
+- [ ] Check that Fluid compute is on (Project → Settings → Functions). The
+  route sets `maxDuration = 60`; on Hobby with Fluid compute the limit is 300 s
+  ([Vercel: duration](https://vercel.com/docs/functions/configuring-functions/duration)).
 - [ ] After the first production deploy with `vercel.json`'s `crons`, check
   that the job shows under Project → Settings → Cron Jobs. On the Hobby plan
-  it runs at most once a day, only on production, and only accurate to the hour.
+  it runs at most once a day, anywhere within the scheduled hour
+  ([Vercel: cron usage](https://vercel.com/docs/cron-jobs/usage-and-pricing)),
+  and only on production.
+- [ ] Run it once by hand:
+  `curl -H "Authorization: Bearer <CRON_SECRET>" https://<production>/api/cron/release-orders`
+  answers `200` with `{"released":…,"skipped":…}`; without the header, `401`.
 
 ### Data
 
