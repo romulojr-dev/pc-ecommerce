@@ -7,7 +7,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #80. One commit p
 - [x] 3. Schema and migration: `PaymentEvent`, paid fields, `PaymentProblem`, CHECKs, reset lists
 - [x] 4. Gateway: `SessionDetails.referenceId` / `expiresAt`, fake payment-status seam
 - [x] 5. Pure pieces: `parseWebhook`, outcomes, `logPaymentEvent`, `paymentView`, copy
-- [ ] 6. `reconcileSession`, with the integration tests (H1–H17, C1–C6)
+- [x] 6. `reconcileSession`, with the integration tests (H1–H17, C1–C6)
 - [ ] 7. Handler, route, fake page, `XENDIT_WEBHOOK_TOKEN` required with both gateways
 - [ ] 8. Order page states and `needs-check` in `startPayment`
 - [ ] 9. `pnpm webhook:replay`
