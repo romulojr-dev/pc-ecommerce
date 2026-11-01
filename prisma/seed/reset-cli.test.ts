@@ -26,9 +26,16 @@ function run(args: string[], env: Record<string, string>) {
     NODE_ENV: "",
     VERCEL_ENV: "",
     PRODUCTION_DATABASE_HOST: "",
-    NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
     DATABASE_URL: URL_OF("127.0.0.1"),
     DATABASE_URL_UNPOOLED: URL_OF("127.0.0.1"),
+    // The app's variables must be valid for the script to start. The
+    // production cases set VERCEL_ENV=production, which refuses the fake
+    // gateway (docs/specs/031-pay-with-xendit, E1), so these are xendit's
+    // with a dummy test key; nothing here calls Xendit.
+    NEXT_PUBLIC_SITE_URL: "https://localhost:3000",
+    PAYMENT_GATEWAY: "xendit",
+    XENDIT_SECRET_KEY: "xnd_development_dummy",
+    XENDIT_WEBHOOK_TOKEN: "",
     ...env,
   }
   const result = spawnSync(process.execPath, [tsx, script, ...args], {
