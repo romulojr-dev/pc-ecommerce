@@ -11,5 +11,5 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #81. One commit p
 - [x] 7. Sweep after the product page, `/cart`, `/checkout`, the order page and the candidates route
 - [x] 8. Cron route, `vercel.json`, `CRON_SECRET` in `lib/env.ts` and `.env.example` (T1–T7, N1–N3)
 - [x] 9. Order page: the `expired` view, the cancelled copy, `cancelReason` (V1–V6, P1–P2)
-- [ ] 10. E2E (X1, X2)
+- [x] 10. E2E (X1, X2)
 - [x] 11. Docs close-out: CLAUDE.md, setup doc, notes in specs 030 and 032 and ADR 0009, spec status
