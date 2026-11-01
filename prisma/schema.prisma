@@ -304,6 +304,14 @@ model Order {
 
   // When an unpaid order auto-cancels (FR-24)
   expiresAt      DateTime
+  // Set with PAID by reconcileSession (docs/specs/032-payment-webhooks). The
+  // migration adds CHECK: a pending order was never paid.
+  paidAt         DateTime?
+  // The gateway's channel code: GCASH, PAYMAYA, CARDS (FAKE in tests)
+  paymentMethod  String?
+  // A payment arrived after cancellation, or a second one after Paid (FR-26).
+  // Only ever set to true here; clearing it is Admin's refund (Sprint 8).
+  refundRequired Boolean         @default(false)
   items          OrderItem[]
   stockMovements StockMovement[]
   payments       Payment[]
@@ -369,8 +377,9 @@ enum PaymentProvider {
 }
 
 // PENDING while its session is open; EXPIRED when the session closed unpaid
-// (a retry, #81's release, or the gateway's expiry); PAID and FAILED come
-// with #80's webhooks
+// (a retry, #81's release, or the gateway's expiry); PAID when the gateway
+// confirms it (docs/specs/032-payment-webhooks). FAILED is unused: Xendit
+// never ends a session as failed (spec 032, D3).
 enum PaymentStatus {
   PENDING
   PAID
@@ -380,29 +389,69 @@ enum PaymentStatus {
 
 // One payment attempt: one gateway session (FR-23). Never hard-deleted.
 model Payment {
-  id          String          @id @default(cuid())
-  orderId     String
-  order       Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  provider    PaymentProvider
+  id               String          @id @default(cuid())
+  orderId          String
+  order            Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  provider         PaymentProvider
   // The gateway's session id (Xendit: ps-…)
-  providerRef String
+  providerRef      String
   // "{orderNumber}-{attempt}", as sent to the gateway
-  referenceId String
+  referenceId      String
   // Centavos
-  amount      Int
-  currency    String          @default("PHP")
-  status      PaymentStatus   @default(PENDING)
+  amount           Int
+  currency         String          @default("PHP")
+  status           PaymentStatus   @default(PENDING)
   // When the session expires at the gateway
-  expiresAt   DateTime
-  // The method paid with (GCash, Maya, card), set by #80
-  method      String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  expiresAt        DateTime
+  // The method paid with (GCASH, PAYMAYA, CARDS), set when Paid
+  method           String?
+  // Set with PAID (docs/specs/032-payment-webhooks); the migration adds
+  // CHECK: status PAID exactly when paidAt is set
+  paidAt           DateTime?
+  // The gateway's payment id (Xendit: py-…)
+  gatewayPaymentId String?
+  // What the gateway received, in centavos, even when it doesn't match
+  receivedAmount   Int?
+  receivedCurrency String?
+  // Why the payment needs Admin: a mismatch, a late or a second payment
+  problem          PaymentProblem?
+  events           PaymentEvent[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   @@unique([provider, providerRef])
   // At most one open session per order (spec 031, §4)
   @@unique([orderId], where: { status: "PENDING" })
   @@index([orderId])
+}
+
+// Why a paid payment needs Admin (docs/specs/032-payment-webhooks, D7)
+enum PaymentProblem {
+  // The amount or currency isn't the order's: the order stays unpaid
+  AMOUNT_MISMATCH
+  // Paid after the order was cancelled: refund
+  LATE
+  // Paid after another payment already paid the order: refund
+  SECOND_PAYMENT
+}
+
+// One gateway webhook event that was processed, so the same event changes
+// nothing twice (FR-23; docs/specs/032-payment-webhooks). Xendit sends no
+// event id, so eventId is "{event}:{payment_session_id}". Written in the same
+// transaction as the change it causes; ignored events (unknown, another
+// environment) are never stored. Never deleted.
+model PaymentEvent {
+  id         String   @id @default(cuid())
+  eventId    String   @unique
+  type       String
+  // The body as received
+  payload    Json
+  // Null for an orphan session that expired unpaid
+  paymentId  String?
+  payment    Payment? @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  receivedAt DateTime @default(now())
+
+  @@index([paymentId])
 }
 
 // The fake gateway's own sessions (docs/specs/031-pay-with-xendit, D8), in
