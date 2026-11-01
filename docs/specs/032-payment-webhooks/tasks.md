@@ -8,7 +8,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #80. One commit p
 - [x] 4. Gateway: `SessionDetails.referenceId` / `expiresAt`, fake payment-status seam
 - [x] 5. Pure pieces: `parseWebhook`, outcomes, `logPaymentEvent`, `paymentView`, copy
 - [x] 6. `reconcileSession`, with the integration tests (H1–H17, C1–C6)
-- [ ] 7. Handler, route, fake page, `XENDIT_WEBHOOK_TOKEN` required with both gateways
+- [x] 7. Handler, route, fake page, `XENDIT_WEBHOOK_TOKEN` required with both gateways
 - [ ] 8. Order page states and `needs-check` in `startPayment`
 - [ ] 9. `pnpm webhook:replay`
 - [ ] 10. E2E (X5–X8)

@@ -37,9 +37,9 @@ export const env = createEnv({
     PAYMENT_GATEWAY: paymentGatewaySchema,
     // Xendit's secret key, test mode only (xnd_development_…). Never logged.
     XENDIT_SECRET_KEY: z.string().optional(),
-    // Xendit's webhook verification token (x-callback-token); the fake's
-    // payment page uses it too. Required with the fake (#79) and, from #80,
-    // with xendit.
+    // Xendit's webhook verification token (x-callback-token), checked by
+    // POST /api/webhooks/xendit; the fake's payment page sends it too.
+    // Required with both gateways (docs/specs/032-payment-webhooks).
     XENDIT_WEBHOOK_TOKEN: z.string().optional(),
     // Set by Vercel: production, preview or development. Unset locally and in
     // CI, which count as development (lib/payments/gateway.ts).

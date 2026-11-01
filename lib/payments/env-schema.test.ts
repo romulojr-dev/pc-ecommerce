@@ -7,7 +7,7 @@ import {
   vercelEnvSchema,
 } from "./env-schema"
 
-// docs/specs/031-pay-with-xendit: E1–E7
+// docs/specs/031-pay-with-xendit: E1–E7; docs/specs/032-payment-webhooks: E8, E9
 
 const TEST_KEY = "xnd_development_abc123"
 const LIVE_KEY = "xnd_production_abc123"
@@ -19,6 +19,7 @@ const fake: PaymentEnvValues = {
 const xendit: PaymentEnvValues = {
   PAYMENT_GATEWAY: "xendit",
   XENDIT_SECRET_KEY: TEST_KEY,
+  XENDIT_WEBHOOK_TOKEN: "dashboard-token",
   NEXT_PUBLIC_SITE_URL: "https://pcsilicon.example",
 }
 
@@ -77,6 +78,17 @@ describe("paymentEnvIssues", () => {
     expect(messages({ ...fake, XENDIT_WEBHOOK_TOKEN: undefined })).toEqual([
       "XENDIT_WEBHOOK_TOKEN is not set",
     ])
+  })
+
+  // docs/specs/032-payment-webhooks
+  it("needs the webhook token with xendit too (E8)", () => {
+    expect(messages({ ...xendit, XENDIT_WEBHOOK_TOKEN: undefined })).toEqual([
+      "XENDIT_WEBHOOK_TOKEN is not set",
+    ])
+  })
+
+  it("takes Xendit's token at any length (E9)", () => {
+    expect(messages({ ...xendit, XENDIT_WEBHOOK_TOKEN: "short" })).toEqual([])
   })
 })
 

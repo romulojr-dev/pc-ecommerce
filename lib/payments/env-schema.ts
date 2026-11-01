@@ -73,8 +73,12 @@ export function paymentEnvIssues(values: PaymentEnvValues): PaymentEnvIssue[] {
     }
   }
   // The fake's Pay builds an event with the verification token (spec 031,
-  // §6 Fake adapter); #80 also requires it with xendit
-  if (gateway === "fake" && !values.XENDIT_WEBHOOK_TOKEN) {
+  // §6 Fake adapter), and the webhook route checks it with either gateway
+  // (docs/specs/032-payment-webhooks, E8)
+  if (
+    (gateway === "fake" || gateway === "xendit") &&
+    !values.XENDIT_WEBHOOK_TOKEN
+  ) {
     issues.push({ variable: "XENDIT_WEBHOOK_TOKEN", message: "is not set" })
   }
   return issues

@@ -21,7 +21,8 @@ import {
 import { startPayment } from "./start-payment"
 
 // The fake payment page (docs/specs/031-pay-with-xendit, Behavior 15–16):
-// F1–F5 and Let it expire
+// F1–F5 and Let it expire; since docs/specs/032-payment-webhooks its events
+// run the webhook handler
 
 beforeEach(resetCatalog)
 afterEach(() => vi.restoreAllMocks())
@@ -33,6 +34,7 @@ const context: FakePageContext = {
   gatewayIsFake: true,
   environment: "development",
   now: NOW,
+  gateway: fakeGateway({ now: () => NOW }),
 }
 
 async function opened() {
@@ -97,13 +99,16 @@ describe("chooseOnFakePage", () => {
 
     expect(url).toBe(`/orders/${order.orderNumber}?key=${TOKEN}&payment=return`)
     expect((await readFakeSession(id, NOW))?.status).toBe("completed")
-    // Delivered with the right token (vitest.db.config.ts sets it)
-    expect(info).toHaveBeenCalledWith(
-      `payment.event_delivered: payment_session.completed ${id}`
-    )
-    // Nothing marks Paid before #80
+    // The webhook handler ran in process with the right token
+    // (vitest.db.config.ts sets it) and marked the order Paid before the
+    // redirect (docs/specs/032-payment-webhooks, behavior 25, D10)
+    expect(JSON.parse(String(info.mock.calls.at(-1)?.[0]))).toMatchObject({
+      event: "payment.webhook",
+      outcome: "paid",
+      sessionId: id,
+    })
     const after = await db.order.findUniqueOrThrow({ where: { id: order.id } })
-    expect(after.status).toBe("PENDING_PAYMENT")
+    expect(after).toMatchObject({ status: "PAID", paymentMethod: "FAKE" })
     expect(JSON.stringify(info.mock.calls)).not.toContain(TOKEN)
   })
 
@@ -122,9 +127,13 @@ describe("chooseOnFakePage", () => {
       `/orders/${order.orderNumber}?key=${TOKEN}&payment=cancelled`
     )
     expect((await readFakeSession(id, NOW))?.status).toBe("expired")
-    expect(info).toHaveBeenCalledWith(
-      `payment.event_delivered: payment_session.expired ${id}`
-    )
+    expect(JSON.parse(String(info.mock.calls.at(-1)?.[0]))).toMatchObject({
+      outcome: "expired",
+      sessionId: id,
+    })
+    expect(
+      await db.payment.findFirstOrThrow({ where: { orderId: order.id } })
+    ).toMatchObject({ status: "EXPIRED" })
   })
 
   it("F5: a closed session goes back to the order, with no event", async () => {
