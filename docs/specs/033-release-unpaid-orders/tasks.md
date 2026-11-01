@@ -6,7 +6,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #81. One commit p
 - [x] 2. Schema and migration: `cancelledAt`, `cancelReason`, `ORDER_RELEASED`, the pending `expiresAt` partial index, CHECKs
 - [x] 3. Gateway: `closeSession` answers `cancelled` / `not-active`; fake failure code and delay seams; `startPayment` unchanged in behavior
 - [x] 4. Pure pieces: `isDue`, `releaseDecision`, constants, `logReleaseEvent`, `secretMatches` / `bearerOf`
-- [ ] 5. Release core: `checkExpiredOrders`, `releaseExpiredOrders`, `afterRelease`, `sweepExpiredOrders`, `timedGateway`, with the integration tests (R1–R14, G1–G5)
+- [x] 5. Release core: `checkExpiredOrders`, `releaseExpiredOrders`, `afterRelease`, `sweepExpiredOrders`, `timedGateway`, with the integration tests (R1–R14, G1–G5)
 - [ ] 6. Scoped release in `addToCart`, `setCartQuantity`, `addBuildToCart` and `placeOrder` (S1–S9c)
 - [ ] 7. Sweep after the product page, `/cart`, `/checkout`, the order page and the candidates route
 - [ ] 8. Cron route, `vercel.json`, `CRON_SECRET` in `lib/env.ts` and `.env.example` (T1–T7, N1–N3)
