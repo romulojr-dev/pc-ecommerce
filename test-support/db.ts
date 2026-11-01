@@ -24,7 +24,8 @@ function assertTestDatabase() {
 // "StoreSettings" are named too (docs/specs/028-shipping-data-and-fee-rules).
 // "Order" is named, and with it "OrderItem" follows by cascade; "StockMovement"
 // points at a product, so it is named for the reader (docs/specs/030-place-an-
-// order). Add each new table of that kind here.
+// order). "Payment" and "FakeGatewaySession" are named for the reader
+// (docs/specs/031-pay-with-xendit). Add each new table of that kind here.
 //
 // The production guard runs first, as a second lock beside assertTestDatabase
 // (docs/specs/022-share-build, Rules › Production safety). It doesn't need
@@ -32,7 +33,7 @@ function assertTestDatabase() {
 export async function resetCatalog() {
   assertResetAllowed(process.env)
   assertTestDatabase()
-  await db.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+  await db.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "FakeGatewaySession", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
 }
 
 // One category and one brand, for tests that only need somewhere to put products

@@ -59,8 +59,11 @@ export function writeSeed(
         // reset clears the demo shipping values for the seed to refill
         // (docs/specs/028-shipping-data-and-fee-rules). "Order" is named too:
         // CASCADE from "Product" empties "OrderItem" and "StockMovement" but
-        // not their parent order (docs/specs/030-place-an-order).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // not their parent order (docs/specs/030-place-an-order). "Payment"
+        // and "FakeGatewaySession" are named for the reader: the first goes
+        // with "Order" anyway, the second points at nothing
+        // (docs/specs/031-pay-with-xendit).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "FakeGatewaySession", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)

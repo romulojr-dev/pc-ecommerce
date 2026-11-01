@@ -306,6 +306,7 @@ model Order {
   expiresAt      DateTime
   items          OrderItem[]
   stockMovements StockMovement[]
+  payments       Payment[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
@@ -358,4 +359,69 @@ model StockMovement {
 
   @@index([productId])
   @@index([orderId])
+}
+
+// The gateway a payment went through (docs/specs/031-pay-with-xendit, ADR
+// 0010). FAKE is the test gateway of CI, E2E and previews.
+enum PaymentProvider {
+  XENDIT
+  FAKE
+}
+
+// PENDING while its session is open; EXPIRED when the session closed unpaid
+// (a retry, #81's release, or the gateway's expiry); PAID and FAILED come
+// with #80's webhooks
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
+
+// One payment attempt: one gateway session (FR-23). Never hard-deleted.
+model Payment {
+  id          String          @id @default(cuid())
+  orderId     String
+  order       Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  provider    PaymentProvider
+  // The gateway's session id (Xendit: ps-…)
+  providerRef String
+  // "{orderNumber}-{attempt}", as sent to the gateway
+  referenceId String
+  // Centavos
+  amount      Int
+  currency    String          @default("PHP")
+  status      PaymentStatus   @default(PENDING)
+  // When the session expires at the gateway
+  expiresAt   DateTime
+  // The method paid with (GCash, Maya, card), set by #80
+  method      String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([provider, providerRef])
+  // At most one open session per order (spec 031, §4)
+  @@unique([orderId], where: { status: "PENDING" })
+  @@index([orderId])
+}
+
+// The fake gateway's own sessions (docs/specs/031-pay-with-xendit, D8), in
+// Xendit's shapes and statuses, so the fake can answer "completed" without
+// reading the store's Payment rows. No foreign keys: a gateway knows nothing
+// of our tables. Unused where PAYMENT_GATEWAY is xendit.
+model FakeGatewaySession {
+  // "ps-" and 24 hex characters, like Xendit's payment_session_id
+  id          String   @id
+  // ACTIVE, COMPLETED, EXPIRED or CANCELED (Xendit's words)
+  status      String
+  // Centavos
+  amount      Int
+  currency    String
+  referenceId String
+  metadata    Json
+  expiresAt   DateTime
+  // "py-…", once paid
+  paymentId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
