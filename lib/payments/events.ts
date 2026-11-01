@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto"
+import { secretMatches } from "@/lib/secrets/compare"
 
 import { logPaymentEvent } from "./log"
 import type { WebhookOutcome } from "./outcome"
@@ -18,17 +18,12 @@ import { MAX_WEBHOOK_BYTES, parseWebhook, webhookStatus } from "./webhook"
 
 export const CALLBACK_TOKEN_HEADER = "x-callback-token"
 
-const sha256 = (text: string) =>
-  createHash("sha256").update(text, "utf8").digest()
-
-// Constant time: both sides are hashed first, so different lengths can't
-// return early
+// Constant time (lib/secrets/compare.ts)
 export function callbackTokenMatches(
   given: string | null | undefined,
   expected: string | undefined
 ): boolean {
-  if (!given || !expected) return false
-  return timingSafeEqual(sha256(given), sha256(expected))
+  return secretMatches(given, expected)
 }
 
 export type PaymentEvent = {
