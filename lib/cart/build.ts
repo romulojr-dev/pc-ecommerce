@@ -12,6 +12,13 @@ import {
 } from "@/lib/builder"
 import { getBuilderParts } from "@/lib/builder-parts"
 import { db } from "@/lib/db"
+import type { DbClient } from "@/lib/db-client"
+import {
+  finishRelease,
+  prepareRelease,
+  releaseInPurchase,
+} from "@/lib/orders/release"
+import type { PaymentGateway } from "@/lib/payments/gateway-types"
 import { isBuyable, manilaToday } from "@/lib/stock"
 
 import { type BuildNeed, buildShortages } from "./build-stock"
@@ -34,6 +41,10 @@ type Options = {
   today?: string
   // Where the snapshot's random slugs come from; tests force collisions
   newSlug?: () => string
+  // When expired orders are released, and the gateway their sessions are
+  // cancelled at (docs/specs/033-release-unpaid-orders); tests pass both
+  now?: Date
+  gateway?: PaymentGateway
 }
 
 export type BuildCartOutcome = CartOutcome<BuildCartResult>
@@ -52,14 +63,16 @@ const slotIndex = (slot: string) => SLOTS.findIndex((known) => known === slot)
 // that can't be bought today
 async function unavailableParts(
   items: readonly BuildItem[],
-  today: string
+  today: string,
+  client: DbClient
 ): Promise<{
   parts: UnavailablePart[]
   loaded: Awaited<ReturnType<typeof getBuilderParts>>
 }> {
   const loaded = await getBuilderParts(
     items.map((item) => item.productId),
-    today
+    today,
+    client
   )
   const { changes } = assembleBuild(
     items,
@@ -73,7 +86,7 @@ async function unavailableParts(
   )
   const names = new Map(
     (
-      await db.product.findMany({
+      await client.product.findMany({
         where: { id: { in: gone.map((part) => part.productId) } },
         select: { id: true, name: true },
       })
@@ -105,10 +118,13 @@ async function unavailableParts(
 // Adds the build as one group. In order, stopping at the first failure
 // (Behavior 9): input, parts, errors, already in the cart, stock, warnings,
 // then the write. Nothing is written before the last step, so a refusal
-// leaves no cart, no snapshot and no lines.
+// leaves no cart, no snapshot and no lines. Expired orders holding the
+// build's parts are released first, in the same transaction, so the parts
+// and stock checks run inside it, after the release (docs/specs/033-release-
+// unpaid-orders, behavior 17–20).
 export async function addBuildToCart(
   input: unknown,
-  { cartId, today = manilaToday(), newSlug }: Options,
+  { cartId, today = manilaToday(), newSlug, now, gateway }: Options,
   newId: () => string = newCartId
 ): Promise<BuildCartOutcome> {
   const parsed = addBuildInputSchema.safeParse(input)
@@ -119,109 +135,126 @@ export async function addBuildToCart(
   if (!checked.ok) return refused(checked)
   const { items } = checked
 
+  const productIds = items.map((item) => item.productId)
+  const pending = await prepareRelease(productIds, { now, gateway })
   try {
-    const { parts: unavailable, loaded } = await unavailableParts(items, today)
-    if (unavailable.length > 0) {
-      return refused({ ok: false, reason: "unavailable", parts: unavailable })
-    }
+    const outcome = await db.$transaction(
+      async (tx): Promise<BuildCartOutcome> => {
+        // No cart, or one the database doesn't know, counts as an empty cart
+        const existing = cartId && (await lockCart(tx, cartId)) ? cartId : null
+        await releaseInPurchase(tx, pending)
 
-    const { build } = assembleBuild(
-      items,
-      new Map(loaded.map((data) => [data.part.id, data.part]))
-    )
-    const issues = checkBuild(build)
-    const errors = issues.filter((issue) => issue.severity === "error")
-    if (errors.length > 0) {
-      return refused({ ok: false, reason: "errors", issues: errors })
-    }
+        const { parts: unavailable, loaded } = await unavailableParts(
+          items,
+          today,
+          tx
+        )
+        if (unavailable.length > 0) {
+          return refused({
+            ok: false,
+            reason: "unavailable",
+            parts: unavailable,
+          })
+        }
 
-    const contentHash = contentHashOf(items)
-    const productIds = items.map((item) => item.productId)
-    const partById = new Map(loaded.map((data) => [data.part.id, data.part]))
-    const needs: BuildNeed[] = items.map((item) => ({
-      productId: item.productId,
-      name: partById.get(item.productId)!.name,
-      slot: item.slot,
-      needs: item.quantity,
-    }))
+        const { build } = assembleBuild(
+          items,
+          new Map(loaded.map((data) => [data.part.id, data.part]))
+        )
+        const issues = checkBuild(build)
+        const errors = issues.filter((issue) => issue.severity === "error")
+        if (errors.length > 0) {
+          return refused({ ok: false, reason: "errors", issues: errors })
+        }
 
-    return await db.$transaction(async (tx): Promise<BuildCartOutcome> => {
-      // No cart, or one the database doesn't know, counts as an empty cart
-      const existing = cartId && (await lockCart(tx, cartId)) ? cartId : null
+        const contentHash = contentHashOf(items)
+        const partById = new Map(
+          loaded.map((data) => [data.part.id, data.part])
+        )
+        const needs: BuildNeed[] = items.map((item) => ({
+          productId: item.productId,
+          name: partById.get(item.productId)!.name,
+          slot: item.slot,
+          needs: item.quantity,
+        }))
 
-      if (existing) {
-        const there = await tx.cartItem.findFirst({
-          where: { cartId: existing, build: { contentHash } },
-          select: { id: true },
-        })
-        if (there) {
-          return {
-            cartId: existing,
-            renewCookie: true,
-            result: {
-              ok: true,
-              status: "already-in-cart",
-              count: await touch(tx, existing),
-            },
+        if (existing) {
+          const there = await tx.cartItem.findFirst({
+            where: { cartId: existing, build: { contentHash } },
+            select: { id: true },
+          })
+          if (there) {
+            return {
+              cartId: existing,
+              renewCookie: true,
+              result: {
+                ok: true,
+                status: "already-in-cart",
+                count: await touch(tx, existing),
+              },
+            }
           }
         }
-      }
 
-      // Each product's total across the whole cart, and its stock now
-      const held = existing
-        ? await tx.cartItem.groupBy({
-            by: ["productId"],
-            where: { cartId: existing, productId: { in: productIds } },
-            _sum: { quantity: true },
-          })
-        : []
-      const stock = await tx.product.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, stock: true },
-      })
-      const shortages = buildShortages(
-        needs,
-        new Map(held.map((row) => [row.productId, row._sum.quantity ?? 0])),
-        new Map(stock.map((row) => [row.id, row.stock]))
-      )
-      if (shortages.length > 0) {
-        return refused({ ok: false, reason: "stock", shortages })
-      }
-
-      // Every warning of the build comes back, so the shopper confirms the
-      // whole set when any of them is new to them
-      if (unacknowledged(issues, acknowledgedWarnings).length > 0) {
-        return refused({
-          ok: false,
-          reason: "confirm",
-          warnings: issues.filter((issue) => issue.severity === "warning"),
+        // Each product's total across the whole cart, and its stock now
+        const held = existing
+          ? await tx.cartItem.groupBy({
+              by: ["productId"],
+              where: { cartId: existing, productId: { in: productIds } },
+              _sum: { quantity: true },
+            })
+          : []
+        const stock = await tx.product.findMany({
+          where: { id: { in: productIds } },
+          select: { id: true, stock: true },
         })
-      }
+        const shortages = buildShortages(
+          needs,
+          new Map(held.map((row) => [row.productId, row._sum.quantity ?? 0])),
+          new Map(stock.map((row) => [row.id, row.stock]))
+        )
+        if (shortages.length > 0) {
+          return refused({ ok: false, reason: "stock", shortages })
+        }
 
-      // The write
-      let id = existing
-      if (!id) {
-        id = newId()
-        await tx.$executeRaw`
+        // Every warning of the build comes back, so the shopper confirms the
+        // whole set when any of them is new to them
+        if (unacknowledged(issues, acknowledgedWarnings).length > 0) {
+          return refused({
+            ok: false,
+            reason: "confirm",
+            warnings: issues.filter((issue) => issue.severity === "warning"),
+          })
+        }
+
+        // The write
+        let id = existing
+        if (!id) {
+          id = newId()
+          await tx.$executeRaw`
           INSERT INTO "Cart" ("id", "updatedAt") VALUES (${id}, now())`
-      }
-      const snapshot = await upsertBuildSnapshot(tx, items, { newSlug })
-      await tx.cartItem.createMany({
-        data: canonicalItems(items).map(([, productId, quantity]) => ({
-          cartId: id,
-          productId,
-          quantity,
-          buildId: snapshot.id,
-        })),
-      })
+        }
+        const snapshot = await upsertBuildSnapshot(tx, items, { newSlug })
+        await tx.cartItem.createMany({
+          data: canonicalItems(items).map(([, productId, quantity]) => ({
+            cartId: id,
+            productId,
+            quantity,
+            buildId: snapshot.id,
+          })),
+        })
 
-      return {
-        cartId: id,
-        renewCookie: true,
-        result: { ok: true, status: "added", count: await touch(tx, id) },
+        return {
+          cartId: id,
+          renewCookie: true,
+          result: { ok: true, status: "added", count: await touch(tx, id) },
+        }
       }
-    })
+    )
+    finishRelease(pending, true)
+    return outcome
   } catch (error) {
+    finishRelease(pending, false)
     logFailure("addBuildToCart", error)
     return refused({ ok: false, reason: "error" })
   }

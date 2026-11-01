@@ -1,5 +1,8 @@
+import { vi } from "vitest"
+
 import { hashToken } from "@/lib/orders/secrets"
 import { fakeGateway } from "@/lib/payments/fake"
+import type { PaymentGateway } from "@/lib/payments/gateway-types"
 import { startPayment } from "@/lib/payments/start-payment"
 
 import { db } from "./db"
@@ -53,13 +56,17 @@ export async function heldOrder(
   return order
 }
 
-// The token openSession pays with: give it to one order per test
-export const releaseTokenHash = () => hashToken(RELEASE_TOKEN)
+// The token openSession pays with: one order per token, since the hash is
+// unique
+export const releaseTokenHash = (token = RELEASE_TOKEN) => hashToken(token)
 
 // Opens a fake session through Pay now at placement time, for an order made
-// with releaseTokenHash(); returns its id
-export async function openSession(orderId: string): Promise<string> {
-  const result = await startPayment(orderId, RELEASE_TOKEN, {
+// with releaseTokenHash(token); returns its id
+export async function openSession(
+  orderId: string,
+  token = RELEASE_TOKEN
+): Promise<string> {
+  const result = await startPayment(orderId, token, {
     now: PLACED,
     gateway: fakeGateway({ now: () => PLACED }),
     siteUrl: "http://localhost:3000",
@@ -79,3 +86,36 @@ export const forceCompleted = (id: string) =>
 
 export const stockOf = async (id: string) =>
   (await db.product.findUniqueOrThrow({ where: { id } })).stock
+
+// Spec 033 S8 (spec 032 H17's rule): wraps db.$transaction to note when one
+// is open, and returns the gateway with every call failing the test while it
+// is. Restore with vi.restoreAllMocks().
+export function guardTransactions(base: PaymentGateway): PaymentGateway {
+  let open = 0
+  const original = db.$transaction.bind(db)
+  vi.spyOn(db, "$transaction").mockImplementation(((
+    fn: (tx: unknown) => Promise<unknown>,
+    options?: unknown
+  ) =>
+    original(async (tx) => {
+      open++
+      try {
+        return await fn(tx)
+      } finally {
+        open--
+      }
+    }, options as never)) as never)
+
+  const guard =
+    <K extends "getSession" | "getPayment" | "closeSession">(name: K) =>
+    (...args: Parameters<PaymentGateway[K]>) => {
+      if (open > 0) throw new Error(`${name} called inside a transaction`)
+      return (base[name] as (...a: typeof args) => unknown)(...args)
+    }
+  return {
+    ...base,
+    getSession: guard("getSession"),
+    getPayment: guard("getPayment"),
+    closeSession: guard("closeSession"),
+  } as PaymentGateway
+}

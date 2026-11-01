@@ -17,6 +17,7 @@ import { paymentData } from "@/test-support/payments"
 import {
   EXPIRES,
   forceCompleted,
+  guardTransactions,
   heldOrder,
   openSession,
   PLACED,
@@ -440,35 +441,7 @@ describe("no gateway call inside a transaction (S8)", () => {
   ])("for %s", async (_, prepare, gatewayOf) => {
     const { session } = await p1()
     await prepare(session!)
-
-    let open = false
-    const original = db.$transaction.bind(db)
-    vi.spyOn(db, "$transaction").mockImplementation(((
-      fn: (tx: unknown) => Promise<unknown>,
-      options?: unknown
-    ) =>
-      original(async (tx) => {
-        open = true
-        try {
-          return await fn(tx)
-        } finally {
-          open = false
-        }
-      }, options as never)) as never)
-
-    const base = gatewayOf()
-    const guard =
-      <K extends "getSession" | "getPayment" | "closeSession">(name: K) =>
-      (...args: Parameters<PaymentGateway[K]>) => {
-        if (open) throw new Error(`${name} called inside a transaction`)
-        return (base[name] as (...a: typeof args) => unknown)(...args)
-      }
-    const gateway = {
-      ...base,
-      getSession: guard("getSession"),
-      getPayment: guard("getPayment"),
-      closeSession: guard("closeSession"),
-    } as PaymentGateway
+    const gateway = guardTransactions(gatewayOf())
 
     expect(await sweep(gateway)).toMatchObject({ failed: false })
   })

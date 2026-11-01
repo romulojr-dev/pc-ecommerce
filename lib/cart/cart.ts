@@ -2,6 +2,12 @@ import { randomUUID } from "node:crypto"
 
 import { db } from "@/lib/db"
 import type { DbClient } from "@/lib/db-client"
+import {
+  finishRelease,
+  prepareRelease,
+  releaseInPurchase,
+} from "@/lib/orders/release"
+import type { PaymentGateway } from "@/lib/payments/gateway-types"
 import { toDateString } from "@/lib/products"
 import {
   getStockStatus,
@@ -48,6 +54,10 @@ type Options = {
   cartId: string | null
   // Manila's date, for pre-order status; tests pass a fixed one
   today?: string
+  // When expired orders are released, and the gateway their sessions are
+  // cancelled at (docs/specs/033-release-unpaid-orders); tests pass both
+  now?: Date
+  gateway?: PaymentGateway
 }
 
 const productFacts = (tx: Tx, productId: string) =>
@@ -82,20 +92,27 @@ const isSold = (product: Facts, today: string) =>
 // cart is made here, on the first add, or when the cookie's cart is gone.
 export async function addToCart(
   input: unknown,
-  { cartId, today = manilaToday() }: Options,
+  { cartId, today = manilaToday(), now, gateway }: Options,
   newId: () => string = newCartId
 ): Promise<CartOutcome> {
   const parsed = addInputSchema.safeParse(input)
   if (!parsed.success) return failed("invalid")
   const { productId, quantity: requested } = parsed.data
 
+  // Expired orders holding this product give it back first, in this
+  // transaction (docs/specs/033-release-unpaid-orders, behavior 17–20)
+  const pending = await prepareRelease([productId], { now, gateway })
   try {
-    return await db.$transaction(async (tx): Promise<CartOutcome> => {
+    const outcome = await db.$transaction(async (tx): Promise<CartOutcome> => {
+      // The cart's lock first, then the release, then the stock read: every
+      // purchase locks in that order
+      let id = cartId && (await lockCart(tx, cartId)) ? cartId : null
+      await releaseInPurchase(tx, pending)
+
       const product = await productFacts(tx, productId)
       if (!product || !isSold(product, today)) return failed("unavailable")
 
-      let id = cartId
-      if (!id || !(await lockCart(tx, id))) {
+      if (!id) {
         id = newId()
         await tx.$executeRaw`
           INSERT INTO "Cart" ("id", "updatedAt") VALUES (${id}, now())`
@@ -140,7 +157,10 @@ export async function addToCart(
         },
       }
     })
+    finishRelease(pending, true)
+    return outcome
   } catch (error) {
+    finishRelease(pending, false)
     logFailure("addToCart", error)
     return failed("error")
   }
@@ -150,16 +170,29 @@ export async function addToCart(
 // always works; raising needs the product to be sold and fits the cap.
 export async function setCartQuantity(
   input: unknown,
-  { cartId, today = manilaToday() }: Options
+  { cartId, today = manilaToday(), now, gateway }: Options
 ): Promise<CartOutcome> {
   const parsed = setInputSchema.safeParse(input)
   if (!parsed.success) return failed("invalid")
   if (!cartId) return failed("not-found")
   const { lineId, quantity: requested } = parsed.data
 
+  // The line's product, for the release's scope (docs/specs/033-release-
+  // unpaid-orders, behavior 17); an unknown line releases nothing
+  const scope = await db.cartItem
+    .findFirst({
+      where: { id: lineId, cartId, buildId: null },
+      select: { productId: true },
+    })
+    .catch(() => null)
+  const pending = await prepareRelease(scope ? [scope.productId] : [], {
+    now,
+    gateway,
+  })
   try {
-    return await db.$transaction(async (tx): Promise<CartOutcome> => {
+    const outcome = await db.$transaction(async (tx): Promise<CartOutcome> => {
       if (!(await lockCart(tx, cartId))) return failed("not-found")
+      await releaseInPurchase(tx, pending)
 
       // Only this cart's single lines: another cart's id, or a line of a
       // build group, is not found (E23–E25)
@@ -197,7 +230,10 @@ export async function setCartQuantity(
         },
       }
     })
+    finishRelease(pending, true)
+    return outcome
   } catch (error) {
+    finishRelease(pending, false)
     logFailure("setCartQuantity", error)
     return failed("error")
   }

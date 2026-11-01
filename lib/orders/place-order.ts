@@ -5,19 +5,23 @@ import { reviewDigest } from "@/lib/checkout/digest"
 import { computeReview } from "@/lib/checkout/review-checkout"
 import { db } from "@/lib/db"
 import { PRODUCTS_TAG } from "@/lib/home"
+import type { PaymentGateway } from "@/lib/payments/gateway-types"
 import { PSGC_VERSION } from "@/lib/psgc/version"
 import { toDbZone } from "@/lib/shipping/zone-enum"
 
 import { placeOrderInputSchema } from "./input"
 import { logSafeFailure } from "./log"
 import { newOrderNumber } from "./number"
+import { finishRelease, prepareRelease, releaseInPurchase } from "./release"
 import { hashCartId, hashToken, tokenMatches } from "./secrets"
 
 // Place an order (docs/specs/030-place-an-order, Behavior 7–15, §4 Placement;
 // ADR 0009). The one writer of an order: the server action only forwards here.
 // Everything happens in one transaction and a refusal leaves nothing behind:
 //
-//   lock the cart → replay check → the review's own checks → compare the
+//   lock the cart → replay check → release expired orders holding the
+//   cart's parts (docs/specs/033-release-unpaid-orders) → the review's own
+//   checks → compare the
 //   digest → take the stock → insert the order → its items → the stock
 //   movements → empty the cart
 //
@@ -49,6 +53,8 @@ export type PlaceOptions = {
   // Tests pass a fixed clock and a number source that collides
   now?: Date
   newNumber?: () => string
+  // The gateway expired orders' sessions are cancelled at (spec 033)
+  gateway?: PaymentGateway
   // Test seam: runs after each step inside the transaction, so a test can make
   // a later step fail and check that nothing was written
   afterStep?: (step: PlaceStep) => void | Promise<void>
@@ -119,7 +125,12 @@ function orderLines(
 export async function placeOrder(
   cartId: string | null,
   input: unknown,
-  { now = new Date(), newNumber = newOrderNumber, afterStep }: PlaceOptions = {}
+  {
+    now = new Date(),
+    newNumber = newOrderNumber,
+    gateway,
+    afterStep,
+  }: PlaceOptions = {}
 ): Promise<PlaceResult> {
   const parsed = placeOrderInputSchema.safeParse(input)
   if (!parsed.success) {
@@ -140,6 +151,19 @@ export async function placeOrder(
     await afterStep?.(name)
   }
 
+  // The cart's products, for the release's scope (spec 033, behavior 17)
+  const held = await db.cartItem
+    .findMany({
+      where: { cartId },
+      select: { productId: true },
+      distinct: ["productId"],
+    })
+    .catch(() => [])
+  const pending = await prepareRelease(
+    held.map(({ productId }) => productId),
+    { now, gateway }
+  )
+
   try {
     const placed = await db.$transaction(async (tx) => {
       // 1. Lock the cart: a cart change in another tab either lands before the
@@ -159,6 +183,10 @@ export async function placeOrder(
         return { orderNumber: earlier.orderNumber, replay: true }
       }
       await step("replay")
+
+      // Expired orders holding the cart's parts give them back here, so the
+      // checks below see that stock (spec 033, behavior 18)
+      await releaseInPurchase(tx, pending)
 
       // 3. The review's own checks on the locked cart, then the comparison
       //    with what the shopper saw
@@ -301,6 +329,7 @@ export async function placeOrder(
 
       return { orderNumber: order.orderNumber, replay: false }
     }, TRANSACTION)
+    finishRelease(pending, true)
 
     // The home page shows stock, so it must be refreshed. The order stands
     // whatever this does.
@@ -313,6 +342,7 @@ export async function placeOrder(
     }
     return { ok: true, orderNumber: placed.orderNumber, accessToken }
   } catch (error) {
+    finishRelease(pending, false)
     if (error instanceof Refusal) return error.result
     logSafeFailure("Place order", error)
     return { ok: false, reason: "error" }

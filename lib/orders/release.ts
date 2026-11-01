@@ -357,26 +357,43 @@ export async function sweepExpiredOrders(
   }
 }
 
-// A purchase's step 1 (behavior 17, 20): scoped to its products, with the
-// purchase timeouts. A failure here never fails the purchase: it goes on with
-// nothing cleared.
-export async function checkForPurchase(
+// A purchase's release (behavior 17–20), in three calls around its own
+// transaction:
+//
+//   const pending = await prepareRelease(productIds, { now })   // step 1
+//   db.$transaction(async (tx) => {
+//     …lock the cart…
+//     await releaseInPurchase(tx, pending)                     // step 2
+//     …its own stock check…
+//   })
+//   finishRelease(pending, committed)                          // step 3
+//
+// A failure in step 1 never fails the purchase: it goes on with nothing
+// cleared. A purchase that rolls back releases nothing.
+export type PendingRelease = {
+  now: Date
+  check: CheckResult
+  release: ReleaseResult | null
+}
+
+export async function prepareRelease(
   productIds: string[],
   {
-    now,
+    now = new Date(),
     gateway,
     environment,
     timeoutMs = PURCHASE_GATEWAY_TIMEOUT_MS,
   }: {
-    now: Date
+    now?: Date
     gateway?: PaymentGateway
     environment?: PaymentEnvironment
     timeoutMs?: number
-  }
-): Promise<CheckResult> {
-  if (productIds.length === 0) return NONE
+  } = {}
+): Promise<PendingRelease> {
+  const pending: PendingRelease = { now, check: NONE, release: null }
+  if (productIds.length === 0) return pending
   try {
-    return await checkExpiredOrders({
+    const check = await checkExpiredOrders({
       now,
       productIds,
       limit: SCOPED_LIMIT,
@@ -384,21 +401,34 @@ export async function checkForPurchase(
       environment,
       purchase: true,
     })
+    return { ...pending, check }
   } catch (error) {
     logSafeFailure("Checking expired orders for a purchase", error)
-    return NONE
+    return pending
   }
 }
 
-// A purchase's step 2, in its transaction right after the cart lock
-export const releaseForPurchase = (
+// Step 2 in the purchase's transaction, right after its cart lock. True when
+// anything was released.
+export async function releaseInPurchase(
   tx: Prisma.TransactionClient,
-  check: CheckResult,
-  now: Date
-): Promise<ReleaseResult | null> =>
-  check.cleared.length > 0
-    ? releaseExpiredOrders(tx, {
-        now,
-        orderIds: check.cleared.map(({ id }) => id),
-      })
-    : Promise.resolve(null)
+  pending: PendingRelease
+): Promise<boolean> {
+  const orderIds = pending.check.cleared.map(({ id }) => id)
+  if (orderIds.length === 0) return false
+  pending.release = await releaseExpiredOrders(tx, {
+    now: pending.now,
+    orderIds,
+  })
+  return pending.release.released.length > 0
+}
+
+// Step 3, once the purchase's transaction has finished
+export function finishRelease(
+  pending: PendingRelease,
+  committed: boolean
+): void {
+  afterRelease(pending.check, committed ? pending.release : null, {
+    via: "purchase",
+  })
+}
