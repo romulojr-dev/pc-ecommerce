@@ -23,6 +23,9 @@ export type PaymentView =
   | "too-late"
   // Past expiresAt: spec 030's past-due text
   | "past-due"
+  // A payment's amount didn't match: no payment can start, only the message
+  // (docs/specs/032-payment-webhooks, behavior 24)
+  | "needs-check"
 
 const PARAMS: readonly PaymentParam[] = ["return", "cancelled", "error"]
 
@@ -34,12 +37,32 @@ export function parsePaymentParam(value: unknown): PaymentParam | null {
     : null
 }
 
+// The order's payments, as far as the view cares (docs/specs/032-payment-
+// webhooks, behavior 21 and 24)
+export type PaymentsSummary = {
+  // The newest Payment's status
+  latest: "pending" | "expired" | "paid" | "failed" | null
+  // A payment whose amount didn't match (Payment.problem AMOUNT_MISMATCH)
+  needsCheck: boolean
+}
+
+const NO_PAYMENTS: PaymentsSummary = { latest: null, needsCheck: false }
+
 export function paymentView(
   status: OrderStatusName,
   expiresAt: Date,
   param: PaymentParam | null,
-  now: Date
+  now: Date,
+  payments: PaymentsSummary = NO_PAYMENTS
 ): PaymentView {
+  // A payment that needs checking wins over everything, and also shows on a
+  // cancelled order (V16–V16d)
+  if (
+    payments.needsCheck &&
+    (status === "PENDING_PAYMENT" || status === "CANCELLED")
+  ) {
+    return "needs-check"
+  }
   if (status !== "PENDING_PAYMENT") return "none"
   if (isPastDue(expiresAt, now)) return "past-due"
   // A return from a payment waits whatever time is left: the shopper may
@@ -48,5 +71,7 @@ export function paymentView(
   if (!canStartSession(expiresAt, now)) return "too-late"
   if (param === "cancelled") return "cancelled"
   if (param === "error") return "error"
+  // The last session expired unpaid: Retry, as after a cancel (V14, D12)
+  if (payments.latest === "expired") return "cancelled"
   return "pay"
 }

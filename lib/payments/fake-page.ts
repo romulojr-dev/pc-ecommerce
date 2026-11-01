@@ -12,6 +12,7 @@ import {
 import { fakeSessionEvent, type FakeEventType } from "./fake-events"
 import { paymentEnvironment } from "./gateway"
 import type { PaymentEnvironment, PaymentParam } from "./session-request"
+import { SESSION_ID } from "./webhook"
 
 // The fake payment page's logic (docs/specs/031-pay-with-xendit, Behavior
 // 15–16, F1–F5). It stands in for Xendit's hosted page: Pay completes the
@@ -20,8 +21,6 @@ import type { PaymentEnvironment, PaymentParam } from "./session-request"
 // payment_session.expired. Every miss is null, so the page answers one 404:
 // the gateway isn't the fake, the id is malformed or unknown, the key doesn't
 // open the session's order, or the session belongs to another environment.
-
-const SESSION_ID = /^ps-[0-9a-f]{24}$/
 
 export type FakePageContext = {
   gatewayIsFake?: boolean
