@@ -12,4 +12,4 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #80. One commit p
 - [x] 8. Order page states and `needs-check` in `startPayment`
 - [x] 9. `pnpm webhook:replay`
 - [x] 10. E2E (X5–X8) (written; the local run needs PRODUCTION_DATABASE_HOST in .env.local, so CI runs them)
-- [ ] 11. Docs close-out: setup doc, CLAUDE.md, PRD data model, spec status
+- [x] 11. Docs close-out: setup doc, CLAUDE.md, PRD data model, spec status

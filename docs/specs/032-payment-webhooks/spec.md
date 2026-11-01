@@ -1,6 +1,6 @@
 # 032 — Payment webhooks
 
-Status: **Approved with changes** (review 2026-11-01, §11) · Issue: #80 (Sprint 6, Checkout epic #4; depends on #79, merged as spec 031) · PRD refs: FR-22 (Paid is set only from the gateway; reworded by this story, D16), FR-23 (idempotent handler, a record per attempt), FR-26 (the refund flag only; refunds are Sprint 8); NFR Security (webhook verification), Observability (structured payment logs); Data model › `Order`, `Payment`, `PaymentEvent`; ADR 0010
+Status: **Implemented** · Approved with changes in review 2026-11-01 (§11) · Issue: #80 (Sprint 6, Checkout epic #4; depends on #79, merged as spec 031) · PRD refs: FR-22 (Paid is set only from the gateway; reworded by this story, D16), FR-23 (idempotent handler, a record per attempt), FR-26 (the refund flag only; refunds are Sprint 8); NFR Security (webhook verification), Observability (structured payment logs); Data model › `Order`, `Payment`, `PaymentEvent`; ADR 0010
 
 **Gateway: Xendit, not PayMongo.** Issue #80 was written for PayMongo. The gateway is Xendit in test mode (ADR 0010, spec 031). Spec 031 §8 listed how #80 changes for Xendit; this spec is the behavior, and D1 maps every PayMongo criterion to its Xendit form.
 
@@ -422,3 +422,12 @@ Before releasing an order, #81 calls **`reconcileSession`** for each of the orde
 6. **Ignored webhooks log** one structured line each (rule *Logging*, D9, L1–L9; H7, H7a, H7b, H8 assert it).
 7. **Xendit API calls never run inside a database transaction** (rule *Gateway calls*, D2, H17), with spec 031's `startPayment` flagged as Q6.
 8. Side effects: a body whose event type disagrees with Xendit now applies Xendit's outcome (D15, H12, H12b changed); `active` is a result of its own (503); Q7 added.
+
+### Changed while building
+
+- `handlePaymentEvent(event, expectedToken, options?)` takes the token as its second argument (the route and the fake page pass `XENDIT_WEBHOOK_TOKEN`), so the handler stays free of the environment, as the seam was.
+- The route also refuses a body whose `Content-Length` announces more than 64 KB before reading it; the handler checks the size it read too.
+- `reconcileSession` reads the order named by the session's metadata in phase 1 (no lock), then locks it in phase 2; an unknown order never opens a transaction.
+- `reconcileSession` logs its own `payment.reconcile` line only when called without an event; with one, the handler's `payment.webhook` line is the call's one line.
+- The fake gateway gained a `paymentStatus` test seam for H12c (`getPayment` reading failed or pending).
+- `pnpm payments:check --read <ps-…>` was added for Q3; the answer waits on a paid test session (`docs/setup/payments.md`, "To confirm in test mode").

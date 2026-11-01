@@ -53,7 +53,7 @@ Add each to `.env.local`, the Vercel environments named, and `.env.example`
 | --- | --- | --- | --- | --- | --- |
 | `PAYMENT_GATEWAY` | `fake` (or `xendit` with a tunnel) | `fake` | `xendit` (`fake` is refused) | `fake` | [#79](https://github.com/romulojr-dev/pc-ecommerce/issues/79) |
 | `XENDIT_SECRET_KEY` | the test key, only with `xendit` | not needed | the test key | not needed | [#79](https://github.com/romulojr-dev/pc-ecommerce/issues/79) |
-| `XENDIT_WEBHOOK_TOKEN` | any random value (the fake uses it) | any random value | the account's webhook verification token | any random value | [#79](https://github.com/romulojr-dev/pc-ecommerce/issues/79) (fake), [#80](https://github.com/romulojr-dev/pc-ecommerce/issues/80) (required with `xendit`) |
+| `XENDIT_WEBHOOK_TOKEN` | any random value (the fake uses it) | any random value | the account's webhook verification token | any random value | [#79](https://github.com/romulojr-dev/pc-ecommerce/issues/79) (fake), [#80](https://github.com/romulojr-dev/pc-ecommerce/issues/80) (required with both gateways) |
 | `VERCEL_ENV` | unset (reads as `development`) | set by Vercel | set by Vercel | unset | [#79](https://github.com/romulojr-dev/pc-ecommerce/issues/79) |
 | `CRON_SECRET` | any random value | not needed | random, at least 16 characters | not needed | [#81](https://github.com/romulojr-dev/pc-ecommerce/issues/81) |
 | `ORDERS_ENABLED` | `true` | `true` | leave unset (off) until #81 is deployed | `true` | [#78](https://github.com/romulojr-dev/pc-ecommerce/issues/78) |
@@ -61,7 +61,9 @@ Add each to `.env.local`, the Vercel environments named, and `.env.example`
 `PAYMENT_GATEWAY` is `xendit` or `fake`, and required: any other value, or
 none, stops the app at startup. With `xendit`, `XENDIT_SECRET_KEY` is required
 and `NEXT_PUBLIC_SITE_URL` must be `https://`, because Xendit only accepts HTTPS
-return URLs. Changing a variable on Vercel needs a redeploy.
+return URLs. `XENDIT_WEBHOOK_TOKEN` is required with both gateways: the
+webhook route checks it, and the fake's payment page sends it. Changing a
+variable on Vercel needs a redeploy.
 
 `ORDERS_ENABLED` is `true` or `false`; unset means off, and any other value
 stops the app at startup. Off, the review shows "Placing orders is coming soon."
@@ -69,8 +71,9 @@ and the server refuses to place an order. Existing orders stay viewable and
 payable. A placed order holds its stock until it is paid or cancelled, and
 nothing cancels it before #81, so Production keeps it off.
 
-`VERCEL_ENV` goes into each session's metadata as the environment, so #80 can
-ignore sessions created by another environment on the same test account.
+`VERCEL_ENV` goes into each session's metadata as the environment, so the
+webhook ignores sessions created by another environment on the same test
+account ([spec 032](../specs/032-payment-webhooks/spec.md)).
 
 ### Production webhook (#80)
 
@@ -82,6 +85,16 @@ ignore sessions created by another environment on the same test account.
   webhook's `x-callback-token` header.
 - [ ] Leave the URL on Production. The token is one per account, so every
   environment using this account shares it.
+- [ ] After the deploy, pay one order on Production with a test card and check
+  that it reaches Paid. Then open the Vercel log for that webhook: its line is
+  `{"event":"payment.webhook","outcome":"paid",…}`. Note there whether Xendit's
+  session webhook body carries `metadata` (spec 032, Q2; nothing depends on
+  it, since the environment is read from Xendit's API).
+
+The handler never trusts the body: it reads the session and its payment from
+Xendit's API before changing anything, and it answers `5xx` only when a later
+try can do better (Xendit unreachable, or not caught up yet). Every webhook,
+the ignored ones included, writes one JSON log line with its outcome.
 
 Xendit retries a webhook that doesn't get a 2xx up to six times (15 min, 1 h,
 3 h, 6 h, 12 h and 24 h after the first try), and the Dashboard can resend one
@@ -98,13 +111,29 @@ by hand.
   restart `pnpm dev`. Payments open and return, but webhooks still go to
   Production, which ignores them (the environment in their metadata is
   `development`), so the local order stays at "Confirming your payment…".
+  Replay the webhook locally to finish it (below).
+
+### Replaying a webhook locally
+
+`pnpm webhook:replay <ps-…> [--event completed|expired] [--url http://localhost:3000]`
+sends a Xendit-format session webhook with `XENDIT_WEBHOOK_TOKEN` from
+`.env.local` to the local server and prints the HTTP status, never the token or
+the body. It only posts to `localhost`, `127.0.0.1` or `[::1]` over `http`, so
+it can't reach Production or a preview.
+
+The handler asks the gateway what happened, so a replay only marks Paid when
+the gateway agrees: with the fake, a session paid on the test page (a second
+replay answers `200` and changes nothing); with real Xendit through a tunnel, a
+session paid on Xendit's test page. A session that is still active answers
+`503`. The session id is in the test page's URL (fake) or `pnpm
+payments:check --read` (Xendit).
 
 ### One test account, several environments
 
 Every session on the account sends its webhooks to the one URL, Production.
 Production ignores a session whose metadata environment isn't `production`, and
 one whose order it doesn't know, and answers `200` so Xendit doesn't retry
-(#80).
+and writes a log line for it ([spec 032](../specs/032-payment-webhooks/spec.md)).
 
 ### Previews
 
@@ -174,3 +203,10 @@ On Xendit's test pages:
 - Cancelling an active session answers `200` with `CANCELED`; cancelling it
   again answers `422 INVALID_SESSION_STATUS` ("Session status is CANCELED,
   expecting ACTIVE").
+
+## To confirm in test mode (spec 032, Q3)
+
+- [ ] Whether `GET /v3/payments/{payment_id}` answers for a paid session's
+  `payment_id`: `pnpm payments:check --keep`, pay the printed link with
+  4000 0000 0000 1000, then `pnpm payments:check --read <ps-…>`. If it doesn't,
+  only the Xendit adapter's `getPayment` changes.
