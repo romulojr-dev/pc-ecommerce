@@ -150,13 +150,13 @@ Errors block "Add build to cart"; warnings allow it after the shopper acknowledg
 
 ## Payments and fulfillment
 
-All online methods go through one PH gateway in test mode; COD is handled in-app. Recommended gateway: **PayMongo** (PH-focused, covers GCash, Maya, cards, BillEase, SPayLater, free test mode); Xendit is the fallback with a similar method list ([HitPay comparison](https://hitpayapp.com/ph/blog/best-payment-gateway-in-the-philippines)).
+All online methods go through one PH gateway in test mode; COD is handled in-app. Gateway: **Xendit** in test mode, through its hosted Payment Sessions (GCash, Maya and cards in the MVP). **PayMongo** is the alternative, with a similar method list (PH-focused, covers GCash, Maya, cards, BillEase, SPayLater, free test mode); the app reaches the gateway through a provider-neutral interface, so switching is an adapter ([HitPay comparison](https://hitpayapp.com/ph/blog/best-payment-gateway-in-the-philippines), [ADR 0010](adr/0010-payment-gateway-xendit-test-mode.md)).
 
 | Method | How it works | Order status after payment |
 | --- | --- | --- |
 | GCash / Maya | Redirect to wallet authorization page, return to order page | Paid (on webhook) |
 | Credit / debit card | Gateway-hosted card form with 3-D Secure | Paid (on webhook) |
-| Installments / BNPL | Gateway BNPL options (e.g. BillEase, SPayLater) and card installment terms where offered | Paid (on webhook) |
+| Installments / BNPL | Gateway BNPL options (e.g. BillEase, SPayLater) and card installment terms where the gateway offers them; not among the MVP's allowed channels | Paid (on webhook) |
 | Cash on delivery | No online step; customer confirms by SMS/email link | COD confirmed → Paid when admin marks delivered |
 
 ### Requirements
@@ -225,7 +225,7 @@ flowchart TB
 
     PG[("PostgreSQL<br/>via Prisma ORM")]
     CL["Cloudinary<br/>product images"]
-    PM["PayMongo<br/>GCash, Maya, cards"]
+    PM["Xendit<br/>GCash, Maya, cards"]
     RS["Resend<br/>order emails"]
 
     Browser -- requests --> App
@@ -255,7 +255,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | Builder state | Zustand (persisted to localStorage), synced to DB when logged in | Shareable build URL via the build snapshot's share slug |
 | Images | Cloudinary or UploadThing | Responsive images via next/image |
 | Email | Resend + React Email | Order and auth emails |
-| Payments | PayMongo API (test mode) | Checkout session + webhooks |
+| Payments | Xendit API (test mode); PayMongo the alternative | Payment sessions + webhooks |
 | Hosting | Vercel | Preview deploys per pull request |
 
 ### Data model (core tables)
@@ -320,7 +320,7 @@ The MVP is built incrementally in vertical slices, one user story at a time, usi
 - GitHub Actions on every pull request: lint, type check, migrations against a throwaway Postgres, unit and integration tests, build. Branch protection requires it to pass.
 - Vercel deploys a preview per branch and production on merge to `main`.
 - Separate databases for local, preview and production; secrets only in `.env.local`, GitHub secrets and Vercel environment settings; `.env.example` lists every variable; env vars validated at startup.
-- Preview deployments sit behind Vercel Deployment Protection, so they don't receive real gateway webhooks: previews and CI use a fake payment adapter and signed replayed events. Real PayMongo webhooks are tested locally (through a tunnel) and on production. Setup steps: [docs/setup/payments.md](setup/payments.md).
+- Preview deployments sit behind Vercel Deployment Protection, so they don't receive real gateway webhooks: previews, CI and local runs use a fake payment adapter that sends events in Xendit's format through the same handler. Real Xendit webhooks reach production only (a local run can use real Xendit through a tunnel, without webhooks). Setup steps: [docs/setup/payments.md](setup/payments.md).
 
 ### Testing strategy
 
@@ -359,7 +359,7 @@ Eight sprints (1–2 weeks each) for one developer, planned on the GitHub Projec
 | 2–3 | Catalog | Category pages, filters, search, product pages, home page, SEO |
 | 4 | PC Builder | Rules engine, builder page, slot picker |
 | 5 | PC Builder, Checkout | Share a build by link, "Fits your build" hints (FR-10), cart (FR-12), add build to cart |
-| 6 | Checkout | 3-step checkout (FR-14 to FR-16), stock re-check (FR-13), orders, PayMongo sandbox and webhooks (FR-22 to FR-24, FR-27) |
+| 6 | Checkout | 3-step checkout (FR-14 to FR-16), stock re-check (FR-13), orders, Xendit sandbox and webhooks (FR-22 to FR-24, FR-27) |
 | 7 | Checkout, Accounts | COD (FR-25), vouchers (FR-17), transactional emails (FR-21); accounts (FR-18), address book, order history and saved builds (FR-19) |
 | 8 | Admin + launch | Admin panel, refunds (FR-26), full E2E suite, success-metric checks, production deploy and demo |
 
@@ -369,7 +369,7 @@ flowchart LR
     S2["<b>Catalog</b><br/>Sprints 2–3<br/>Category pages<br/>Filters + search<br/>Product pages"]
     S4["<b>PC Builder</b><br/>Sprint 4<br/>Rules engine<br/>Builder page<br/>Slot picker"]
     S5["<b>Builder + cart</b><br/>Sprint 5<br/>Share builds<br/>Fits-your-build hints<br/>Cart + add build"]
-    S6["<b>Checkout</b><br/>Sprint 6<br/>Checkout steps<br/>Orders<br/>PayMongo sandbox"]
+    S6["<b>Checkout</b><br/>Sprint 6<br/>Checkout steps<br/>Orders<br/>Xendit sandbox"]
     S7["<b>Checkout + Accounts</b><br/>Sprint 7<br/>COD + vouchers<br/>Emails<br/>Accounts + saved builds"]
     S8["<b>Admin + launch</b><br/>Sprint 8<br/>Admin panel<br/>E2E tests<br/>Deploy + demo"]
 
