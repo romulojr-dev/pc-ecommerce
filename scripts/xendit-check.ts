@@ -84,6 +84,60 @@ function show(
   }
 }
 
+// `--read ps-…`: after paying a `--keep` session, read it and its payment
+// (docs/specs/032-payment-webhooks, Q3: does GET /v3/payments take the
+// session's payment_id?). Prints statuses and id prefixes only.
+const readAt = process.argv.indexOf("--read")
+if (readAt !== -1) {
+  const sessionId = process.argv[readAt + 1] ?? ""
+  if (!/^ps-[0-9a-f]{24}$/.test(sessionId)) {
+    console.error("Usage: pnpm payments:check --read <ps-…>")
+    process.exit(1)
+  }
+  await readPaid(sessionId)
+  process.exit(0)
+}
+
+async function readPaid(sessionId: string) {
+  const prefix = (value: unknown) =>
+    typeof value === "string" ? `${value.split("-")[0]}-…` : "absent"
+
+  const session = await fetch(`${API}/sessions/${sessionId}`, {
+    headers,
+    signal: AbortSignal.timeout(15_000),
+  })
+  const s = (await session.json().catch(() => ({}))) as Record<string, unknown>
+  console.log(`\nRead the session: HTTP ${session.status}`)
+  console.log(`  status: ${s.status}`)
+  console.log(`  payment_id: ${prefix(s.payment_id)}`)
+  console.log(`  payment_request_id: ${prefix(s.payment_request_id)}`)
+  if (typeof s.payment_id !== "string") return
+
+  const payment = await fetch(
+    `${API}/v3/payments/${encodeURIComponent(s.payment_id)}`,
+    {
+      headers: { ...headers, "api-version": "2024-11-11" },
+      signal: AbortSignal.timeout(15_000),
+    }
+  )
+  const p = (await payment.json().catch(() => ({}))) as Record<string, unknown>
+  console.log(
+    `\nRead its payment (GET /v3/payments/{payment_id}): HTTP ${payment.status}`
+  )
+  if (typeof p.error_code === "string") {
+    console.log(`  error_code: ${p.error_code}`)
+    return
+  }
+  for (const field of [
+    "status",
+    "channel_code",
+    "request_amount",
+    "currency",
+  ]) {
+    console.log(`  ${field}: ${p[field]}`)
+  }
+}
+
 const expiresAt = new Date(Date.now() + 24 * 3_600_000)
 const stamp = Date.now().toString(36).toUpperCase()
 
