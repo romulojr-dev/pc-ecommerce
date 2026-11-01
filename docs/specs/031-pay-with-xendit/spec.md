@@ -1,6 +1,6 @@
 # 031 — Pay with a Xendit payment session
 
-Status: **Approved** (review 2026-11-01) · Issue: #79 (Sprint 6, Checkout epic #4; depends on #78, merged as spec 030) · PRD refs: Payments and fulfillment (method table), FR-22 (the redirect never marks Paid), FR-23 (a payment record per attempt), FR-27 (Test mode banner with test instructions); Data model › `Payment`; Risks (mock provider adapter behind the same interface)
+Status: **Implemented** (test-mode checks Q4, Q6 and Q8 pending) · Approved in review 2026-11-01 · Issue: #79 (Sprint 6, Checkout epic #4; depends on #78, merged as spec 030) · PRD refs: Payments and fulfillment (method table), FR-22 (the redirect never marks Paid), FR-23 (a payment record per attempt), FR-27 (Test mode banner with test instructions); Data model › `Payment`; Risks (mock provider adapter behind the same interface)
 
 **Gateway decision (settled before this spec):** Xendit in test mode, not PayMongo. The PRD named Xendit as the fallback; the owner has a Xendit test account. Issue #79's text was written for PayMongo; this spec is the behavior, and D1 maps each PayMongo criterion to its Xendit equivalent.
 
@@ -78,7 +78,7 @@ Seed parts and values as in spec 030 (P1: AMD Ryzen 5 7600 × 2, delivery to QC,
 | S2 | P1, third attempt | `reference_id` "PCS-7KQ2M9XD-3" |
 | S3 | Amount conversion (`toProviderAmount`), centavos → the JSON number sent | 6,906,000 → `69060`; 1,999 → `19.99`; 2,311,099 → `23110.99`; 1,149,500 → `11495`; 100 → `1`; 2,000 → `20`; 5 → `0.05`; 10 → `0.1`. In each case `JSON.stringify` of the result prints exactly that text |
 | S3a | The reverse (`fromProviderAmount`, for #80), the JSON number received → centavos | `69060` → 6,906,000; `19.99` → 1,999; `0.1` → 10; `19.999`, `-1`, `NaN`, `1e21`, the string `"19.99"` → refused (`null`), never rounded |
-| S3b | Not an integer, zero or negative, or above `Number.MAX_SAFE_INTEGER` centavos | `RangeError` (a bug: totals are checked integers) |
+| S3b | Not an integer, zero or negative, or above `MAX_CENTAVOS` (999,999,999,999,999: a double keeps decimal text exactly only up to 15 significant digits) | `RangeError` (a bug: totals are checked integers). *Changed while building: the draft said `Number.MAX_SAFE_INTEGER`, whose peso text doesn't survive the round trip.* |
 | S3c | **Only if the planning check finds Xendit refuses centavos in PHP sessions** (Q8): a total of 1,999 | No gateway call, no `Payment`; `startPayment` answers `fractional-amount`, logged; the page shows "This order can't be paid online because its total includes centavos. Contact us." Whole-peso totals (6,906,000) work as S1. Every seed price and shipping fee is whole pesos today, so this path is for data entered later |
 | S4 | Locally, `VERCEL_ENV` unset | `metadata.environment` "development" |
 | S5 | `VERCEL_ENV` "preview" | "preview" |
@@ -176,7 +176,7 @@ Seed parts and values as in spec 030 (P1: AMD Ryzen 5 7600 × 2, delivery to QC,
 - **The status route** reads the key from the `X-Order-Key` request header only (not the URL, so the platform's request log doesn't record the token a second time), runs spec 030's shape checks and constant-time comparison, and returns only `{ status }`. Same 404 for every miss.
 - **Polling is bounded** (10 minutes, ≤ 56 requests per page load) and stops on the first non-pending status.
 - **The `payment` value is display state only.** A visitor with the key can type any value; at worst they see "Confirming…" or "Payment not completed" on their own order.
-- **Gateway HTTP calls happen while the order row is locked**, with a per-call timeout (8 s) and a transaction timeout above the sum of the calls (20 s), so a hung gateway can't hold the row or a pooled connection indefinitely. A timeout is `error` and rolls back. Placement itself (spec 030's transaction) never calls the gateway.
+- **Gateway HTTP calls happen while the order row is locked**, with a per-call timeout (6 s) and a transaction timeout above the sum of the calls (25 s; up to three calls: close, the read after a "not active" answer, create). *Changed while building: the draft said 8 s and 20 s, which three calls could exceed.*, so a hung gateway can't hold the row or a pooled connection indefinitely. A timeout is `error` and rolls back. Placement itself (spec 030's transaction) never calls the gateway.
 - **Orphan sessions.** If the gateway creates a session but our transaction then fails, the session exists with no `Payment` row. It carries `metadata.order_id`, which #80 uses to record the payment (§8). Its id is logged (`payment.session_orphaned`); nothing else.
 - **Logging** follows spec 030's rule: `logSafeFailure` style, event name, provider, order number, session id and an error code; never the secret key, the access token, a return URL, the request or response bodies, or shopper details.
 - **`ORDERS_ENABLED` off:** no order can be placed, so nothing is payable that wasn't already; Pay now on an existing pending order still works (paying for an order that holds stock is the way to release it from the hold).
@@ -258,6 +258,7 @@ The fake's metadata title is "Test payment" (`noindex`). The spec 030 line "Payi
 ### Server actions and routes
 
 - `placeOrderAction` result on success gains `payUrl: string | null` (null = the session failed; the browser then goes to the order link with `payment=error`).
+- `startPayment(orderId, accessToken, options)`: the token comes from the caller (Place order has it; Pay now reads it from the address bar), because only its hash is stored.
 - `startPaymentAction({ orderNumber, key })` → `{ ok: true, url } | { ok: false, reason: "confirming" | "expired" | "not-pending" | "error" }`; an unknown number or wrong key is `not-found` with no other detail. Forwards to `startPayment(orderId, now)` in `lib/payments/start-payment.ts`. Rate limiting is #64.
 - `GET /api/orders/[number]/status` (key in `X-Order-Key`) → `{ status }`, `no-store`.
 - `/test-payment/[id]` page and its `payFakeAction`, `cancelFakeAction`, `expireFakeAction`; the route answers 404 in every request when `PAYMENT_GATEWAY` isn't `fake`. `next.config.ts` gives `/test-payment/:path*` the order page's `no-store` and `no-referrer` headers.
@@ -269,7 +270,7 @@ The fake's metadata title is "Test payment" (`noindex`). The spec 030 line "Payi
 | --- | --- |
 | `PAYMENT_GATEWAY` | `xendit` or `fake`, required. `fake` is refused when `VERCEL_ENV=production` (E1) |
 | `XENDIT_SECRET_KEY` | Required with `xendit`; must start `xnd_development_` (E3); a key that starts `xnd_production_` fails startup anywhere. Never logged or printed |
-| `XENDIT_WEBHOOK_TOKEN` | Optional here; used by the fake's event seam (CI: any random value). #80 makes it required with `xendit` |
+| `XENDIT_WEBHOOK_TOKEN` | Required with `fake`: the fake's Pay sends it with its event (CI: any random value). #80 makes it required with `xendit` too. *Changed while building: the draft had it optional here.* |
 | `VERCEL_ENV` | Read, not set: Vercel provides it. Unset → `development` |
 | `NEXT_PUBLIC_SITE_URL` | Existing; with `xendit` it must be `https://` (E7, Q3) |
 

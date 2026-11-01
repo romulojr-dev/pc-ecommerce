@@ -38,6 +38,11 @@ Where each environment gets its payments and payment events:
   `xnd_development_` prefix (spec 031, E3).
 - [ ] Activate **GCash**, **Maya** and **cards** for test mode, if the Dashboard
   asks. The store offers only these three (`allowed_payment_channels`).
+- [ ] Run `pnpm payments:check` with the key in `.env.local`. It prints only
+  whether the key has the test prefix (never the key), creates a ₱19.99 session
+  that expires in 24 hours, prints Xendit's answer and cancels it; with
+  `--keep` it leaves the session open so its link can be used to try GCash and
+  Maya. Record the answers under "To confirm in test mode" below.
 
 ### Environment variables
 
