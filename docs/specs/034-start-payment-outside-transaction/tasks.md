@@ -12,7 +12,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit p
   - B20 in `lib/payments/schema.db.test.ts`
 
   `pnpm db:drift` must be clean and `pnpm typecheck` must pass.
-- [ ] 4. **Attempt states.** `lib/payments/attempt.ts`: `attemptState`, `OPENING_ABANDONED_AFTER_MS`, `START_PATH_BUDGET_MS`, with unit tests U1–U5 written first.
+- [x] 4. **Attempt states.** `lib/payments/attempt.ts`: `attemptState`, `OPENING_ABANDONED_AFTER_MS`, `START_PATH_BUDGET_MS`, with unit tests U1–U5 written first.
 - [ ] 5. **Wait helper.** `lib/payments/wait-for-session.ts`: `waitForSession`, `OPENING_RETRY_MS`, `OPENING_WAIT_MS`, with fake-timer unit tests for W1–W3's logic (retry, 30 calls then `error`, stop on `confirming`, a throw is `error`).
 - [ ] 6. **Link after a start.** `lib/payments/pay-link.ts`: `linkAfterStart` moves out of `placeOrderAction` unchanged, with a unit test for each refusal.
 - [ ] 7. **Order page summary.** `getOrderForPage` takes `latest` from payments with a session and `needsCheck` from all payments. Unit tests U6–U8; the `paymentView` tests stay green.
