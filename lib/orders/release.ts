@@ -230,6 +230,14 @@ export async function releaseExpiredOrders(
     where: { orderId: { in: ids }, status: "PENDING" },
     data: { status: "EXPIRED" },
   })
+  // An OPENING attempt on a due order is always abandoned (it was claimed at
+  // least 10 minutes before the deadline, and abandoned after 60 s): it has
+  // no session to close (docs/specs/034-start-payment-outside-transaction,
+  // D10)
+  await tx.payment.updateMany({
+    where: { orderId: { in: ids }, status: "OPENING" },
+    data: { status: "FAILED" },
+  })
 
   // Undo the reservations row for row (D9), one stock update per product in
   // id order, the order placement takes them in
