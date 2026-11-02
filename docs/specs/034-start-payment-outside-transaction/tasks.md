@@ -34,7 +34,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit p
   - the log spy
 - [x] 12. **Release.** `releaseExpiredOrders` marks Opening attempts Failed; B19 in `release.db.test.ts`.
 - [x] 13. **Actions.** `placeOrderAction` answers `paymentOpening: true` on `opening` and uses `linkAfterStart`. Cases in `startPaymentAction` and `placeOrderAction` integration tests that pass `opening` through.
-- [ ] 14. **Order page waits.** `PaymentPanel.pay()` runs `waitForSession` and stays busy throughout; update the `order-view.test.tsx` stub type.
+- [x] 14. **Order page waits.** `PaymentPanel.pay()` runs `waitForSession` and stays busy throughout; update the `order-view.test.tsx` stub type.
 - [ ] 15. **Checkout waits.** `CheckoutFlow.goToOrder` and `ReviewStep.onPlaced` carry `paymentOpening`. The wait keeps "Placing your order…" and ends on the payment page or on `linkAfterStart`'s link (B17a, browser side).
 - [ ] 16. **E2E.** `e2e/payment-start.spec.ts` covers two tabs clicking Pay now (W4). Run the existing payment, release and checkout specs (W5).
 - [ ] 17. **Docs close-out.**
