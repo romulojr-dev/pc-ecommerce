@@ -35,7 +35,11 @@ type Props = {
   // The order exists: the flow clears the saved details, zeroes the header
   // count and goes to the order's link
   // The order link, and the payment page to go to (null: no session opened)
-  onPlaced: (link: string, payUrl: string | null) => void
+  onPlaced: (
+    link: string,
+    payUrl: string | null,
+    paymentOpening: boolean
+  ) => void
 }
 
 // Step 2 (docs/specs/029-checkout-steps, Behavior 15–23): sends the saved
@@ -122,7 +126,7 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
       setPlacing(false)
     } else if (answer.ok) {
       // Stay busy: the page is leaving for the order
-      onPlaced(answer.link, answer.payUrl)
+      onPlaced(answer.link, answer.payUrl, answer.paymentOpening === true)
     } else if (answer.reason === "invalid") {
       setPlacing(false)
       onInvalid(answer.fields)
