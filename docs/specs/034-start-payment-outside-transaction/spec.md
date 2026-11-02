@@ -1,6 +1,6 @@
 # 034 — Start a payment with no gateway call inside a transaction
 
-Issue: [#88](https://github.com/romulojr-dev/pc-ecommerce/issues/88). PRD: FR-23 (a payment record per attempt), NFR Performance; CLAUDE.md working rule "No gateway or other network calls inside a database transaction". Origin: [spec 032](../032-payment-webhooks/spec.md) Q6. Depends on [spec 031](../031-pay-with-xendit/spec.md) (`startPayment`), [spec 032](../032-payment-webhooks/spec.md) (`reconcileSession`, orphan sessions) and [spec 033](../033-release-unpaid-orders/spec.md) (the release, which takes the same order lock).
+Status: implemented (2026-11-02). Issue: [#88](https://github.com/romulojr-dev/pc-ecommerce/issues/88). PRD: FR-23 (a payment record per attempt), NFR Performance; CLAUDE.md working rule "No gateway or other network calls inside a database transaction". Origin: [spec 032](../032-payment-webhooks/spec.md) Q6. Depends on [spec 031](../031-pay-with-xendit/spec.md) (`startPayment`), [spec 032](../032-payment-webhooks/spec.md) (`reconcileSession`, orphan sessions) and [spec 033](../033-release-unpaid-orders/spec.md) (the release, which takes the same order lock).
 
 ## 1. Summary
 
@@ -109,7 +109,7 @@ Values as in spec 031: P1 (AMD Ryzen 5 7600 × 2, delivery to QC, total **2,311,
 
 ## 4. Rules and edge cases
 
-- **No gateway call while a transaction is open**, in every path of `startPayment`: claim, finish, attach and the second try are database work only; every `closeSession`, `getSession` and `createSession` runs between them. B1–B19 run under `guardTransactions`, like `reconcile.db.test.ts` H17. CLAUDE.md's "known exception" notes go.
+- **No gateway call while a transaction is open**, in every path of `startPayment`: claim, finish, attach and the second try are database work only; every `closeSession`, `getSession` and `createSession` runs between them. B1–B19 run under `guardTransactions`, like `reconcile.db.test.ts` H17. *Changed while building: the guard now also covers `createSession`, and "inside a transaction" is tracked per async call chain (`AsyncLocalStorage`), not per process, so B3's two concurrent starts don't trip on each other's transactions; a test checks that it still catches a call made inside one.* CLAUDE.md's "known exception" notes go.
 - **At most one opening attempt per order**, decided under the order lock in the claim and backed by a partial unique index `Payment(orderId) WHERE status = 'OPENING'`. The existing `Payment(orderId) WHERE status = 'PENDING'` stays. **An Opening and a Pending can coexist** during a Retry (the old session is still open while the new one is created), which is why this is a second index and not the issue's "extend the partial unique index" (D2).
 - **One open session per order** (spec 031) still holds: a session becomes Pending only in the attach, under the order lock, after the old one was closed; and only one attempt can be between claim and attach. Xendit never holds two live sessions of ours with known ids (the old one is closed **before** the create). The one exception is an orphan from a lost create response or a crash (D11, B7a), which nobody holds the link to and which expires on its own.
 - **Abandoned** is derived from `createdAt` and the database's `now()`, never stored: age ≥ `OPENING_ABANDONED_AFTER_MS` (60 s). Both values come from the database clock (the claim writes `createdAt` from the same `now()` it judges by), so app servers with different clocks agree. A future `createdAt` is fresh. The claim turns an abandoned attempt Failed before inserting the new one, in the same transaction, so the index never sees two.
@@ -132,7 +132,9 @@ No new strings. `opening` reuses the existing busy labels "Opening the payment p
 
 ## 6. Data and interfaces
 
-### Schema (one migration)
+### Schema (two migrations)
+
+*Changed while building: the draft said one migration. Postgres can't use a new enum value in the transaction that adds it, and the index and the CHECK both name `OPENING`, so `payment_opening_status` adds the value alone and `payment_attempts` holds the rest.*
 
 - `PaymentStatus` gains `OPENING`.
 - `Payment.providerRef` becomes nullable (null while Opening, and on Failed attempts). The unique `(provider, providerRef)` stays (Postgres treats nulls as distinct).

@@ -36,8 +36,8 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit p
 - [x] 13. **Actions.** `placeOrderAction` answers `paymentOpening: true` on `opening` and uses `linkAfterStart`. Cases in `startPaymentAction` and `placeOrderAction` integration tests that pass `opening` through.
 - [x] 14. **Order page waits.** `PaymentPanel.pay()` runs `waitForSession` and stays busy throughout; update the `order-view.test.tsx` stub type.
 - [x] 15. **Checkout waits.** `CheckoutFlow.goToOrder` and `ReviewStep.onPlaced` carry `paymentOpening`. The wait keeps "Placing your order…" and ends on the payment page or on `linkAfterStart`'s link (B17a, browser side).
-- [ ] 16. **E2E.** `e2e/payment-start.spec.ts` covers two tabs clicking Pay now (W4). Run the existing payment, release and checkout specs (W5).
-- [ ] 17. **Docs close-out.**
+- [x] 16. **E2E.** `e2e/payment-start.spec.ts` covers two tabs clicking Pay now (W4). Run the existing payment, release and checkout specs (W5).
+- [x] 17. **Docs close-out.**
   - CLAUDE.md: the Paying paragraph, and remove both #88 exception notes
   - spec 032 Q6 and spec 033's #88 row
   - `docs/setup/payments.md`
