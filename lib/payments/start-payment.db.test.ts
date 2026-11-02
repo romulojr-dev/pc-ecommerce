@@ -84,7 +84,7 @@ describe("the first session (A1)", () => {
       expiresAt: EXPIRES,
       method: null,
     })
-    const session = await readFakeSession(payment.providerRef, NOW)
+    const session = await readFakeSession(payment.providerRef ?? "", NOW)
     expect(session).toMatchObject({
       status: "active",
       amountCentavos: 2_311_000,
@@ -135,7 +135,7 @@ describe("retrying", () => {
     ])
     // Only the open Payment's session is still active at the gateway
     for (const row of rows) {
-      expect((await readFakeSession(row.providerRef, NOW))?.status).toBe(
+      expect((await readFakeSession(row.providerRef ?? "", NOW))?.status).toBe(
         row.status === "PENDING" ? "active" : "closed"
       )
     }

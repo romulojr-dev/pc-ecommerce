@@ -105,10 +105,10 @@ export async function startPayment(
       // 2. Close the open session. If it was paid first, a payment is on
       //    its way: no new session (Behavior 13.2).
       const open = await tx.payment.findFirst({
-        where: { orderId, status: "PENDING" },
+        where: { orderId, status: "PENDING", providerRef: { not: null } },
         select: { id: true, providerRef: true },
       })
-      if (open) {
+      if (open?.providerRef) {
         const closed = await gw.closeSession(open.providerRef)
         if (!closed.ok) {
           logGatewayFailure("payment.close", closed.code)

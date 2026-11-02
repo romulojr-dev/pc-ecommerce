@@ -99,6 +99,7 @@ export async function getOrderForPage(
 
 const LATEST = {
   NONE: null,
+  OPENING: null,
   PENDING: "pending",
   EXPIRED: "expired",
   PAID: "paid",

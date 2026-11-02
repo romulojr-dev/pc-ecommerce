@@ -303,7 +303,12 @@ async function apply(
   // Its other open sessions expire here and close at the gateway after the
   // commit (behavior 14)
   const open = await tx.payment.findMany({
-    where: { orderId: order.id, status: "PENDING", id: { not: row.id } },
+    where: {
+      orderId: order.id,
+      status: "PENDING",
+      id: { not: row.id },
+      providerRef: { not: null },
+    },
     select: { id: true, providerRef: true },
   })
   if (open.length > 0) {
@@ -312,5 +317,9 @@ async function apply(
       data: { status: "EXPIRED" },
     })
   }
-  return { outcome, toClose: open.map(({ providerRef }) => providerRef) }
+  // A PENDING payment always has its session id (the attempt CHECK)
+  const toClose = open.flatMap(({ providerRef }) =>
+    providerRef ? [providerRef] : []
+  )
+  return { outcome, toClose }
 }

@@ -130,11 +130,21 @@ export async function checkExpiredOrders({
     LIMIT ${limit}`
   if (due.length === 0) return NONE
 
-  const open = await db.payment.findMany({
-    where: { orderId: { in: due.map(({ id }) => id) }, status: "PENDING" },
+  // A PENDING payment always has its session id (the attempt CHECK); an
+  // OPENING attempt on a due order is abandoned and has none to close
+  // (docs/specs/034-start-payment-outside-transaction, D10)
+  const rows = await db.payment.findMany({
+    where: {
+      orderId: { in: due.map(({ id }) => id) },
+      status: "PENDING",
+      providerRef: { not: null },
+    },
     select: { orderId: true, providerRef: true },
     orderBy: { createdAt: "asc" },
   })
+  const open = rows.flatMap(({ orderId, providerRef }) =>
+    providerRef ? [{ orderId, providerRef }] : []
+  )
 
   const started = Date.now()
   let stopped: string | null = null
