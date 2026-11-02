@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button"
 import { fitPartOf } from "@/lib/build-state/fit"
 import { env } from "@/lib/env"
 import { formatWarranty } from "@/lib/format"
+import { sweepAfterResponse } from "@/lib/orders/release"
 import { getProductPage, type ProductPageData } from "@/lib/products"
 import { type Crumb, breadcrumbJsonLd, productJsonLd } from "@/lib/seo/json-ld"
 import { socialMetadata } from "@/lib/seo/metadata"
@@ -80,6 +81,9 @@ export default async function ProductPage({
   if (category !== product.category.slug) {
     permanentRedirect(productHref(product.category.slug, product.slug))
   }
+  // Expired orders give their parts back after the response (docs/specs/033-
+  // release-unpaid-orders); this view may still show the held stock
+  sweepAfterResponse()
 
   const today = manilaToday()
   const status = getStockStatus(product, today)

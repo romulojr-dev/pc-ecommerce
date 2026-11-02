@@ -15,3 +15,34 @@ export function safeErrorText(error: unknown): string {
 export function logSafeFailure(where: string, error: unknown): void {
   console.error(`${where} failed: ${safeErrorText(error)}`)
 }
+
+// One line per released or skipped order (docs/specs/033-release-unpaid-
+// orders, rule Logging): JSON with only these fields. Never a secret, a token,
+// a cart id, a URL or a shopper's details.
+export type ReleaseLogFields = {
+  outcome: "released" | "skipped"
+  orderNumber: string
+  via: "purchase" | "sweep" | "cron"
+  // A gateway failure code, a reconcile outcome, "locked", "budget" or
+  // "no-reservation"
+  code?: string
+}
+
+export function logReleaseEvent(fields: ReleaseLogFields): void {
+  console.info(
+    JSON.stringify({
+      event: "order.release",
+      outcome: fields.outcome,
+      orderNumber: fields.orderNumber,
+      via: fields.via,
+      code: fields.code,
+    })
+  )
+}
+
+// The cron's summary line, or its refusal
+export function logCronEvent(
+  fields: { released: number; skipped: number } | { outcome: "unauthorized" }
+): void {
+  console.info(JSON.stringify({ event: "order.release.cron", ...fields }))
+}

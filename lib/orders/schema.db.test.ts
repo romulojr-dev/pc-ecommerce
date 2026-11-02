@@ -394,3 +394,43 @@ describe("the narrowed search trigger (T1–T4)", () => {
     ).toBe(90_000)
   })
 })
+
+// Cancelling (docs/specs/033-release-unpaid-orders, §6 Schema)
+describe("cancelled orders", () => {
+  const cancelledAt = new Date("2026-11-02T07:00:00Z")
+
+  it("accepts a cancelled order with its time and reason", async () => {
+    const order = await db.order.create({
+      data: orderData({
+        status: "CANCELLED",
+        cancelledAt,
+        cancelReason: "EXPIRED",
+      }),
+    })
+    expect(order.cancelReason).toBe("EXPIRED")
+  })
+
+  it.each([
+    { cancelledAt: null, cancelReason: "EXPIRED" as const },
+    { cancelledAt, cancelReason: null },
+    { cancelledAt: null, cancelReason: null },
+  ])("refuses a cancelled order without both (%o)", async (fields) => {
+    await expect(
+      db.order.create({ data: orderData({ status: "CANCELLED", ...fields }) })
+    ).rejects.toThrow()
+  })
+
+  it("refuses a pending order with a cancel time", async () => {
+    await expect(
+      db.order.create({
+        data: orderData({ cancelledAt, cancelReason: "EXPIRED" }),
+      })
+    ).rejects.toThrow()
+  })
+
+  it("has the partial index the release's query uses", async () => {
+    const [index] = await db.$queryRaw<{ indexdef: string }[]>`
+      SELECT "indexdef" FROM pg_indexes WHERE "indexname" = 'Order_expiresAt_idx'`
+    expect(index?.indexdef).toContain("WHERE (status = 'PENDING_PAYMENT'")
+  })
+})

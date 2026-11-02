@@ -347,6 +347,8 @@ No `PAYMONGO_WEBHOOK_SECRET` (D1).
 
 ### Note for #81 (added to the issue)
 
+*Changed by [spec 033](../033-release-unpaid-orders/spec.md) (D1, D2): #81 cancels each open session at Xendit first and reconciles only a session Xendit says is no longer active; Expired payments are final and aren't checked again.*
+
 Before releasing an order, #81 calls **`reconcileSession`** for each of the order's sessions that could still have been paid: its Pending `Payment`, and its Expired ones (a retry or an earlier close may have raced a payment). Each call asks Xendit outside any transaction, then applies the result under the order lock, so a payment whose webhook was missed (Production down, Xendit's retries used up) makes the order **Paid instead of Cancelled** (C1). #81's own release then runs in its own transaction and changes the status only if it is still Pending payment. A result of `retry` (Xendit unreachable) is #81's to decide; the recommendation for #81's spec is to skip that order on this run and try again on the next one, since releasing it could cancel a paid order. These calls are Xendit API calls, so they too run outside every database transaction, including the purchase transactions in which #81's scoped release runs (`addToCart`, placement): the scoped release can only reconcile before its transaction opens, or leave reconciling to the global sweep and the cron. #81's spec decides which.
 
 ## 9. Decisions

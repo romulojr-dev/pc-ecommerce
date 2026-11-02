@@ -38,8 +38,12 @@ export const fakePaymentPath = (id: string, key: string): string =>
   `/test-payment/${id}?key=${encodeURIComponent(key)}`
 
 export type FakeOptions = {
-  // Test seams (A6, A7): make a call fail as a gateway error would
-  fail?: { create?: boolean; close?: boolean; get?: boolean }
+  // Test seams (A6, A7): make a call fail as a gateway error would, with
+  // `code` as the failure (default "http-500"; "timeout" for docs/specs/033-
+  // release-unpaid-orders, S9)
+  fail?: { create?: boolean; close?: boolean; get?: boolean; code?: string }
+  // Test seam (spec 033, S9a): how long closeSession takes to answer, in ms
+  closeDelayMs?: number
   // Test seam (docs/specs/032-payment-webhooks, H12c): what a paid session's
   // payment reads as. A real fake payment always succeeded.
   paymentStatus?: PaymentDetails["status"]
@@ -79,13 +83,13 @@ const details = (
   expiresAt: row.expiresAt,
 })
 
-const failed = { ok: false, code: "http-500" } as const
-
 export function fakeGateway({
   fail = {},
+  closeDelayMs = 0,
   paymentStatus = "succeeded",
   now = () => new Date(),
 }: FakeOptions = {}): PaymentGateway {
+  const failed = { ok: false, code: fail.code ?? "http-500" } as const
   return {
     provider: "FAKE",
     name: "the test payment page",
@@ -119,17 +123,19 @@ export function fakeGateway({
     },
 
     async closeSession(id) {
+      if (closeDelayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, closeDelayMs))
+      }
       if (fail.close) return failed
       const row = await read(id, now())
       if (!row) return { ok: false, code: "not-found" }
-      if (row.status === "COMPLETED") return { ok: true, outcome: "completed" }
-      if (row.status === "ACTIVE") {
-        await db.fakeGatewaySession.update({
-          where: { id },
-          data: { status: "CANCELED" },
-        })
-      }
-      return { ok: true, outcome: "closed" }
+      // Xendit cancels only ACTIVE sessions and answers 422 for the rest
+      if (row.status !== "ACTIVE") return { ok: true, outcome: "not-active" }
+      await db.fakeGatewaySession.update({
+        where: { id },
+        data: { status: "CANCELED" },
+      })
+      return { ok: true, outcome: "cancelled" }
     },
 
     async getSession(id) {

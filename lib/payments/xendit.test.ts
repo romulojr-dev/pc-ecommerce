@@ -185,7 +185,7 @@ describe("closeSession (Behavior 14)", () => {
       await xenditGateway({ secretKey: KEY, fetch: fetcher }).closeSession(
         SESSION_ID
       )
-    ).toEqual({ ok: true, outcome: "closed" })
+    ).toEqual({ ok: true, outcome: "cancelled" })
     expect(calls[0].url).toBe(`${XENDIT_API}/sessions/${SESSION_ID}/cancel`)
     expect(calls[0].init.method).toBe("POST")
   })
@@ -196,23 +196,31 @@ describe("closeSession (Behavior 14)", () => {
       message: "Only ACTIVE sessions can be canceled.",
     })
 
-  it.each([
-    ["EXPIRED", { ok: true, outcome: "closed" }],
-    ["CANCELED", { ok: true, outcome: "closed" }],
-    ["COMPLETED", { ok: true, outcome: "completed" }],
-    ["ACTIVE", { ok: false, code: "cancel-refused" }],
-  ])("reads a session that isn't active: %s", async (status, outcome) => {
-    const { fetcher, calls } = fakeFetch(
-      notActive(),
-      json(200, session({ status }))
-    )
+  // docs/specs/033-release-unpaid-orders, D1: the caller reads or reconciles
+  it("answers not-active for a session that isn't active, without reading", async () => {
+    const { fetcher, calls } = fakeFetch(notActive())
     expect(
       await xenditGateway({ secretKey: KEY, fetch: fetcher }).closeSession(
         SESSION_ID
       )
-    ).toEqual(outcome)
-    expect(calls[1].url).toBe(`${XENDIT_API}/sessions/${SESSION_ID}`)
-    expect(calls[1].init.method).toBe("GET")
+    ).toEqual({ ok: true, outcome: "not-active" })
+    expect(calls).toHaveLength(1)
+  })
+
+  it("answers timeout when Xendit doesn't answer in time", async () => {
+    const fetcher = ((_url: string, init: RequestInit) =>
+      new Promise((_, reject) => {
+        init.signal?.addEventListener("abort", () =>
+          reject(init.signal?.reason)
+        )
+      })) as typeof fetch
+    expect(
+      await xenditGateway({
+        secretKey: KEY,
+        fetch: fetcher,
+        timeoutMs: 10,
+      }).closeSession(SESSION_ID)
+    ).toEqual({ ok: false, code: "timeout" })
   })
 
   it("fails on any other error, without reading", async () => {

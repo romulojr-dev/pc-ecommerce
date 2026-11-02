@@ -87,6 +87,7 @@ export async function getOrderForPage(
     paidAt: order.paidAt,
     paymentMethod: order.paymentMethod,
     refundRequired: order.refundRequired,
+    cancelReason: order.cancelReason,
     payments: {
       latest: LATEST[order.payments[0]?.status ?? "NONE"],
       needsCheck: order.payments.some(

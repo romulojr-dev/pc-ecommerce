@@ -177,7 +177,7 @@ Seed values unless stated; "[n]" sets a product's stock in the test database fir
 | V8 | P3's link | One single line (Ryzen × 1) and "Custom PC build" with eight parts in slot order and ₱69,060.00; no number (one group) |
 | V9 | An order with two groups (inserted directly) | "Custom PC build 1" and "Custom PC build 2" |
 | V10 | The status set to PAID / CANCELLED / REFUNDED / each other status (component test on fixtures) | The current step moves; Cancelled and Refunded show as their own item; "Pay by" is gone for Paid and later |
-| V11 | Pending payment with `expiresAt` in the past | "The time to pay has passed. This order will be cancelled and its parts released." |
+| V11 | Pending payment with `expiresAt` in the past | "The time to pay has passed. This order will be cancelled and its parts released." *Changed by [spec 033](../033-release-unpaid-orders/spec.md) (#81): shown as Cancelled with "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts."* |
 | V12 | P30's order after the rename and repricing | The page shows the old name and price |
 | V13 | P31's order with a retired part | Still renders |
 | V14 | Copy link with the clipboard allowed / denied | "Link copied" in the live region / "Couldn't copy. Select the link and copy it yourself." with the field selected |
@@ -272,7 +272,7 @@ Seed values unless stated; "[n]" sets a product's stock in the test database fir
 | Placed on | "Placed on {date}" |
 | Timeline labels | "Pending payment", "Paid", "Processing", "Shipped", "Ready for pickup", "Delivered", "Picked up", "Cancelled", "Refunded"; `aria-label="Order status"` |
 | Pay by | "Pay by {time}" |
-| Past due | "The time to pay has passed. This order will be cancelled and its parts released." |
+| Past due | "The time to pay has passed. This order will be cancelled and its parts released." *Changed by spec 033: "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts."* |
 | Payment not open | "Paying online is coming soon." |
 | Save the link | "Save this link: it's the only way to see your order until order emails arrive." |
 | Link field / button | Label "Your order link"; "Copy link"; "Link copied"; "Couldn't copy. Select the link and copy it yourself." |

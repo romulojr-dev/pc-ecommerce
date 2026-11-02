@@ -1,6 +1,7 @@
 import { createEnv } from "@t3-oss/env-nextjs"
 import { z } from "zod"
 
+import { cronSecretSchema } from "./orders/cron-secret-schema"
 import { ordersEnabledSchema } from "./orders/orders-enabled-schema"
 import {
   paymentEnvIssues,
@@ -28,9 +29,14 @@ export const env = createEnv({
     // script reads it, so the app doesn't need it.
     PRODUCTION_DATABASE_HOST: z.string().min(1).optional(),
     // Whether Place order works (docs/specs/030-place-an-order, D13): "true"
-    // or "false", unset means off. Off in Production until #81 releases unpaid
-    // orders' stock. Read through ordersEnabled().
+    // or "false", unset means off. Off in Production until #81 (unpaid orders
+    // release their stock, docs/specs/033-release-unpaid-orders) is deployed.
+    // Read through ordersEnabled().
     ORDERS_ENABLED: ordersEnabledSchema,
+    // What Vercel's cron sends as `Authorization: Bearer …` to
+    // GET /api/cron/release-orders (docs/specs/033-release-unpaid-orders).
+    // Optional: unset, the route refuses every call. Never logged.
+    CRON_SECRET: cronSecretSchema,
     // The payment gateway (docs/specs/031-pay-with-xendit, ADR 0010):
     // "xendit" or "fake", required; Production refuses the fake. The rules
     // across these variables are in createFinalSchema below.

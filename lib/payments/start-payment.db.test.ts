@@ -216,7 +216,11 @@ describe("orders that can't be paid", () => {
   it.each(["CANCELLED", "PAID"] as const)(
     "refuses a %s order (A8)",
     async (status) => {
-      const order = await newOrder({ status })
+      const order = await newOrder(
+        status === "CANCELLED"
+          ? { status, cancelledAt: EXPIRES, cancelReason: "EXPIRED" }
+          : { status }
+      )
       expect(await startPayment(order.id, TOKEN, options())).toEqual({
         ok: false,
         reason: "not-pending",
@@ -235,6 +239,33 @@ describe("orders that can't be paid", () => {
     expect(await db.payment.count()).toBe(0)
     expect(await db.fakeGatewaySession.count()).toBe(0)
   })
+
+  // docs/specs/033-release-unpaid-orders, P1 and P2: Pay now from a page
+  // opened before the deadline
+  it.each([
+    ["past expiresAt, not released yet (P1)", {}, "expired"],
+    [
+      "cancelled by the release (P2)",
+      { status: "CANCELLED", cancelledAt: EXPIRES, cancelReason: "EXPIRED" },
+      "not-pending",
+    ],
+  ] as const)(
+    "refuses an order %s with no gateway call",
+    async (_, overrides, reason) => {
+      const order = await newOrder(overrides)
+      const gateway = fakeGateway({ now: () => NOW })
+      const close = vi.spyOn(gateway, "closeSession")
+      const create = vi.spyOn(gateway, "createSession")
+      const now = new Date(EXPIRES.getTime() + 1_000)
+
+      expect(
+        await startPayment(order.id, TOKEN, options({ now, gateway }))
+      ).toEqual({ ok: false, reason })
+      expect(close).not.toHaveBeenCalled()
+      expect(create).not.toHaveBeenCalled()
+      expect(await db.payment.count()).toBe(0)
+    }
+  )
 
   it("leaves an open session alone with 9 minutes left (A9a)", async () => {
     const order = await newOrder()

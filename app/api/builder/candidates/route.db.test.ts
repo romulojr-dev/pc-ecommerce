@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { afterAll, beforeEach, describe, expect, it } from "vitest"
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { createCategoryAndBrand, db, resetCatalog } from "@/test-support/db"
 import { seed } from "@/test-support/seed-parts"
@@ -9,10 +9,19 @@ import { GET } from "./route"
 // GET /api/builder/candidates (docs/specs/021-slot-picker, Rules ›
 // Candidates): one Zod-checked slot, 400 on anything else, never cached
 
+// after() needs Next's request scope: here it only records the sweep the
+// route schedules (docs/specs/033-release-unpaid-orders, behavior 22)
+const after = vi.hoisted(() => vi.fn())
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after,
+}))
+
 let categoryId: string
 let brandId: string
 
 beforeEach(async () => {
+  after.mockReset()
   await resetCatalog()
   ;({ categoryId, brandId } = await createCategoryAndBrand())
 })
@@ -56,6 +65,8 @@ describe("GET /api/builder/candidates", () => {
         .map((c: { data: { part: { name: string } } }) => c.data.part.name)
         .sort()
     ).toEqual(["Ryzen 5 7600", "Ryzen 5 7600X"])
+    // The sweep runs after the response
+    expect(after).toHaveBeenCalledTimes(1)
   })
 
   it("takes a slot with a hyphen (E35a)", async () => {
@@ -81,5 +92,6 @@ describe("GET /api/builder/candidates", () => {
     expect(response.status).toBe(400)
     expect(response.headers.get("Cache-Control")).toBe("no-store")
     expect(await response.json()).toEqual({ error: "Invalid slot" })
+    expect(after).not.toHaveBeenCalled()
   })
 })

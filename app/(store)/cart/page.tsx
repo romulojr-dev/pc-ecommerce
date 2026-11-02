@@ -5,6 +5,7 @@ import { CartContent } from "@/components/cart/cart-content"
 import { Container } from "@/components/layout/container"
 import { getCartView } from "@/lib/cart/cart"
 import { readCartId } from "@/lib/cart/cookie"
+import { sweepAfterResponse } from "@/lib/orders/release"
 import { socialMetadata } from "@/lib/seo/metadata"
 
 const title = "Cart"
@@ -25,6 +26,9 @@ export const metadata: Metadata = {
 // after every change (the actions refresh the page).
 export default async function CartPage() {
   await connection()
+  // Expired orders give their parts back after the response (docs/specs/033-
+  // release-unpaid-orders); the next view shows it
+  sweepAfterResponse()
 
   const view = await getCartView(await readCartId())
 

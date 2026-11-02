@@ -21,8 +21,9 @@ export type PaymentView =
   | "error"
   // Under 10 minutes left: no session can open
   | "too-late"
-  // Past expiresAt: spec 030's past-due text
-  | "past-due"
+  // Past expiresAt: shown as cancelled whatever the row says, with no way to
+  // pay (docs/specs/033-release-unpaid-orders, behavior 31)
+  | "expired"
   // A payment's amount didn't match: no payment can start, only the message
   // (docs/specs/032-payment-webhooks, behavior 24)
   | "needs-check"
@@ -64,7 +65,7 @@ export function paymentView(
     return "needs-check"
   }
   if (status !== "PENDING_PAYMENT") return "none"
-  if (isPastDue(expiresAt, now)) return "past-due"
+  if (isPastDue(expiresAt, now)) return "expired"
   // A return from a payment waits whatever time is left: the shopper may
   // have paid (V2)
   if (param === "return") return "confirming"

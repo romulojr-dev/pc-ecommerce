@@ -68,6 +68,7 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
     paidAt: null,
     paymentMethod: null,
     refundRequired: false,
+    cancelReason: null,
     payments: { latest: null, needsCheck: false },
     ...over,
   }
@@ -255,11 +256,13 @@ describe("V10: every status", () => {
   })
 })
 
+// Changed by docs/specs/033-release-unpaid-orders: past the payment time the
+// order reads as cancelled (V2 there)
 describe("V11: past the payment time", () => {
-  it("says so and drops the pay-by line", () => {
+  it("shows it cancelled and drops the pay-by line", () => {
     const t = text(render(order(), new Date("2026-11-01T07:42:00Z")))
     expect(t).toContain(
-      "The time to pay has passed. This order will be cancelled and its parts released."
+      "This order was cancelled because it wasn't paid in time."
     )
     expect(t).not.toContain("Pay by")
   })
@@ -347,9 +350,9 @@ describe("the payment area (spec 031)", () => {
     expect(t).not.toContain("We couldn't open the payment page.")
   })
 
-  it("V6: past the deadline, the past-due text and no button", () => {
+  it("V6: past the deadline, cancelled and no button (spec 033)", () => {
     const html = render(pending, new Date("2026-11-01T07:42:00Z"), "cancelled")
-    expect(text(html)).toContain("The time to pay has passed.")
+    expect(text(html)).toContain("wasn't paid in time")
     expect(html).not.toMatch(PAY_BUTTON)
   })
 
@@ -444,7 +447,7 @@ describe("after the gateway answered", () => {
       render(order({ payments: check }), new Date("2026-11-01T08:00:00Z"))
     )
     expect(t).toContain(NEEDS_CHECK)
-    expect(t).not.toContain("The time to pay has passed")
+    expect(t).not.toContain("wasn't paid in time")
   })
 
   it("V16d: says it under a cancelled order", () => {
@@ -456,5 +459,115 @@ describe("after the gateway answered", () => {
     const t = text(render(paid({ refundRequired: true, payments: check })))
     expect(t).not.toContain(NEEDS_CHECK)
     expect(t).toContain("We received a second payment")
+  })
+})
+
+// docs/specs/033-release-unpaid-orders: V1–V6 as markup
+describe("an order that wasn't paid in time", () => {
+  const EXPIRED =
+    "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts."
+  const DEADLINE = new Date("2026-11-01T07:42:00Z")
+  const gone = [
+    "Pay now",
+    "Retry payment",
+    "Confirming your payment",
+    "Test mode",
+    "Pay by",
+    "The time to pay has passed",
+  ]
+  const currentItems = (html: string) =>
+    [...html.matchAll(/aria-current="step"[^>]*>([\s\S]*?)</g)].map(
+      ([, label]) => label.trim()
+    )
+
+  it("V1: released, it reads as cancelled with the line", () => {
+    const html = render(
+      order({ status: "CANCELLED", cancelReason: "EXPIRED" }),
+      DEADLINE
+    )
+    const t = text(html)
+    expect(t).toContain(EXPIRED)
+    expect(t).toContain("· Cancelled")
+    for (const missing of gone) expect(t).not.toContain(missing)
+  })
+
+  it.each([null, "return", "cancelled", "error"] as const)(
+    "V2, V2a: pending past the deadline reads the same (payment=%s)",
+    (param) => {
+      const pending = text(render(order(), DEADLINE, param))
+      const released = text(
+        render(
+          order({ status: "CANCELLED", cancelReason: "EXPIRED" }),
+          DEADLINE
+        )
+      )
+      expect(pending).toBe(released)
+    }
+  )
+
+  it("V2: the timeline shows Cancelled, not Pending payment, as current", () => {
+    const html = render(order(), DEADLINE)
+    expect(currentItems(html)).not.toContain("Pending payment")
+    expect(text(html)).toContain("Cancelled")
+  })
+
+  it("V2b: a second before the deadline is still the too-late view", () => {
+    const t = text(render(order(), new Date("2026-11-01T07:41:59Z")))
+    expect(t).not.toContain(EXPIRED)
+    expect(t).toContain("Pay by")
+    expect(t).toContain("This order expires in a few minutes")
+  })
+
+  it("V2c: no Retry after an expired session either", () => {
+    const t = text(
+      render(
+        order({ payments: { latest: "expired", needsCheck: false } }),
+        DEADLINE
+      )
+    )
+    expect(t).toContain(EXPIRED)
+    expect(t).not.toContain("Retry payment")
+  })
+
+  it("V3: a late payment adds the refund line under it", () => {
+    const t = text(
+      render(
+        order({
+          status: "CANCELLED",
+          cancelReason: "EXPIRED",
+          refundRequired: true,
+        }),
+        DEADLINE
+      )
+    )
+    expect(t).toContain(
+      `${EXPIRED} Payment received after this order was cancelled. We'll refund it.`
+    )
+  })
+
+  it("V4: a cancel with no reason has no expiry line", () => {
+    expect(text(render(order({ status: "CANCELLED" })))).not.toContain(EXPIRED)
+  })
+
+  it("V5: a payment that needs checking keeps its own view", () => {
+    const t = text(
+      render(
+        order({ payments: { latest: "paid", needsCheck: true } }),
+        DEADLINE
+      )
+    )
+    expect(t).toContain("We received a payment that needs checking.")
+    expect(t).not.toContain(EXPIRED)
+  })
+
+  it("V6: a paid order is never shown as expired", () => {
+    const t = text(
+      render(
+        order({ status: "PAID", paidAt: new Date("2026-11-01T07:00:00Z") }),
+        new Date("2026-11-02T00:00:00Z")
+      )
+    )
+    expect(t).not.toContain(EXPIRED)
+    expect(t).toContain("Paid on")
   })
 })

@@ -9,7 +9,7 @@ A guest can place an order with no account. Four things follow:
 - **Stock is money.** Two shoppers must never both get the last unit, and a failed placement must not leave stock taken, an order half written or a cart half emptied (PRD NFR Reliability).
 - **A submit is not always one request.** A double-click, a second tab or a retry after a lost response must not make a second order, and must not leave the shopper without a link to the first.
 - **There is no account to find the order by.** Until order emails arrive (FR-21, Sprint 7) the only way back to an order is a link, so the link is a credential.
-- **Nothing releases stock yet.** An unpaid order holds its stock until it is paid or cancelled, and the cancelling job is #81.
+- **Nothing releases stock yet.** An unpaid order holds its stock until it is paid or cancelled, and the cancelling job is #81. *Released by [spec 033](../specs/033-release-unpaid-orders/spec.md): an order still unpaid at `expiresAt` is cancelled and its `ORDER_RESERVED` movements are undone row for row as `ORDER_RELEASED`.*
 
 ## Decision
 

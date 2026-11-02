@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server"
 
 import { builderCandidatesQuerySchema } from "@/lib/build-state/candidates"
 import { getBuilderCandidates } from "@/lib/builder-candidates"
+import { sweepAfterResponse } from "@/lib/orders/release"
 import { manilaToday } from "@/lib/stock"
 
 // The slot picker's candidates, fresh on every request (docs/specs/021-slot-
@@ -16,6 +17,9 @@ export async function GET(request: NextRequest) {
   if (!slot.success) {
     return Response.json({ error: "Invalid slot" }, { status: 400, headers })
   }
+  // Expired orders give their parts back after the response (docs/specs/033-
+  // release-unpaid-orders); the next opening lists them in stock
+  sweepAfterResponse()
   const today = manilaToday()
   const candidates = await getBuilderCandidates(slot.data, today)
   return Response.json({ today, candidates }, { headers })

@@ -33,6 +33,10 @@ export default defineConfig({
       // .env.local chooses (docs/specs/031-pay-with-xendit)
       PAYMENT_GATEWAY: "fake",
       XENDIT_WEBHOOK_TOKEN: "test-webhook-token",
+      // Unset whatever .env.local says: the cron route then refuses every
+      // call (docs/specs/033-release-unpaid-orders, T3); the cron's own tests
+      // pass a secret in
+      CRON_SECRET: "",
       VERCEL_ENV: "",
     },
   },

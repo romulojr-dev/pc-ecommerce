@@ -247,6 +247,14 @@ enum Fulfillment {
 // release stock (#81) or adjust it (Admin) add their values.
 enum StockMovementReason {
   ORDER_RESERVED
+  // An unpaid order's stock given back (docs/specs/033-release-unpaid-orders)
+  ORDER_RELEASED
+}
+
+// Why an order was cancelled. Admin adds its own reasons in Sprint 8.
+enum OrderCancelReason {
+  // Not paid by expiresAt (FR-24, docs/specs/033-release-unpaid-orders)
+  EXPIRED
 }
 
 // A placed order (docs/specs/030-place-an-order, ADR 0009). Everything on it
@@ -311,14 +319,20 @@ model Order {
   paymentMethod  String?
   // A payment arrived after cancellation, or a second one after Paid (FR-26).
   // Only ever set to true here; clearing it is Admin's refund (Sprint 8).
-  refundRequired Boolean         @default(false)
+  refundRequired Boolean            @default(false)
+  // Set with CANCELLED (docs/specs/033-release-unpaid-orders); the migration
+  // adds CHECKs: a cancelled order has both, a pending one has neither
+  cancelledAt    DateTime?
+  cancelReason   OrderCancelReason?
   items          OrderItem[]
   stockMovements StockMovement[]
   payments       Payment[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@index([cartIdHash])
+  // The release's one query: unpaid orders by when they expire
+  @@index([expiresAt], where: { status: "PENDING_PAYMENT" })
 }
 
 // One line of an order: a single item (buildId null) or a part of a build

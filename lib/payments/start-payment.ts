@@ -114,7 +114,18 @@ export async function startPayment(
           logGatewayFailure("payment.close", closed.code)
           throw refuse("error")
         }
-        if (closed.outcome === "completed") throw refuse("confirming")
+        // Already ended: if it was paid, a payment is on its way
+        if (closed.outcome === "not-active") {
+          const read = await gw.getSession(open.providerRef)
+          if (!read.ok || !read.session) {
+            logGatewayFailure(
+              "payment.close",
+              read.ok ? "not-found" : read.code
+            )
+            throw refuse("error")
+          }
+          if (read.session.status === "completed") throw refuse("confirming")
+        }
         await tx.payment.update({
           where: { id: open.id },
           data: { status: "EXPIRED" },

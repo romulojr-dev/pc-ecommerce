@@ -150,8 +150,11 @@ printing the key.
 
 Placing an order is behind `ORDERS_ENABLED` (`"true"` or `"false"`; unset means
 off). Set it to `true` in `.env.local` to place orders locally. It is on in
-Preview and CI and stays off in Production until unpaid orders release their
-stock (#81).
+Preview and CI. In Production it is turned on once unpaid orders release their
+stock (#81, [spec 033](docs/specs/033-release-unpaid-orders/spec.md)) is
+deployed. Unpaid orders are cancelled at their deadline by the purchases that
+need their stock, by a sweep after pages that show stock, and by a daily cron
+(`CRON_SECRET`, see the setup page).
 
 ## AI agent skills
 
