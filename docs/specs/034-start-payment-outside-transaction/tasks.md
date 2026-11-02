@@ -42,4 +42,4 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit p
   - spec 032 Q6 and spec 033's #88 row
   - `docs/setup/payments.md`
   - spec 034's status line
-- [ ] 18. **Checks.** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm test:e2e`. Then the manual pass on the preview URL: Pay now, Cancel then Retry, Let it expire then Retry, two tabs, checkout → paid.
+- [ ] 18. **Checks.** *Automated checks pass (2026-11-02); the manual preview pass waits for the preview deploy.* `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm test:e2e`. Then the manual pass on the preview URL: Pay now, Cancel then Retry, Let it expire then Retry, two tabs, checkout → paid.
