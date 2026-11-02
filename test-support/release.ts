@@ -93,18 +93,22 @@ export const stockOf = async (id: string) =>
 // is open, and returns the gateway with every call failing the test while it
 // is. "Open" is per async call chain, not per process, so two starts running
 // at once (docs/specs/034-start-payment-outside-transaction, B3) don't trip
-// on each other's transactions. Restore with vi.restoreAllMocks().
+// on each other's transactions. Safe to call more than once in a test: the
+// spy is installed once. Restore with vi.restoreAllMocks().
+const inside = new AsyncLocalStorage<true>()
+
 export function guardTransactions(base: PaymentGateway): PaymentGateway {
-  const inside = new AsyncLocalStorage<true>()
-  const original = db.$transaction.bind(db)
-  vi.spyOn(db, "$transaction").mockImplementation(((
-    fn: (tx: unknown) => Promise<unknown>,
-    options?: unknown
-  ) =>
-    original(
-      (tx) => inside.run(true, () => fn(tx)),
-      options as never
-    )) as never)
+  if (!vi.isMockFunction(db.$transaction)) {
+    const original = db.$transaction.bind(db)
+    vi.spyOn(db, "$transaction").mockImplementation(((
+      fn: (tx: unknown) => Promise<unknown>,
+      options?: unknown
+    ) =>
+      original(
+        (tx) => inside.run(true, () => fn(tx)),
+        options as never
+      )) as never)
+  }
 
   const guard =
     <K extends "createSession" | "getSession" | "getPayment" | "closeSession">(

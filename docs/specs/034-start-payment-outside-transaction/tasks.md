@@ -25,7 +25,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit p
   - the best-effort close of an orphan on `not-pending` or taken-over
   - the second try and close when settle throws
   - remove the 25 s `TRANSACTION` and rewrite the header comment
-- [ ] 11. **Integration tests for `startPayment`.** Rewrite `start-payment.db.test.ts` with B1–B18 under `guardTransactions`:
+- [x] 11. **Integration tests for `startPayment`.** Rewrite `start-payment.db.test.ts` with B1–B18 under `guardTransactions`:
   - B1–B8, the old A1–A7 plus the lost-response and failing-create cases
   - B9 and B9a, the lock is free during a slow create
   - B10–B12, B11a and B14, abandoned attempts on the database clock

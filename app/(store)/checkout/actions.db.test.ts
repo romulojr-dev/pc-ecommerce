@@ -159,7 +159,11 @@ describe("placeOrderAction", () => {
     expect(result.payUrl).toBeNull()
     expect(result.link).toMatch(/\?key=[A-Za-z0-9_-]{43}&payment=error$/)
     expect(await db.order.count()).toBe(1)
-    expect(await db.payment.count()).toBe(0)
+    // The attempt is recorded and failed (docs/specs/034-start-payment-
+    // outside-transaction, D8)
+    expect(await db.payment.findMany()).toMatchObject([
+      { status: "FAILED", providerRef: null },
+    ])
   })
 
   it("takes the cart from the cookie, not from the request", async () => {
