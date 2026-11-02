@@ -24,9 +24,12 @@ describe("one open session per order", () => {
 
   it("allows any number of closed payments beside the open one", async () => {
     const order = await newOrder()
-    for (const status of ["EXPIRED", "EXPIRED", "FAILED"] as const) {
+    for (const status of ["EXPIRED", "EXPIRED"] as const) {
       await db.payment.create({ data: paymentData(order.id, { status }) })
     }
+    await db.payment.create({
+      data: paymentData(order.id, { status: "FAILED", providerRef: null }),
+    })
     await db.payment.create({ data: paymentData(order.id) })
     expect(await db.payment.count({ where: { orderId: order.id } })).toBe(4)
   })
@@ -36,6 +39,46 @@ describe("one open session per order", () => {
     await db.payment.create({ data: paymentData(a.id) })
     await db.payment.create({ data: paymentData(b.id) })
     expect(await db.payment.count({ where: { status: "PENDING" } })).toBe(2)
+  })
+})
+
+// docs/specs/034-start-payment-outside-transaction, §6 Schema (B20)
+describe("one start in flight per order", () => {
+  const opening = (orderId: string) =>
+    paymentData(orderId, { status: "OPENING", providerRef: null })
+
+  it("refuses a second opening attempt for the same order", async () => {
+    const order = await newOrder()
+    await db.payment.create({ data: opening(order.id) })
+    await expect(
+      db.payment.create({ data: opening(order.id) })
+    ).rejects.toThrow()
+  })
+
+  it("allows an opening attempt beside the open session (a retry)", async () => {
+    const order = await newOrder()
+    await db.payment.create({ data: paymentData(order.id) })
+    await db.payment.create({ data: opening(order.id) })
+    expect(await db.payment.count({ where: { orderId: order.id } })).toBe(2)
+  })
+
+  it.each([
+    ["an opening attempt with a session id", { status: "OPENING" }],
+    ["a failed attempt with a session id", { status: "FAILED" }],
+    ["a pending payment without one", { providerRef: null }],
+    [
+      "a paid payment without one",
+      { providerRef: null, status: "PAID", paidAt: new Date() },
+    ],
+    [
+      "an expired payment without one",
+      { providerRef: null, status: "EXPIRED" },
+    ],
+  ] as const)("refuses %s", async (_, change) => {
+    const order = await newOrder()
+    await expect(
+      db.payment.create({ data: paymentData(order.id, change) })
+    ).rejects.toThrow()
   })
 })
 

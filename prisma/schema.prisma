@@ -390,11 +390,14 @@ enum PaymentProvider {
   FAKE
 }
 
-// PENDING while its session is open; EXPIRED when the session closed unpaid
-// (a retry, #81's release, or the gateway's expiry); PAID when the gateway
-// confirms it (docs/specs/032-payment-webhooks). FAILED is unused: Xendit
-// never ends a session as failed (spec 032, D3).
+// OPENING while startPayment asks the gateway for a session; PENDING while its
+// session is open; EXPIRED when the session closed unpaid (a retry, #81's
+// release, or the gateway's expiry); PAID when the gateway confirms it
+// (docs/specs/032-payment-webhooks). FAILED is an attempt that got no session
+// of ours: its create or close failed, or it was abandoned (docs/specs/034-
+// start-payment-outside-transaction). Xendit never ends a session as failed.
 enum PaymentStatus {
+  OPENING
   PENDING
   PAID
   FAILED
@@ -407,8 +410,10 @@ model Payment {
   orderId          String
   order            Order           @relation(fields: [orderId], references: [id], onDelete: Restrict)
   provider         PaymentProvider
-  // The gateway's session id (Xendit: ps-…)
-  providerRef      String
+  // The gateway's session id (Xendit: ps-…); null while OPENING and on a
+  // FAILED attempt, which never got one (the migration adds CHECK: null
+  // exactly then; docs/specs/034-start-payment-outside-transaction)
+  providerRef      String?
   // "{orderNumber}-{attempt}", as sent to the gateway
   referenceId      String
   // Centavos
@@ -436,6 +441,10 @@ model Payment {
   @@unique([provider, providerRef])
   // At most one open session per order (spec 031, §4)
   @@unique([orderId], where: { status: "PENDING" })
+  // At most one start in flight per order (docs/specs/034-start-payment-
+  // outside-transaction). Not one index with PENDING: during a retry the old
+  // session stays PENDING until it is closed, beside the new OPENING attempt.
+  @@unique([orderId], where: { status: "OPENING" }, map: "Payment_orderId_opening_key")
   @@index([orderId])
 }
 

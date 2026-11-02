@@ -71,6 +71,33 @@ describe("createSession", () => {
     })
     expect(await db.fakeGatewaySession.count()).toBe(0)
   })
+
+  it("makes the session and loses the answer when told to (spec 034, B7a)", async () => {
+    expect(
+      await fakeGateway({ fail: { createLost: true } }).createSession(input)
+    ).toEqual({ ok: false, code: "timeout" })
+    const [row] = await db.fakeGatewaySession.findMany()
+    expect(row).toMatchObject({
+      status: "ACTIVE",
+      referenceId: input.referenceId,
+    })
+  })
+
+  it("waits for the hold before answering (spec 034, B9)", async () => {
+    let release!: () => void
+    const held = new Promise<void>((resolve) => (release = resolve))
+    let answered = false
+    const call = fakeGateway({ holdCreate: () => held })
+      .createSession(input)
+      .then((made) => {
+        answered = true
+        return made
+      })
+    await expect.poll(() => db.fakeGatewaySession.count()).toBe(1)
+    expect(answered).toBe(false)
+    release()
+    expect((await call).ok).toBe(true)
+  })
 })
 
 describe("closeSession", () => {

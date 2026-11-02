@@ -47,7 +47,7 @@ export function completedOutcome(
 // An expired session's effect on its Payment (behavior 16): only an open one
 // changes
 export const expiredOutcome = (
-  paymentStatus: "PENDING" | "PAID" | "FAILED" | "EXPIRED"
+  paymentStatus: "OPENING" | "PENDING" | "PAID" | "FAILED" | "EXPIRED"
 ): "expired" | "already-applied" =>
   paymentStatus === "PENDING" ? "expired" : "already-applied"
 

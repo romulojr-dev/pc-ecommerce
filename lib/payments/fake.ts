@@ -41,7 +41,18 @@ export type FakeOptions = {
   // Test seams (A6, A7): make a call fail as a gateway error would, with
   // `code` as the failure (default "http-500"; "timeout" for docs/specs/033-
   // release-unpaid-orders, S9)
-  fail?: { create?: boolean; close?: boolean; get?: boolean; code?: string }
+  fail?: {
+    create?: boolean
+    // The session is made, then the answer is lost (default code "timeout";
+    // docs/specs/034-start-payment-outside-transaction, B7a)
+    createLost?: boolean
+    close?: boolean
+    get?: boolean
+    code?: string
+  }
+  // Test seam (spec 034, B3, B9): createSession waits for this before it
+  // answers, after making the session
+  holdCreate?: () => Promise<void>
   // Test seam (spec 033, S9a): how long closeSession takes to answer, in ms
   closeDelayMs?: number
   // Test seam (docs/specs/032-payment-webhooks, H12c): what a paid session's
@@ -86,6 +97,7 @@ const details = (
 export function fakeGateway({
   fail = {},
   closeDelayMs = 0,
+  holdCreate,
   paymentStatus = "succeeded",
   now = () => new Date(),
 }: FakeOptions = {}): PaymentGateway {
@@ -111,6 +123,8 @@ export function fakeGateway({
           expiresAt: input.expiresAt,
         },
       })
+      await holdCreate?.()
+      if (fail.createLost) return { ok: false, code: fail.code ?? "timeout" }
       return {
         ok: true,
         session: {

@@ -9,6 +9,7 @@ import { ordersEnabled } from "@/lib/orders/enabled"
 import { findOrderByKey } from "@/lib/orders/get-order"
 import { orderLink } from "@/lib/orders/link"
 import { type PlaceResult, placeOrder } from "@/lib/orders/place-order"
+import { linkAfterStart } from "@/lib/payments/pay-link"
 import { startPayment } from "@/lib/payments/start-payment"
 
 // What the browser gets for a review: the server's answer, and on success
@@ -36,7 +37,16 @@ export async function reviewCheckoutAction(
 // (docs/specs/031-pay-with-xendit, Behavior 1–3); when no session opened it is
 // null and the link carries `payment=error`, so the order page says why.
 export type PlaceActionResult =
-  | { ok: true; link: string; payUrl: string | null; count: 0 }
+  | {
+      ok: true
+      link: string
+      payUrl: string | null
+      // Another start of this order is opening a session (a replayed Place
+      // order): the browser waits for it (docs/specs/034-start-payment-
+      // outside-transaction, behavior 8)
+      paymentOpening?: true
+      count: 0
+    }
   | Exclude<PlaceResult, { ok: true }>
   | { ok: false; reason: "disabled" }
 
@@ -60,10 +70,12 @@ export async function placeOrderAction(
     ? await startPayment(order.id, result.accessToken)
     : ({ ok: false, reason: "error" } as const)
   if (payment.ok) return { ok: true, link, payUrl: payment.url, count: 0 }
-  const failed = payment.reason === "error" || payment.reason === "expired"
+  if (payment.reason === "opening") {
+    return { ok: true, link, payUrl: null, paymentOpening: true, count: 0 }
+  }
   return {
     ok: true,
-    link: failed ? `${link}&payment=error` : link,
+    link: linkAfterStart(link, payment),
     payUrl: null,
     count: 0,
   }

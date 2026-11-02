@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
+import { startPaymentAction } from "@/app/(store)/orders/[number]/actions"
 import {
   type CheckoutStep,
   CheckoutSteps,
@@ -17,6 +18,8 @@ import { STEP_COPY } from "@/lib/checkout/copy"
 import { clearFrom, isComplete } from "@/lib/checkout/draft"
 import { checkoutDraftStore } from "@/lib/checkout/draft-store"
 import type { ReviewProblem } from "@/lib/checkout/problems"
+import { linkAfterStart } from "@/lib/payments/pay-link"
+import { waitForSession } from "@/lib/payments/wait-for-session"
 
 export const STEP_HEADING_ID = "checkout-heading"
 
@@ -87,11 +90,31 @@ export function CheckoutFlow({
   // order's, so Back doesn't return to a stale review. With a payment session
   // (docs/specs/031-pay-with-xendit, Behavior 1) this history entry becomes
   // the order link first, so Back from the payment page lands on the order,
-  // then the browser leaves for the payment page.
-  function goToOrder(link: string, payUrl: string | null) {
+  // then the browser leaves for the payment page. A replayed Place order can
+  // meet a session another start is still opening: the page keeps "Placing
+  // your order…" and waits for it (docs/specs/034-start-payment-outside-
+  // transaction, behavior 8).
+  async function goToOrder(
+    placedLink: string,
+    placedPayUrl: string | null,
+    paymentOpening: boolean
+  ) {
     setPlaced(true)
     checkoutDraftStore.getState().clear()
     cartCountStore.getState().fromAction(0)
+    let link = placedLink
+    let payUrl = placedPayUrl
+    if (!payUrl && paymentOpening) {
+      const url = new URL(link, window.location.origin)
+      const orderNumber = url.pathname.split("/").at(-1)
+      const key = url.searchParams.get("key")
+      const result = await waitForSession(
+        () => startPaymentAction({ orderNumber, key }),
+        { skipFirst: true }
+      )
+      if (result.ok) payUrl = result.url
+      else link = linkAfterStart(link, result)
+    }
     if (payUrl) {
       window.history.replaceState(null, "", link)
       window.location.assign(payUrl)

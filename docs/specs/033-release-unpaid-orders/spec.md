@@ -337,7 +337,7 @@ The `after()` wiring on pages isn't unit-tested (Next's request scope); X1 cover
 | Refunding a late payment | FR-26, Sprint 8 |
 | "Order cancelled" email | FR-21, Sprint 7 |
 | COD orders (no online payment; their expiry rules) | FR-25, Sprint 7 |
-| Taking `startPayment`'s gateway calls out of its transaction | #88 |
+| Taking `startPayment`'s gateway calls out of its transaction | #88, done in [spec 034](../034-start-payment-outside-transaction/spec.md) |
 | Putting a cancelled order's parts back in the shopper's cart | Not planned |
 | Turning `ORDERS_ENABLED` on in Production | A release step after this story is deployed (`docs/setup/payments.md`) |
 | Moving local E2E to the Docker Postgres | #74 |

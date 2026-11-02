@@ -1,6 +1,7 @@
 import { cache } from "react"
 
 import { db } from "@/lib/db"
+import { paymentsSummary } from "@/lib/payments/payment-view"
 
 import { orderNumberShape } from "./number"
 import { DUMMY_TOKEN_HASH, tokenMatches, tokenShape } from "./secrets"
@@ -31,7 +32,7 @@ export async function getOrderForPage(
       // payment-webhooks, behavior 21 and 24)
       payments: {
         orderBy: { createdAt: "desc" },
-        select: { status: true, problem: true },
+        select: { status: true, providerRef: true, problem: true },
       },
     },
   })
@@ -88,22 +89,9 @@ export async function getOrderForPage(
     paymentMethod: order.paymentMethod,
     refundRequired: order.refundRequired,
     cancelReason: order.cancelReason,
-    payments: {
-      latest: LATEST[order.payments[0]?.status ?? "NONE"],
-      needsCheck: order.payments.some(
-        ({ problem }) => problem === "AMOUNT_MISMATCH"
-      ),
-    },
+    payments: paymentsSummary(order.payments),
   }
 }
-
-const LATEST = {
-  NONE: null,
-  PENDING: "pending",
-  EXPIRED: "expired",
-  PAID: "paid",
-  FAILED: "failed",
-} as const
 
 // One read per request: generateMetadata and the page both ask
 export const loadOrder = cache(getOrderForPage)

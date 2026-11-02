@@ -129,6 +129,32 @@ describe("placeOrderAction", () => {
     expect(payment).toMatchObject({ status: "PENDING", provider: "FAKE" })
   })
 
+  it("tells the browser to wait when a session is opening (spec 034, B17a)", async () => {
+    const { cartId } = await cartWithRyzen()
+    const request = await freshRequest(cartId)
+    await placeOrderAction(request)
+    const order = await db.order.findFirstOrThrow()
+    // A start of the replayed request still in flight
+    await db.payment.create({
+      data: {
+        orderId: order.id,
+        provider: "FAKE",
+        status: "OPENING",
+        referenceId: `${order.orderNumber}-2`,
+        amount: order.total,
+        expiresAt: order.expiresAt,
+      },
+    })
+
+    expect(await placeOrderAction(request)).toEqual({
+      ok: true,
+      link: `/orders/${order.orderNumber}?key=${request.accessToken}`,
+      payUrl: null,
+      paymentOpening: true,
+      count: 0,
+    })
+  })
+
   it("closes the first session when Place order is replayed (spec 031, A10)", async () => {
     const { cartId } = await cartWithRyzen()
     const request = await freshRequest(cartId)
@@ -159,7 +185,11 @@ describe("placeOrderAction", () => {
     expect(result.payUrl).toBeNull()
     expect(result.link).toMatch(/\?key=[A-Za-z0-9_-]{43}&payment=error$/)
     expect(await db.order.count()).toBe(1)
-    expect(await db.payment.count()).toBe(0)
+    // The attempt is recorded and failed (docs/specs/034-start-payment-
+    // outside-transaction, D8)
+    expect(await db.payment.findMany()).toMatchObject([
+      { status: "FAILED", providerRef: null },
+    ])
   })
 
   it("takes the cart from the cookie, not from the request", async () => {

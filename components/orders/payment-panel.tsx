@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/button"
 import { useOrderStatus } from "@/hooks/use-order-status"
 import { PAY_COPY, stillConfirmingText } from "@/lib/payments/copy"
 import type { PaymentView } from "@/lib/payments/payment-view"
+import { waitForSession } from "@/lib/payments/wait-for-session"
 
 // The order page's payment area while it is Pending payment (docs/specs/031-
 // pay-with-xendit, Behavior 4–13). The server picks the view from the order
 // and the URL's `payment=` value; this only adds what a click changes. Pay now
-// and Retry payment are the same action. Messages sit in an aria-live
+// and Retry payment are the same action; while another start of the order is
+// opening a session, the button stays busy and asks again (docs/specs/034-
+// start-payment-outside-transaction, behavior 6). Messages sit in an aria-live
 // container, not role="status" (the page's one status role stays spec 030's).
 
 export type PanelView = Exclude<PaymentView, "none" | "expired" | "needs-check">
@@ -38,27 +41,28 @@ export function PaymentPanel({
     if (busy) return
     setBusy(true)
     const key = new URLSearchParams(window.location.search).get("key")
-    let result: Awaited<ReturnType<typeof startPaymentAction>> | null = null
-    try {
-      result = await startPaymentAction({ orderNumber, key })
-    } catch {
-      // No answer: nothing to go to; the shopper can try again
-    }
-    if (result?.ok) {
+    // Waits while another start of this order is opening a session, then
+    // answers like a single click (docs/specs/034-start-payment-outside-
+    // transaction, behavior 6). No answer is an error: the shopper can try
+    // again.
+    const result = await waitForSession(() =>
+      startPaymentAction({ orderNumber, key })
+    )
+    if (result.ok) {
       // Stay busy: the page is leaving for the payment page
       window.location.assign(result.url)
       return
     }
     setBusy(false)
-    if (result?.reason === "confirming") setView("confirming")
-    else if (result?.reason === "expired") {
+    if (result.reason === "confirming") setView("confirming")
+    else if (result.reason === "expired") {
       // Too late to open a session; past the deadline the page shows the
       // order as cancelled instead (docs/specs/033-release-unpaid-orders)
       setView("too-late")
       router.refresh()
-    } else if (result?.reason === "not-pending") router.refresh()
+    } else if (result.reason === "not-pending") router.refresh()
     // A payment arrived that needs checking: the page shows only that now
-    else if (result?.reason === "needs-check") router.refresh()
+    else if (result.reason === "needs-check") router.refresh()
     else setView("error")
   }
 

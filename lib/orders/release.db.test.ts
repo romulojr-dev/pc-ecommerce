@@ -257,6 +257,24 @@ describe("releasing an expired order", () => {
     expect(await stockOf(ryzen)).toBe(12)
   })
 
+  // docs/specs/034-start-payment-outside-transaction, B19
+  it("fails an abandoned opening attempt, with no gateway call (B19)", async () => {
+    const { order, ryzen } = await p1(false)
+    const attempt = await db.payment.create({
+      data: paymentData(order.id, { status: "OPENING", providerRef: null }),
+    })
+    const gateway = lagging()
+    const close = vi.spyOn(gateway, "closeSession")
+
+    expect(await sweep(gateway)).toMatchObject({ released: 1 })
+    expect(close).not.toHaveBeenCalled()
+    expect(await orderOf(order.id)).toMatchObject({ status: "CANCELLED" })
+    expect(
+      await db.payment.findUniqueOrThrow({ where: { id: attempt.id } })
+    ).toMatchObject({ status: "FAILED", providerRef: null })
+    expect(await stockOf(ryzen)).toBe(12)
+  })
+
   it("releases after a rolled-back release left the session cancelled (R10)", async () => {
     const { order, session, ryzen } = await p1()
     await lagging().closeSession(session!)

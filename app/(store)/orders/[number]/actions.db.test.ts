@@ -43,6 +43,23 @@ describe("startPaymentAction", () => {
     expect(await db.payment.count()).toBe(1)
   })
 
+  it("passes opening through while another start is in flight (spec 034, B10)", async () => {
+    const order = await newOrder()
+    await db.payment.create({
+      data: {
+        orderId: order.id,
+        provider: "FAKE",
+        status: "OPENING",
+        referenceId: `${order.orderNumber}-1`,
+        amount: order.total,
+        expiresAt: order.expiresAt,
+      },
+    })
+    expect(
+      await startPaymentAction({ orderNumber: order.orderNumber, key: TOKEN })
+    ).toEqual({ ok: false, reason: "opening" })
+  })
+
   it.each([
     ["a wrong key", (n: string) => ({ orderNumber: n, key: newAccessToken() })],
     ["no key", (n: string) => ({ orderNumber: n })],
