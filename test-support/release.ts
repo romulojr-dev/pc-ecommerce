@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks"
+
 import { vi } from "vitest"
 
 import { hashToken } from "@/lib/orders/secrets"
@@ -89,31 +91,34 @@ export const stockOf = async (id: string) =>
 
 // Spec 033 S8 (spec 032 H17's rule): wraps db.$transaction to note when one
 // is open, and returns the gateway with every call failing the test while it
-// is. Restore with vi.restoreAllMocks().
+// is. "Open" is per async call chain, not per process, so two starts running
+// at once (docs/specs/034-start-payment-outside-transaction, B3) don't trip
+// on each other's transactions. Restore with vi.restoreAllMocks().
 export function guardTransactions(base: PaymentGateway): PaymentGateway {
-  let open = 0
+  const inside = new AsyncLocalStorage<true>()
   const original = db.$transaction.bind(db)
   vi.spyOn(db, "$transaction").mockImplementation(((
     fn: (tx: unknown) => Promise<unknown>,
     options?: unknown
   ) =>
-    original(async (tx) => {
-      open++
-      try {
-        return await fn(tx)
-      } finally {
-        open--
-      }
-    }, options as never)) as never)
+    original(
+      (tx) => inside.run(true, () => fn(tx)),
+      options as never
+    )) as never)
 
   const guard =
-    <K extends "getSession" | "getPayment" | "closeSession">(name: K) =>
+    <K extends "createSession" | "getSession" | "getPayment" | "closeSession">(
+      name: K
+    ) =>
     (...args: Parameters<PaymentGateway[K]>) => {
-      if (open > 0) throw new Error(`${name} called inside a transaction`)
+      if (inside.getStore()) {
+        throw new Error(`${name} called inside a transaction`)
+      }
       return (base[name] as (...a: typeof args) => unknown)(...args)
     }
   return {
     ...base,
+    createSession: guard("createSession"),
     getSession: guard("getSession"),
     getPayment: guard("getPayment"),
     closeSession: guard("closeSession"),

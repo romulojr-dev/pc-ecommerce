@@ -16,7 +16,7 @@ Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit p
 - [x] 5. **Wait helper.** `lib/payments/wait-for-session.ts`: `waitForSession`, `OPENING_RETRY_MS`, `OPENING_WAIT_MS`, with fake-timer unit tests for W1–W3's logic (retry, 30 calls then `error`, stop on `confirming`, a throw is `error`).
 - [x] 6. **Link after a start.** `lib/payments/pay-link.ts`: `linkAfterStart` moves out of `placeOrderAction` unchanged, with a unit test for each refusal.
 - [x] 7. **Order page summary.** `getOrderForPage` takes `latest` from payments with a session and `needsCheck` from all payments. Unit tests U6–U8; the `paymentView` tests stay green.
-- [ ] 8. **Fake gateway seams.** `holdCreate` and `fail.createLost` in `lib/payments/fake.ts`, and `guardTransactions` also guards `createSession`. Small tests for the seams in `fake.db.test.ts`.
+- [x] 8. **Fake gateway seams.** `holdCreate` and `fail.createLost` in `lib/payments/fake.ts`, and `guardTransactions` also guards `createSession`. Small tests for the seams in `fake.db.test.ts`.
 - [ ] 9. **Claim.** In `startPayment`: the lock query with the database's `now()`, today's checks, `opening` / abandoned → Failed, the attempt number, `sessionRequest`, and the Opening insert with `createdAt` from the database. `StartResult` gains `opening`, and `StartStep` is renamed.
 - [ ] 10. **Gateway steps and settle.** In `startPayment`:
   - the close and read outside any transaction
