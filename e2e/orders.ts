@@ -37,3 +37,17 @@ export async function dueOrdersHolding(productName: string): Promise<number> {
     return Number(rows[0].count)
   })
 }
+
+// How many of an order's payments are open (Pending): one at most, whatever
+// the clicks (docs/specs/034-start-payment-outside-transaction, W4)
+export async function openPayments(orderNumber: string): Promise<number> {
+  return withPool(async (pool) => {
+    const { rows } = await pool.query<{ count: string }>(
+      `SELECT count(*) AS "count"
+       FROM "Payment" p JOIN "Order" o ON o."id" = p."orderId"
+       WHERE o."orderNumber" = $1 AND p."status" = 'PENDING'`,
+      [orderNumber]
+    )
+    return Number(rows[0].count)
+  })
+}
