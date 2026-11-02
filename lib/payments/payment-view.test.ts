@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { OrderStatusName } from "@/lib/orders/timeline"
 
 import { isPayable } from "./payable"
-import { parsePaymentParam, paymentView } from "./payment-view"
+import { parsePaymentParam, paymentsSummary, paymentView } from "./payment-view"
 
 // docs/specs/031-pay-with-xendit: V1–V9, V5a, V5b, A8, A9
 
@@ -183,5 +183,51 @@ describe("paymentView with the order's payments", () => {
     expect(paymentView("PAID", expiresAt, null, HOURS_LEFT_23, check)).toBe(
       "none"
     )
+  })
+})
+
+// docs/specs/034-start-payment-outside-transaction, behavior 9, U6–U8
+describe("paymentsSummary", () => {
+  const ref = "ps-0123456789abcdef01234567"
+  const NOW = new Date("2026-11-01T08:00:00Z")
+  const EXPIRES = new Date("2026-11-02T07:00:00Z")
+
+  it("skips a failed attempt without a session, so Retry stays (U6)", () => {
+    const summary = paymentsSummary([
+      { status: "FAILED", providerRef: null, problem: null },
+      { status: "EXPIRED", providerRef: ref, problem: null },
+    ])
+    expect(summary).toEqual({ latest: "expired", needsCheck: false })
+    expect(paymentView("PENDING_PAYMENT", EXPIRES, null, NOW, summary)).toBe(
+      "cancelled"
+    )
+  })
+
+  it("skips an opening attempt (U7)", () => {
+    expect(
+      paymentsSummary([
+        { status: "OPENING", providerRef: null, problem: null },
+        { status: "PENDING", providerRef: ref, problem: null },
+      ])
+    ).toEqual({ latest: "pending", needsCheck: false })
+  })
+
+  it("has no latest with only a failed attempt (U8)", () => {
+    const summary = paymentsSummary([
+      { status: "FAILED", providerRef: null, problem: null },
+    ])
+    expect(summary).toEqual({ latest: null, needsCheck: false })
+    expect(paymentView("PENDING_PAYMENT", EXPIRES, null, NOW, summary)).toBe(
+      "pay"
+    )
+  })
+
+  it("sees a mismatch on any payment", () => {
+    expect(
+      paymentsSummary([
+        { status: "OPENING", providerRef: null, problem: null },
+        { status: "PAID", providerRef: ref, problem: "AMOUNT_MISMATCH" },
+      ])
+    ).toEqual({ latest: "paid", needsCheck: true })
   })
 })

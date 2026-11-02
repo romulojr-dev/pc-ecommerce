@@ -49,6 +49,34 @@ export type PaymentsSummary = {
 
 const NO_PAYMENTS: PaymentsSummary = { latest: null, needsCheck: false }
 
+const LATEST = {
+  PENDING: "pending",
+  EXPIRED: "expired",
+  PAID: "paid",
+  FAILED: "failed",
+} as const
+
+// The summary from an order's payments, newest first. "Latest" is the newest
+// payment that got a session: an attempt still opening or one that failed
+// without a session never changes the view (docs/specs/034-start-payment-
+// outside-transaction, behavior 9, D9). A mismatch counts on any payment.
+export function paymentsSummary(
+  payments: readonly {
+    status: "OPENING" | keyof typeof LATEST
+    providerRef: string | null
+    problem: string | null
+  }[]
+): PaymentsSummary {
+  const latest = payments.find(
+    ({ status, providerRef }) => status !== "OPENING" && providerRef !== null
+  )
+  return {
+    latest:
+      latest && latest.status !== "OPENING" ? LATEST[latest.status] : null,
+    needsCheck: payments.some(({ problem }) => problem === "AMOUNT_MISMATCH"),
+  }
+}
+
 export function paymentView(
   status: OrderStatusName,
   expiresAt: Date,
