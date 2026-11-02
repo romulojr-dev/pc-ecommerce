@@ -2,8 +2,8 @@
 
 Plan: [plan.md](plan.md) · Spec: [spec.md](spec.md) · Issue: #88. One commit per task.
 
-- [ ] 1. **Docs scaffold.** Branch `88-startpayment-no-xendit-calls-inside-the-transaction` from an up-to-date `main`. Commit the spec, plan and tasks with the "Changed by spec 034" notes in spec 031 and ADR 0010.
-- [ ] 2. **Enum migration.** `payment_opening_status`: `ALTER TYPE "PaymentStatus" ADD VALUE 'OPENING'` only, and `OPENING` in `schema.prisma` with its comment.
+- [x] 1. **Docs scaffold.** Branch `88-startpayment-no-xendit-calls-inside-the-transaction` from an up-to-date `main`. Commit the spec, plan and tasks with the "Changed by spec 034" notes in spec 031 and ADR 0010.
+- [x] 2. **Enum migration.** `payment_opening_status`: `ALTER TYPE "PaymentStatus" ADD VALUE 'OPENING'` only, and `OPENING` in `schema.prisma` with its comment.
 - [ ] 3. **Attempt migration.** `payment_attempts`:
   - `providerRef` nullable
   - the partial unique index on Opening (named so it doesn't clash with `Payment_orderId_key`)
