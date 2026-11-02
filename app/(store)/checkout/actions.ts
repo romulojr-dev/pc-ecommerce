@@ -9,6 +9,7 @@ import { ordersEnabled } from "@/lib/orders/enabled"
 import { findOrderByKey } from "@/lib/orders/get-order"
 import { orderLink } from "@/lib/orders/link"
 import { type PlaceResult, placeOrder } from "@/lib/orders/place-order"
+import { linkAfterStart } from "@/lib/payments/pay-link"
 import { startPayment } from "@/lib/payments/start-payment"
 
 // What the browser gets for a review: the server's answer, and on success
@@ -60,10 +61,9 @@ export async function placeOrderAction(
     ? await startPayment(order.id, result.accessToken)
     : ({ ok: false, reason: "error" } as const)
   if (payment.ok) return { ok: true, link, payUrl: payment.url, count: 0 }
-  const failed = payment.reason === "error" || payment.reason === "expired"
   return {
     ok: true,
-    link: failed ? `${link}&payment=error` : link,
+    link: linkAfterStart(link, payment),
     payUrl: null,
     count: 0,
   }
