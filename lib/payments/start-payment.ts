@@ -26,6 +26,9 @@ export type StartResult =
   | {
       ok: false
       reason:
+        // Another start of this order is opening a session: wait and ask
+        // again (docs/specs/034-start-payment-outside-transaction)
+        | "opening"
         | "confirming"
         | "expired"
         | "not-pending"

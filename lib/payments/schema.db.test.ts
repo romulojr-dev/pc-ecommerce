@@ -66,16 +66,18 @@ describe("one start in flight per order", () => {
     ["an opening attempt with a session id", { status: "OPENING" }],
     ["a failed attempt with a session id", { status: "FAILED" }],
     ["a pending payment without one", { providerRef: null }],
-    ["a paid payment without one", { providerRef: null, status: "PAID" }],
+    [
+      "a paid payment without one",
+      { providerRef: null, status: "PAID", paidAt: new Date() },
+    ],
     [
       "an expired payment without one",
       { providerRef: null, status: "EXPIRED" },
     ],
   ] as const)("refuses %s", async (_, change) => {
     const order = await newOrder()
-    const paid = change.status === "PAID" ? { paidAt: new Date() } : {}
     await expect(
-      db.payment.create({ data: paymentData(order.id, { ...change, ...paid }) })
+      db.payment.create({ data: paymentData(order.id, change) })
     ).rejects.toThrow()
   })
 })
