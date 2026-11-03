@@ -93,4 +93,22 @@ apex's own mail records (if any) are untouched. The sender is
   `pcsilicon.tech`.
 
 Changing `ORDER_LINK_SECRET` revokes every signed order link already emailed;
-the shopper's original access-token link keeps working.
+the shopper's original access-token link keeps working. It is the only way to
+revoke a signed link, so rotate it on purpose, never as a side effect of a
+deploy. The app refuses to start without it (at least 32 bytes), in every
+environment, and refuses `EMAIL_TRANSPORT=fake` when `VERCEL_ENV=production`
+([ADR 0011](../adr/0011-signed-order-links-beside-the-access-token.md)).
+
+Secrets checklist (Vercel → Settings → Environment Variables):
+
+| Variable | Production | Preview | Local (`.env.local`) |
+| --- | --- | --- | --- |
+| `EMAIL_TRANSPORT` | `resend` | `fake` | `fake` |
+| `RESEND_API_KEY` | the sending-only key for `mail.pcsilicon.tech` | not set | not set |
+| `EMAIL_FROM` | optional (default `PC Silicon <orders@mail.pcsilicon.tech>`) | not set | not set |
+| `ORDER_LINK_SECRET` | its own, 32 bytes or more | its own | any long text (see `.env.example`) |
+
+Add the two required variables to `.env.local` after pulling spec 035, or
+`pnpm dev` stops at startup with "EMAIL_TRANSPORT is not set" and
+"ORDER_LINK_SECRET is not set". The Playwright process reads `.env.local` too,
+which the E2E needs to mint links.
