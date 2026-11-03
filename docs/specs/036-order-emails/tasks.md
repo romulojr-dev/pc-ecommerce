@@ -43,12 +43,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `order-view.test.tsx`: V1 (prompt by `?key=`, none by signed link)
 
 ## 6. `/dev/emails`
-- [ ] `"dev"` added to `RESERVED_SLUGS`; `reserved-slugs.test.ts` passes
-- [ ] `lib/email/dev-emails.ts`: `devEmailsEnabled(transport, vercelEnv)` and `listFakeEmails()` (newest 50, `server-only`)
-- [ ] `app/dev/emails/page.tsx`: guard before any read, `connection()`, `noindex`, no `loading.tsx`, empty state
-- [ ] `components/email/dev-email-list.tsx`: sandboxed frame (`allow-popups allow-popups-to-escape-sandbox`), `<base target="_blank">`, text with links
-- [ ] Tests: guard (V5), list markup (V2–V4, V6, V8)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `"dev"` added to `RESERVED_SLUGS`; `reserved-slugs.test.ts` passes
+- [x] `lib/email/dev-emails.ts`: `devEmailsEnabled(transport, vercelEnv)` and `listFakeEmails()` (newest 50, `server-only`)
+- [x] `app/dev/emails/page.tsx`: guard before any read, `connection()`, `noindex`, no `loading.tsx`, empty state
+- [x] `components/email/dev-email-list.tsx`: sandboxed frame (`allow-popups allow-popups-to-escape-sandbox`), `<base target="_blank">`, text with links
+- [x] Tests: guard (V5), list markup (V2–V4, V6, V8)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 7. E2E
 - [ ] `e2e/orders.ts`: `fakeEmailsFor(email)` and a link extractor

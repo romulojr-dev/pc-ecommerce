@@ -16,6 +16,8 @@ export const RESERVED_SLUGS = [
   "sidebar",
   // The fake payment gateway's page (docs/specs/031-pay-with-xendit)
   "test-payment",
+  // The fake email transport's page (docs/specs/036-order-emails)
+  "dev",
   // Likely routes, reserved early
   "products",
   "build",
