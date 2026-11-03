@@ -49,6 +49,10 @@ jobs:
       # Xendit (docs/specs/031-pay-with-xendit)
       PAYMENT_GATEWAY: fake
       XENDIT_WEBHOOK_TOKEN: ci-dummy-token
+      # The fake email transport and a dummy link secret; CI never sends email
+      # (docs/specs/035-email-foundation-signed-links)
+      EMAIL_TRANSPORT: fake
+      ORDER_LINK_SECRET: ci-dummy-order-link-secret-0123456789abcdef
 
     steps:
       - uses: actions/checkout@v7
