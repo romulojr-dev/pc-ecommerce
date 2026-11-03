@@ -20,15 +20,15 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Templates and the sender's changes
-- [ ] `lib/email/templates/layout.tsx` (text wordmark, test-mode note, footer; `import "server-only"`)
-- [ ] `order-placed.tsx` (items by build, totals, address or store and hours, pay block, Pay now and order link, link note)
-- [ ] `payment-received.tsx` (amount, `paidLine`, order link)
-- [ ] `order-cancelled.tsx` (reason line, shop link only)
-- [ ] Register the three in `lib/email/templates.ts`; `COD_CONFIRM` stays unregistered
-- [ ] `EmailTemplate` may return a promise; `EmailContext` gains `now` and `store`; `deliver()` in `send.ts` reads `StoreSettings` for pickup orders only and awaits the template inside the existing try/catch
-- [ ] Content assertions for T1–T11 on HTML and text (order number, items, totals, links, test-mode sentence, no `<img` / `<script`, escaping, no broken link in text)
-- [ ] Plain-text snapshots only: placed × delivery and pickup, received, cancelled (T10)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/email/templates/layout.tsx` and `render.tsx` (one tree, HTML and plain text; the plain text is tidied) (text wordmark, test-mode note, footer; `import "server-only"`)
+- [x] `order-placed.tsx` (items by build, totals, address or store and hours, pay block, Pay now and order link, link note)
+- [x] `payment-received.tsx` (amount, `paidLine`, order link)
+- [x] `order-cancelled.tsx` (reason line, shop link only)
+- [x] Register the three in `lib/email/templates.ts`; `COD_CONFIRM` stays unregistered
+- [x] `EmailTemplate` may return a promise; `EmailContext` gains `now` and `store`; `deliver()` in `send.ts` reads `StoreSettings` for pickup orders only and awaits the template inside the existing try/catch
+- [x] Content assertions for T1–T11 on HTML and text (order number, items, totals, links, test-mode sentence, no `<img` / `<script`, escaping, no broken link in text)
+- [x] Plain-text snapshots only: placed × delivery and pickup, received, cancelled (T10)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 4. Triggers
 - [ ] `placeOrder`: enqueue `ORDER_PLACED` after the items insert; `"email"` step name in `PlaceStep`; schedule after the commit for a non-replay (Q1–Q3)
