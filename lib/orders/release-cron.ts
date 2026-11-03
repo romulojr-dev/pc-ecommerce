@@ -1,3 +1,5 @@
+import { EMAIL_CRON_BATCH } from "@/lib/email/due"
+import { sendPending } from "@/lib/email/send"
 import type { PaymentGateway } from "@/lib/payments/gateway-types"
 import type { PaymentEnvironment } from "@/lib/payments/session-request"
 import { bearerOf, secretMatches } from "@/lib/secrets/compare"
@@ -60,6 +62,14 @@ export async function runReleaseCron(
     skipped += batch.skipped
     tried.push(...batch.tried)
     if (batch.tried.length === 0) break
+  }
+
+  // Then the emails that are due: those the release just enqueued, and the
+  // retries of earlier failures (docs/specs/035-email-foundation-signed-links,
+  // Behavior 3). Within what is left of the budget; it never fails the run.
+  while (clock() - started < budgetMs) {
+    const batch = await sendPending({ now, limit: EMAIL_CRON_BATCH })
+    if (batch.claimed + batch.tooOld + batch.skipped === 0) break
   }
 
   logCronEvent({ released, skipped })

@@ -18,6 +18,9 @@ export const MAX_ATTEMPTS = 5
 // Resend remembers an Idempotency-Key for 24 hours, so a row isn't sent once
 // it is that old (D6)
 export const SEND_WINDOW_MS = 24 * 3_600_000
+// Rows a page's sweep sends, and rows per batch of the daily cron
+export const EMAIL_SWEEP_LIMIT = 10
+export const EMAIL_CRON_BATCH = 25
 // The transport gives up after this; it must stay well inside the lease
 export const TRANSPORT_TIMEOUT_MS = 6_000
 

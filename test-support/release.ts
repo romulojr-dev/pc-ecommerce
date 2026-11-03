@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks"
 
 import { vi } from "vitest"
 
+import type { EmailTransport } from "@/lib/email/transport"
 import { hashToken } from "@/lib/orders/secrets"
 import { fakeGateway } from "@/lib/payments/fake"
 import type { PaymentGateway } from "@/lib/payments/gateway-types"
@@ -97,7 +98,8 @@ export const stockOf = async (id: string) =>
 // spy is installed once. Restore with vi.restoreAllMocks().
 const inside = new AsyncLocalStorage<true>()
 
-export function guardTransactions(base: PaymentGateway): PaymentGateway {
+// Installs the transaction spy once (see above)
+function watchTransactions() {
   if (!vi.isMockFunction(db.$transaction)) {
     const original = db.$transaction.bind(db)
     vi.spyOn(db, "$transaction").mockImplementation(((
@@ -109,6 +111,25 @@ export function guardTransactions(base: PaymentGateway): PaymentGateway {
         options as never
       )) as never)
   }
+}
+
+// The same rule for the email transport (docs/specs/035-email-foundation-
+// signed-links, O13): a send called while a transaction is open fails the
+// test.
+export function guardEmailTransport(base: EmailTransport): EmailTransport {
+  watchTransactions()
+  return {
+    send(message) {
+      if (inside.getStore()) {
+        throw new Error("send called inside a transaction")
+      }
+      return base.send(message)
+    },
+  }
+}
+
+export function guardTransactions(base: PaymentGateway): PaymentGateway {
+  watchTransactions()
 
   const guard =
     <K extends "createSession" | "getSession" | "getPayment" | "closeSession">(

@@ -37,6 +37,11 @@ function run(args: string[], env: Record<string, string>) {
     PAYMENT_GATEWAY: "xendit",
     XENDIT_SECRET_KEY: "xnd_development_dummy",
     XENDIT_WEBHOOK_TOKEN: "dummy-webhook-token",
+    // Required too (docs/specs/035-email-foundation-signed-links)
+    // resend, since the fake is refused where VERCEL_ENV is production
+    EMAIL_TRANSPORT: "resend",
+    RESEND_API_KEY: "re_dummy",
+    ORDER_LINK_SECRET: "dummy-order-link-secret-0123456789abcdef",
     ...env,
   }
   const result = spawnSync(process.execPath, [tsx, script, ...args], {

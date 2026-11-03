@@ -2,6 +2,8 @@ import { revalidateTag } from "next/cache"
 import { after } from "next/server"
 
 import { db } from "@/lib/db"
+import { EMAIL_SWEEP_LIMIT } from "@/lib/email/due"
+import { sendPending } from "@/lib/email/send"
 import { PRODUCTS_TAG } from "@/lib/home"
 import { gateway as defaultGateway } from "@/lib/payments/gateway"
 import type { PaymentGateway } from "@/lib/payments/gateway-types"
@@ -380,7 +382,13 @@ export async function sweepExpiredOrders(
 // read during the request, and the work runs after the response, so the page
 // never waits. Inside after() revalidateTag is allowed and flushed.
 export function sweepAfterResponse(now = new Date()): void {
-  after(() => sweepExpiredOrders(now).then(() => undefined))
+  // The release first: it enqueues the cancelled order's email, which the send
+  // sweep then picks up (docs/specs/035-email-foundation-signed-links,
+  // Behavior 3). Neither can throw.
+  after(async () => {
+    await sweepExpiredOrders(now)
+    await sendPending({ now, limit: EMAIL_SWEEP_LIMIT })
+  })
 }
 
 // A purchase's release (behavior 17–20), in three calls around its own
