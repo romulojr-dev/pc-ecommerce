@@ -80,7 +80,9 @@ account ([spec 032](../specs/032-payment-webhooks/spec.md)).
 
 - [ ] Dashboard → Settings → Webhooks: set the URL for **Payment Sessions**
   events (`payment_session.completed`, `payment_session.expired`) to
-  `https://<production domain>/api/webhooks/xendit`.
+  `https://pcsilicon.tech/api/webhooks/xendit`: the primary domain exactly,
+  never an address that redirects (`www`, the old `*.vercel.app` alias), since
+  Xendit doesn't follow redirects ([domain.md](domain.md)).
 - [ ] Copy the **webhook verification token** from the same page into Vercel →
   Production → `XENDIT_WEBHOOK_TOKEN`, then redeploy. Xendit sends it in every
   webhook's `x-callback-token` header.
