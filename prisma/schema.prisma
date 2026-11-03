@@ -327,6 +327,7 @@ model Order {
   items          OrderItem[]
   stockMovements StockMovement[]
   payments       Payment[]
+  emails         EmailOutbox[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
@@ -496,4 +497,70 @@ model FakeGatewaySession {
   paymentId   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+enum EmailType {
+  ORDER_PLACED
+  PAYMENT_RECEIVED
+  ORDER_CANCELLED
+  COD_CONFIRM
+}
+
+enum EmailStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+// One email to send for an order (docs/specs/035-email-foundation-signed-
+// links): written in the transaction that causes it and sent after the
+// commit. It stores no address, no rendered email and no secret: the email is
+// built from the order row at send time, and only the recipient's hash is
+// kept, for the per-recipient cap. Never hard-deleted. The migration adds
+// CHECKs Prisma can't express: attempts are not negative, a sent row has its
+// time and message id (and only a sent row does), a sending row has its claim
+// time, and the hash is 64 hex characters (lib/email/schema.db.test.ts).
+model EmailOutbox {
+  id                String      @id @default(cuid())
+  orderId           String
+  order             Order       @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  type              EmailType
+  status            EmailStatus @default(PENDING)
+  // SHA-256 hex of the normalized address (lib/email/recipient.ts)
+  recipientHash     String
+  // Claims, takeovers included
+  attempts          Int         @default(0)
+  // A short code: timeout, network, http-422:validation_error, no-template,
+  // too-old. Never a message or a body.
+  lastErrorCode     String?
+  // The last claim; a sending row older than the lease is taken over
+  claimedAt         DateTime?
+  sentAt            DateTime?
+  providerMessageId String?
+  createdAt         DateTime    @default(now())
+
+  // One email of each type per order: writing twice is a no-op
+  @@unique([orderId, type])
+  // The cap counts a recipient's recent rows
+  @@index([recipientHash, sentAt])
+  // The due scan
+  @@index([status, claimedAt])
+}
+
+// What the fake email transport "sent", for the tests and E2E to read
+// (docs/specs/035-email-foundation-signed-links, D11). Holds addresses and
+// bodies, so it exists only where EMAIL_TRANSPORT is fake. Like Resend, the
+// same idempotency key returns the same message.
+model FakeEmail {
+  // "fake_" and hex, also the providerMessageId
+  id             String   @id
+  idempotencyKey String   @unique
+  from           String
+  to             String
+  subject        String
+  html           String
+  text           String
+  createdAt      DateTime @default(now())
 }
