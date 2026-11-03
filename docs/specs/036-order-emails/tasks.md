@@ -57,14 +57,14 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm test:e2e` passes against dev; `pnpm build` + `CI=1 pnpm test:e2e` passes against the production build
 
 ## 8. Docs
-- [ ] Spec 035 and spec 030 pointers ("Changed by spec 036")
-- [ ] `CLAUDE.md` email and placing-an-order paragraphs
-- [ ] `docs/setup/domain.md`: first real send checklist and the Preview protection check
-- [ ] Spec 036 status line set to implemented
+- [x] Spec 035 and spec 030 pointers ("Changed by spec 036")
+- [x] `CLAUDE.md` email and placing-an-order paragraphs
+- [x] `docs/setup/domain.md`: first real send checklist and the Preview protection check
+- [x] Spec 036 status line set to implemented
 
 ## Definition of done
 - [ ] Acceptance criteria checked on the Preview URL (the three emails in `/dev/emails`)
 - [ ] Vercel Preview protection confirmed on for the project (Q2)
-- [ ] Desktop widths; empty, loading and error states handled
-- [ ] Lint and type check pass; tests at the right level
+- [x] Desktop widths; empty, loading and error states handled (the dev page's empty state and the 404 are tested; the email states are in the spec)
+- [x] Lint and type check pass; tests at the right level (unit, DB and E2E all green locally; E2E also against the production build)
 - [ ] PR opened from the template (`Closes #93`)

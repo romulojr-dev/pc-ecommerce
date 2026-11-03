@@ -1,6 +1,6 @@
 # 036 — Order emails: placed, payment received, cancelled
 
-Status: approved with changes (2026-11-03; see the change list at the end of §10). Issue: [#93](https://github.com/romulojr-dev/pc-ecommerce/issues/93) (parent epic [#4](https://github.com/romulojr-dev/pc-ecommerce/issues/4), Checkout). PRD: FR-21 (order confirmation, payment received, order cancelled), FR-27 (test-mode notes). Depends on [#92](https://github.com/romulojr-dev/pc-ecommerce/issues/92) / [spec 035](../035-email-foundation-signed-links/spec.md) / [ADR 0011](../../adr/0011-signed-order-links-beside-the-access-token.md) (outbox, sender, signed `view` links, `FakeEmail`). Builds on [spec 030](../030-place-an-order/spec.md) (`placeOrder`, the order page and its save-the-link prompt), [spec 032](../032-payment-webhooks/spec.md) (`reconcileSession`, the one function that sets Paid) and [spec 033](../033-release-unpaid-orders/spec.md) (`releaseExpiredOrders`, the sweep and the cron). Siblings: [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) (vouchers) and [#95](https://github.com/romulojr-dev/pc-ecommerce/issues/95) (COD and its confirmation email).
+Status: implemented (2026-11-03; approved with changes, see the change list at the end of §10, and "What changed while building" there). Issue: [#93](https://github.com/romulojr-dev/pc-ecommerce/issues/93) (parent epic [#4](https://github.com/romulojr-dev/pc-ecommerce/issues/4), Checkout). PRD: FR-21 (order confirmation, payment received, order cancelled), FR-27 (test-mode notes). Depends on [#92](https://github.com/romulojr-dev/pc-ecommerce/issues/92) / [spec 035](../035-email-foundation-signed-links/spec.md) / [ADR 0011](../../adr/0011-signed-order-links-beside-the-access-token.md) (outbox, sender, signed `view` links, `FakeEmail`). Builds on [spec 030](../030-place-an-order/spec.md) (`placeOrder`, the order page and its save-the-link prompt), [spec 032](../032-payment-webhooks/spec.md) (`reconcileSession`, the one function that sets Paid) and [spec 033](../033-release-unpaid-orders/spec.md) (`releaseExpiredOrders`, the sweep and the cron). Siblings: [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) (vouchers) and [#95](https://github.com/romulojr-dev/pc-ecommerce/issues/95) (COD and its confirmation email).
 
 Long form: the story touches three writers, a renderer, an order-page string and a dev page.
 
@@ -205,7 +205,7 @@ All shopper-facing strings this story adds. Constants go in one module so the te
 | Cancelled, lead | Your order {number} was cancelled because it wasn't paid in time. You haven't been charged. |
 | Cancelled, link | Still want these parts? Visit PC Silicon |
 | Order page, save-the-link prompt (was "Save this link: it's the only way to see your order until order emails arrive.") | Save this link to see your order. We're also emailing you a link to it; if it doesn't arrive, this one still works. (Q1) |
-| `/dev/emails` | Heading "Test emails" · "Demo data. These are the emails the fake transport recorded." · empty "No emails yet." · per email "To", "From", "Subject", "HTML", "Text" |
+| `/dev/emails` | Heading "Test emails" · "Demo data. These are the emails the fake transport recorded." · empty "No emails yet." · per email "To", "From", "Sent", "HTML", "Text" (the subject is the email's heading) |
 
 Existing strings reused as they are: `paidLine`, `payByText` (the date part), `statusLabel`, `groupName`, `SLOT_COPY`, `ORDER_COPY.pickupNote`, `addressLines`, `shippingValue`. The email's test-mode sentence is **not** `STEP_COPY.bannerText` (D4).
 
@@ -220,7 +220,7 @@ Existing strings reused as they are: `paidLine`, `payByText` (the date part), `s
 - **Order page.** `ORDER_COPY.saveLink` changes; nothing else on the page or its loader.
 - **`/dev/emails`**: a server page under `app/` (top-level segment `dev`; `dev` joins `RESERVED_SLUGS`), reading `FakeEmail` newest first, limit 50; the render of one email is a small component taking `{to, from, subject, html, text, createdAt}`. No API route.
 - **Server only.** Every module that renders or builds an email (`lib/email/templates*`, the view-model, `EMAIL_COPY`, the React Email components, the `/dev/emails` reader) starts with `import "server-only"`, so React Email and its renderer can never enter the client bundle; a client component importing one fails the build. Tests need a stub for that import (the plan finds how the project's Vitest configs handle it). The email modules are not imported from `lib/builder/**` or `lib/specs/**`.
-- **Dependencies**: React Email's component and render packages (the PRD's stack row "Resend + React Email"). The plan checks they work with React 19.3 and Next 16.4 and picks the exact packages; not hand-edited in `node_modules`.
+- **Dependencies**: `react-email` (components, `render`, `toPlainText`; the PRD's stack row "Resend + React Email") and `server-only`. `@react-email/components` was not used: npm marks it as no longer supported. Rendering works in a server component, in `after()` and in the production build with no `serverExternalPackages`.
 - **E2E helpers** (`e2e/orders.ts`): read an order's fake emails by recipient address, extract the first link; `enqueueEmailFor` stays for the foundation's own spec.
 - **Docs**: this spec; spec 035 gets a pointer where it says the registry is empty and where it says the prompt's text changes in #93 ("Changed by spec 036"); CLAUDE.md's email paragraph (templates now registered, triggers, `/dev/emails`, the `dev` reserved slug); `docs/setup/domain.md` (first real send: place an order on Production and check the three emails); spec 030's saved-link prompt text.
 
@@ -282,3 +282,11 @@ None open. The review of 2026-11-03 settled the three questions of the first dra
 - Subjects start with "[Demo] " and the placed subject reads "placed" (§2.1, T1, T7, T9, S1–S3, §4 Content, §5, D13).
 - `/dev/emails` frame: `allow-popups allow-popups-to-escape-sandbox`, scripts still blocked; examples V7 and V8 added (Behavior 14, V6–V8, §4, X4).
 - Q1–Q3 settled; the Preview-protection check added to the definition of done (§7).
+
+### What changed while building
+
+- The package is `react-email` (the supported one), not `@react-email/components`; `server-only` was added as a dependency (it was not installed), with a Vitest alias to an empty stub.
+- The plain text is tidied after rendering (trimmed lines, no runs of blank lines), and table cells are separated with two spaces, so "Subtotal  ₱22,990.00" reads as a line.
+- `/dev/emails` shows each email's subject as its heading, with To / From / Sent rows; `/dev/*` also gets the order pages' `no-store` and `no-referrer` headers.
+- **The sender's cap shaped the tests**: the E2E gives each order its own recipient, because the order specs all use `ana@example.com` and a run places far more than five orders. `e2e/signed-link.spec.ts` was changed the same way, and its "no template" check now enqueues a `COD_CONFIRM` row (still unregistered).
+- `ORDERS_ENABLED`, `ORDER_LINK_SECRET` and `EMAIL_TRANSPORT` must be set for `pnpm dev`, `pnpm typecheck` and the E2E (spec 035 added the last two to the schema; `.env.local` needs them).
