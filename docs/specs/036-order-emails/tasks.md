@@ -64,7 +64,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## Definition of done
 - [ ] Acceptance criteria checked on the Preview URL (the three emails in `/dev/emails`)
-- [ ] Vercel Preview protection confirmed on for the project (Q2)
+- [x] Vercel Preview protection confirmed on for the project (Q2): Standard Protection is on (2026-11-03)
 - [x] Desktop widths; empty, loading and error states handled (the dev page's empty state and the 404 are tested; the email states are in the spec)
 - [x] Lint and type check pass; tests at the right level (unit, DB and E2E all green locally; E2E also against the production build)
 - [ ] PR opened from the template (`Closes #93`)
