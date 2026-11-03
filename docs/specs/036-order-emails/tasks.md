@@ -39,8 +39,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm test:db` passes (Docker Postgres)
 
 ## 5. Order page prompt
-- [ ] `ORDER_COPY.saveLink` set to the approved wording
-- [ ] `order-view.test.tsx`: V1 (prompt by `?key=`, none by signed link)
+- [x] `ORDER_COPY.saveLink` set to the approved wording
+- [x] `order-view.test.tsx`: V1 (prompt by `?key=`, none by signed link)
 
 ## 6. `/dev/emails`
 - [ ] `"dev"` added to `RESERVED_SLUGS`; `reserved-slugs.test.ts` passes

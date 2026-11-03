@@ -121,7 +121,7 @@ describe("V1: a delivery order awaiting payment", () => {
 
   it("shows the save-the-link prompt with the copy button", () => {
     expect(text(html)).toContain(
-      "Save this link: it's the only way to see your order until order emails arrive."
+      "Save this link to see your order. We're also emailing you a link to it; if it doesn't arrive, this one still works."
     )
     expect(html).toContain("Copy link")
     expect(html).toContain("Your order link")

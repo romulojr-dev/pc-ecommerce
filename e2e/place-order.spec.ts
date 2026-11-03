@@ -133,7 +133,7 @@ test("place an order and land on its page (X1, X2)", async ({ page }) => {
   ).toBeVisible()
   await expect(
     page.getByText(
-      "Save this link: it's the only way to see your order until order emails arrive."
+      "Save this link to see your order. We're also emailing you a link to it; if it doesn't arrive, this one still works."
     )
   ).toBeVisible()
   await expect(
