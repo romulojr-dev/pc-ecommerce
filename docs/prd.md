@@ -105,8 +105,8 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 - **FR-18** Email + password and Google sign-in; email verification; password reset.
 - **FR-19** Address book, order history, saved builds.
-- **FR-20** Order status timeline: Pending payment → Paid / COD confirmed → Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded.
-- **FR-21** Transactional emails: order confirmation, payment received, shipped, delivered.
+- **FR-20** Order status timeline: Pending payment / Pending confirmation (COD) → Paid / COD confirmed → Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded.
+- **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, delivered; COD orders also get a confirmation link.
 
 ## PC Builder
 
@@ -157,7 +157,7 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 | GCash / Maya | Redirect to wallet authorization page, return to order page | Paid (on webhook) |
 | Credit / debit card | Gateway-hosted card form with 3-D Secure | Paid (on webhook) |
 | Installments / BNPL | Gateway BNPL options (e.g. BillEase, SPayLater) and card installment terms where the gateway offers them; not among the MVP's allowed channels | Paid (on webhook) |
-| Cash on delivery | No online step; customer confirms by SMS/email link | COD confirmed → Paid when admin marks delivered |
+| Cash on delivery (or pay on pickup) | No online step; stock is reserved at placement and the order is Pending confirmation until the customer confirms through a signed link in the order email. Unconfirmed orders auto-cancel and release stock after a set time; confirmed ones never auto-expire | COD confirmed → Paid when admin marks delivered (or picked up) |
 
 ### Requirements
 
@@ -272,13 +272,13 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
 | `SavedBuild` | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
 | `Cart` / `CartItem` | cartId (cookie or userId), productId, quantity, buildId (nullable, for grouping) |
-| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the token is only in the order link), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, total, paymentMethod, shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
+| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the token is only in the order link), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, voucherId and voucherCode (snapshot), total, payment option (online / COD), paymentMethod (the gateway channel paid with), shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
 | `Payment` | orderId, provider, providerRef, method, amount, status, paidAt, received amount and currency, problem (amount mismatch, late, second payment), createdAt. One row per payment attempt; the webhook bodies are in `PaymentEvent` |
 | `PaymentEvent` | eventId (unique; Xendit sends none, so it is `{event}:{session id}`), type, payload, paymentId, receivedAt. Each processed gateway webhook event, so the same event is processed once (FR-23) |
 | `Voucher` | code, type, value, minSpend, startsAt, endsAt, usageLimit, usedCount |
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
-| `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25). Seeded until the admin settings screen (AD-9) |
+| `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: COD on/off, max order total including shipping, allowed zones, pay on pickup on/off, hours to confirm a COD order). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |
 | `AuditLog` | actorId, entity, entityId, action, before, after, createdAt |
 
@@ -351,7 +351,7 @@ As a portfolio project, success is measured in demo-ability and quality rather t
 
 ## Milestones
 
-Eight sprints (1–2 weeks each) for one developer, planned on the GitHub Projects board; each sprint ends with a deployable preview. Each epic covers one area; an epic can span sprints, and a sprint can serve two epics.
+Nine sprints (1–2 weeks each) for one developer, planned on the GitHub Projects board; each sprint ends with a deployable preview. Each epic covers one area; an epic can span sprints, and a sprint can serve two epics.
 
 | Sprint | Epic | Scope |
 | --- | --- | --- |
@@ -360,8 +360,9 @@ Eight sprints (1–2 weeks each) for one developer, planned on the GitHub Projec
 | 4 | PC Builder | Rules engine, builder page, slot picker |
 | 5 | PC Builder, Checkout | Share a build by link, "Fits your build" hints (FR-10), cart (FR-12), add build to cart |
 | 6 | Checkout | 3-step checkout (FR-14 to FR-16), stock re-check (FR-13), orders, Xendit sandbox and webhooks (FR-22 to FR-24, FR-27) |
-| 7 | Checkout, Accounts | COD (FR-25), vouchers (FR-17), transactional emails (FR-21); accounts (FR-18), address book, order history and saved builds (FR-19) |
-| 8 | Admin + launch | Admin panel, refunds (FR-26), full E2E suite, success-metric checks, production deploy and demo |
+| 7 | Checkout | Transactional emails (FR-21: order placed, payment received, order cancelled) with signed order links, vouchers (FR-17), COD with email confirmation (FR-25) |
+| 8 | Accounts | Accounts (FR-18), address book, order history and saved builds (FR-19) |
+| 9 | Admin + launch | Admin panel, "Shipped" and "Delivered" emails with the status transitions, refunds (FR-26), full E2E suite, success-metric checks, production deploy and demo |
 
 ```mermaid
 flowchart LR
@@ -370,15 +371,16 @@ flowchart LR
     S4["<b>PC Builder</b><br/>Sprint 4<br/>Rules engine<br/>Builder page<br/>Slot picker"]
     S5["<b>Builder + cart</b><br/>Sprint 5<br/>Share builds<br/>Fits-your-build hints<br/>Cart + add build"]
     S6["<b>Checkout</b><br/>Sprint 6<br/>Checkout steps<br/>Orders<br/>Xendit sandbox"]
-    S7["<b>Checkout + Accounts</b><br/>Sprint 7<br/>COD + vouchers<br/>Emails<br/>Accounts + saved builds"]
-    S8["<b>Admin + launch</b><br/>Sprint 8<br/>Admin panel<br/>E2E tests<br/>Deploy + demo"]
+    S7["<b>Checkout</b><br/>Sprint 7<br/>Order emails<br/>Vouchers<br/>COD"]
+    S8["<b>Accounts</b><br/>Sprint 8<br/>Sign-in<br/>Address book<br/>Orders + saved builds"]
+    S9["<b>Admin + launch</b><br/>Sprint 9<br/>Admin panel<br/>E2E tests<br/>Deploy + demo"]
 
-    S1 --> S2 --> S4 --> S5 --> S6 --> S7 --> S8
+    S1 --> S2 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
 
     style S5 stroke-width:3px
 ```
 
-The seed script stands in for the admin panel until Sprint 8, so catalog, builder and checkout work never waits on admin screens.
+The seed script stands in for the admin panel until Sprint 9, so catalog, builder and checkout work never waits on admin screens.
 
 After the MVP ships, Phase 2 items are planned as their own backlog, prioritized in this order: product compare and wishlist, prebuilt build templates, partial COD, warranty / RMA flow, then admin roles and CSV import. Phase 3 items are optional stretch goals.
 
