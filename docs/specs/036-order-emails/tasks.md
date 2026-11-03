@@ -14,10 +14,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass (typecheck and the dev server need `EMAIL_TRANSPORT` and `ORDER_LINK_SECRET` in the environment, i.e. in `.env.local`, as spec 035 requires)
 
 ## 2. Copy and the pure view-model
-- [ ] `lib/email/copy.ts` (`EMAIL_COPY`: "[Demo] " prefix, test-mode sentence, footer, subjects, leads, link note, pay block and status lines, cancelled reason map)
-- [ ] `lib/email/view.ts` (`emailView` for the three types; throws on `PAYMENT_RECEIVED` without `paidAt` and on a pickup order without settings)
-- [ ] Unit tests: T1–T6 data side, T3 (two groups), T4 (discount row), T5 (past-due, Paid, Cancelled: no pay block), T8 (method names), T12
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/email/copy.ts` (`EMAIL_COPY`: "[Demo] " prefix, test-mode sentence, footer, subjects, leads, link note, pay block and status lines, cancelled reason map)
+- [x] `lib/email/view.ts` (`emailView` for the three types; throws on `PAYMENT_RECEIVED` without `paidAt` and on a pickup order without settings)
+- [x] Unit tests: T1–T6 data side, T3 (two groups), T4 (discount row), T5 (past-due, Paid, Cancelled: no pay block), T8 (method names), T12 (`view.test.ts`)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Templates and the sender's changes
 - [ ] `lib/email/templates/layout.tsx` (text wordmark, test-mode note, footer; `import "server-only"`)

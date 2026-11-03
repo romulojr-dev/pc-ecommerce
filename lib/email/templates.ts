@@ -17,9 +17,18 @@ export type EmailContext = {
   // A fresh signed `view` link to the order, absolute, on NEXT_PUBLIC_SITE_URL
   viewUrl: string
   siteUrl: string
+  // When the email is built: whether an order can still be paid is judged
+  // against it (docs/specs/036-order-emails, D2)
+  now: Date
+  // The store's current address and hours, read for pickup orders only
+  store: { address: string; hours: string } | null
 }
 
-export type EmailTemplate = (context: EmailContext) => EmailContent
+// React Email renders asynchronously, so a template may return a promise; a
+// rejection is a `render-error`, as a throw is
+export type EmailTemplate = (
+  context: EmailContext
+) => EmailContent | Promise<EmailContent>
 
 export type EmailTemplates = Partial<Record<EmailType, EmailTemplate>>
 
