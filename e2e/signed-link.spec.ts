@@ -6,7 +6,8 @@ import { expect, test } from "./test"
 
 // A signed order link opens the order like its key does, and Pay now works
 // through it (docs/specs/035-email-foundation-signed-links, X1–X4). The real
-// emails and the links they carry are #93's E2E.
+// emails and the links they carry are order-emails.spec.ts's
+// (docs/specs/036-order-emails).
 // Needs a seeded database, ORDERS_ENABLED=true, PAYMENT_GATEWAY=fake,
 // EMAIL_TRANSPORT=fake and ORDER_LINK_SECRET for the app server and for this
 // process. Like the other order specs it takes real stock and leaves its
@@ -46,7 +47,11 @@ async function placeOrder(page: Page): Promise<string> {
   await page.goto("/cart")
   await page.getByRole("link", { name: "Checkout" }).click()
   await expect(page.getByLabel("Email")).toBeEnabled()
-  await page.getByLabel("Email").fill("ana@example.com")
+  // Its own recipient: the sender caps one address at five emails a day, and
+  // the order specs place many (docs/specs/036-order-emails)
+  await page
+    .getByLabel("Email")
+    .fill(`e2e-link-${Date.now().toString(36)}@example.com`)
   await page.getByLabel("Full name").fill("Ana Santos")
   await page.getByLabel("Mobile number").fill("0917 123 4567")
   await page
@@ -78,7 +83,7 @@ test("a signed link opens the order, without the save-the-link prompt (X1)", asy
   const number = await placeOrder(page)
   expect(await readStock(CASE)).toBe(before - 1)
   // With the key, the page offers to save the link
-  await expect(page.getByText(/^Save this link:/)).toBeVisible()
+  await expect(page.getByText(/^Save this link/)).toBeVisible()
 
   const response = await page.goto(`/orders/${number}?${viewLinkQuery(number)}`)
 
@@ -92,7 +97,7 @@ test("a signed link opens the order, without the save-the-link prompt (X1)", asy
       .getByRole("navigation", { name: "Order status" })
       .locator('[aria-current="step"]')
   ).toHaveText("Pending payment")
-  await expect(page.getByText(/^Save this link:/)).toHaveCount(0)
+  await expect(page.getByText(/^Save this link/)).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Copy link" })).toHaveCount(0)
   // The save-the-link prompt is the only difference: Pay now is there
   await expect(page.getByRole("button", { name: "Pay now" })).toBeVisible()
@@ -162,21 +167,19 @@ test("Pay now through the link reaches the payment page and Paid (X3)", async ({
 
 test("a due outbox row is claimed by a page's sweep (X4)", async ({ page }) => {
   const number = await placeOrder(page)
-  // No template is registered until #93: the row fails final, loudly, and the
-  // order is untouched
-  await enqueueEmailFor(number, "ORDER_PLACED")
+  // COD_CONFIRM has no template until #95: the row fails final, loudly, and
+  // the order is untouched (the order's own "Order placed" row is sent)
+  await enqueueEmailFor(number, "COD_CONFIRM")
 
   await expect(async () => {
     await page.goto("/cart")
     const rows = await outboxFor(number)
-    expect(rows).toEqual([
-      {
-        type: "ORDER_PLACED",
-        status: "FAILED",
-        attempts: 5,
-        lastErrorCode: "no-template",
-      },
-    ])
+    expect(rows.find((row) => row.type === "COD_CONFIRM")).toEqual({
+      type: "COD_CONFIRM",
+      status: "FAILED",
+      attempts: 5,
+      lastErrorCode: "no-template",
+    })
   }).toPass({ timeout: 30_000 })
 
   await page.goto(`/orders/${number}?${viewLinkQuery(number)}`)

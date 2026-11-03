@@ -51,10 +51,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 7. E2E
-- [ ] `e2e/orders.ts`: `fakeEmailsFor(email)` and a link extractor
-- [ ] `e2e/order-emails.spec.ts`: X1, X2, X3, X4 and V7 (popup from the frame)
-- [ ] `e2e/signed-link.spec.ts` X4 switched to `COD_CONFIRM`
-- [ ] `pnpm test:e2e` passes against dev; `pnpm build` + `CI=1 pnpm test:e2e` passes against the production build
+- [x] `e2e/orders.ts`: `fakeEmailsFor(email)` and a link extractor
+- [x] `e2e/order-emails.spec.ts`: X1, X2, X3, X4 and V7 (popup from the frame)
+- [x] `e2e/signed-link.spec.ts` X4 switched to `COD_CONFIRM`, and each of its orders has its own recipient (the sender's cap is five emails a day per address, and the order specs share `ana@example.com`)
+- [x] `pnpm test:e2e` passes against dev; `pnpm build` + `CI=1 pnpm test:e2e` passes against the production build
 
 ## 8. Docs
 - [ ] Spec 035 and spec 030 pointers ("Changed by spec 036")
