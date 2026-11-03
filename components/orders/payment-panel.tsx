@@ -7,6 +7,7 @@ import { useState } from "react"
 import { startPaymentAction } from "@/app/(store)/orders/[number]/actions"
 import { Button } from "@/components/ui/button"
 import { useOrderStatus } from "@/hooks/use-order-status"
+import { credentialParamsOf } from "@/lib/orders/link"
 import { PAY_COPY, stillConfirmingText } from "@/lib/payments/copy"
 import type { PaymentView } from "@/lib/payments/payment-view"
 import { waitForSession } from "@/lib/payments/wait-for-session"
@@ -40,13 +41,15 @@ export function PaymentPanel({
   async function pay() {
     if (busy) return
     setBusy(true)
-    const key = new URLSearchParams(window.location.search).get("key")
+    const credential = credentialParamsOf(
+      new URLSearchParams(window.location.search)
+    )
     // Waits while another start of this order is opening a session, then
     // answers like a single click (docs/specs/034-start-payment-outside-
     // transaction, behavior 6). No answer is an error: the shopper can try
     // again.
     const result = await waitForSession(() =>
-      startPaymentAction({ orderNumber, key })
+      startPaymentAction({ orderNumber, ...credential })
     )
     if (result.ok) {
       // Stay busy: the page is leaving for the payment page

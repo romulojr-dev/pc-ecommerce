@@ -18,6 +18,7 @@ import { STEP_COPY } from "@/lib/checkout/copy"
 import { clearFrom, isComplete } from "@/lib/checkout/draft"
 import { checkoutDraftStore } from "@/lib/checkout/draft-store"
 import type { ReviewProblem } from "@/lib/checkout/problems"
+import { credentialParamsOf } from "@/lib/orders/link"
 import { linkAfterStart } from "@/lib/payments/pay-link"
 import { waitForSession } from "@/lib/payments/wait-for-session"
 
@@ -107,9 +108,9 @@ export function CheckoutFlow({
     if (!payUrl && paymentOpening) {
       const url = new URL(link, window.location.origin)
       const orderNumber = url.pathname.split("/").at(-1)
-      const key = url.searchParams.get("key")
+      const credential = credentialParamsOf(url.searchParams)
       const result = await waitForSession(
-        () => startPaymentAction({ orderNumber, key }),
+        () => startPaymentAction({ orderNumber, ...credential }),
         { skipFirst: true }
       )
       if (result.ok) payUrl = result.url

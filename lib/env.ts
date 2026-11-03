@@ -1,6 +1,12 @@
 import { createEnv } from "@t3-oss/env-nextjs"
 import { z } from "zod"
 
+import {
+  emailEnvIssues,
+  emailFromSchema,
+  emailTransportSchema,
+  orderLinkSecretSchema,
+} from "./email/env-schema"
 import { cronSecretSchema } from "./orders/cron-secret-schema"
 import { ordersEnabledSchema } from "./orders/orders-enabled-schema"
 import {
@@ -47,6 +53,17 @@ export const env = createEnv({
     // POST /api/webhooks/xendit; the fake's payment page sends it too.
     // Required with both gateways (docs/specs/032-payment-webhooks).
     XENDIT_WEBHOOK_TOKEN: z.string().optional(),
+    // Email (docs/specs/035-email-foundation-signed-links): "resend" or
+    // "fake", required; Production refuses the fake. The rules across these
+    // variables are in createFinalSchema below.
+    EMAIL_TRANSPORT: emailTransportSchema,
+    // Resend's sending key, required with EMAIL_TRANSPORT=resend. Never logged.
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_FROM: emailFromSchema,
+    // Signs the order links in emails (HMAC-SHA256), at least 32 bytes, one
+    // per environment. Rotating it revokes every link already sent. Never
+    // logged.
+    ORDER_LINK_SECRET: orderLinkSecretSchema,
     // Set by Vercel: production, preview or development. Unset locally and in
     // CI, which count as development (lib/payments/gateway.ts).
     VERCEL_ENV: vercelEnvSchema,
@@ -69,6 +86,9 @@ export const env = createEnv({
     z.object(shape).superRefine((values, ctx) => {
       if (!isServer) return
       for (const { variable, message } of paymentEnvIssues(values)) {
+        ctx.addIssue({ code: "custom", path: [variable], message })
+      }
+      for (const { variable, message } of emailEnvIssues(values)) {
         ctx.addIssue({ code: "custom", path: [variable], message })
       }
     }),

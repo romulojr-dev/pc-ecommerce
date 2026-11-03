@@ -1,4 +1,4 @@
-import { orderLink } from "@/lib/orders/link"
+import { credentialQuery, type OrderCredential } from "@/lib/orders/credential"
 
 import { sessionDescription } from "./copy"
 import { canStartSession } from "./payable"
@@ -8,7 +8,8 @@ import { canStartSession } from "./payable"
 // adapter turns it into its gateway's request. Pure.
 //
 // Nothing about the shopper goes in it (D6): no name, contact, address or
-// items. The return URLs carry the order's key (ADR 0010).
+// items. The return URLs carry the order's credential: its key, or a freshly
+// signed link (ADR 0010; docs/specs/035-email-foundation-signed-links, D5).
 
 // The longest session asked for (spec 031, Q2)
 export const SESSION_MAX_HOURS = 24
@@ -45,8 +46,9 @@ export type SessionOrder = {
 export type SessionContext = {
   // The site's own origin (NEXT_PUBLIC_SITE_URL), never the request's Host
   siteUrl: string
-  // The order's access token, from the caller: only its hash is stored
-  accessToken: string
+  // How the return URLs open the order: the access token (from the caller:
+  // only its hash is stored) or a signed `view` link
+  credential: OrderCredential
   environment: PaymentEnvironment
   // 1 + the order's earlier payments
   attempt: number
@@ -57,16 +59,16 @@ export type SessionContext = {
 export function returnUrl(
   siteUrl: string,
   orderNumber: string,
-  accessToken: string,
+  credential: OrderCredential,
   payment: PaymentParam
 ): string {
   const base = siteUrl.replace(/\/+$/, "")
-  return `${base}${orderLink(orderNumber, accessToken)}&payment=${payment}`
+  return `${base}/orders/${orderNumber}?${credentialQuery(credential)}&payment=${payment}`
 }
 
 export function sessionRequest(
   order: SessionOrder,
-  { siteUrl, accessToken, environment, attempt, now }: SessionContext
+  { siteUrl, credential, environment, attempt, now }: SessionContext
 ): { ok: true; input: SessionInput } | { ok: false; reason: "expired" } {
   if (!canStartSession(order.expiresAt, now)) {
     return { ok: false, reason: "expired" }
@@ -84,13 +86,8 @@ export function sessionRequest(
         order_number: order.orderNumber,
         environment,
       },
-      successUrl: returnUrl(siteUrl, order.orderNumber, accessToken, "return"),
-      cancelUrl: returnUrl(
-        siteUrl,
-        order.orderNumber,
-        accessToken,
-        "cancelled"
-      ),
+      successUrl: returnUrl(siteUrl, order.orderNumber, credential, "return"),
+      cancelUrl: returnUrl(siteUrl, order.orderNumber, credential, "cancelled"),
       expiresAt: new Date(Math.min(order.expiresAt.getTime(), cap)),
     },
   }

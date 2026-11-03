@@ -9,11 +9,12 @@ import {
   payFakeAction,
 } from "@/app/(store)/test-payment/[id]/actions"
 import { Button } from "@/components/ui/button"
+import { credentialParamsOf } from "@/lib/orders/link"
 import { PAY_COPY } from "@/lib/payments/copy"
 
 // Pay, Cancel and Let it expire on the fake payment page (docs/specs/031-pay-
-// with-xendit, Behavior 15). Each sends the session id and the key from the
-// address bar, then follows the answer back to the order page. A miss (the
+// with-xendit, Behavior 15). Each sends the session id and the credential from
+// the address bar (the key, or a signed link's parameters), then follows the answer back to the order page. A miss (the
 // page went stale) reloads, which shows the closed or 404 state.
 export function FakePayButtons({ sessionId }: { sessionId: string }) {
   const [busy, setBusy] = useState(false)
@@ -21,9 +22,11 @@ export function FakePayButtons({ sessionId }: { sessionId: string }) {
   async function run(action: (input: unknown) => Promise<FakeChoiceResult>) {
     if (busy) return
     setBusy(true)
-    const key = new URLSearchParams(window.location.search).get("key")
+    const credential = credentialParamsOf(
+      new URLSearchParams(window.location.search)
+    )
     try {
-      const result = await action({ id: sessionId, key })
+      const result = await action({ id: sessionId, ...credential })
       if (result.ok) {
         window.location.assign(result.url)
         return

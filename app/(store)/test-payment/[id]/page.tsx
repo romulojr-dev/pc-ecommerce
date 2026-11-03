@@ -6,6 +6,7 @@ import { connection } from "next/server"
 import { Container } from "@/components/layout/container"
 import { FakePayButtons } from "@/components/payments/fake-pay-buttons"
 import { formatPeso } from "@/lib/format"
+import { credentialFromParams } from "@/lib/orders/credential"
 import { PAY_COPY } from "@/lib/payments/copy"
 import { openFakePage } from "@/lib/payments/fake-page"
 
@@ -30,8 +31,11 @@ export default async function TestPaymentPage({
   await connection()
 
   const { id } = await params
-  const { key } = await searchParams
-  const page = await openFakePage(id, typeof key === "string" ? key : null)
+  const { key, sig, exp, p } = await searchParams
+  const page = await openFakePage(
+    id,
+    credentialFromParams({ key, sig, exp, p })
+  )
   if (!page) notFound()
   const { session, orderNumber, orderHref } = page
 

@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 
+import { credentialFromParams } from "@/lib/orders/credential"
 import { chooseOnFakePage, type FakeChoice } from "@/lib/payments/fake-page"
 
 // The fake payment page's buttons (docs/specs/031-pay-with-xendit, Behavior
@@ -10,7 +11,14 @@ import { chooseOnFakePage, type FakeChoice } from "@/lib/payments/fake-page"
 // session's order) and does nothing on a miss. They only exist where
 // PAYMENT_GATEWAY is fake; elsewhere every call is a miss.
 
-const inputSchema = z.object({ id: z.string(), key: z.string() })
+// The credential is the page's: the key, or a signed link's sig, exp and p
+const inputSchema = z.object({
+  id: z.string(),
+  key: z.string().nullish(),
+  sig: z.string().nullish(),
+  exp: z.string().nullish(),
+  p: z.string().nullish(),
+})
 
 export type FakeChoiceResult = { ok: true; url: string } | { ok: false }
 
@@ -20,7 +28,8 @@ async function choose(
 ): Promise<FakeChoiceResult> {
   const parsed = inputSchema.safeParse(input)
   if (!parsed.success) return { ok: false }
-  const url = await chooseOnFakePage(choice, parsed.data.id, parsed.data.key)
+  const { id, ...params } = parsed.data
+  const url = await chooseOnFakePage(choice, id, credentialFromParams(params))
   return url ? { ok: true, url } : { ok: false }
 }
 

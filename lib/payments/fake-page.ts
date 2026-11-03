@@ -1,6 +1,10 @@
 import { env } from "@/lib/env"
-import { findOrderByKey } from "@/lib/orders/get-order"
-import { orderLink } from "@/lib/orders/link"
+import {
+  credentialQuery,
+  type OrderCredential,
+  toCredential,
+} from "@/lib/orders/credential"
+import { findOrderByCredential } from "@/lib/orders/get-order"
 
 import { CALLBACK_TOKEN_HEADER, handlePaymentEvent } from "./events"
 import {
@@ -34,7 +38,7 @@ export type FakePageContext = {
 export type FakePage = {
   session: FakeSession
   orderNumber: string
-  // The order link, built from the key the page was opened with
+  // The order link, built from the credential the page was opened with
   orderHref: string
 }
 
@@ -49,20 +53,28 @@ export async function openFakePage(
 ): Promise<FakePage | null> {
   if (!gatewayIsFake) return null
   if (typeof id !== "string" || !SESSION_ID.test(id)) return null
-  if (typeof key !== "string") return null
+  const credential = toCredential(key)
+  if (credential.kind !== "token" && credential.kind !== "link") return null
 
   const session = await readFakeSession(id, now)
   const metadata = session?.metadata ?? {}
   if (!session || metadata.environment !== environment) return null
-  const order = await findOrderByKey(metadata.order_number, key)
+  const order = await findOrderByCredential(
+    metadata.order_number,
+    credential,
+    now
+  )
   if (!order || order.id !== metadata.order_id) return null
 
   return {
     session,
     orderNumber: order.orderNumber,
-    orderHref: orderLink(order.orderNumber, key),
+    orderHref: orderHref(order.orderNumber, credential),
   }
 }
+
+const orderHref = (orderNumber: string, credential: OrderCredential) =>
+  `/orders/${orderNumber}?${credentialQuery(credential)}`
 
 const back = (page: FakePage, payment: PaymentParam) =>
   `${page.orderHref}&payment=${payment}`

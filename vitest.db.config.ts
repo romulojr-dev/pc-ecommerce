@@ -37,6 +37,10 @@ export default defineConfig({
       // call (docs/specs/033-release-unpaid-orders, T3); the cron's own tests
       // pass a secret in
       CRON_SECRET: "",
+      // Always the fake email transport, and a fixed link secret
+      // (docs/specs/035-email-foundation-signed-links)
+      EMAIL_TRANSPORT: "fake",
+      ORDER_LINK_SECRET: "test-order-link-secret-0123456789abcdef-xyz",
       VERCEL_ENV: "",
     },
   },

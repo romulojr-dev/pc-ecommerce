@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
-import { ORDER_KEY_HEADER } from "@/lib/orders/link"
+import { credentialHeaders, credentialParamsOf } from "@/lib/orders/link"
 import { startStatusPoller } from "@/lib/payments/status-poller"
 
 // While the return page confirms a payment, ask for the order's status
@@ -12,21 +12,21 @@ import { startStatusPoller } from "@/lib/payments/status-poller"
 // value, so the server renders the new status. Returns whether the first
 // minute has passed ("Still confirming").
 //
-// The key is read from the address bar and sent in a header, never in the
-// status route's URL.
+// The credential (the key, or a signed link's parameters) is read from the
+// address bar and sent in a header, never in the status route's URL.
 export function useOrderStatus(orderNumber: string): boolean {
   const router = useRouter()
   const [slow, setSlow] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const key = params.get("key") ?? ""
+    const headers = credentialHeaders(credentialParamsOf(params))
 
     const poller = startStatusPoller({
       async fetchStatus() {
         const response = await fetch(
           `/api/orders/${encodeURIComponent(orderNumber)}/status`,
-          { headers: { [ORDER_KEY_HEADER]: key }, cache: "no-store" }
+          { headers, cache: "no-store" }
         )
         if (!response.ok) return null
         const body: unknown = await response.json()

@@ -41,6 +41,7 @@ const part = (
 function order(over: Partial<OrderPageData> = {}): OrderPageData {
   return {
     orderNumber: "PCS-7K3M9QXZ",
+    viaLink: false,
     status: "PENDING_PAYMENT",
     fulfillment: "DELIVERY",
     createdAt: new Date("2026-10-31T07:42:00Z"),
@@ -124,6 +125,14 @@ describe("V1: a delivery order awaiting payment", () => {
     )
     expect(html).toContain("Copy link")
     expect(html).toContain("Your order link")
+  })
+
+  // docs/specs/035-email-foundation-signed-links, D8
+  it("doesn't offer to save the link when opened by a signed link", () => {
+    const viaLink = render(order({ viaLink: true }))
+    expect(text(viaLink)).not.toContain("Save this link")
+    expect(viaLink).not.toContain("Copy link")
+    expect(text(viaLink)).toContain("Pay now")
   })
 
   it("shows the item from its snapshot, and the totals", () => {

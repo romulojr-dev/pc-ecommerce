@@ -1,7 +1,13 @@
 import { randomBytes } from "node:crypto"
 
-import { db } from "@/lib/db"
 import type { Prisma } from "@/generated/prisma/client"
+import { db } from "@/lib/db"
+import {
+  credentialFromParams,
+  credentialQuery,
+  type OrderCredential,
+} from "@/lib/orders/credential"
+import { credentialParamsOf } from "@/lib/orders/link"
 
 import { FAKE_INSTRUCTIONS } from "./copy"
 import type {
@@ -17,9 +23,10 @@ import type {
 // and statuses, so it can say "completed" without reading the store's
 // Payment rows (#80 confirms a payment through the gateway).
 //
-// Its payment page is the store's own /test-payment/{id}?key=…: the key is
-// read from the success URL it is given, and no URL is stored, so the order's
-// token is never kept in clear (ADR 0009).
+// Its payment page is the store's own /test-payment/{id}?key=… (or the signed
+// link's sig, exp and p): the credential is read from the success URL it is
+// given, and no URL is stored, so the order's token is never kept in clear
+// (ADR 0009; docs/specs/035-email-foundation-signed-links).
 
 type FakeStatus = "ACTIVE" | "COMPLETED" | "EXPIRED" | "CANCELED"
 
@@ -34,8 +41,10 @@ const STATUS: Record<FakeStatus, SessionStatus> = {
 const newId = (prefix: "ps" | "py") =>
   `${prefix}-${randomBytes(12).toString("hex")}`
 
-export const fakePaymentPath = (id: string, key: string): string =>
-  `/test-payment/${id}?key=${encodeURIComponent(key)}`
+export const fakePaymentPath = (
+  id: string,
+  credential: OrderCredential
+): string => `/test-payment/${id}?${credentialQuery(credential)}`
 
 export type FakeOptions = {
   // Test seams (A6, A7): make a call fail as a gateway error would, with
@@ -109,8 +118,12 @@ export function fakeGateway({
 
     async createSession(input) {
       if (fail.create) return failed
-      const key = new URL(input.successUrl).searchParams.get("key")
-      if (!key) return { ok: false, code: "invalid-request" }
+      const credential = credentialFromParams(
+        credentialParamsOf(new URL(input.successUrl).searchParams)
+      )
+      if (credential.kind !== "token" && credential.kind !== "link") {
+        return { ok: false, code: "invalid-request" }
+      }
       const id = newId("ps")
       await db.fakeGatewaySession.create({
         data: {
@@ -129,7 +142,7 @@ export function fakeGateway({
         ok: true,
         session: {
           id,
-          url: fakePaymentPath(id, key),
+          url: fakePaymentPath(id, credential),
           status: "active",
           expiresAt: input.expiresAt,
         },

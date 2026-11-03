@@ -144,7 +144,7 @@ export function OrderView({
         )}
       </section>
 
-      <CopyLink />
+      {!order.viaLink && <CopyLink />}
 
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_20rem]">
         <div className="flex flex-col gap-8">

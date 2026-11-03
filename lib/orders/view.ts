@@ -17,6 +17,9 @@ export type OrderPageItem = {
 
 export type OrderPageData = {
   orderNumber: string
+  // Opened with a signed link from an email: the page doesn't offer to save
+  // the link (docs/specs/035-email-foundation-signed-links, D8)
+  viaLink: boolean
   status: OrderStatusName
   fulfillment: FulfillmentName
   createdAt: Date

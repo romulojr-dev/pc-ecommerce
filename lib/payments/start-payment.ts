@@ -1,6 +1,12 @@
 import { db } from "@/lib/db"
 import { env } from "@/lib/env"
+import {
+  linkCredential,
+  type ParsedCredential,
+  toCredential,
+} from "@/lib/orders/credential"
 import { logSafeFailure } from "@/lib/orders/log"
+import { mintViewLink } from "@/lib/orders/order-links"
 
 import { attemptState, START_TRANSACTION } from "./attempt"
 import { gateway, paymentEnvironment } from "./gateway"
@@ -82,9 +88,13 @@ type Claimed = {
   input: SessionInput
 }
 
+// `credential` is how the caller opened the order: its access token (a bare
+// string is one) or a signed `view` link. The return URLs carry the token as
+// it is, or a link signed now (docs/specs/035-email-foundation-signed-links,
+// D5), so a link nearly out of time can't strand the shopper at the gateway.
 export async function startPayment(
   orderId: string,
-  accessToken: string,
+  credentialIn: string | ParsedCredential,
   {
     now = new Date(),
     gateway: chosen,
@@ -94,6 +104,10 @@ export async function startPayment(
   }: StartOptions = {}
 ): Promise<StartResult> {
   const gw = chosen ?? gateway()
+  const given = toCredential(credentialIn)
+  if (given.kind !== "token" && given.kind !== "link") {
+    return refused("not-found")
+  }
 
   // 1. Claim
   let claimed: Claimed | Refused
@@ -138,7 +152,10 @@ export async function startPayment(
       const attempt = (await tx.payment.count({ where: { orderId } })) + 1
       const request = sessionRequest(order, {
         siteUrl,
-        accessToken,
+        credential:
+          given.kind === "link"
+            ? linkCredential(mintViewLink(order.orderNumber, now))
+            : given,
         environment: environment ?? paymentEnvironment(),
         attempt,
         now,

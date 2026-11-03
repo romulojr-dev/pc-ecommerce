@@ -146,3 +146,33 @@ describe("the run", () => {
     ).toEqual({ status: 200, body: { released: 0, skipped: 0 } })
   })
 })
+
+// docs/specs/035-email-foundation-signed-links, Behavior 3: the cron also
+// sends the emails that are due (none has a template yet, so a row fails
+// final as no-template; that it was claimed and settled is the point)
+describe("the emails", () => {
+  it("sends due outbox rows after the release and never fails the run", async () => {
+    const order = await db.order.create({
+      data: (await import("@/test-support/orders")).orderData(),
+    })
+    const row = await db.emailOutbox.create({
+      data: {
+        orderId: order.id,
+        type: "ORDER_PLACED",
+        recipientHash: "a".repeat(64),
+        createdAt: new Date(NOW.getTime() - 60_000),
+      },
+    })
+
+    const answer = await run(`Bearer ${SECRET}`)
+
+    expect(answer.status).toBe(200)
+    expect(
+      await db.emailOutbox.findUniqueOrThrow({ where: { id: row.id } })
+    ).toMatchObject({
+      status: "FAILED",
+      lastErrorCode: "no-template",
+      attempts: 5,
+    })
+  })
+})

@@ -3,26 +3,30 @@ import { cache } from "react"
 import { db } from "@/lib/db"
 import { paymentsSummary } from "@/lib/payments/payment-view"
 
+import { credentialShape, toCredential } from "./credential"
 import { orderNumberShape } from "./number"
-import { DUMMY_TOKEN_HASH, tokenMatches, tokenShape } from "./secrets"
+import { credentialOpens } from "./order-links"
 import type { FulfillmentName, OrderStatusName } from "./timeline"
 import type { OrderPageData } from "./view"
 
 // Reads an order for its page (docs/specs/030-place-an-order, Behavior 17).
-// The order is found by its number and opened with its token; a wrong key, a
-// missing key and an unknown number are all `null`, so the page can answer
-// them with the same 404.
+// The order is found by its number and opened with its credential: the access
+// token or a signed `view` link (docs/specs/035-email-foundation-signed-
+// links). A wrong credential, a missing one and an unknown number are all
+// `null`, so the page can answer them with the same 404.
 //
-// A number or key of the wrong shape is `null` without a database read. For a
-// well-formed pair the cost is the same whether the order exists or not: one
-// read and one constant-time comparison (a missing order is compared against
-// a fixed hash).
+// A number or credential of the wrong shape is `null` without a database
+// read. For a well-formed pair the cost is the same whether the order exists
+// or not: one read and one constant-time comparison. A bare string is an
+// access token.
 
 export async function getOrderForPage(
   number: unknown,
-  key: unknown
+  credential: unknown,
+  now = new Date()
 ): Promise<OrderPageData | null> {
-  if (!orderNumberShape(number) || !tokenShape(key)) return null
+  const given = toCredential(credential)
+  if (!orderNumberShape(number) || !credentialShape(given)) return null
 
   const order = await db.order.findUnique({
     where: { orderNumber: number },
@@ -36,8 +40,7 @@ export async function getOrderForPage(
       },
     },
   })
-  const matches = tokenMatches(key, order?.accessTokenHash ?? DUMMY_TOKEN_HASH)
-  if (!order || !matches) return null
+  if (!order || !credentialOpens(given, number, order, now)) return null
 
   // The store's address and hours are the settings' current ones, not a
   // snapshot (D5)
@@ -51,6 +54,7 @@ export async function getOrderForPage(
 
   return {
     orderNumber: order.orderNumber,
+    viaLink: given.kind === "link",
     status: order.status satisfies OrderStatusName,
     fulfillment: order.fulfillment satisfies FulfillmentName,
     createdAt: order.createdAt,
@@ -96,18 +100,21 @@ export async function getOrderForPage(
 // One read per request: generateMetadata and the page both ask
 export const loadOrder = cache(getOrderForPage)
 
-// An order's id and status, opened by its number and key with the same checks
-// as the page (docs/specs/031-pay-with-xendit: Pay now, the status route and
-// the test payment page). `null` for every miss, so callers answer them alike.
-export async function findOrderByKey(
+// An order's id and status, opened by its number and credential with the same
+// checks as the page (docs/specs/031-pay-with-xendit: Pay now, the status
+// route and the test payment page). `null` for every miss, so callers answer
+// them alike.
+export async function findOrderByCredential(
   number: unknown,
-  key: unknown
+  credential: unknown,
+  now = new Date()
 ): Promise<{
   id: string
   orderNumber: string
   status: OrderStatusName
 } | null> {
-  if (!orderNumberShape(number) || !tokenShape(key)) return null
+  const given = toCredential(credential)
+  if (!orderNumberShape(number) || !credentialShape(given)) return null
 
   const order = await db.order.findUnique({
     where: { orderNumber: number },
@@ -118,7 +125,10 @@ export async function findOrderByKey(
       accessTokenHash: true,
     },
   })
-  const matches = tokenMatches(key, order?.accessTokenHash ?? DUMMY_TOKEN_HASH)
-  if (!order || !matches) return null
+  if (!order || !credentialOpens(given, number, order, now)) return null
   return { id: order.id, orderNumber: order.orderNumber, status: order.status }
 }
+
+// The access-token form, for callers that hold the key alone
+export const findOrderByKey = (number: unknown, key: unknown) =>
+  findOrderByCredential(number, key)

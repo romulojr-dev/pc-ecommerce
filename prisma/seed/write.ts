@@ -63,8 +63,10 @@ export function writeSeed(
         // and "FakeGatewaySession" are named for the reader: the first goes
         // with "Order" anyway, the second points at nothing
         // (docs/specs/031-pay-with-xendit), and so is "PaymentEvent"
-        // (docs/specs/032-payment-webhooks).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "PaymentEvent", "FakeGatewaySession", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // (docs/specs/032-payment-webhooks). "EmailOutbox" goes with "Order"
+        // and "FakeEmail" points at nothing; both are named for the reader
+        // (docs/specs/035-email-foundation-signed-links).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)
