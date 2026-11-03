@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto"
 
 import { db } from "@/lib/db"
+import { enqueueEmail } from "@/lib/email/outbox"
+import { scheduleEmailSend } from "@/lib/email/schedule"
 import { logSafeFailure } from "@/lib/orders/log"
 import type { OrderStatusName } from "@/lib/orders/timeline"
 import type { Prisma } from "@/generated/prisma/client"
@@ -135,6 +137,7 @@ async function reconcile(
 
   // 2. Apply (one transaction, no gateway call)
   let toClose: string[] = []
+  let emailId: string | null = null
   let outcome: ReconcileOutcome
   try {
     const applied = await db.$transaction(async (tx) => {
@@ -143,11 +146,17 @@ async function reconcile(
     }, TRANSACTION)
     outcome = applied.outcome
     toClose = applied.toClose
+    emailId = applied.emailId
   } catch (error) {
     logSafeFailure("Reconcile payment", error)
     return { outcome: "error", orderNumber }
   }
   await options.afterStep?.("tx-closed")
+
+  // The "Payment received" email, once the order is Paid and committed. It
+  // never throws, and a send that doesn't happen now is picked up by the
+  // sweeps (docs/specs/036-order-emails, Behavior 4).
+  if (emailId) scheduleEmailSend(emailId)
 
   // 3. After the commit: the order is Paid, so its other open sessions close
   for (const ref of toClose) {
@@ -182,8 +191,16 @@ async function apply(
   order: KnownOrder,
   confirmed: Confirmed,
   { event, now = new Date(), afterStep }: ReconcileOptions
-): Promise<{ outcome: ReconcileOutcome; toClose: string[] }> {
-  const none = (outcome: ReconcileOutcome) => ({ outcome, toClose: [] })
+): Promise<{
+  outcome: ReconcileOutcome
+  toClose: string[]
+  emailId: string | null
+}> {
+  const none = (outcome: ReconcileOutcome) => ({
+    outcome,
+    toClose: [],
+    emailId: null,
+  })
 
   const [locked] = await tx.$queryRaw<LockedOrder[]>`
     SELECT "id", "status"::text AS "status", "total"
@@ -300,6 +317,11 @@ async function apply(
     where: { id: order.id },
     data: { status: "PAID", paidAt: now, paymentMethod: payment.method },
   })
+  // The order just became Paid, so its "Payment received" email is enqueued
+  // in this transaction. Only this outcome reaches here: a late payment, a
+  // second one and a mismatch returned above (docs/specs/036-order-emails,
+  // Behavior 4).
+  const email = await enqueueEmail(tx, order.id, "PAYMENT_RECEIVED")
   // Its other open sessions expire here and close at the gateway after the
   // commit (behavior 14)
   const open = await tx.payment.findMany({
@@ -321,5 +343,5 @@ async function apply(
   const toClose = open.flatMap(({ providerRef }) =>
     providerRef ? [providerRef] : []
   )
-  return { outcome, toClose }
+  return { outcome, toClose, emailId: email?.id ?? null }
 }

@@ -31,12 +31,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 4. Triggers
-- [ ] `placeOrder`: enqueue `ORDER_PLACED` after the items insert; `"email"` step name in `PlaceStep`; schedule after the commit for a non-replay (Q1–Q3)
-- [ ] `reconcileSession`: enqueue `PAYMENT_RECEIVED` only on outcome `paid`; return `emailId`; schedule after the transaction (Q4–Q9, Q12)
-- [ ] `releaseExpiredOrders`: enqueue `ORDER_CANCELLED` per released order; `ReleaseResult` carries the ids; `afterRelease` schedules each after a commit (Q10, Q11, Q13, Q14)
-- [ ] DB tests S1–S6 with real templates, `guardTransactions` and the console spy
-- [ ] Update existing tests that counted outbox or `FakeEmail` rows or expected `no-template` for `ORDER_PLACED` (`send.db.test.ts` O8, `outbox.db.test.ts`, placement, reconcile and release DB tests)
-- [ ] `pnpm test:db` passes (Docker Postgres)
+- [x] `placeOrder`: enqueue `ORDER_PLACED` after the items insert; `"email"` step name in `PlaceStep`; schedule after the commit for a non-replay (Q1–Q3)
+- [x] `reconcileSession`: enqueue `PAYMENT_RECEIVED` only on outcome `paid`; return `emailId`; schedule after the transaction (Q4–Q9, Q12)
+- [x] `releaseExpiredOrders`: enqueue `ORDER_CANCELLED` per released order; `ReleaseResult` carries the ids; `afterRelease` schedules each after a commit (Q10, Q11, Q13, Q14)
+- [x] DB tests S1–S6 with real templates, `guardTransactions` and the console spy
+- [x] Update existing tests that counted outbox or `FakeEmail` rows or expected `no-template` for `ORDER_PLACED` (only `release-cron.db.test.ts` needed it: its row is now `COD_CONFIRM`)
+- [x] `pnpm test:db` passes (Docker Postgres)
 
 ## 5. Order page prompt
 - [ ] `ORDER_COPY.saveLink` set to the approved wording
