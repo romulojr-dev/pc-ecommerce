@@ -4,6 +4,7 @@ import { connection } from "next/server"
 
 import { Container } from "@/components/layout/container"
 import { OrderView } from "@/components/orders/order-view"
+import { credentialFromParams } from "@/lib/orders/credential"
 import { orderTitle } from "@/lib/orders/copy"
 import { loadOrder } from "@/lib/orders/get-order"
 import { sweepAfterResponse } from "@/lib/orders/release"
@@ -16,9 +17,12 @@ import { parsePaymentParam, paymentView } from "@/lib/payments/payment-view"
 // only URL that works carries the key, so a canonical with it would write the
 // secret into the markup and one without it would point at a 404 (D6).
 //
-// The key is a single query value; anything else counts as no key.
-const keyOf = (value: string | string[] | undefined): string | undefined =>
-  typeof value === "string" ? value : undefined
+// The credential is the key, or a signed link's `sig`, `exp` and `p`
+// (docs/specs/035-email-foundation-signed-links); each is a single query
+// value, and anything else is a bad link.
+type Query = Awaited<PageProps<"/orders/[number]">["searchParams"]>
+const credentialOf = ({ key, sig, exp, p }: Query) =>
+  credentialFromParams({ key, sig, exp, p })
 
 // A bad link is a 404 here too, so the page and its metadata agree. The read
 // is shared with the page (React cache).
@@ -27,8 +31,7 @@ export async function generateMetadata({
   searchParams,
 }: PageProps<"/orders/[number]">): Promise<Metadata> {
   const { number } = await params
-  const { key } = await searchParams
-  if (!(await loadOrder(number, keyOf(key)))) notFound()
+  if (!(await loadOrder(number, credentialOf(await searchParams)))) notFound()
 
   return {
     title: orderTitle(number),
@@ -48,8 +51,9 @@ export default async function OrderPage({
   await connection()
 
   const { number } = await params
-  const { key, payment } = await searchParams
-  const order = await loadOrder(number, keyOf(key))
+  const query = await searchParams
+  const { payment } = query
+  const order = await loadOrder(number, credentialOf(query))
   if (!order) notFound()
   // Expired orders, this one included, are released after the response
   // (docs/specs/033-release-unpaid-orders); the page already shows a past-due

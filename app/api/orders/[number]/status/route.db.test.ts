@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { db } from "@/lib/db"
+import { mintViewLink } from "@/lib/orders/order-links"
 import { hashToken, newAccessToken } from "@/lib/orders/secrets"
 import { resetCatalog } from "@/test-support/db"
 import { orderData } from "@/test-support/orders"
@@ -63,5 +64,58 @@ describe("GET /api/orders/[number]/status", () => {
     const { orderNumber } = await newOrder()
     const response = await get(orderNumber, undefined, `?key=${TOKEN}`)
     expect(response.status).toBe(404)
+  })
+})
+
+// docs/specs/035-email-foundation-signed-links: K2–K4, the signed link in
+// the X-Order-Link header
+describe("with a signed link", () => {
+  const getWith = (number: string, headers: Record<string, string>) =>
+    GET(
+      new NextRequest(`http://localhost:3000/api/orders/${number}/status`, {
+        headers,
+      }),
+      { params: Promise.resolve({ number }) }
+    )
+  const linkHeader = (number: string) => {
+    const { sig, exp, p } = mintViewLink(number)
+    return { "X-Order-Link": new URLSearchParams({ sig, exp, p }).toString() }
+  }
+
+  it("answers the status for a valid link, uncached (K2)", async () => {
+    const { orderNumber } = await newOrder()
+    const response = await getWith(orderNumber, linkHeader(orderNumber))
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ status: "PENDING_PAYMENT" })
+    expect(response.headers.get("Cache-Control")).toBe("no-store")
+  })
+
+  it("answers the same 404 for a bad link (K3)", async () => {
+    const { orderNumber } = await newOrder()
+    const other = await db.order.create({
+      data: orderData({ accessTokenHash: hashToken(newAccessToken()) }),
+    })
+    const good = linkHeader(orderNumber)["X-Order-Link"]
+    const misses = [
+      await getWith(orderNumber, {
+        "X-Order-Link": good.replace(/sig=./, "sig=Z"),
+      }),
+      await getWith(orderNumber, linkHeader(other.orderNumber)),
+      await getWith(orderNumber, { "X-Order-Link": "sig=a&exp=1&p=view" }),
+      await getWith(orderNumber, {
+        "X-Order-Key": TOKEN,
+        "X-Order-Link": good,
+      }),
+    ]
+    for (const response of misses) {
+      expect(response.status).toBe(404)
+      expect(await response.json()).toEqual({ error: "not-found" })
+    }
+  })
+
+  it("reads nothing for a malformed link (K4)", async () => {
+    const spy = vi.spyOn(db.order, "findUnique")
+    await getWith("PCS-7KQ2M9XD", { "X-Order-Link": "sig=a&exp=1&p=view" })
+    expect(spy).not.toHaveBeenCalled()
   })
 })

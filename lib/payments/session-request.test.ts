@@ -10,6 +10,7 @@ import {
 // docs/specs/031-pay-with-xendit: S1, S2, S4–S8
 
 const TOKEN = "A".repeat(43)
+const CREDENTIAL = { kind: "token", token: TOKEN } as const
 const order = {
   id: "cord1",
   orderNumber: "PCS-7KQ2M9XD",
@@ -19,7 +20,7 @@ const order = {
 }
 const context: SessionContext = {
   siteUrl: "https://pcsilicon.example",
-  accessToken: TOKEN,
+  credential: CREDENTIAL,
   environment: "production",
   attempt: 1,
   now: new Date("2026-11-01T07:00:00Z"),
@@ -102,7 +103,12 @@ describe("sessionRequest", () => {
 describe("returnUrl", () => {
   it("ignores a trailing slash on the site URL", () => {
     expect(
-      returnUrl("https://pcsilicon.example/", "PCS-7KQ2M9XD", TOKEN, "error")
+      returnUrl(
+        "https://pcsilicon.example/",
+        "PCS-7KQ2M9XD",
+        CREDENTIAL,
+        "error"
+      )
     ).toBe(
       `https://pcsilicon.example/orders/PCS-7KQ2M9XD?key=${TOKEN}&payment=error`
     )

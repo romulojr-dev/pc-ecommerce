@@ -81,6 +81,31 @@ export function credentialShape(
   return false
 }
 
+// Any value a caller holds as "the credential": a parsed one, or a bare
+// string, which is an access token (every caller before spec 035 passed the
+// key alone)
+export function toCredential(value: unknown): ParsedCredential {
+  if (typeof value === "string") return { kind: "token", token: value }
+  if (typeof value === "object" && value !== null && "kind" in value) {
+    const { kind } = value as { kind: unknown }
+    if (kind === "token" || kind === "link") return value as OrderCredential
+    if (kind === "none") return NONE
+  }
+  return MALFORMED
+}
+
+// A signed link's parameters as a credential
+export const linkCredential = ({
+  sig,
+  exp,
+  p,
+}: LinkParams): Extract<OrderCredential, { kind: "link" }> => ({
+  kind: "link",
+  sig,
+  exp,
+  purpose: p,
+})
+
 export const linkParamsOf = (
   credential: Extract<OrderCredential, { kind: "link" }>
 ): LinkParams => ({
@@ -93,6 +118,6 @@ export const linkParamsOf = (
 // page's own address, a payment's return URL and the fake payment page.
 export function credentialQuery(credential: OrderCredential): string {
   return credential.kind === "token"
-    ? `key=${credential.token}`
+    ? `key=${encodeURIComponent(credential.token)}`
     : linkQuery(linkParamsOf(credential))
 }
