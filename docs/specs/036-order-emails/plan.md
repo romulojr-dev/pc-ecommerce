@@ -28,7 +28,7 @@ Spec 035 (#92) shipped the outbox, the sender, the transports and signed `view` 
 Commit `docs/specs/036-order-emails/{spec,plan,tasks}.md`.
 
 ### 1. Dependencies, `server-only`, render spike
-- `pnpm add @react-email/components server-only` (exact packages confirmed in the spike; `render` with `plainText` and wrap off).
+- `pnpm add react-email server-only`. (The spike found `@react-email/components` marked "no longer supported" on npm; `react-email` 6 is its replacement and exports the components, `render` and `toPlainText`.)
 - `vitest.config.ts` and `vitest.db.config.ts`: alias `server-only` to an empty stub in `test-support/` (`resolve.alias`).
 - Throwaway check, not committed: render a trivial component from `sendPending` through a page's `after()` in dev and in the production build. Fix with `serverExternalPackages` if needed (commit that config).
 - Gate: lint, typecheck and `pnpm test` green with the alias.

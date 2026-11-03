@@ -6,12 +6,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [ ] Commit spec.md, plan.md and tasks.md on `93-order-emails-placed-payment-received-cancelled`
 
 ## 1. Dependencies, `server-only`, render spike
-- [ ] `pnpm add @react-email/components server-only` (exact packages confirmed against React 19.3 and Next 16.4)
-- [ ] Alias `server-only` to an empty stub (`test-support/server-only-stub.ts`) in `vitest.config.ts` and `vitest.db.config.ts`
-- [ ] Spike: render a trivial component from `sendPending` via a page's `after()` in `pnpm dev` **and** in `pnpm build && pnpm start`
-- [ ] If the spike fails, add the packages to `serverExternalPackages` in `next.config.ts` and re-run it
-- [ ] Plain-text render with word wrap off keeps a long signed URL on one line
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `pnpm add react-email server-only` (changed from `@react-email/components`, which npm marks as no longer supported; `react-email` 6 exports the components, `render` and `toPlainText`, and accepts React 19)
+- [x] Alias `server-only` to an empty stub (`test-support/server-only-stub.ts`) in `vitest.config.ts` and `vitest.db.config.ts`
+- [x] Spike: render a trivial component in a server component and in `after()`, in `pnpm dev` **and** in `pnpm build && pnpm start`: works in both
+- [x] The spike passed, so `serverExternalPackages` is not needed (no `next.config.ts` change)
+- [x] Plain-text render keeps a long signed URL on one line (`toPlainText` defaults to `wordwrap: false`); step 3 asserts it
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass (typecheck and the dev server need `EMAIL_TRANSPORT` and `ORDER_LINK_SECRET` in the environment, i.e. in `.env.local`, as spec 035 requires)
 
 ## 2. Copy and the pure view-model
 - [ ] `lib/email/copy.ts` (`EMAIL_COPY`: "[Demo] " prefix, test-mode sentence, footer, subjects, leads, link note, pay block and status lines, cancelled reason map)

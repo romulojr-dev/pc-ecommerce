@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url"
+
 import { config } from "dotenv"
 import { defineConfig } from "vitest/config"
 
@@ -13,7 +15,15 @@ config({ path: ".env.local", quiet: true })
 const { url } = resolveTestDatabase(process.env)
 
 export default defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    // `import "server-only"` throws outside a server bundle; here it is empty
+    alias: {
+      "server-only": fileURLToPath(
+        new URL("./test-support/server-only-stub.ts", import.meta.url)
+      ),
+    },
+  },
   test: {
     environment: "node",
     include: ["**/*.db.test.ts"],
