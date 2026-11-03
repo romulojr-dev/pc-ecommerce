@@ -1,3 +1,7 @@
+import { randomBytes } from "node:crypto"
+
+import { recipientHash } from "../lib/email/recipient"
+import { signOrderLink } from "../lib/orders/signed-link"
 import { withPool } from "./stock"
 
 // Moves an order's deadline in the database the app server uses, for the one
@@ -49,5 +53,63 @@ export async function openPayments(orderNumber: string): Promise<number> {
       [orderNumber]
     )
     return Number(rows[0].count)
+  })
+}
+
+// A signed `view` link for an order, minted with the same secret the app
+// server signs with (docs/specs/035-email-foundation-signed-links), so the
+// E2E can open what an email will carry. Needs ORDER_LINK_SECRET in the
+// environment (.env.local locally, the job's variables in CI).
+export function viewLinkQuery(
+  orderNumber: string,
+  { expiresInSeconds = 90 * 86_400 }: { expiresInSeconds?: number } = {}
+): string {
+  const secret = process.env.ORDER_LINK_SECRET
+  if (!secret) throw new Error("ORDER_LINK_SECRET is not set.")
+  const exp = Math.floor(Date.now() / 1000) + expiresInSeconds
+  const { sig, p } = signOrderLink(secret, orderNumber, "view", exp)
+  return `sig=${sig}&exp=${exp}&p=${p}`
+}
+
+// Writes an outbox row for an order, as a trigger's transaction will (#93):
+// the recipient hash is of the order's own address
+export async function enqueueEmailFor(
+  orderNumber: string,
+  type: "ORDER_PLACED" | "PAYMENT_RECEIVED" | "ORDER_CANCELLED" | "COD_CONFIRM"
+) {
+  await withPool(async (pool) => {
+    const { rows } = await pool.query<{ id: string; guestEmail: string }>(
+      'SELECT "id", "guestEmail" FROM "Order" WHERE "orderNumber" = $1',
+      [orderNumber]
+    )
+    if (rows.length !== 1) throw new Error(`No order ${orderNumber}.`)
+    await pool.query(
+      `INSERT INTO "EmailOutbox" ("id", "orderId", "type", "recipientHash")
+       VALUES ($1, $2, $3::"EmailType", $4)`,
+      [
+        `e2e${randomBytes(10).toString("hex")}`,
+        rows[0].id,
+        type,
+        recipientHash(rows[0].guestEmail),
+      ]
+    )
+  })
+}
+
+export async function outboxFor(orderNumber: string) {
+  return withPool(async (pool) => {
+    const { rows } = await pool.query<{
+      type: string
+      status: string
+      attempts: number
+      lastErrorCode: string | null
+    }>(
+      `SELECT e."type"::text AS "type", e."status"::text AS "status",
+         e."attempts", e."lastErrorCode"
+       FROM "EmailOutbox" e JOIN "Order" o ON o."id" = e."orderId"
+       WHERE o."orderNumber" = $1 ORDER BY e."createdAt"`,
+      [orderNumber]
+    )
+    return rows
   })
 }
