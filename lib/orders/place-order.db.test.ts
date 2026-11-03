@@ -4,6 +4,7 @@ import { warningKey } from "@/lib/build-state/warnings"
 import type { BuildItem } from "@/lib/builder"
 import { addBuildToCart } from "@/lib/cart/build"
 import { newCartId } from "@/lib/cart/id"
+import { recipientHash } from "@/lib/email/recipient"
 import { reviewCheckout } from "@/lib/checkout/review-checkout"
 import { shippingSeed } from "@/prisma/seed/data/shipping"
 import { writeSeed } from "@/prisma/seed/write"
@@ -145,6 +146,7 @@ const everything = async () => ({
     select: { id: true, stock: true, effectivePrice: true },
   }),
   builds: await db.build.count(),
+  emails: await db.emailOutbox.count(),
 })
 
 describe("a placed order", () => {
@@ -903,7 +905,7 @@ describe("failures roll everything back", () => {
     }
   }
 
-  it.each(["stock", "order", "items", "movements", "cart"] as const)(
+  it.each(["stock", "order", "items", "email", "movements", "cart"] as const)(
     "P24, P35: a failure after the %s step leaves nothing behind",
     (step) => failAt(step)
   )
@@ -944,6 +946,61 @@ describe("failures roll everything back", () => {
       spy.mockRestore()
     }
     expect(await everything()).toEqual(before)
+  })
+})
+
+// docs/specs/036-order-emails: Q1, Q2 (Q3 is the "email" step of the
+// rollback table above). The email itself is sent after the commit; here only
+// the row it will be sent from.
+describe("the order's email", () => {
+  it("Q1: one ORDER_PLACED row is written with the order", async () => {
+    const { id } = await setup()
+    const cart = await newCart()
+    await single(cart, id(seed.ryzen5_7600), 2)
+
+    const result = await placed(cart, await prepare(cart))
+
+    const order = await db.order.findUniqueOrThrow({
+      where: { orderNumber: result.orderNumber },
+    })
+    const rows = await db.emailOutbox.findMany()
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
+      orderId: order.id,
+      type: "ORDER_PLACED",
+      status: "PENDING",
+      attempts: 0,
+      recipientHash: recipientHash("ana@example.com"),
+    })
+  })
+
+  it("Q2: a replay of the same request writes no second row", async () => {
+    const { id } = await setup()
+    const cart = await newCart()
+    await single(cart, id(seed.ryzen5_7600), 1)
+    const request = await prepare(cart)
+
+    await placed(cart, request)
+    await placed(cart, request)
+
+    expect(await db.order.count()).toBe(1)
+    expect(await db.emailOutbox.count()).toBe(1)
+  })
+
+  it("Q2: a refused placement writes no row", async () => {
+    const { id } = await setup({
+      [seed.ryzen5_7600.id]: { price: RYZEN_PRICE, stock: 1 },
+    })
+    const cart = await newCart()
+    await single(cart, id(seed.ryzen5_7600), 1)
+    const request = await prepare(cart)
+    await db.product.update({
+      where: { id: id(seed.ryzen5_7600) },
+      data: { stock: 0 },
+    })
+
+    expect(await placeOrder(cart, request)).toMatchObject({ ok: false })
+    expect(await db.emailOutbox.count()).toBe(0)
   })
 })
 

@@ -254,9 +254,22 @@ async function deliver(
 
   let content
   try {
-    content = template({
+    // A pickup order shows the store's address and hours as they are now
+    // (docs/specs/036-order-emails, Behavior 2)
+    const settings =
+      order.fulfillment === "PICKUP"
+        ? await db.storeSettings.findUnique({
+            where: { id: 1 },
+            select: { storeAddress: true, storeHours: true },
+          })
+        : null
+    content = await template({
       order,
       siteUrl,
+      now,
+      store: settings
+        ? { address: settings.storeAddress, hours: settings.storeHours }
+        : null,
       viewUrl: orderLinkUrl(
         siteUrl,
         order.orderNumber,

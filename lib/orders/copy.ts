@@ -14,7 +14,7 @@ export const ORDER_COPY = {
   cancelledExpired:
     "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts.",
   saveLink:
-    "Save this link: it's the only way to see your order until order emails arrive.",
+    "Save this link to see your order. We're also emailing you a link to it; if it doesn't arrive, this one still works.",
   linkLabel: "Your order link",
   copy: "Copy link",
   copied: "Link copied",

@@ -148,8 +148,9 @@ describe("the run", () => {
 })
 
 // docs/specs/035-email-foundation-signed-links, Behavior 3: the cron also
-// sends the emails that are due (none has a template yet, so a row fails
-// final as no-template; that it was claimed and settled is the point)
+// sends the emails that are due. A COD_CONFIRM row has no template until #95,
+// so it fails final as no-template; that it was claimed and settled is the
+// point (docs/specs/036-order-emails registered the other three).
 describe("the emails", () => {
   it("sends due outbox rows after the release and never fails the run", async () => {
     const order = await db.order.create({
@@ -158,7 +159,7 @@ describe("the emails", () => {
     const row = await db.emailOutbox.create({
       data: {
         orderId: order.id,
-        type: "ORDER_PLACED",
+        type: "COD_CONFIRM",
         recipientHash: "a".repeat(64),
         createdAt: new Date(NOW.getTime() - 60_000),
       },

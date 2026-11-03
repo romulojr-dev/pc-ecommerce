@@ -113,3 +113,30 @@ export async function outboxFor(orderNumber: string) {
     return rows
   })
 }
+
+// The emails the fake transport recorded for an address, oldest first
+// (docs/specs/036-order-emails, X1–X4). Test addresses are unique per test:
+// the sender's cap is five emails per recipient per day (spec 035).
+export async function fakeEmailsFor(address: string) {
+  return withPool(async (pool) => {
+    const { rows } = await pool.query<{
+      subject: string
+      html: string
+      text: string
+    }>(
+      `SELECT "subject", "html", "text" FROM "FakeEmail"
+       WHERE "to" = $1 ORDER BY "createdAt", "id"`,
+      [address]
+    )
+    return rows
+  })
+}
+
+// The path and query of the first order link in an email's text, for
+// `page.goto`: the email's host is the site URL, the browser's is the server
+// under test
+export function orderLinkPath(text: string): string {
+  const match = /https?:\/\/[^\s/]+(\/orders\/\S+)/.exec(text)
+  if (!match) throw new Error("No order link in the email.")
+  return match[1]
+}

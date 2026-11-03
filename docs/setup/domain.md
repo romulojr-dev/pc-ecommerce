@@ -89,8 +89,15 @@ apex's own mail records (if any) are untouched. The sender is
   `EMAIL_TRANSPORT=fake`, so they never send real email, and each environment
   has its own `ORDER_LINK_SECRET`. Redeploy.
 - [ ] Place one test order on Production with your own address and check that
-  "Order placed" arrives, is not in spam, and its links open the order on
-  `pcsilicon.tech`.
+  "[Demo] Order … placed" arrives, is not in spam, and its **Pay now** and
+  **View your order** links open the order on `pcsilicon.tech`. Pay it with a
+  Xendit test card and check "[Demo] Payment received…"; place another and let
+  it expire (or move its deadline) to check "[Demo] Order … was cancelled"
+  ([spec 036](../specs/036-order-emails/spec.md)).
+- [ ] Vercel → Settings → Deployment Protection: confirm **Vercel Authentication
+  is on for Preview** deployments. `/dev/emails` on a Preview lists the emails
+  the fake transport recorded, and their links open orders in the preview
+  database; protection is what keeps it private (it is a 404 in Production).
 
 Changing `ORDER_LINK_SECRET` revokes every signed order link already emailed;
 the shopper's original access-token link keeps working. It is the only way to

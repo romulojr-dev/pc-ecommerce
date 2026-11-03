@@ -4,6 +4,8 @@ import { lockCart, touch } from "@/lib/cart/tx"
 import { reviewDigest } from "@/lib/checkout/digest"
 import { computeReview } from "@/lib/checkout/review-checkout"
 import { db } from "@/lib/db"
+import { enqueueEmail } from "@/lib/email/outbox"
+import { scheduleEmailSend } from "@/lib/email/schedule"
 import { PRODUCTS_TAG } from "@/lib/home"
 import type { PaymentGateway } from "@/lib/payments/gateway-types"
 import { PSGC_VERSION } from "@/lib/psgc/version"
@@ -46,6 +48,7 @@ export type PlaceStep =
   | "stock"
   | "order"
   | "items"
+  | "email"
   | "movements"
   | "cart"
 
@@ -180,7 +183,11 @@ export async function placeOrder(
         if (!tokenMatches(accessToken, earlier.accessTokenHash)) {
           throw refuse("duplicate")
         }
-        return { orderNumber: earlier.orderNumber, replay: true }
+        return {
+          orderNumber: earlier.orderNumber,
+          replay: true,
+          emailId: null,
+        }
       }
       await step("replay")
 
@@ -311,6 +318,13 @@ export async function placeOrder(
       })
       await step("items")
 
+      // The "Order placed" email is enqueued here, in the order's own
+      // transaction: it commits with the order or not at all, and a replay
+      // (which returned above) writes nothing. It is sent after the commit
+      // (docs/specs/036-order-emails, Behavior 1).
+      const email = await enqueueEmail(tx, order.id, "ORDER_PLACED")
+      await step("email")
+
       // 6. One movement per product, with the quantity the stock changed by
       await tx.stockMovement.createMany({
         data: ids.map((id) => ({
@@ -327,7 +341,11 @@ export async function placeOrder(
       await touch(tx, cartId)
       await step("cart")
 
-      return { orderNumber: order.orderNumber, replay: false }
+      return {
+        orderNumber: order.orderNumber,
+        replay: false,
+        emailId: email?.id ?? null,
+      }
     }, TRANSACTION)
     finishRelease(pending, true)
 
@@ -340,6 +358,8 @@ export async function placeOrder(
         logSafeFailure("Revalidating products after an order", error)
       }
     }
+    // Never throws: a send that doesn't happen now is picked up by the sweeps
+    if (placed.emailId) scheduleEmailSend(placed.emailId)
     return { ok: true, orderNumber: placed.orderNumber, accessToken }
   } catch (error) {
     finishRelease(pending, false)

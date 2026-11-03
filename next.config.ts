@@ -35,6 +35,15 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "no-referrer" },
         ],
       },
+      // The recorded test emails carry signed order links
+      // (docs/specs/036-order-emails, Behavior 15)
+      {
+        source: "/dev/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
     ]
   },
 }

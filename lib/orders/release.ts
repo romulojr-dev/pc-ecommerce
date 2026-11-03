@@ -3,6 +3,8 @@ import { after } from "next/server"
 
 import { db } from "@/lib/db"
 import { EMAIL_SWEEP_LIMIT } from "@/lib/email/due"
+import { enqueueEmail } from "@/lib/email/outbox"
+import { scheduleEmailSend } from "@/lib/email/schedule"
 import { sendPending } from "@/lib/email/send"
 import { PRODUCTS_TAG } from "@/lib/home"
 import { gateway as defaultGateway } from "@/lib/payments/gateway"
@@ -51,6 +53,9 @@ export type ReleaseResult = {
   notLocked: string[]
   // Released with no reservation to undo (none exist today)
   noReservation: string[]
+  // The "Order cancelled" outbox rows this transaction wrote, one per released
+  // order; sent after the commit (docs/specs/036-order-emails, Behavior 6)
+  emails: string[]
 }
 
 const NONE: CheckResult = { cleared: [], skipped: [] }
@@ -206,7 +211,7 @@ export async function releaseExpiredOrders(
   { now, orderIds }: { now: Date; orderIds: string[] }
 ): Promise<ReleaseResult> {
   if (orderIds.length === 0) {
-    return { released: [], notLocked: [], noReservation: [] }
+    return { released: [], notLocked: [], noReservation: [], emails: [] }
   }
   const locked = await tx.$queryRaw<DueOrder[]>`
     SELECT o."id", o."orderNumber"
@@ -221,7 +226,9 @@ export async function releaseExpiredOrders(
     FOR UPDATE OF o SKIP LOCKED`
   const ids = locked.map(({ id }) => id)
   const notLocked = orderIds.filter((id) => !ids.includes(id))
-  if (ids.length === 0) return { released: [], notLocked, noReservation: [] }
+  if (ids.length === 0) {
+    return { released: [], notLocked, noReservation: [], emails: [] }
+  }
 
   await tx.order.updateMany({
     where: { id: { in: ids } },
@@ -268,11 +275,21 @@ export async function releaseExpiredOrders(
     })
   }
 
+  // One "Order cancelled" email per order this transaction cancelled, written
+  // with the cancellation: a rolled-back release leaves none, and an order a
+  // webhook or another sweep got to first isn't in `locked`
+  const emails: string[] = []
+  for (const id of ids) {
+    const email = await enqueueEmail(tx, id, "ORDER_CANCELLED")
+    if (email) emails.push(email.id)
+  }
+
   const withReservation = new Set(reserved.map(({ orderId }) => orderId))
   return {
     released: locked,
     notLocked,
     noReservation: ids.filter((id) => !withReservation.has(id)),
+    emails,
   }
 }
 
@@ -291,6 +308,9 @@ export function afterRelease(
       logSafeFailure("Revalidating products after a release", error)
     }
   }
+  // The emails of the orders just cancelled; `release` is null after a
+  // rollback, so a rolled-back purchase schedules nothing. Never throws.
+  for (const id of release?.emails ?? []) scheduleEmailSend(id)
   for (const order of release?.released ?? []) {
     logReleaseEvent({
       outcome: "released",
