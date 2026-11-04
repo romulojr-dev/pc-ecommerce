@@ -128,16 +128,31 @@ describe("emailView: ORDER_PLACED", () => {
     ).toEqual(["Custom PC build 1", "Thermal paste", "Custom PC build 2"])
   })
 
-  it("T4: a discount shows as its own row", () => {
-    const order = p1({ discount: 50_000, total: 2_261_000 })
+  it("T4/O2: a discount shows as its own row, named for its voucher", () => {
+    const order = p1({
+      discount: 50_000,
+      total: 2_261_000,
+      voucherCode: "SAVE500",
+    })
     const labels = emailView("ORDER_PLACED", input(order)).totals!
 
     expect(labels.map((row) => [row.label, row.value])).toEqual([
       ["Subtotal", "₱22,990.00"],
       ["Shipping", "₱120.00"],
-      ["Discount", "−₱500.00"],
+      ["Discount (SAVE500)", "−₱500.00"],
       ["Total", "₱22,610.00"],
     ])
+  })
+
+  it("O2/O3: no Discount row without a discount, even with a voucher", () => {
+    for (const order of [p1(), p1({ voucherCode: "SAVE500" })]) {
+      const rows = emailView("ORDER_PLACED", input(order)).totals!
+      expect(rows.map((row) => row.label)).toEqual([
+        "Subtotal",
+        "Shipping",
+        "Total",
+      ])
+    }
   })
 
   it("T5: an email built after the deadline has no pay block", () => {

@@ -41,6 +41,9 @@ export type OrderPageData = {
   subtotal: number
   shippingFee: number
   discount: number
+  // The voucher the discount came from, as it was (docs/specs/037-vouchers-at-
+  // checkout, Behavior 19)
+  voucherCode: string | null
   total: number
   // docs/specs/032-payment-webhooks: set when the gateway confirmed a payment
   paidAt: Date | null

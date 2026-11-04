@@ -9,6 +9,7 @@ import { insertParts } from "@/test-support/build-fixtures"
 import { db, resetCatalog } from "@/test-support/db"
 import { seed } from "@/test-support/seed-parts"
 
+import { getOrderForPage } from "./get-order"
 import { type PlaceStep, placeOrder } from "./place-order"
 
 // docs/specs/037-vouchers-at-checkout: P1–P16 against the test database. The
@@ -157,6 +158,24 @@ describe("an order with a voucher", () => {
       (await db.orderItem.findFirstOrThrow({ where: { orderId: order.id } }))
         .priceSnapshot
     ).toBe(1_149_500)
+  })
+
+  it("O1: the order page of the placed order names the voucher", async () => {
+    const p = await setup()
+    const cart = await cartOf(p.ryzen, 2)
+    const request = await prepare(cart, delivery("WELCOME10"))
+
+    const result = await placeOrder(cart, request)
+    if (!result.ok) throw new Error("expected ok")
+
+    const page = await getOrderForPage(result.orderNumber, result.accessToken)
+    expect(page).toMatchObject({
+      subtotal: 2_299_000,
+      shippingFee: 12_000,
+      discount: 229_900,
+      voucherCode: "WELCOME10",
+      total: 2_081_100,
+    })
   })
 
   it("P2: the same request again returns the order and counts nothing more", async () => {

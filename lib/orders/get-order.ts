@@ -88,6 +88,7 @@ export async function getOrderForPage(
     subtotal: order.subtotal,
     shippingFee: order.shippingFee,
     discount: order.discount,
+    voucherCode: order.voucherCode,
     total: order.total,
     paidAt: order.paidAt,
     paymentMethod: order.paymentMethod,
