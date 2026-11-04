@@ -3,6 +3,11 @@ import Link from "next/link"
 import { CartGroup } from "@/components/cart/cart-group"
 import { CartLine } from "@/components/cart/cart-line"
 import { ProblemsBox } from "@/components/checkout/problems-box"
+import {
+  idleVoucherBox,
+  VoucherBox,
+  type VoucherBoxState,
+} from "@/components/checkout/voucher-box"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { subtotalLabel } from "@/lib/cart/copy"
 import type { ReviewActionResult } from "@/app/(store)/checkout/actions"
@@ -14,6 +19,7 @@ import {
   thresholdNote,
 } from "@/lib/checkout/copy"
 import { formatPeso } from "@/lib/format"
+import { discountLabel } from "@/lib/orders/copy"
 import { cn, focusRing } from "@/lib/utils"
 
 export type ReviewOk = Extract<ReviewActionResult, { ok: true }>
@@ -44,11 +50,14 @@ export function ReviewView({
   placing = false,
   onPlace = noop,
   onCheckAgain,
+  voucher = idleVoucherBox,
 }: {
   result: ReviewOk
   placing?: boolean
   onPlace?: () => void
   onCheckAgain: () => void
+  // The voucher box's text, requests and message (spec 037); ReviewStep owns it
+  voucher?: VoucherBoxState
 }) {
   const { review, contact, address, store } = result
   const warned = new Set(review.warnings.map((w) => w.buildId))
@@ -150,7 +159,14 @@ export function ReviewView({
           className="flex flex-col gap-3 rounded-lg border p-5 text-sm lg:sticky lg:top-6"
         >
           <h2 className="sr-only">Order summary</h2>
-          <dl className="flex flex-col gap-2">
+          <VoucherBox
+            applied={
+              review.voucher.kind === "applied" ? review.voucher.code : null
+            }
+            disabled={placing}
+            state={voucher}
+          />
+          <dl className="flex flex-col gap-2 border-t pt-3">
             <div className="flex justify-between gap-4">
               <dt>{subtotalLabel(review.view.count)}</dt>
               <dd className="tabular-nums">{formatPeso(review.subtotal)}</dd>
@@ -159,6 +175,12 @@ export function ReviewView({
               <dt>Shipping</dt>
               <dd className="tabular-nums">{shippingValue(shipping)}</dd>
             </div>
+            {review.voucher.kind === "applied" && review.discount > 0 && (
+              <div className="flex justify-between gap-4">
+                <dt>{discountLabel(review.voucher.code)}</dt>
+                <dd className="tabular-nums">−{formatPeso(review.discount)}</dd>
+              </div>
+            )}
             {review.total !== null && (
               <div className="flex justify-between gap-4 border-t pt-2 text-base font-semibold">
                 <dt>Total</dt>
@@ -175,7 +197,12 @@ export function ReviewView({
             <Button
               type="button"
               size="lg"
-              disabled={!result.ordersEnabled || !review.canPlace || placing}
+              disabled={
+                !result.ordersEnabled ||
+                !review.canPlace ||
+                placing ||
+                voucher.busy !== null
+              }
               aria-busy={placing}
               aria-describedby={placeNote ? PLACE_NOTE_ID : undefined}
               onClick={onPlace}
@@ -191,7 +218,7 @@ export function ReviewView({
             <Button
               type="button"
               variant="outline"
-              disabled={placing}
+              disabled={placing || voucher.busy !== null}
               onClick={onCheckAgain}
             >
               {STEP_COPY.checkAgain}

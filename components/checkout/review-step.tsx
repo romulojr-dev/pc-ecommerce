@@ -14,10 +14,19 @@ import {
   type ReviewOk,
   ReviewView,
 } from "@/components/checkout/review-view"
+import {
+  VOUCHER_INPUT_ID,
+  VOUCHER_REMOVE_ID,
+} from "@/components/checkout/voucher-box"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { STEP_COPY } from "@/lib/checkout/copy"
+import {
+  STEP_COPY,
+  VOUCHER_COPY,
+  voucherRefusalText,
+} from "@/lib/checkout/copy"
 import { type CheckoutDraft, draftPayload } from "@/lib/checkout/draft"
+import { checkoutDraftStore } from "@/lib/checkout/draft-store"
 import { cn, focusRing } from "@/lib/utils"
 
 type Phase =
@@ -25,6 +34,11 @@ type Phase =
   | { kind: "error" }
   // `source` is what asked: the step opening, or the Check again button
   | { kind: "ready"; result: ReviewOk; source: "arrival" | "again" }
+
+// An Apply or a Remove: the review is asked for again with this code (an empty
+// one for Remove), and the answer settles the box (docs/specs/037-vouchers-at-
+// checkout, Behavior 4–6)
+type VoucherChange = { action: "apply" | "remove"; code: string }
 
 type Props = {
   draft: CheckoutDraft
@@ -60,22 +74,71 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
   // Only the latest request may answer
   const latest = useRef(0)
 
+  // The voucher box: what is typed, the request in flight, the message under
+  // the field, and where focus goes once the answer is on screen
+  const [voucherText, setVoucherText] = useState("")
+  const [voucherBusy, setVoucherBusy] = useState<"apply" | "remove" | null>(
+    null
+  )
+  const [voucherMessage, setVoucherMessage] = useState<string | null>(null)
+  const focusNext = useRef<"input" | "remove" | null>(null)
+
+  // What the review made of the code it was sent. Only an applied code is
+  // kept in the saved details; a refused one stays in the field with its
+  // reason, so the shopper can fix or clear it.
+  function settleVoucher(
+    outcome: ReviewOk["review"]["voucher"],
+    sent: string,
+    action: VoucherChange["action"] | undefined
+  ) {
+    const draftStore = checkoutDraftStore.getState()
+    if (outcome.kind === "applied") {
+      draftStore.update({ voucherCode: outcome.code })
+      setVoucherText("")
+      setVoucherMessage(null)
+      if (action === "apply") focusNext.current = "remove"
+    } else if (outcome.kind === "refused") {
+      draftStore.update({ voucherCode: "" })
+      setVoucherText(sent)
+      setVoucherMessage(voucherRefusalText(outcome.refusal))
+      if (action === "apply") focusNext.current = "input"
+    } else {
+      draftStore.update({ voucherCode: "" })
+      if (action === "remove") {
+        setVoucherText("")
+        setVoucherMessage(null)
+        focusNext.current = "input"
+      }
+    }
+  }
+
   // Sends the details and shows the answer; the caller has already put the
-  // step in its loading state
-  async function request(source: "arrival" | "again") {
+  // step in its loading state. A voucher change keeps the review on screen
+  // and answers in the box.
+  async function request(source: "arrival" | "again", change?: VoucherChange) {
     const mine = ++latest.current
+    const sent = change ? change.code : draft.voucherCode
     let result: ReviewActionResult | null = null
     try {
-      result = await reviewCheckoutAction(draftPayload(draft))
+      result = await reviewCheckoutAction(
+        draftPayload({ ...draft, voucherCode: sent })
+      )
     } catch {
       // A network failure: the same "Try again" as a server error
     }
     if (mine !== latest.current) return
     setChecking(false)
+    setVoucherBusy(null)
     if (!result || (!result.ok && result.reason === "error")) {
-      setPhase({ kind: "error" })
+      if (change) {
+        setVoucherMessage(VOUCHER_COPY.failed)
+        focusNext.current = change.action === "apply" ? "input" : "remove"
+      } else {
+        setPhase({ kind: "error" })
+      }
     } else if (result.ok) {
       setPhase({ kind: "ready", result, source })
+      settleVoucher(result.review.voucher, sent, change?.action)
     } else if (result.reason === "invalid") {
       onInvalid(result.fields)
     } else {
@@ -94,6 +157,28 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     void request(source)
   }
 
+  function changeVoucher(change: VoucherChange) {
+    setVoucherMessage(null)
+    setVoucherBusy(change.action)
+    void request("arrival", change)
+  }
+
+  function applyVoucher() {
+    if (phase.kind !== "ready" || voucherBusy || checking || placing) return
+    const typed = voucherText.trim()
+    if (!typed) {
+      setVoucherMessage(VOUCHER_COPY.empty)
+      document.getElementById(VOUCHER_INPUT_ID)?.focus()
+      return
+    }
+    changeVoucher({ action: "apply", code: typed })
+  }
+
+  function removeVoucher() {
+    if (phase.kind !== "ready" || voucherBusy || checking || placing) return
+    changeVoucher({ action: "remove", code: "" })
+  }
+
   // Reloads the review under the notice, keeping the old one on screen until
   // the new one arrives
   function reload() {
@@ -107,12 +192,15 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
   async function place() {
     if (phase.kind !== "ready" || placing || checking) return
     const { digest, idempotencyKey, accessToken } = phase.result
+    // The code goes only if this review applied it (spec 037, Behavior 7)
+    const applied = phase.result.review.voucher
+    const voucherCode = applied.kind === "applied" ? applied.code : ""
     setPlacing(true)
     setNotice(null)
     let answer: Awaited<ReturnType<typeof placeOrderAction>> | null = null
     try {
       answer = await placeOrderAction({
-        details: draftPayload(draft),
+        details: draftPayload({ ...draft, voucherCode }),
         digest,
         idempotencyKey,
         accessToken,
@@ -168,18 +256,30 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     }
   }, [phase])
 
+  // After a voucher answer is on screen, focus goes to the control it names
+  useEffect(() => {
+    const target = focusNext.current
+    if (!target || voucherBusy) return
+    focusNext.current = null
+    document
+      .getElementById(target === "input" ? VOUCHER_INPUT_ID : VOUCHER_REMOVE_ID)
+      ?.focus()
+  })
+
   const clean =
     phase.kind === "ready" && phase.result.review.problems.length === 0
   // One polite live region (Behavior 34), not role="status"
   const live = placing
     ? STEP_COPY.placing
-    : phase.kind === "loading" || checking
-      ? STEP_COPY.loading
-      : phase.kind === "error"
-        ? STEP_COPY.loadFailed
-        : clean && phase.source === "again"
-          ? STEP_COPY.checkedClean
-          : ""
+    : voucherBusy
+      ? VOUCHER_COPY.checking
+      : phase.kind === "loading" || checking
+        ? STEP_COPY.loading
+        : phase.kind === "error"
+          ? STEP_COPY.loadFailed
+          : clean && phase.source === "again"
+            ? STEP_COPY.checkedClean
+            : ""
 
   return (
     <div className="flex flex-col gap-4" aria-busy={phase.kind === "loading"}>
@@ -208,6 +308,17 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
           placing={placing}
           onPlace={() => void place()}
           onCheckAgain={() => run("again")}
+          voucher={{
+            text: voucherText,
+            onText: (text) => {
+              setVoucherText(text)
+              setVoucherMessage(null)
+            },
+            busy: voucherBusy,
+            message: voucherMessage,
+            onApply: applyVoucher,
+            onRemove: removeVoucher,
+          }}
         />
       )}
       <div>
