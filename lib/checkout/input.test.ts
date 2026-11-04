@@ -203,4 +203,35 @@ describe("checkoutInputSchema", () => {
       ).toBe(false)
     })
   })
+
+  // docs/specs/038-cash-on-delivery: U15
+  describe("the payment choice", () => {
+    it("is online when it is missing, on both shapes", () => {
+      expect(checkoutInputSchema.parse(delivery()).payment).toBe("online")
+      expect(
+        checkoutInputSchema.parse({ method: "pickup", contact }).payment
+      ).toBe("online")
+    })
+
+    it("accepts cod and online", () => {
+      expect(
+        checkoutInputSchema.parse({ ...delivery(), payment: "cod" }).payment
+      ).toBe("cod")
+      expect(
+        checkoutInputSchema.parse({ method: "pickup", contact, payment: "cod" })
+          .payment
+      ).toBe("cod")
+      expect(
+        checkoutInputSchema.parse({ ...delivery(), payment: "online" }).payment
+      ).toBe("online")
+    })
+
+    it.each(["cash", "COD", "", 1, null])(
+      "is malformed for %j, with a message on payment",
+      (payment) => {
+        const errors = errorsOf({ ...delivery(), payment })
+        expect(errors.payment).toBe(CHECKOUT_COPY.payment)
+      }
+    )
+  })
 })

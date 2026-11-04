@@ -28,6 +28,7 @@ function review(
     total?: number | null
     voucher?: CheckoutReview["voucher"]
     discount?: number
+    payment?: "online" | "cod"
     warnings?: number
     flag?: boolean
   } = {}
@@ -40,6 +41,7 @@ function review(
     total = 2_311_000,
     voucher = { kind: "none" },
     discount = 0,
+    payment = "online",
   } = options
   const entries: unknown[] = singles.map((s) => ({
     kind: "single",
@@ -71,6 +73,7 @@ function review(
     total,
     voucher,
     discount,
+    payment: { requested: payment, chosen: payment },
     warnings: Array.from({ length: options.warnings ?? 0 }),
   } as unknown as CheckoutReview
 }
@@ -195,5 +198,18 @@ describe("reviewDigest", () => {
       parts: [{ slot: "cpu", id: "ryzen", quantity: 1, effectivePrice: 100 }],
     })
     expect(reviewDigest(single)).not.toBe(reviewDigest(inBuild))
+  })
+
+  // docs/specs/038-cash-on-delivery: U16
+  it("U16: differs between paying online and paying cash", () => {
+    expect(reviewDigest(review({ payment: "cod" }))).not.toBe(
+      reviewDigest(review({ payment: "online" }))
+    )
+  })
+
+  it("U16: is the same for a cash request that fell back to online", () => {
+    const fellBack = review()
+    ;(fellBack.payment as { requested: string }).requested = "cod"
+    expect(reviewDigest(fellBack)).toBe(reviewDigest(review()))
   })
 })

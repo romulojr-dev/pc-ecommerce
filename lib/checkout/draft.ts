@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { checkoutInputSchema } from "./input"
+import { checkoutInputSchema, PAYMENT_CHOICES } from "./input"
 
 // What the shopper has typed in step 1, kept in the tab's sessionStorage
 // (docs/specs/029-checkout-steps, Behavior 8, D4). Loose on purpose: a half
@@ -25,6 +25,9 @@ export const draftSchema = z.object({
   // The applied voucher code (docs/specs/037-vouchers-at-checkout, D6); only an
   // applied code is kept
   voucherCode: z.string().default(""),
+  // The payment choice (docs/specs/038-cash-on-delivery, Behavior 7); anything
+  // else stored reads as online
+  payment: z.enum(PAYMENT_CHOICES).catch("online").default("online"),
 })
 
 export type CheckoutDraft = z.output<typeof draftSchema>
@@ -49,13 +52,16 @@ export function draftPayload(draft: CheckoutDraft) {
   const voucher = draft.voucherCode.trim()
     ? { voucherCode: draft.voucherCode }
     : {}
+  // Sent only when cash is chosen; online is what a missing value means
+  const payment = draft.payment === "cod" ? { payment: "cod" as const } : {}
   if (draft.method === "pickup") {
-    return { method: "pickup" as const, contact, ...voucher }
+    return { method: "pickup" as const, contact, ...voucher, ...payment }
   }
   return {
     method: "delivery" as const,
     contact,
     ...voucher,
+    ...payment,
     address: {
       regionCode: draft.regionCode,
       provinceCode: draft.provinceCode,

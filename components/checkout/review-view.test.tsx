@@ -42,6 +42,12 @@ function result(
       shipping: { ok: true, fee: 0, basis: "pickup" },
       discount: options.discount ?? 0,
       voucher: options.voucher ?? { kind: "none" },
+      payment: {
+        requested: "online",
+        chosen: "online",
+        cod: { offered: true },
+        limit: 5_000_000,
+      },
       total: 2_299_000 - (options.discount ?? 0),
       threshold: options.threshold ?? null,
       problems,

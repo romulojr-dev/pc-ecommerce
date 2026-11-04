@@ -11,6 +11,8 @@ import {
   type VoucherRefusal,
 } from "@/lib/vouchers"
 
+import { type CodEligibility, codEligibility } from "./cod-eligibility"
+import type { PaymentChoice } from "./input"
 import { cartProblems, type ReviewProblem } from "./problems"
 
 // The review of step 2 (docs/specs/029-checkout-steps, Behavior 19–27). Pure:
@@ -47,6 +49,18 @@ export type VoucherOutcome =
   | { kind: "applied"; code: string; discount: number }
   | { kind: "refused"; refusal: VoucherRefusal }
 
+// How the order will be paid (docs/specs/038-cash-on-delivery, Behavior 4–7):
+// what was asked for, what the review settled on, and whether cash is offered.
+// Cash is chosen only when asked for and offered; otherwise the order is
+// online and the shopper reads why (`cod`).
+export type ReviewPayment = {
+  requested: PaymentChoice
+  chosen: PaymentChoice
+  cod: CodEligibility
+  // The store's cash limit in centavos (null: none), for the reason text
+  limit: number | null
+}
+
 export type CheckoutReview = {
   method: "delivery" | "pickup"
   // The cart's entries as /cart shows them, read-only
@@ -59,6 +73,7 @@ export type CheckoutReview = {
   // Centavos off the subtotal; 0 with no voucher or a refused one
   discount: number
   voucher: VoucherOutcome
+  payment: ReviewPayment
   // subtotal - discount + shipping; null when delivery isn't available
   total: number | null
   // The free-shipping threshold, when a delivery order hasn't reached it
@@ -145,7 +160,8 @@ export function buildReview(
   weights: ReadonlyMap<string, number>,
   destination: ReviewDestination,
   config: ShippingConfig,
-  request: VoucherRequest = { requested: false }
+  request: VoucherRequest = { requested: false },
+  payment: PaymentChoice = "online"
 ): CheckoutReview {
   const subtotal = view.subtotal
   const weightGrams = orderWeightGrams(weightLines(view, weights))
@@ -162,6 +178,16 @@ export function buildReview(
 
   const voucher = voucherOutcome(request, subtotal, shipping)
   const discount = voucher.kind === "applied" ? voucher.discount : 0
+  const total = shipping.ok ? subtotal - discount + shipping.fee : null
+
+  // Cash is judged on the total the courier collects: after the discount, with
+  // shipping (spec 038 Behavior 4)
+  const cod = codEligibility(
+    destination.method === "delivery"
+      ? { method: "delivery", zone: destination.zone, total }
+      : { method: "pickup", total },
+    config.settings
+  )
 
   const problems = cartProblems(view)
   if (!shipping.ok && destination.method === "delivery") {
@@ -185,7 +211,13 @@ export function buildReview(
     shipping,
     discount,
     voucher,
-    total: shipping.ok ? subtotal - discount + shipping.fee : null,
+    payment: {
+      requested: payment,
+      chosen: payment === "cod" && cod.offered ? "cod" : "online",
+      cod,
+      limit: config.settings.codMaxTotal,
+    },
+    total,
     threshold:
       destination.method === "delivery" &&
       shipping.ok &&

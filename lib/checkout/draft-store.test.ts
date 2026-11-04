@@ -80,6 +80,28 @@ describe("the draft", () => {
     expect(emptyDraft().voucherCode).toBe("")
   })
 
+  // docs/specs/038-cash-on-delivery, Behavior 7
+  it("sends the payment choice only when it is cash", () => {
+    expect(draftPayload(filled)).not.toHaveProperty("payment")
+    expect(draftPayload({ ...filled, payment: "cod" })).toMatchObject({
+      payment: "cod",
+    })
+    expect(
+      draftPayload({ ...filled, method: "pickup", payment: "cod" })
+    ).toMatchObject({ method: "pickup", payment: "cod" })
+  })
+
+  it("reads a draft saved before cash on delivery as paying online", () => {
+    expect(parseDraft({ email: "a@b.co" }).payment).toBe("online")
+    expect(emptyDraft().payment).toBe("online")
+  })
+
+  it("reads a stored value that isn't a choice as online, keeping the rest", () => {
+    const draft = parseDraft({ email: "a@b.co", payment: "cash" })
+    expect(draft.payment).toBe("online")
+    expect(draft.email).toBe("a@b.co")
+  })
+
   it("clears a level and the levels below it, keeping street and ZIP", () => {
     const cleared = clearFrom(filled, "provinceCode")
     expect(cleared).toMatchObject({

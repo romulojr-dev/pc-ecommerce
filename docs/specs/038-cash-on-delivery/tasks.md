@@ -29,11 +29,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 3. The review
-- [ ] `checkoutInputSchema` `payment`; draft `payment` and `draftPayload`
-- [ ] `buildReview` returns `payment: { requested, chosen, cod }`; `computeReview` passes it and sets `holdHours`; `reviewDigest` covers `chosen`
-- [ ] Fixtures fixed in `review.test.ts`, `digest.test.ts`, `review-view.test.tsx`
-- [ ] Unit tests U15, U16; DB tests V1–V15
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `checkoutInputSchema` `payment`; draft `payment` and `draftPayload`
+- [x] `buildReview` returns `payment: { requested, chosen, cod }`; `computeReview` passes it and sets `holdHours`; `reviewDigest` covers `chosen`
+- [x] Fixtures fixed in `review.test.ts`, `digest.test.ts`, `review-view.test.tsx`
+- [x] Unit tests U15, U16; DB tests V1–V15
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. The `COD_CONFIRM` email
 - [ ] `emailView` for `COD_CONFIRM` (subject by fulfillment, lead, details, button only while confirmable, status lines); `EMAIL_COPY`; `cancelledLead` by payment option
