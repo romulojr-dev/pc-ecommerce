@@ -38,6 +38,9 @@ export type PlaceResult =
       orderNumber: string
       // The caller builds the link; only its hash is stored
       accessToken: string
+      // How the order is paid: a cash order starts no payment session
+      // (docs/specs/038-cash-on-delivery, Behavior 13)
+      payment: "online" | "cod"
     }
   | { ok: false; reason: "changed" | "empty" | "duplicate" | "error" }
   | { ok: false; reason: "invalid"; fields: Record<string, string> }
@@ -179,7 +182,11 @@ export async function placeOrder(
       // 2. Replay (D2, D14): this cart already placed an order with this key
       const earlier = await tx.order.findFirst({
         where: { idempotencyKey, cartIdHash: hashCartId(cartId) },
-        select: { orderNumber: true, accessTokenHash: true },
+        select: {
+          orderNumber: true,
+          accessTokenHash: true,
+          paymentOption: true,
+        },
       })
       if (earlier) {
         if (!tokenMatches(accessToken, earlier.accessTokenHash)) {
@@ -189,6 +196,10 @@ export async function placeOrder(
           orderNumber: earlier.orderNumber,
           replay: true,
           emailId: null,
+          payment:
+            earlier.paymentOption === "COD"
+              ? ("cod" as const)
+              : ("online" as const),
         }
       }
       await step("replay")
@@ -218,8 +229,15 @@ export async function placeOrder(
       ) {
         throw refuse("changed")
       }
+      // Likewise cash that was asked for and isn't offered now (the limit, the
+      // zone or the switch changed): never placed as an online order instead
+      // (docs/specs/038-cash-on-delivery, Behavior 11)
+      if (details.payment === "cod" && review.payment.chosen !== "cod") {
+        throw refuse("changed")
+      }
       if (reviewDigest(review) !== digest) throw refuse("changed")
       await step("checks")
+      const cash = review.payment.chosen === "cod"
 
       // 4. Take the stock: one conditional update per product, in id order.
       //    The update reports the price it saw; a price that moved since the
@@ -284,6 +302,12 @@ export async function placeOrder(
         idempotencyKey,
         cartIdHash: hashCartId(cartId),
         fulfillment: address ? ("DELIVERY" as const) : ("PICKUP" as const),
+        // A cash order waits for the shopper's confirmation, not a payment
+        // (docs/specs/038-cash-on-delivery, Behavior 12)
+        status: cash
+          ? ("PENDING_CONFIRMATION" as const)
+          : ("PENDING_PAYMENT" as const),
+        paymentOption: cash ? ("COD" as const) : ("ONLINE" as const),
         guestEmail: details.contact.email,
         contactName: details.contact.name,
         contactMobile: details.contact.mobile,
@@ -351,11 +375,16 @@ export async function placeOrder(
       })
       await step("items")
 
-      // The "Order placed" email is enqueued here, in the order's own
-      // transaction: it commits with the order or not at all, and a replay
-      // (which returned above) writes nothing. It is sent after the commit
-      // (docs/specs/036-order-emails, Behavior 1).
-      const email = await enqueueEmail(tx, order.id, "ORDER_PLACED")
+      // The order's email is enqueued here, in its own transaction: it commits
+      // with the order or not at all, and a replay (which returned above)
+      // writes nothing. It is sent after the commit (docs/specs/036-order-
+      // emails, Behavior 1). A cash order gets its confirmation link in place
+      // of "Order placed" (docs/specs/038-cash-on-delivery, D11).
+      const email = await enqueueEmail(
+        tx,
+        order.id,
+        cash ? "COD_CONFIRM" : "ORDER_PLACED"
+      )
       await step("email")
 
       // 6. One movement per product, with the quantity the stock changed by
@@ -378,6 +407,7 @@ export async function placeOrder(
         orderNumber: order.orderNumber,
         replay: false,
         emailId: email?.id ?? null,
+        payment: cash ? ("cod" as const) : ("online" as const),
       }
     }, TRANSACTION)
     finishRelease(pending, true)
@@ -393,7 +423,12 @@ export async function placeOrder(
     }
     // Never throws: a send that doesn't happen now is picked up by the sweeps
     if (placed.emailId) scheduleEmailSend(placed.emailId)
-    return { ok: true, orderNumber: placed.orderNumber, accessToken }
+    return {
+      ok: true,
+      orderNumber: placed.orderNumber,
+      accessToken,
+      payment: placed.payment,
+    }
   } catch (error) {
     finishRelease(pending, false)
     if (error instanceof Refusal) return error.result

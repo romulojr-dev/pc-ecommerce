@@ -43,10 +43,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Placement
-- [ ] `placeOrder`: `changed` for a cash request not chosen; status, `paymentOption`, `expiresAt` and the email type by the chosen option; `PlaceResult` carries the option
-- [ ] `placeOrderAction` skips `startPayment` for cash
-- [ ] DB tests P1–P15 (gateway spy, forged calls, rollback, unit race, switch off); console spy; `guardTransactions`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `placeOrder`: `changed` for a cash request not chosen; status, `paymentOption`, `expiresAt` and the email type by the chosen option; `PlaceResult` carries the option
+- [x] `placeOrderAction` skips `startPayment` for cash
+- [x] DB tests P1, P3–P14 in `place-order-cod.db.test.ts` and P2, P15 in `actions.db.test.ts` (call-counting gateway with a control, forged calls, rollback with a log check, unit race); no gateway method is called by a cash placement, so `guardTransactions` has nothing to guard there
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. The release
 - [ ] Due and lock queries in `release.ts` take both pending statuses
