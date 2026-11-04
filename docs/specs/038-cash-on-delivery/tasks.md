@@ -78,8 +78,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Run against a scratch database in the Docker Postgres (not the Neon dev branch): the whole suite in dev with one worker (165 of 166, the one failure a share-build navigation timeout that passes alone, 12 of 12), `pnpm build`, and the order-related specs against the production build with `CI=1` (39 of 39). With parallel workers the dev server was too slow and 18 unrelated specs timed out; they passed serially
 
 ## 11. Docs
-- [ ] `docs/prd.md` (FR-20, FR-21, COD row, `StoreSettings` and `Order` rows)
-- [ ] Pointers in specs 028, 030, 033, 035, 036
-- [ ] `CLAUDE.md` and README (demo COD values, trying it in `/dev/emails`)
-- [ ] Spec 038 status set to implemented
+- [x] `docs/prd.md` (FR-20, FR-21, COD row, `StoreSettings` and `Order` rows)
+- [x] Pointers in specs 028, 030, 033, 035, 036
+- [x] `CLAUDE.md` and README (demo COD values, trying it in `/dev/emails`)
+- [x] Spec 038 status set to implemented, with "What changed while building"
 - [ ] Acceptance criteria checked on the Preview URL
+
+Open, for the review and merge: acceptance criteria checked on the Preview URL (the unchecked box above), and the PR.

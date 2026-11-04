@@ -154,6 +154,27 @@ them). Enter one on the review step of checkout
 The discount comes off the merchandise only, never the shipping, and never
 leaves a total under ₱20.00. There is no Admin screen for vouchers yet.
 
+## Cash on delivery
+
+On the review step a shopper can choose **Cash on delivery** (**Pay on pickup**
+for a pickup order) instead of paying online
+([spec 038](docs/specs/038-cash-on-delivery/spec.md)). `pnpm db:seed` and the
+migrations give the settings these demo values, which the seed never
+overwrites (there is no Admin screen yet):
+
+| Setting | Demo value |
+| --- | --- |
+| On | yes (pay on pickup too) |
+| Limit on the total, shipping included | ₱50,000.00 |
+| Zones | Metro Manila and Luzon |
+| Time to confirm | 24 hours |
+
+To try it locally with the fake email transport (`EMAIL_TRANSPORT=fake`),
+choose Cash on delivery and place the order, then open `/dev/emails`: the
+"Confirm your cash-on-delivery order" email has a **Confirm order** link. Open
+it and press the button. An order left unconfirmed is cancelled when its time
+is up and its stock goes back.
+
 ## Payments
 
 Checkout pays through Xendit's test mode ([ADR 0010](docs/adr/0010-payment-gateway-xendit-test-mode.md),

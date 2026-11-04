@@ -4,6 +4,8 @@ Status: implemented (2026-11-03; reviewed and approved with changes, see the cha
 
 > **Changed by [spec 036](../036-order-emails/spec.md) (#93):** the template registry is no longer empty (`ORDER_PLACED`, `PAYMENT_RECEIVED`, `ORDER_CANCELLED` are registered; `COD_CONFIRM` is #95's), a template may return a promise and its context gains `now` and the store's settings, the three writers enqueue and schedule, the order page's save-the-link prompt reads "Save this link to see your order. We're also emailing you a link to it; if it doesn't arrive, this one still works.", `/dev/emails` exists, and React Email is the `react-email` package.
 
+> **Changed by [spec 038](../038-cash-on-delivery/spec.md) (#95):** a `cod-confirm` link now opens the cash order's confirmation page and its Confirm order action (Behavior 9 and D9 said it opened nothing); it still opens no order page, status route, Pay now or fake payment page. `COD_CONFIRM` is registered.
+
 This is a large story, not a short-form one: it adds a table, a send path, a second order credential and three environment variables. It sends **no email the shopper receives** yet: the three order emails are #93 and the COD one #95. What ships is the machinery they use and the links they carry.
 
 ## 1. Summary

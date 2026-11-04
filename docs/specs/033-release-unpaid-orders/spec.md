@@ -2,6 +2,8 @@
 
 Status: **Implemented** · Approved with changes in review 2026-11-01 (§11) · Issue: #81 (Sprint 6, Checkout epic #4; depends on #78 = spec 030, #79 = spec 031, #80 = spec 032, all merged) · PRD refs: FR-24 (unpaid online orders auto-cancel after a set time and release reserved stock), FR-20 (Cancelled on the timeline), FR-22 (Paid only from the gateway); Risks › "Overselling on concurrent checkouts" (reservation with expiry); Data model › `Order`, `StockMovement`; ADR 0009, ADR 0010
 
+> **Changed by [spec 038](../038-cash-on-delivery/spec.md) (#95):** the release also takes Pending confirmation orders past `expiresAt` (cash orders), with no gateway step, and the partial index covers both statuses. A COD confirmed order is never due.
+
 **Gateway: Xendit, not PayMongo.** Issue #81 says "PayMongo session" throughout. The gateway is Xendit (ADR 0010): a session is cancelled with `closeSession` (`POST /sessions/{id}/cancel`), which sends no webhook, so the release marks the `Payment` Expired itself. The issue's two comments from spec 032 (reconcile before releasing; skip orders with a flagged payment) are part of this spec, with one change from review: open sessions are **cancelled first** and only reconciled when the cancel is refused (D1).
 
 ## 1. Summary
