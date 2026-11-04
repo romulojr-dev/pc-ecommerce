@@ -3,6 +3,7 @@ import { toDbZone } from "@/lib/shipping/zone-enum"
 import { builderCategories } from "@/lib/specs"
 
 import type { ShippingSeed } from "./data/shipping"
+import type { VoucherSeed } from "./data/vouchers"
 import type { ValidPart, ValidSeedFile } from "./validate"
 
 // What a re-seed refreshes on a product that already exists (spec.md, "Which
@@ -35,6 +36,8 @@ export type SeedCounts = {
   shippingRates: number
   // Whether the StoreSettings row was created (false when it already existed)
   settingsCreated: boolean
+  // Voucher rows added (a code that already exists is left as it is)
+  vouchers: number
 }
 
 export class SeedWriteError extends Error {}
@@ -44,7 +47,11 @@ export class SeedWriteError extends Error {}
 export function writeSeed(
   db: PrismaClient,
   files: ValidSeedFile[],
-  { reset, shipping }: { reset: boolean; shipping: ShippingSeed }
+  {
+    reset,
+    shipping,
+    vouchers = [],
+  }: { reset: boolean; shipping: ShippingSeed; vouchers?: VoucherSeed[] }
 ): Promise<SeedCounts> {
   return db.$transaction(
     async (tx) => {
@@ -65,8 +72,10 @@ export function writeSeed(
         // (docs/specs/031-pay-with-xendit), and so is "PaymentEvent"
         // (docs/specs/032-payment-webhooks). "EmailOutbox" goes with "Order"
         // and "FakeEmail" points at nothing; both are named for the reader
-        // (docs/specs/035-email-foundation-signed-links).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // (docs/specs/035-email-foundation-signed-links). "Voucher" points at no
+        // product and is not emptied by "Order" either (Order points at it), so
+        // it is named (docs/specs/037-vouchers-at-checkout).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)
@@ -127,6 +136,7 @@ export function writeSeed(
       }
 
       const shippingWritten = await writeShipping(tx, shipping)
+      const vouchersAdded = await writeVouchers(tx, vouchers)
 
       return {
         categories: categoryIds.size,
@@ -135,6 +145,7 @@ export function writeSeed(
         updated: parts.length - newParts.length,
         images: imagesAdded,
         ...shippingWritten,
+        vouchers: vouchersAdded,
       }
     },
     // Prisma's default is 5 s; ~150 sequential writes to a remote database
@@ -166,6 +177,25 @@ async function writeShipping(
     shippingRates = created.count
   }
   return { shippingRates, settingsCreated: settings.count === 1 }
+}
+
+// Each demo code only when its code is missing: ON CONFLICT DO NOTHING, so an
+// edited row, and its usedCount, are never touched (docs/specs/037-vouchers-
+// at-checkout, D11). Returns how many were added.
+async function writeVouchers(
+  tx: Prisma.TransactionClient,
+  vouchers: VoucherSeed[]
+) {
+  if (vouchers.length === 0) return 0
+  const created = await tx.voucher.createMany({
+    data: vouchers.map((voucher) => ({
+      ...voucher,
+      startsAt: new Date(voucher.startsAt),
+      endsAt: voucher.endsAt ? new Date(voucher.endsAt) : null,
+    })),
+    skipDuplicates: true,
+  })
+  return created.count
 }
 
 // Category rows come from the registry, so names and order match the code
