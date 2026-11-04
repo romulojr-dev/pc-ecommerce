@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import type { CheckoutReview } from "@/lib/checkout/review"
 import type { ReviewProblem } from "@/lib/checkout/problems"
 
+import type { PaymentChoiceState } from "./payment-choice"
 import { type ReviewOk, ReviewView } from "./review-view"
 import { idleVoucherBox, type VoucherBoxState } from "./voucher-box"
 
@@ -59,7 +60,11 @@ function result(
 
 const render = (
   r: ReviewOk,
-  props: { placing?: boolean; voucher?: VoucherBoxState } = {}
+  props: {
+    placing?: boolean
+    voucher?: VoucherBoxState
+    payment?: PaymentChoiceState
+  } = {}
 ): string =>
   renderToStaticMarkup(
     <ReviewView result={r} onCheckAgain={() => {}} {...props} />
@@ -184,6 +189,54 @@ describe("the summary with a voucher", () => {
     const html = render(result(), {
       voucher: { ...idleVoucherBox, busy: "apply" },
     })
+    expect(isDisabled(placeButton(html))).toBe(true)
+    expect(isDisabled(buttonLabelled(html, "Check again"))).toBe(true)
+  })
+})
+
+// docs/specs/038-cash-on-delivery: O5–O7 in the whole review
+describe("the Payment section in the review", () => {
+  const withPayment = (payment: CheckoutReview["payment"]): ReviewOk => {
+    const base = result()
+    return { ...base, review: { ...base.review, payment } }
+  }
+  const cashChosen = withPayment({
+    requested: "cod",
+    chosen: "cod",
+    cod: { offered: true },
+    limit: 5_000_000,
+  })
+
+  it("O5: shows the section above the items, online chosen by default", () => {
+    const html = render(result())
+
+    expect(html).toContain("Pay online")
+    // the fixture is a pickup review
+    expect(html).toContain("Pay on pickup")
+    expect(html.indexOf("<legend")).toBeLessThan(html.indexOf("Items"))
+    // no Payment row for an online order
+    expect(html).not.toContain("<dt>Payment</dt>")
+    expect(html).toContain(
+      "Your parts are held for 24 hours after you place your order."
+    )
+  })
+
+  it("O5: with cash chosen the summary names it and the note says to confirm by email", () => {
+    const html = render(cashChosen)
+
+    expect(html).toContain("<dt>Payment</dt>")
+    expect(html).toContain("<dd>Pay on pickup</dd>")
+    expect(html).toContain(
+      "Confirm your order from the email we send you, or it is cancelled."
+    )
+    expect(isDisabled(placeButton(html))).toBe(false)
+  })
+
+  it("O7: a choice in flight disables Place order and Check again", () => {
+    const html = render(result(), {
+      payment: { busy: "cod", message: null, onChoose: () => {} },
+    })
+
     expect(isDisabled(placeButton(html))).toBe(true)
     expect(isDisabled(buttonLabelled(html, "Check again"))).toBe(true)
   })

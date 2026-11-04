@@ -67,10 +67,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. The review UI
-- [ ] `components/checkout/payment-choice.tsx`; the Payment section, Payment row and cash place-note in `ReviewView`
-- [ ] `ReviewStep`: choosing an option is a review request; draft `payment`; reset when no longer offered; Place order sends the chosen option
-- [ ] Component tests O5–O7
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `components/checkout/payment-choice.tsx`; the Payment section, Payment row and cash place-note in `ReviewView`
+- [x] `ReviewStep`: choosing an option is a review request; draft `payment`; reset when no longer offered; Place order sends the chosen option
+- [x] Component tests O5–O7 (`payment-choice.test.tsx`, `review-view.test.tsx`); the checkout flow keeps the test-mode banner for cash but drops the gateway's instructions (spec Behavior 8 updated). The request path in `ReviewStep` (choose, fall back, focus) is covered by the E2E in step 10
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 10. E2E
 - [ ] `e2e/cod.spec.ts` X1–X7 (own recipient per order; part, stock and deadline helpers)

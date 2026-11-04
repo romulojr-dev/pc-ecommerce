@@ -2,6 +2,11 @@ import Link from "next/link"
 
 import { CartGroup } from "@/components/cart/cart-group"
 import { CartLine } from "@/components/cart/cart-line"
+import {
+  idlePaymentChoice,
+  PaymentChoice,
+  type PaymentChoiceState,
+} from "@/components/checkout/payment-choice"
 import { ProblemsBox } from "@/components/checkout/problems-box"
 import {
   idleVoucherBox,
@@ -13,6 +18,9 @@ import { subtotalLabel } from "@/lib/cart/copy"
 import type { ReviewActionResult } from "@/app/(store)/checkout/actions"
 import {
   addressLines,
+  COD_COPY,
+  codOptionName,
+  codPlaceNote,
   holdText,
   shippingValue,
   STEP_COPY,
@@ -51,6 +59,7 @@ export function ReviewView({
   onPlace = noop,
   onCheckAgain,
   voucher = idleVoucherBox,
+  payment = idlePaymentChoice,
 }: {
   result: ReviewOk
   placing?: boolean
@@ -58,6 +67,8 @@ export function ReviewView({
   onCheckAgain: () => void
   // The voucher box's text, requests and message (spec 037); ReviewStep owns it
   voucher?: VoucherBoxState
+  // The Payment section's request and message (spec 038); ReviewStep owns it
+  payment?: PaymentChoiceState
 }) {
   const { review, contact, address, store } = result
   const warned = new Set(review.warnings.map((w) => w.buildId))
@@ -67,7 +78,9 @@ export function ReviewView({
     problems.length > 0
       ? null
       : result.ordersEnabled
-        ? holdText(result.holdHours)
+        ? review.payment.chosen === "cod"
+          ? codPlaceNote(result.holdHours)
+          : holdText(result.holdHours)
         : STEP_COPY.placeSoon
   const lines = address
     ? addressLines({
@@ -117,6 +130,15 @@ export function ReviewView({
               </>
             )}
           </section>
+
+          <PaymentChoice
+            payment={review.payment}
+            pickup={review.method === "pickup"}
+            total={review.total}
+            regionName={address?.region.name ?? null}
+            disabled={placing}
+            state={payment}
+          />
 
           <section className="flex flex-col gap-2">
             <h3 className="text-base font-medium">Items</h3>
@@ -188,6 +210,14 @@ export function ReviewView({
               </div>
             )}
           </dl>
+          {review.payment.chosen === "cod" && (
+            <dl className="border-t pt-3">
+              <div className="flex justify-between gap-4">
+                <dt>{COD_COPY.summaryLabel}</dt>
+                <dd>{codOptionName(review.method === "pickup")}</dd>
+              </div>
+            </dl>
+          )}
           {review.threshold !== null && (
             <p className="text-muted-foreground">
               {thresholdNote(review.threshold)}
@@ -201,7 +231,8 @@ export function ReviewView({
                 !result.ordersEnabled ||
                 !review.canPlace ||
                 placing ||
-                voucher.busy !== null
+                voucher.busy !== null ||
+                payment.busy !== null
               }
               aria-busy={placing}
               aria-describedby={placeNote ? PLACE_NOTE_ID : undefined}
@@ -218,7 +249,9 @@ export function ReviewView({
             <Button
               type="button"
               variant="outline"
-              disabled={placing || voucher.busy !== null}
+              disabled={
+                placing || voucher.busy !== null || payment.busy !== null
+              }
               onClick={onCheckAgain}
             >
               {STEP_COPY.checkAgain}
