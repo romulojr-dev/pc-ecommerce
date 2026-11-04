@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import {
   buildPart,
+  cod1,
+  cod2,
   input,
   p1,
   p2,
@@ -292,8 +294,149 @@ describe("emailView: ORDER_CANCELLED", () => {
   })
 })
 
+// docs/specs/038-cash-on-delivery: U17, U18, U21
+describe("emailView: COD_CONFIRM", () => {
+  const CONFIRM =
+    "https://pcsilicon.tech/orders/PCS-7KQ2M9XD?sig=SIG&exp=1793000000&p=cod-confirm"
+
+  it("U21: the subject and first line name the action (delivery)", () => {
+    const view = emailView("COD_CONFIRM", input(cod1()))
+
+    expect(view.subject).toBe(
+      "[Demo] Confirm your cash-on-delivery order PCS-7KQ2M9XD"
+    )
+    expect(view.greeting).toBe("Hi Ana Santos,")
+    expect(view.lead).toBe(
+      "Please confirm your cash-on-delivery order PCS-7KQ2M9XD to keep your parts reserved."
+    )
+  })
+
+  it("U21: the subject and first line name the action (pickup)", () => {
+    const view = emailView("COD_CONFIRM", input(cod2(), { store: STORE }))
+
+    expect(view.subject).toBe(
+      "[Demo] Confirm your pay-on-pickup order PCS-4TN8V2HC"
+    )
+    expect(view.lead).toBe(
+      "Please confirm your pay-on-pickup order PCS-4TN8V2HC to keep your parts reserved."
+    )
+  })
+
+  it("U17: a confirmable order says when, what it will pay, and has one button", () => {
+    const view = emailView("COD_CONFIRM", input(cod1()))
+
+    expect(view.details).toEqual([
+      "Confirm by Mon 2 Nov 2026, 3:00 PM. Orders not confirmed by then are cancelled.",
+      "You'll pay ₱23,110.00 in cash when your order arrives.",
+    ])
+    expect(view.statusLine).toBeNull()
+    expect(view.action).toEqual({ label: "Confirm order", href: CONFIRM })
+    expect(view.links).toEqual([{ label: "View your order", href: VIEW }])
+  })
+
+  it("U17: a pickup order pays at the store, and shows the store", () => {
+    const view = emailView("COD_CONFIRM", input(cod2(), { store: STORE }))
+
+    expect(view.details?.[1]).toBe(
+      "You'll pay ₱44,485.00 in cash at the store when you collect it."
+    )
+    expect(view.where).toMatchObject({
+      kind: "pickup",
+      address: STORE.address,
+    })
+  })
+
+  it("U17: shows the order's lines and totals, as the placed email does", () => {
+    const cod = emailView("COD_CONFIRM", input(cod1()))
+    const placed = emailView("ORDER_PLACED", input(p1()))
+
+    expect(cod.entries).toEqual(placed.entries)
+    expect(cod.totals).toEqual(placed.totals)
+    expect(cod.where).toEqual(placed.where)
+  })
+
+  it("U17: a discounted order carries its Discount row", () => {
+    const view = emailView(
+      "COD_CONFIRM",
+      input(
+        cod1({
+          discount: 229_900,
+          voucherCode: "WELCOME10",
+          total: 2_081_100,
+        })
+      )
+    )
+    expect(view.totals).toContainEqual({
+      label: "Discount (WELCOME10)",
+      value: "−₱2,299.00",
+      strong: false,
+    })
+  })
+
+  it.each([
+    ["confirmed", { status: "COD_CONFIRMED" }, "Status: COD confirmed"],
+    [
+      "cancelled",
+      { status: "CANCELLED", cancelReason: "EXPIRED" },
+      "Status: Cancelled",
+    ],
+    [
+      "past its deadline but not yet released",
+      { status: "PENDING_CONFIRMATION" },
+      "Status: Cancelled",
+    ],
+  ] as const)(
+    "U17: an order that is %s has a status line and no button",
+    (name, patch, line) => {
+      // "past its deadline" is judged by the clock, the others by the status
+      const now =
+        name === "past its deadline but not yet released"
+          ? new Date("2026-11-02T07:00:00Z")
+          : undefined
+      const view = emailView(
+        "COD_CONFIRM",
+        input(cod1(patch as Partial<EmailOrder>), now ? { now } : {})
+      )
+
+      expect(view.action).toBeNull()
+      expect(view.details).toEqual([])
+      expect(view.statusLine).toBe(line)
+    }
+  )
+
+  it("U17: a confirmable order with no confirm link is a bug, not a blank button", () => {
+    expect(() =>
+      emailView("COD_CONFIRM", input(cod1(), { confirmUrl: null }))
+    ).toThrow()
+  })
+
+  it("U17: a pickup order with no store settings is a bug", () => {
+    expect(() => emailView("COD_CONFIRM", input(cod2()))).toThrow()
+  })
+
+  it("U18: the cancelled email says why, by how the order was settled", () => {
+    const cash = emailView(
+      "ORDER_CANCELLED",
+      input(cod1({ status: "CANCELLED", cancelReason: "EXPIRED" }))
+    )
+    const online = emailView(
+      "ORDER_CANCELLED",
+      input(p1({ status: "CANCELLED", cancelReason: "EXPIRED" }))
+    )
+
+    expect(cash.lead).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled because it wasn't confirmed in time. You haven't been charged."
+    )
+    expect(online.lead).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled because it wasn't paid in time. You haven't been charged."
+    )
+  })
+})
+
 describe("emailView: types with no view", () => {
-  it("COD_CONFIRM is #95's", () => {
-    expect(() => emailView("COD_CONFIRM", input(p1()))).toThrow()
+  it("a type nobody registered throws", () => {
+    expect(() =>
+      emailView("NOT_A_TYPE" as unknown as "ORDER_PLACED", input(p1()))
+    ).toThrow()
   })
 })

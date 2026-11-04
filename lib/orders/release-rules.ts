@@ -18,13 +18,16 @@ export const SWEEP_LIMIT = 10
 export const CRON_BATCH = 25
 export const CRON_BUDGET_MS = 50_000
 
-// Pending payment, at or past expiresAt, and no payment that needs checking
-// (behavior 1). The boundary is the order page's: at the deadline it is due.
+// Pending payment, or Pending confirmation (a cash order, docs/specs/038-cash-
+// on-delivery, Behavior 20), at or past expiresAt, and no payment that needs
+// checking (behavior 1). The boundary is the order page's: at the deadline it
+// is due. A COD confirmed order is never due.
 export const isDue = (
   order: { status: OrderStatusName; expiresAt: Date; flagged: boolean },
   now: Date
 ): boolean =>
-  order.status === "PENDING_PAYMENT" &&
+  (order.status === "PENDING_PAYMENT" ||
+    order.status === "PENDING_CONFIRMATION") &&
   !order.flagged &&
   isPastDue(order.expiresAt, now)
 

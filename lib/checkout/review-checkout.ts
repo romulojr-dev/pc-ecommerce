@@ -180,7 +180,8 @@ export async function computeReview(
         }
       : { method: "pickup" },
     config,
-    request
+    request,
+    details.payment
   )
   return {
     ok: true,
@@ -202,7 +203,12 @@ export async function computeReview(
             hours: config.settings.storeHours,
           }
         : null,
-    holdHours: config.settings.orderExpiryHours,
+    // How long the order's parts are held: a cash order has the time to
+    // confirm, an online one the time to pay
+    holdHours:
+      review.payment.chosen === "cod"
+        ? config.settings.codConfirmHours
+        : config.settings.orderExpiryHours,
   }
 }
 

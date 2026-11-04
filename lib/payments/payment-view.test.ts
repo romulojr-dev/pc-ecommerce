@@ -231,3 +231,36 @@ describe("paymentsSummary", () => {
     ).toEqual({ latest: "paid", needsCheck: true })
   })
 })
+
+// docs/specs/038-cash-on-delivery, Behavior 25: a cash order has no payment to
+// make, and reads as cancelled from its deadline
+describe("paymentView for a cash order", () => {
+  it.each([null, "return", "cancelled", "error"] as const)(
+    "has no payment area before the deadline, whatever the value (%s)",
+    (param) => {
+      expect(
+        paymentView("PENDING_CONFIRMATION", expiresAt, param, HOURS_LEFT_23)
+      ).toBe("none")
+    }
+  )
+
+  it("reads as expired at the deadline and after it", () => {
+    expect(
+      paymentView("PENDING_CONFIRMATION", expiresAt, null, expiresAt)
+    ).toBe("expired")
+    expect(
+      paymentView(
+        "PENDING_CONFIRMATION",
+        expiresAt,
+        null,
+        at("2026-11-09T00:00:00Z")
+      )
+    ).toBe("expired")
+  })
+
+  it("has none once confirmed, however late", () => {
+    expect(
+      paymentView("COD_CONFIRMED", expiresAt, null, at("2027-01-01T00:00:00Z"))
+    ).toBe("none")
+  })
+})

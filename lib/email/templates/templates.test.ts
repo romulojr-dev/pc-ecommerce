@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest"
 
-import { input, p1, p2, SITE, STORE, VIEW } from "@/test-support/email-orders"
+import {
+  cod1,
+  cod2,
+  input,
+  p1,
+  p2,
+  SITE,
+  STORE,
+  VIEW,
+} from "@/test-support/email-orders"
 
 import { EMAIL_COPY } from "../copy"
 import type { EmailContent } from "../templates"
+import { codConfirm } from "./cod-confirm"
 import { orderCancelled } from "./order-cancelled"
 import { orderPlaced } from "./order-placed"
 import { paymentReceived } from "./payment-received"
@@ -182,5 +192,77 @@ describe("links in the plain text", () => {
     const long = `${SITE}/orders/PCS-7KQ2M9XD?sig=${"A".repeat(43)}&exp=1793000000&p=view`
     const email = await orderPlaced(input(p1(), { viewUrl: long }))
     expect(email.text).toContain(long)
+  })
+})
+
+// docs/specs/038-cash-on-delivery: U17 on the rendered HTML and plain text
+describe("Confirm your order (cash on delivery)", () => {
+  const CONFIRM = `${SITE}/orders/PCS-7KQ2M9XD?sig=SIG&exp=1793000000&p=cod-confirm`
+
+  it("U17: a delivery order, as HTML and plain text", async () => {
+    const email = await codConfirm(input(cod1()))
+
+    expectCommon(email, "PCS-7KQ2M9XD")
+    expect(email.subject).toBe(
+      "[Demo] Confirm your cash-on-delivery order PCS-7KQ2M9XD"
+    )
+    // The button's link: HTML escapes the ampersands, the plain text doesn't
+    expect(email.text).toContain(CONFIRM)
+    expect(email.html).toContain(`href="${CONFIRM.replaceAll("&", "&amp;")}"`)
+    for (const part of [email.html, email.text]) {
+      expect(part).toContain("Hi Ana Santos,")
+      expect(part).toContain(
+        "Please confirm your cash-on-delivery order PCS-7KQ2M9XD to keep your parts reserved."
+      )
+      expect(part).toContain("Confirm by Mon 2 Nov 2026, 3:00 PM")
+      expect(part).toContain("in cash when your order arrives")
+      expect(part).toContain("Confirm order")
+      expect(part).toContain("View your order")
+      expect(part).toContain("AMD Ryzen 5 7600")
+      expect(part).toContain("₱23,110.00")
+      expect(part).toContain("12 Mabini St")
+      expect(part).not.toContain("Pay now")
+    }
+  })
+
+  it("U17: a pickup order says pay-on-pickup and shows the store", async () => {
+    const email = await codConfirm(input(cod2(), { store: STORE }))
+
+    expectCommon(email, "PCS-4TN8V2HC")
+    expect(email.subject).toContain("pay-on-pickup")
+    for (const part of [email.html, email.text]) {
+      expect(part).toContain(STORE.address)
+      expect(part).toContain("at the store when you collect it")
+    }
+  })
+
+  it("U17: an order that was confirmed has no button, only its status", async () => {
+    const email = await codConfirm(input(cod1({ status: "COD_CONFIRMED" })))
+
+    for (const part of [email.html, email.text]) {
+      expect(part).not.toContain("Confirm order")
+      expect(part).not.toContain(CONFIRM)
+      expect(part).toContain("Status: COD confirmed")
+      expect(part).toContain("View your order")
+    }
+  })
+
+  it("U17: hostile text is escaped", async () => {
+    const email = await codConfirm(
+      input(cod1({ contactName: "<b>Ana</b> & Co" }))
+    )
+
+    expect(email.html).not.toContain("<b>Ana</b>")
+    expect(email.html).toContain("&lt;b&gt;Ana&lt;/b&gt; &amp; Co")
+  })
+
+  it("T10: the plain text, delivery", async () => {
+    expect((await codConfirm(input(cod1()))).text).toMatchSnapshot()
+  })
+
+  it("T10: the plain text, pickup with a build", async () => {
+    expect(
+      (await codConfirm(input(cod2(), { store: STORE }))).text
+    ).toMatchSnapshot()
   })
 })

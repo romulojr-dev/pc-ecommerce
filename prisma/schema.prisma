@@ -208,18 +208,31 @@ model ShippingRate {
 // The store's one settings row (id is always 1). The seed creates it only when
 // it is missing, so it never overwrites what Admin sets. The migration also
 // adds CHECK (id = 1), CHECK (freeShippingThreshold > 0) and
-// CHECK (orderExpiryHours >= 1). COD limits come with FR-25.
+// CHECK (orderExpiryHours >= 1), CHECK (codMaxTotal > 0) and
+// CHECK (codConfirmHours >= 1). The cod* columns are the FR-25 limits
+// (docs/specs/038-cash-on-delivery); their defaults are the demo values, which
+// is how the row that already exists gets them.
 model StoreSettings {
-  id                    Int      @id @default(1)
+  id                    Int            @id @default(1)
   // Centavos; null turns free shipping off
   freeShippingThreshold Int?
-  pickupEnabled         Boolean  @default(true)
+  pickupEnabled         Boolean        @default(true)
   storeAddress          String
   storeHours            String
   storeInfo             String
   // Unpaid online orders auto-cancel after this many hours (FR-24)
-  orderExpiryHours      Int      @default(24)
-  updatedAt             DateTime @updatedAt
+  orderExpiryHours      Int            @default(24)
+  // Cash on delivery (pay on pickup for a pickup order), FR-25. codEnabled is
+  // the master switch.
+  codEnabled            Boolean        @default(true)
+  // Centavos; null means no limit
+  codMaxTotal           Int?           @default(5000000)
+  // Delivery zones where cash is allowed; empty means none
+  codZones              ShippingZone[] @default([METRO_MANILA, LUZON])
+  codPickupEnabled      Boolean        @default(true)
+  // Hours a cash order has to be confirmed from its email
+  codConfirmHours       Int            @default(24)
+  updatedAt             DateTime       @updatedAt
 }
 
 enum VoucherType {
@@ -255,11 +268,14 @@ model Voucher {
   updatedAt  DateTime    @updatedAt
 }
 
-// The order's lifecycle (FR-20, docs/specs/030-place-an-order). Only
-// PENDING_PAYMENT is reached by placing; PAID and CANCELLED come with #80 and
-// #81, the rest with Admin. COD_CONFIRMED is Sprint 7 (FR-25).
+// The order's lifecycle (FR-20, docs/specs/030-place-an-order). An online order
+// is placed PENDING_PAYMENT and becomes PAID; a cash order (docs/specs/038-
+// cash-on-delivery, FR-25) is placed PENDING_CONFIRMATION and becomes
+// COD_CONFIRMED when the shopper confirms from the email. CANCELLED is the
+// release's (docs/specs/033-release-unpaid-orders); the rest come with Admin.
 enum OrderStatus {
   PENDING_PAYMENT
+  PENDING_CONFIRMATION
   PAID
   COD_CONFIRMED
   PROCESSING
@@ -274,6 +290,13 @@ enum OrderStatus {
 enum Fulfillment {
   DELIVERY
   PICKUP
+}
+
+// How the shopper pays (docs/specs/038-cash-on-delivery). COD is cash on
+// delivery, or pay on pickup for a pickup order.
+enum PaymentOption {
+  ONLINE
+  COD
 }
 
 // Why stock moved. Only ORDER_RESERVED is written so far; the stories that
@@ -299,18 +322,19 @@ enum OrderCancelReason {
 // not pass the subtotal and needs a voucher, and a delivery order has an
 // address and zone while a pickup order has neither.
 model Order {
-  id              String      @id @default(cuid())
+  id              String        @id @default(cuid())
   // "PCS-" and 8 Crockford base32 characters
-  orderNumber     String      @unique
+  orderNumber     String        @unique
   // SHA-256 hex of a 256-bit random token that only the order link holds
-  accessTokenHash String      @unique
+  accessTokenHash String        @unique
   // The review's random key: a retry or double submit returns this order
-  idempotencyKey  String      @unique
+  idempotencyKey  String        @unique
   // SHA-256 hex of the cart id it was placed from; the key only replays for
   // that cart
   cartIdHash      String
-  status          OrderStatus @default(PENDING_PAYMENT)
+  status          OrderStatus   @default(PENDING_PAYMENT)
   fulfillment     Fulfillment
+  paymentOption   PaymentOption @default(ONLINE)
 
   // Contact
   guestEmail    String
@@ -351,13 +375,19 @@ model Order {
   voucher     Voucher? @relation(fields: [voucherId], references: [id], onDelete: Restrict)
   voucherCode String?
 
-  // When an unpaid order auto-cancels (FR-24)
+  // When an unpaid online order auto-cancels (FR-24), or a cash order that is
+  // still Pending confirmation does (docs/specs/038-cash-on-delivery)
   expiresAt      DateTime
   // Set with PAID by reconcileSession (docs/specs/032-payment-webhooks). The
   // migration adds CHECK: a pending order was never paid.
   paidAt         DateTime?
-  // The gateway's channel code: GCASH, PAYMAYA, CARDS (FAKE in tests)
+  // The gateway's channel code: GCASH, PAYMAYA, CARDS (FAKE in tests). Null for
+  // a cash order.
   paymentMethod  String?
+  // When the shopper confirmed a cash order from its email; set once by the
+  // confirm action. The migration adds CHECKs: only a cash order has it, not
+  // while Pending confirmation, always from COD confirmed on.
+  confirmedAt    DateTime?
   // A payment arrived after cancellation, or a second one after Paid (FR-26).
   // Only ever set to true here; clearing it is Admin's refund (Sprint 8).
   refundRequired Boolean            @default(false)
@@ -374,8 +404,10 @@ model Order {
 
   @@index([cartIdHash])
   @@index([voucherId])
-  // The release's one query: unpaid orders by when they expire
-  @@index([expiresAt], where: { status: "PENDING_PAYMENT" })
+  // The release's one query: orders waiting on payment or confirmation, by when
+  // they expire
+  // (the text is how Postgres prints the predicate, so db:drift sees no change)
+  @@index([expiresAt], where: raw("(status = ANY (ARRAY['PENDING_PAYMENT'::\"OrderStatus\", 'PENDING_CONFIRMATION'::\"OrderStatus\"]))"))
 }
 
 // One line of an order: a single item (buildId null) or a part of a build

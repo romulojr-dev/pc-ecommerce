@@ -92,6 +92,12 @@ export function paymentView(
   ) {
     return "needs-check"
   }
+  // A cash order has no payment to make: nothing to show until its deadline,
+  // after which it reads as cancelled whatever the row says (docs/specs/038-
+  // cash-on-delivery, Behavior 25)
+  if (status === "PENDING_CONFIRMATION") {
+    return isPastDue(expiresAt, now) ? "expired" : "none"
+  }
   if (status !== "PENDING_PAYMENT") return "none"
   if (isPastDue(expiresAt, now)) return "expired"
   // A return from a payment waits whatever time is left: the shopper may

@@ -2,6 +2,8 @@
 
 Status: implemented (2026-11-03; approved with changes, see the change list at the end of §10, and "What changed while building" there). Issue: [#93](https://github.com/romulojr-dev/pc-ecommerce/issues/93) (parent epic [#4](https://github.com/romulojr-dev/pc-ecommerce/issues/4), Checkout). PRD: FR-21 (order confirmation, payment received, order cancelled), FR-27 (test-mode notes). Depends on [#92](https://github.com/romulojr-dev/pc-ecommerce/issues/92) / [spec 035](../035-email-foundation-signed-links/spec.md) / [ADR 0011](../../adr/0011-signed-order-links-beside-the-access-token.md) (outbox, sender, signed `view` links, `FakeEmail`). Builds on [spec 030](../030-place-an-order/spec.md) (`placeOrder`, the order page and its save-the-link prompt), [spec 032](../032-payment-webhooks/spec.md) (`reconcileSession`, the one function that sets Paid) and [spec 033](../033-release-unpaid-orders/spec.md) (`releaseExpiredOrders`, the sweep and the cron). Siblings: [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) (vouchers) and [#95](https://github.com/romulojr-dev/pc-ecommerce/issues/95) (COD and its confirmation email).
 
+> **Changed by [spec 038](../038-cash-on-delivery/spec.md) (#95):** `COD_CONFIRM` is registered; a cash order gets it instead of "Order placed"; the cancelled email says "it wasn't confirmed in time" for a cash order.
+
 Long form: the story touches three writers, a renderer, an order-page string and a dev page.
 
 ## 1. Summary

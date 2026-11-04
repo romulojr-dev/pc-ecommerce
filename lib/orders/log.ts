@@ -46,3 +46,22 @@ export function logCronEvent(
 ): void {
   console.info(JSON.stringify({ event: "order.release.cron", ...fields }))
 }
+
+// One line per confirmation of a cash order (docs/specs/038-cash-on-delivery,
+// rule Logging): JSON with the event, the outcome and, for an order that was
+// found, its number. Never the link, signature, token, address or details. A
+// link that opens nothing logs no number.
+export type CodConfirmLogFields = {
+  outcome: "confirmed" | "already" | "expired" | "not-found"
+  orderNumber?: string
+}
+
+export function logCodEvent(fields: CodConfirmLogFields): void {
+  console.info(
+    JSON.stringify({
+      event: "order.cod_confirm",
+      outcome: fields.outcome,
+      orderNumber: fields.orderNumber,
+    })
+  )
+}

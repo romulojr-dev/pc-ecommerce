@@ -34,7 +34,7 @@ export async function dueOrdersHolding(productName: string): Promise<number> {
        JOIN "OrderItem" i ON i."orderId" = o."id"
        JOIN "Product" p ON p."id" = i."productId"
        WHERE p."name" = $1
-         AND o."status" = 'PENDING_PAYMENT'
+         AND o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
          AND o."expiresAt" <= (now() AT TIME ZONE 'UTC')`,
       [productName]
     )
@@ -139,4 +139,33 @@ export function orderLinkPath(text: string): string {
   const match = /https?:\/\/[^\s/]+(\/orders\/\S+)/.exec(text)
   if (!match) throw new Error("No order link in the email.")
   return match[1]
+}
+
+// The path and query of the order link with this purpose in an email's text
+// (docs/specs/038-cash-on-delivery): the cash order's email carries a
+// `cod-confirm` link and a `view` link
+export function orderLinkPathFor(
+  text: string,
+  purpose: "view" | "cod-confirm"
+): string {
+  const links = [...text.matchAll(/https?:\/\/[^\s/]+(\/orders\/\S+)/g)].map(
+    (match) => match[1]
+  )
+  const found = links.find((path) => path.includes(`p=${purpose}`))
+  if (!found) throw new Error(`No ${purpose} link in the email.`)
+  return found
+}
+
+// A correctly signed `cod-confirm` link for any order number, with the secret
+// the app server signs with: to see that the purpose opens nothing on an
+// online order
+export function codConfirmLinkQuery(
+  orderNumber: string,
+  { expiresInSeconds = 86_400 }: { expiresInSeconds?: number } = {}
+): string {
+  const secret = process.env.ORDER_LINK_SECRET
+  if (!secret) throw new Error("ORDER_LINK_SECRET is not set.")
+  const exp = Math.floor(Date.now() / 1000) + expiresInSeconds
+  const { sig, p } = signOrderLink(secret, orderNumber, "cod-confirm", exp)
+  return `sig=${sig}&exp=${exp}&p=${p}`
 }

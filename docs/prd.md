@@ -105,8 +105,8 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 - **FR-18** Email + password and Google sign-in; email verification; password reset.
 - **FR-19** Address book, order history, saved builds.
-- **FR-20** Order status timeline: Pending payment / Pending confirmation (COD) → Paid / COD confirmed → Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded.
-- **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, delivered; COD orders also get a confirmation link.
+- **FR-20** Order status timeline: an online order runs Pending payment → Paid; a cash order runs Pending confirmation → COD confirmed (it is paid when delivered or picked up, which Admin records). Then Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded. A cash order's timeline shows when it was confirmed.
+- **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, delivered; A cash order gets one email, "Confirm your cash-on-delivery order" ("pay-on-pickup" for pickup), with a signed confirmation link, in place of the order confirmation.
 
 ## PC Builder
 
@@ -157,7 +157,7 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 | GCash / Maya | Redirect to wallet authorization page, return to order page | Paid (on webhook) |
 | Credit / debit card | Gateway-hosted card form with 3-D Secure | Paid (on webhook) |
 | Installments / BNPL | Gateway BNPL options (e.g. BillEase, SPayLater) and card installment terms where the gateway offers them; not among the MVP's allowed channels | Paid (on webhook) |
-| Cash on delivery (or pay on pickup) | No online step; stock is reserved at placement and the order is Pending confirmation until the customer confirms through a signed link in the order email. Unconfirmed orders auto-cancel and release stock after a set time; confirmed ones never auto-expire | COD confirmed → Paid when admin marks delivered (or picked up) |
+| Cash on delivery (or pay on pickup) | No online step; stock is reserved at placement and the order is Pending confirmation until the customer presses Confirm order on the page the signed link in the order email opens (a POST, so a link scanner changes nothing). Unconfirmed orders auto-cancel and release stock after a set time (`codConfirmHours`); confirmed ones never auto-expire. Offered only within the admin's limits (FR-25) | COD confirmed → Paid when admin marks delivered (or picked up) |
 
 ### Requirements
 
@@ -272,13 +272,13 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
 | `SavedBuild` | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
 | `Cart` / `CartItem` | cartId (cookie or userId), productId, quantity, buildId (nullable, for grouping) |
-| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the access token, which is only in the order link, or a signed link from an email), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, voucherId and voucherCode (snapshot), total, payment option (online / COD), paymentMethod (the gateway channel paid with), shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
+| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the access token, which is only in the order link, or a signed link from an email), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, voucherId and voucherCode (snapshot), total, payment option (online / COD), confirmedAt (when a cash order was confirmed from its email), paymentMethod (the gateway channel paid with), shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
 | `Payment` | orderId, provider, providerRef, method, amount, status, paidAt, received amount and currency, problem (amount mismatch, late, second payment), createdAt. One row per payment attempt; the webhook bodies are in `PaymentEvent` |
 | `PaymentEvent` | eventId (unique; Xendit sends none, so it is `{event}:{session id}`), type, payload, paymentId, receivedAt. Each processed gateway webhook event, so the same event is processed once (FR-23) |
 | `Voucher` | code (upper-case, unique), type (fixed / percent), value (centavos for fixed, whole percent 1–100 for percent), minSpend (centavos, 0 for none), startsAt, endsAt (null: never ends), usageLimit (null: unlimited), usedCount (orders holding the code that are not cancelled: taken when an order is placed, given back when it is cancelled unpaid) |
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
-| `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: COD on/off, max order total including shipping, allowed zones, pay on pickup on/off, hours to confirm a COD order). Seeded until the admin settings screen (AD-9) |
+| `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: `codEnabled`, `codMaxTotal` in centavos on the total after the discount including shipping, null for no limit, `codZones`, `codPickupEnabled`, `codConfirmHours`). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |
 | `AuditLog` | actorId, entity, entityId, action, before, after, createdAt |
 

@@ -41,6 +41,11 @@ const config = {
     storeHours: "",
     storeInfo: "",
     orderExpiryHours: 24,
+    codEnabled: true,
+    codMaxTotal: 5_000_000,
+    codZones: ["metro-manila", "luzon"],
+    codPickupEnabled: true,
+    codConfirmHours: 24,
   },
 } satisfies ShippingConfig
 

@@ -63,6 +63,13 @@ export async function placeOrderAction(
   if (!result.ok) return result
   const link = orderLink(result.orderNumber, result.accessToken)
 
+  // A cash order has nothing to pay online: no session, no gateway call, and
+  // a plain link, so the order page says to confirm by email (docs/specs/038-
+  // cash-on-delivery, Behavior 13)
+  if (result.payment === "cod") {
+    return { ok: true, link, payUrl: null, count: 0 }
+  }
+
   // Then straight to a payment session. The order stands whatever this does
   // (spec 031, D3); a replay starts a fresh session the same way.
   const order = await findOrderByKey(result.orderNumber, result.accessToken)

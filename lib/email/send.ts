@@ -2,7 +2,7 @@ import type { EmailType } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
 import { env } from "@/lib/env"
 import { logSafeFailure } from "@/lib/orders/log"
-import { mintViewLink } from "@/lib/orders/order-links"
+import { mintCodConfirmLink, mintViewLink } from "@/lib/orders/order-links"
 import { orderLinkUrl } from "@/lib/orders/signed-link"
 
 import {
@@ -275,6 +275,16 @@ async function deliver(
         order.orderNumber,
         mintViewLink(order.orderNumber, now)
       ),
+      // A cash order's link lasts until its deadline (docs/specs/038-cash-on-
+      // delivery, D10); an online order has none
+      confirmUrl:
+        order.paymentOption === "COD"
+          ? orderLinkUrl(
+              siteUrl,
+              order.orderNumber,
+              mintCodConfirmLink(order.orderNumber, order.expiresAt)
+            )
+          : null,
     })
   } catch (error) {
     logSafeFailure("Rendering email", error)

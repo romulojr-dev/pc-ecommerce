@@ -8,6 +8,10 @@ import {
   type ReviewActionResult,
   reviewCheckoutAction,
 } from "@/app/(store)/checkout/actions"
+import {
+  PAYMENT_COD_ID,
+  PAYMENT_ONLINE_ID,
+} from "@/components/checkout/payment-choice"
 import { PROBLEMS_HEADING_ID } from "@/components/checkout/problems-box"
 import {
   DETAILS_HREF,
@@ -21,11 +25,15 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
+  COD_COPY,
+  codFallbackText,
+  codReasonText,
   STEP_COPY,
   VOUCHER_COPY,
   voucherRefusalText,
 } from "@/lib/checkout/copy"
 import { type CheckoutDraft, draftPayload } from "@/lib/checkout/draft"
+import type { PaymentChoice } from "@/lib/checkout/input"
 import { checkoutDraftStore } from "@/lib/checkout/draft-store"
 import { cn, focusRing } from "@/lib/utils"
 
@@ -81,7 +89,13 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     null
   )
   const [voucherMessage, setVoucherMessage] = useState<string | null>(null)
-  const focusNext = useRef<"input" | "remove" | null>(null)
+  // The Payment section (docs/specs/038-cash-on-delivery): the choice being
+  // sent as a review, and the note under the options
+  const [paymentBusy, setPaymentBusy] = useState<PaymentChoice | null>(null)
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null)
+  const focusNext = useRef<
+    "input" | "remove" | "payment-online" | "payment-cod" | null
+  >(null)
 
   // What the review made of the code it was sent. Only an applied code is
   // kept in the saved details; a refused one stays in the field with its
@@ -112,16 +126,51 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     }
   }
 
+  // What the review made of the payment choice (docs/specs/038-cash-on-
+  // delivery, Behavior 6-7). The chosen option is kept in the saved details; a
+  // saved cash choice that isn't offered any more falls back to online with
+  // the reason, never silently. `choice` is what the shopper just picked.
+  function settlePayment(result: ReviewOk, choice: PaymentChoice | undefined) {
+    const { review } = result
+    const { requested, chosen, cod, limit } = review.payment
+    checkoutDraftStore.getState().update({ payment: chosen })
+    if (requested === "cod" && chosen === "online" && !cod.offered) {
+      setPaymentMessage(
+        codFallbackText(
+          codReasonText(cod, {
+            pickup: review.method === "pickup",
+            regionName: result.address?.region.name ?? null,
+            limit,
+            total: review.total,
+          })
+        )
+      )
+    } else {
+      setPaymentMessage(null)
+    }
+    if (choice) {
+      focusNext.current = chosen === "cod" ? "payment-cod" : "payment-online"
+    }
+  }
+
   // Sends the details and shows the answer; the caller has already put the
-  // step in its loading state. A voucher change keeps the review on screen
-  // and answers in the box.
-  async function request(source: "arrival" | "again", change?: VoucherChange) {
+  // step in its loading state. A voucher change or a payment choice keeps the
+  // review on screen and answers in its own section.
+  async function request(
+    source: "arrival" | "again",
+    change?: VoucherChange,
+    choice?: PaymentChoice
+  ) {
     const mine = ++latest.current
     const sent = change ? change.code : draft.voucherCode
     let result: ReviewActionResult | null = null
     try {
       result = await reviewCheckoutAction(
-        draftPayload({ ...draft, voucherCode: sent })
+        draftPayload({
+          ...draft,
+          voucherCode: sent,
+          payment: choice ?? draft.payment,
+        })
       )
     } catch {
       // A network failure: the same "Try again" as a server error
@@ -129,16 +178,23 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     if (mine !== latest.current) return
     setChecking(false)
     setVoucherBusy(null)
+    setPaymentBusy(null)
     if (!result || (!result.ok && result.reason === "error")) {
       if (change) {
         setVoucherMessage(VOUCHER_COPY.failed)
         focusNext.current = change.action === "apply" ? "input" : "remove"
+      } else if (choice) {
+        // The review stays as it was; the old choice is still the one in force
+        setPaymentMessage(COD_COPY.failed)
+        focusNext.current =
+          draft.payment === "cod" ? "payment-cod" : "payment-online"
       } else {
         setPhase({ kind: "error" })
       }
     } else if (result.ok) {
       setPhase({ kind: "ready", result, source })
       settleVoucher(result.review.voucher, sent, change?.action)
+      settlePayment(result, choice)
     } else if (result.reason === "invalid") {
       onInvalid(result.fields)
     } else {
@@ -164,7 +220,15 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
   }
 
   function applyVoucher() {
-    if (phase.kind !== "ready" || voucherBusy || checking || placing) return
+    if (
+      phase.kind !== "ready" ||
+      voucherBusy ||
+      paymentBusy ||
+      checking ||
+      placing
+    ) {
+      return
+    }
     const typed = voucherText.trim()
     if (!typed) {
       setVoucherMessage(VOUCHER_COPY.empty)
@@ -175,8 +239,35 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
   }
 
   function removeVoucher() {
-    if (phase.kind !== "ready" || voucherBusy || checking || placing) return
+    if (
+      phase.kind !== "ready" ||
+      voucherBusy ||
+      paymentBusy ||
+      checking ||
+      placing
+    ) {
+      return
+    }
     changeVoucher({ action: "remove", code: "" })
+  }
+
+  // Choosing an option is a review request, like Apply: a new digest, key and
+  // token come back with the answer (docs/specs/038-cash-on-delivery,
+  // Behavior 6)
+  function choosePayment(choice: PaymentChoice) {
+    if (
+      phase.kind !== "ready" ||
+      voucherBusy ||
+      paymentBusy ||
+      checking ||
+      placing ||
+      choice === phase.result.review.payment.chosen
+    ) {
+      return
+    }
+    setPaymentMessage(null)
+    setPaymentBusy(choice)
+    void request("arrival", undefined, choice)
   }
 
   // Reloads the review under the notice, keeping the old one on screen until
@@ -190,17 +281,19 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
   // that left the order unplaced the same pair is sent again on a retry; after
   // `changed` the review reloads and brings a new pair.
   async function place() {
-    if (phase.kind !== "ready" || placing || checking) return
+    if (phase.kind !== "ready" || placing || checking || paymentBusy) return
     const { digest, idempotencyKey, accessToken } = phase.result
-    // The code goes only if this review applied it (spec 037, Behavior 7)
+    // The code goes only if this review applied it (spec 037, Behavior 7), and
+    // the payment option is the one this review settled on
     const applied = phase.result.review.voucher
     const voucherCode = applied.kind === "applied" ? applied.code : ""
+    const payment = phase.result.review.payment.chosen
     setPlacing(true)
     setNotice(null)
     let answer: Awaited<ReturnType<typeof placeOrderAction>> | null = null
     try {
       answer = await placeOrderAction({
-        details: draftPayload({ ...draft, voucherCode }),
+        details: draftPayload({ ...draft, voucherCode, payment }),
         digest,
         idempotencyKey,
         accessToken,
@@ -256,14 +349,19 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     }
   }, [phase])
 
-  // After a voucher answer is on screen, focus goes to the control it names
+  // After a voucher or payment answer is on screen, focus goes to the control
+  // it names
   useEffect(() => {
     const target = focusNext.current
-    if (!target || voucherBusy) return
+    if (!target || voucherBusy || paymentBusy) return
     focusNext.current = null
-    document
-      .getElementById(target === "input" ? VOUCHER_INPUT_ID : VOUCHER_REMOVE_ID)
-      ?.focus()
+    const ids = {
+      input: VOUCHER_INPUT_ID,
+      remove: VOUCHER_REMOVE_ID,
+      "payment-online": PAYMENT_ONLINE_ID,
+      "payment-cod": PAYMENT_COD_ID,
+    }
+    document.getElementById(ids[target])?.focus()
   })
 
   const clean =
@@ -273,13 +371,15 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
     ? STEP_COPY.placing
     : voucherBusy
       ? VOUCHER_COPY.checking
-      : phase.kind === "loading" || checking
+      : paymentBusy
         ? STEP_COPY.loading
-        : phase.kind === "error"
-          ? STEP_COPY.loadFailed
-          : clean && phase.source === "again"
-            ? STEP_COPY.checkedClean
-            : ""
+        : phase.kind === "loading" || checking
+          ? STEP_COPY.loading
+          : phase.kind === "error"
+            ? STEP_COPY.loadFailed
+            : clean && phase.source === "again"
+              ? STEP_COPY.checkedClean
+              : ""
 
   return (
     <div className="flex flex-col gap-4" aria-busy={phase.kind === "loading"}>
@@ -318,6 +418,11 @@ export function ReviewStep({ draft, onInvalid, onEmpty, onPlaced }: Props) {
             message: voucherMessage,
             onApply: applyVoucher,
             onRemove: removeVoucher,
+          }}
+          payment={{
+            busy: paymentBusy,
+            message: paymentMessage,
+            onChoose: choosePayment,
           }}
         />
       )}

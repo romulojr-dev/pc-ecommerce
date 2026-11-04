@@ -27,6 +27,7 @@ export const CHECKOUT_COPY = {
   provinceAgain: "Choose your province again.",
   cityAgain: "Choose your city or municipality again.",
   barangayAgain: "Choose your barangay again.",
+  payment: "Choose how you'll pay.",
 } as const
 
 const code = (message: string) =>
@@ -79,6 +80,15 @@ const voucherCodeSchema = z
     return code ? code : undefined
   })
 
+// How the shopper pays (docs/specs/038-cash-on-delivery, Behavior 10): online,
+// or cash on delivery (pay on pickup for a pickup order). Optional, online
+// when absent; any other value is malformed, not a refusal.
+export const PAYMENT_CHOICES = ["online", "cod"] as const
+export type PaymentChoice = (typeof PAYMENT_CHOICES)[number]
+const paymentSchema = z
+  .enum(PAYMENT_CHOICES, { error: CHECKOUT_COPY.payment })
+  .default("online")
+
 const addressSchema = z.object({
   regionCode: code(CHECKOUT_COPY.region),
   provinceCode: code(CHECKOUT_COPY.province),
@@ -99,11 +109,13 @@ export const checkoutInputSchema = z.discriminatedUnion("method", [
     contact: contactSchema,
     address: addressSchema,
     voucherCode: voucherCodeSchema,
+    payment: paymentSchema,
   }),
   z.object({
     method: z.literal("pickup"),
     contact: contactSchema,
     voucherCode: voucherCodeSchema,
+    payment: paymentSchema,
   }),
 ])
 

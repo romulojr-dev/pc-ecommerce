@@ -18,6 +18,9 @@ export const EMAIL_COPY = {
   payNow: "Pay now",
   visitShop: "Still want these parts? Visit PC Silicon",
   unpaidNote: "Unpaid orders are cancelled at that time.",
+  // The cash-on-delivery confirmation (docs/specs/038-cash-on-delivery, §5)
+  confirmOrder: "Confirm order",
+  confirmNote: "Orders not confirmed by then are cancelled.",
   // Headings are the order page's
   itemsHeading: ORDER_COPY.itemsHeading,
   addressHeading: ORDER_COPY.addressHeading,
@@ -38,6 +41,22 @@ export const receivedSubject = (orderNumber: string): string =>
 export const cancelledSubject = (orderNumber: string): string =>
   `${EMAIL_COPY.subjectPrefix}Order ${orderNumber} was cancelled`
 
+// The cash order's email names its action in the subject and the first line
+const cashName = (pickup: boolean): string =>
+  pickup ? "pay-on-pickup" : "cash-on-delivery"
+
+export const codConfirmSubject = (
+  orderNumber: string,
+  pickup: boolean
+): string =>
+  `${EMAIL_COPY.subjectPrefix}Confirm your ${cashName(pickup)} order ${orderNumber}`
+
+export const codConfirmLead = (orderNumber: string, pickup: boolean): string =>
+  `Please confirm your ${cashName(pickup)} order ${orderNumber} to keep your parts reserved.`
+
+export const confirmByLine = (time: string): string =>
+  `Confirm by ${time}. ${EMAIL_COPY.confirmNote}`
+
 export const greeting = (contactName: string): string => `Hi ${contactName},`
 
 export const placedLead = (orderNumber: string): string =>
@@ -50,19 +69,24 @@ export const amountPaid = (amount: string): string => `Amount paid: ${amount}`
 
 export const statusLine = (label: string): string => `Status: ${label}`
 
-// The reason an order was cancelled, keyed by Order.cancelReason; "not
-// confirmed in time" arrives with COD (#95)
-const CANCEL_REASONS: Record<string, string> = {
-  EXPIRED: "it wasn't paid in time",
+// The reason an order was cancelled, keyed by Order.cancelReason and, for
+// EXPIRED, by how the order was to be settled: an online order wasn't paid in
+// time, a cash order (docs/specs/038-cash-on-delivery) wasn't confirmed
+const CANCEL_REASONS: Record<string, Record<"ONLINE" | "COD", string>> = {
+  EXPIRED: {
+    ONLINE: "it wasn't paid in time",
+    COD: "it wasn't confirmed in time",
+  },
 }
 
 export const cancelledLead = (
   orderNumber: string,
-  cancelReason: string | null
+  cancelReason: string | null,
+  paymentOption: "ONLINE" | "COD" = "ONLINE"
 ): string => {
   const reason =
     cancelReason !== null && Object.hasOwn(CANCEL_REASONS, cancelReason)
-      ? CANCEL_REASONS[cancelReason]
+      ? CANCEL_REASONS[cancelReason][paymentOption]
       : null
   return reason
     ? `Your order ${orderNumber} was cancelled because ${reason}. You haven't been charged.`

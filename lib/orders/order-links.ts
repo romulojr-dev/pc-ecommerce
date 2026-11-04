@@ -5,6 +5,7 @@ import { DUMMY_TOKEN_HASH, tokenMatches } from "./secrets"
 import {
   type LinkParams,
   type LinkVerdict,
+  newCodConfirmLink,
   newViewLink,
   verifyOrderLink,
 } from "./signed-link"
@@ -16,6 +17,25 @@ import {
 
 export const mintViewLink = (orderNumber: string, now = new Date()) =>
   newViewLink(env.ORDER_LINK_SECRET, orderNumber, now)
+
+// The confirm link of a cash order, good until the order's `expiresAt`
+// (docs/specs/038-cash-on-delivery)
+export const mintCodConfirmLink = (orderNumber: string, expiresAt: Date) =>
+  newCodConfirmLink(env.ORDER_LINK_SECRET, orderNumber, expiresAt)
+
+// Only the confirm page and its action accept `cod-confirm`
+export const verifyCodConfirmLink = (
+  orderNumber: string,
+  params: LinkParams,
+  now = new Date()
+): LinkVerdict =>
+  verifyOrderLink(
+    env.ORDER_LINK_SECRET,
+    orderNumber,
+    params,
+    "cod-confirm",
+    now
+  )
 
 // The order page, status route, Pay now and the fake page accept `view` only
 export const verifyViewLink = (

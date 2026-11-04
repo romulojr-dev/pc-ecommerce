@@ -140,7 +140,14 @@ export function CheckoutFlow({
 
   return (
     <div className="flex flex-col gap-6">
-      <TestModeBanner instructions={testInstructions} />
+      {/* The banner stays on every step (FR-27); the gateway's payment
+          instructions go when the shopper pays cash (docs/specs/038-cash-on-
+          delivery, Behavior 8) */}
+      <TestModeBanner
+        instructions={
+          step === "review" && draft.payment === "cod" ? "" : testInstructions
+        }
+      />
       <CheckoutSteps current={step} />
       <h2
         id={STEP_HEADING_ID}

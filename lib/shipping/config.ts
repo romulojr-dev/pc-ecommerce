@@ -1,6 +1,8 @@
 import { db } from "@/lib/db"
 import type { DbClient } from "@/lib/db-client"
 
+import type { CodSettings } from "@/lib/checkout/cod-eligibility"
+
 import type { ShippingRateTier } from "./fee"
 import { fromDbZone } from "./zone-enum"
 
@@ -8,7 +10,7 @@ import { fromDbZone } from "./zone-enum"
 // (docs/specs/028-shipping-data-and-fee-rules, D16). Checkout is per request
 // and a stale fee would be wrong money, so nothing here is cached.
 
-export type StoreSettingsData = {
+export type StoreSettingsData = CodSettings & {
   // Centavos; null means free shipping is off
   freeShippingThreshold: number | null
   pickupEnabled: boolean
@@ -16,6 +18,8 @@ export type StoreSettingsData = {
   storeHours: string
   storeInfo: string
   orderExpiryHours: number
+  // Hours a cash order has to be confirmed (docs/specs/038-cash-on-delivery)
+  codConfirmHours: number
 }
 
 export type ShippingConfig = {
@@ -46,6 +50,11 @@ export async function getShippingConfig(
       storeHours: true,
       storeInfo: true,
       orderExpiryHours: true,
+      codEnabled: true,
+      codMaxTotal: true,
+      codZones: true,
+      codPickupEnabled: true,
+      codConfirmHours: true,
     },
   })
   if (!settings) {
@@ -57,6 +66,9 @@ export async function getShippingConfig(
       maxWeightGrams,
       fee,
     })),
-    settings,
+    settings: {
+      ...settings,
+      codZones: settings.codZones.map((zone) => fromDbZone[zone]),
+    },
   }
 }

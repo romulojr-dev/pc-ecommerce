@@ -166,4 +166,26 @@ describe("validateShippingSeed (S8)", () => {
       validateShippingSeed(withStore({ freeShippingThreshold: null }))
     ).toEqual([])
   })
+
+  it("refuses bad COD settings and accepts no limit and no zones", () => {
+    const withStore = (patch: object) => ({
+      ...shippingSeed,
+      store: { ...shippingSeed.store, ...patch },
+    })
+    expect(validateShippingSeed(withStore({ codMaxTotal: 0 }))).toEqual([
+      "Shipping seed: the COD limit must be null or a whole number of centavos above 0.",
+    ])
+    expect(validateShippingSeed(withStore({ codConfirmHours: 0 }))).toEqual([
+      "Shipping seed: the COD confirmation time must be a whole number of hours, 1 or more.",
+    ])
+    expect(
+      validateShippingSeed(withStore({ codZones: ["metro-manila", "manila"] }))
+    ).toEqual(['Shipping seed: the COD zone "manila" is not a shipping zone.'])
+    expect(
+      validateShippingSeed(withStore({ codZones: ["luzon", "luzon"] }))
+    ).toEqual(["Shipping seed: a COD zone appears twice."])
+    expect(
+      validateShippingSeed(withStore({ codMaxTotal: null, codZones: [] }))
+    ).toEqual([])
+  })
 })

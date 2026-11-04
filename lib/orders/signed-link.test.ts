@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  codConfirmExp,
   linkShape,
   type LinkPurpose,
+  newCodConfirmLink,
   newViewLink,
   orderLinkPath,
   orderLinkUrl,
@@ -131,5 +133,40 @@ describe("newViewLink", () => {
     const now = new Date("2026-11-01T07:00:00Z")
     expect(newViewLink(SECRET, NUMBER, now).exp).toBe(String(E))
     expect(verify(newViewLink(SECRET, NUMBER, now), { now })).toBe("ok")
+  })
+})
+
+// docs/specs/038-cash-on-delivery: U19
+describe("the cod-confirm link", () => {
+  // 2026-11-05 10:00:00.750 in Manila: a deadline with milliseconds
+  const expiresAt = new Date("2026-11-05T02:00:00.750Z")
+  const cod = newCodConfirmLink(SECRET, NUMBER, expiresAt)
+  const verifyCod = (now: Date) =>
+    verifyOrderLink(SECRET, NUMBER, cod, "cod-confirm", now)
+
+  it("expires at the deadline rounded down to whole seconds", () => {
+    expect(codConfirmExp(expiresAt)).toBe(
+      Date.parse("2026-11-05T02:00:00Z") / 1000
+    )
+    expect(cod.exp).toBe(String(codConfirmExp(expiresAt)))
+    expect(cod.p).toBe("cod-confirm")
+  })
+
+  it("is valid before the expiry and expired from it", () => {
+    const exp = codConfirmExp(expiresAt) * 1000
+    expect(verifyCod(new Date(exp - 1))).toBe("ok")
+    expect(verifyCod(new Date(exp))).toBe("expired")
+    expect(verifyCod(new Date(expiresAt.getTime() + 1))).toBe("expired")
+  })
+
+  it("is the same link for the same order and deadline", () => {
+    expect(newCodConfirmLink(SECRET, NUMBER, expiresAt)).toEqual(cod)
+  })
+
+  it("never outlives the deadline, and a view link doesn't verify as it", () => {
+    expect(codConfirmExp(expiresAt) * 1000).toBeLessThanOrEqual(
+      expiresAt.getTime()
+    )
+    expect(verify(cod)).toBe("invalid")
   })
 })

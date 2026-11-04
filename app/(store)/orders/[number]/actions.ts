@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 
+import { type ConfirmResult, confirmCodOrder } from "@/lib/orders/confirm-cod"
 import { credentialFromParams } from "@/lib/orders/credential"
 import { findOrderByCredential } from "@/lib/orders/get-order"
 import { type StartResult, startPayment } from "@/lib/payments/start-payment"
@@ -21,6 +22,27 @@ const inputSchema = z.object({
   exp: z.string().nullish(),
   p: z.string().nullish(),
 })
+
+// Confirm order, on the cash order's confirmation page (docs/specs/038-cash-
+// on-delivery, Behavior 18). A server action is a POST, so a link scanner that
+// opens the page changes nothing. It takes the order number and the link's
+// three values and nothing else; confirmCodOrder verifies the signature on
+// every call. Rate limiting is #64.
+const confirmSchema = z.object({
+  orderNumber: z.string(),
+  sig: z.string(),
+  exp: z.string(),
+  p: z.string(),
+})
+
+export async function confirmCodOrderAction(
+  input: unknown
+): Promise<ConfirmResult> {
+  const parsed = confirmSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, reason: "not-found" }
+  const { orderNumber, ...link } = parsed.data
+  return confirmCodOrder(orderNumber, link)
+}
 
 export async function startPaymentAction(input: unknown): Promise<StartResult> {
   const parsed = inputSchema.safeParse(input)

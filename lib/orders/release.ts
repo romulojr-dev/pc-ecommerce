@@ -26,7 +26,10 @@ import { giveBackVoucherUses } from "./voucher-use"
 
 // Releasing unpaid orders (docs/specs/033-release-unpaid-orders, FR-24): an
 // order still Pending payment at expiresAt is cancelled and its stock goes
-// back.
+// back. A cash order still Pending confirmation at its expiresAt is released
+// the same way (docs/specs/038-cash-on-delivery, Behavior 20): it has no
+// payment, so step 1 finds no session to close and clears it with no gateway
+// call. A COD confirmed order is never due.
 //
 //   1. Check (no transaction): find the due orders, cancel each open session
 //      at the gateway; a session that had already ended is reconciled, so a
@@ -125,7 +128,7 @@ export async function checkExpiredOrders({
   const due = await db.$queryRaw<DueOrder[]>`
     SELECT o."id", o."orderNumber"
     FROM "Order" o
-    WHERE o."status" = 'PENDING_PAYMENT'
+    WHERE o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
       AND o."expiresAt" <= ${now}
       AND NOT EXISTS (
         SELECT 1 FROM "Payment" p
@@ -219,7 +222,7 @@ export async function releaseExpiredOrders(
     SELECT o."id", o."orderNumber"
     FROM "Order" o
     WHERE o."id" = ANY(${orderIds}::text[])
-      AND o."status" = 'PENDING_PAYMENT'
+      AND o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
       AND o."expiresAt" <= ${now}
       AND NOT EXISTS (
         SELECT 1 FROM "Payment" p

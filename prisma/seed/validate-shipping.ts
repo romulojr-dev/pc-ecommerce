@@ -22,6 +22,27 @@ export function validateShippingSeed(seed: ShippingSeed): string[] {
   )) {
     fail("the order expiry must be a whole number of hours, 1 or more.")
   }
+  if (
+    store.codMaxTotal !== null &&
+    !(Number.isInteger(store.codMaxTotal) && store.codMaxTotal > 0)
+  ) {
+    fail("the COD limit must be null or a whole number of centavos above 0.")
+  }
+  if (!(
+    Number.isInteger(store.codConfirmHours) && store.codConfirmHours >= 1
+  )) {
+    fail(
+      "the COD confirmation time must be a whole number of hours, 1 or more."
+    )
+  }
+  for (const zone of store.codZones) {
+    if (!(SHIPPING_ZONES as readonly string[]).includes(zone)) {
+      fail(`the COD zone "${zone}" is not a shipping zone.`)
+    }
+  }
+  if (new Set(store.codZones).size !== store.codZones.length) {
+    fail("a COD zone appears twice.")
+  }
   for (const [label, value] of [
     ["address", store.storeAddress],
     ["hours", store.storeHours],

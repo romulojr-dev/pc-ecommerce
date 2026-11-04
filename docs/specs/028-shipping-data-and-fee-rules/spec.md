@@ -2,6 +2,8 @@
 
 Status: **Implemented** · Issue: #76 (Sprint 6, Checkout epic; depends on none) · PRD refs: FR-15 (address data), FR-16 (shipping fee by zone and weight, free-shipping threshold); Payments and fulfillment › Fulfillment; AD-9 (seeded now, edited by Admin in Sprint 8); Technical architecture › Data model (`ShippingRate`, `StoreSettings`)
 
+> **Changed by [spec 038](../038-cash-on-delivery/spec.md) (#95):** `StoreSettings` gains the COD limits (`codEnabled`, `codMaxTotal`, `codZones`, `codPickupEnabled`, `codConfirmHours`), read with the rest by `getShippingConfig`. The fee rules are unchanged.
+
 ## 1. Summary
 
 This story gives the checkout (#77, #78) the data and the rules it needs before it can show a shipping fee. It adds the `ShippingRate` and single-row `StoreSettings` tables with a **fictional demo store and demo rates**, a versioned **PH address dataset** converted from the PSA's PSGC `2026Q3` publication (which the server also uses to validate addresses), the **region → zone** map, the order **weight** sum, and a pure **`shippingFee`** function in integer centavos. It has no screen: the address form, the fee line and the order come in the next stories.
