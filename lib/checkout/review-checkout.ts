@@ -98,9 +98,15 @@ export type ReviewCore =
       address: CheckoutAddress | null
       store: { address: string; hours: string } | null
       holdHours: number
-      // The applied voucher's row, for the placement's count; never sent to
-      // the browser (docs/specs/037-vouchers-at-checkout, plan)
-      voucherId: string | null
+      // The applied voucher's row and the terms the review used, for the
+      // placement's count; never sent to the browser (docs/specs/037-vouchers-
+      // at-checkout, plan)
+      voucher: {
+        id: string
+        type: "FIXED" | "PERCENT"
+        value: number
+        minSpend: number
+      } | null
     }
   | { ok: false; reason: "invalid"; fields: Record<string, string> }
   | { ok: false; reason: "empty" }
@@ -179,9 +185,14 @@ export async function computeReview(
   return {
     ok: true,
     review,
-    voucherId:
-      review.voucher.kind === "applied" && request.requested
-        ? (request.voucher?.id ?? null)
+    voucher:
+      review.voucher.kind === "applied" && request.requested && request.voucher
+        ? {
+            id: request.voucher.id,
+            type: request.voucher.type,
+            value: request.voucher.value,
+            minSpend: request.voucher.minSpend,
+          }
         : null,
     address,
     store:

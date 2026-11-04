@@ -178,9 +178,14 @@ describe("V1–V2: a percent code", () => {
     )
     const none = await computeReview(db, cart, parse(delivery()), NOW)
 
-    expect(applied.ok && applied.voucherId).toBe(row.id)
-    expect(refused.ok && refused.voucherId).toBeNull()
-    expect(none.ok && none.voucherId).toBeNull()
+    expect(applied.ok && applied.voucher).toEqual({
+      id: row.id,
+      type: "PERCENT",
+      value: 10,
+      minSpend: 500_000,
+    })
+    expect(refused.ok && refused.voucher).toBeNull()
+    expect(none.ok && none.voucher).toBeNull()
   })
 })
 
