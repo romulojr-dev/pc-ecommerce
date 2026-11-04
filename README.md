@@ -138,6 +138,22 @@ files in `data/psgc/json/2026Q3/`, which are committed; the app serves them at
 For a new quarter, put the workbook in `data/psgc/`, change `PSGC_VERSION` in
 `lib/psgc/version.ts`, run `pnpm psgc:convert`, and fix what the tests name.
 
+## Vouchers
+
+`pnpm db:seed` adds three demo voucher codes, each only when its code is missing
+(an existing row, edited or used, is never touched; `--reset` clears and refills
+them). Enter one on the review step of checkout
+([spec 037](docs/specs/037-vouchers-at-checkout/spec.md)):
+
+| Code | Discount | Needs |
+| --- | --- | --- |
+| `WELCOME10` | 10 % off | ₱5,000.00 or more |
+| `SAVE500` | ₱500.00 off | ₱10,000.00 or more |
+| `BUILD5000` | ₱5,000.00 off | ₱50,000.00 or more; the first 100 uses |
+
+The discount comes off the merchandise only, never the shipping, and never
+leaves a total under ₱20.00. There is no Admin screen for vouchers yet.
+
 ## Payments
 
 Checkout pays through Xendit's test mode ([ADR 0010](docs/adr/0010-payment-gateway-xendit-test-mode.md),

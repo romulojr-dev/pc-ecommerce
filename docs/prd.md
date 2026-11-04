@@ -276,7 +276,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
 | `Payment` | orderId, provider, providerRef, method, amount, status, paidAt, received amount and currency, problem (amount mismatch, late, second payment), createdAt. One row per payment attempt; the webhook bodies are in `PaymentEvent` |
 | `PaymentEvent` | eventId (unique; Xendit sends none, so it is `{event}:{session id}`), type, payload, paymentId, receivedAt. Each processed gateway webhook event, so the same event is processed once (FR-23) |
-| `Voucher` | code, type, value, minSpend, startsAt, endsAt, usageLimit, usedCount |
+| `Voucher` | code (upper-case, unique), type (fixed / percent), value (centavos for fixed, whole percent 1–100 for percent), minSpend (centavos, 0 for none), startsAt, endsAt (null: never ends), usageLimit (null: unlimited), usedCount (orders holding the code that are not cancelled: taken when an order is placed, given back when it is cancelled unpaid) |
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
 | `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: COD on/off, max order total including shipping, allowed zones, pay on pickup on/off, hours to confirm a COD order). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |

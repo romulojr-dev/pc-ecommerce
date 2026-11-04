@@ -71,7 +71,7 @@ Orders as in spec 034/035. **P1**: order **PCS-7KQ2M9XD**, contact Ana Santos `a
 | T1 | P1, `ORDER_PLACED`, built at 2026-11-01T07:00:30Z | Subject "[Demo] Order PCS-7KQ2M9XD placed"; "Hi Ana Santos,"; one line "AMD Ryzen 5 7600 · ₱11,495.00 × 2 · ₱22,990.00"; Subtotal ₱22,990.00, Shipping ₱120.00, Total ₱23,110.00; the address lines; "Pay by Mon 2 Nov 2026, 3:00 PM"; a **Pay now** button and an order link, both `…/orders/PCS-7KQ2M9XD?sig=…&exp=…&p=view` with `exp` = 2027-01-30T07:00:30Z; the test-mode note; no Discount row |
 | T2 | P2, `ORDER_PLACED` | One "Custom PC build" group listing the three parts with their slot names and prices, group ₱44,485.00; **no address**; "Pick up at" with the store's current address and hours, then the pickup note; no shipping fee wording of a rate; Total ₱44,485.00 |
 | T3 | P1 with a second build and a single part (two groups) | Groups numbered "Custom PC build 1" / "Custom PC build 2", the single line in cart order |
-| T4 | P1 with `discount` 50,000 | A Discount row "−₱500.00" and the total as stored |
+| T4 | P1 with `discount` 50,000 | A Discount row "−₱500.00" and the total as stored. *Changed by [spec 037](../037-vouchers-at-checkout/spec.md): the label is "Discount ({code})" when the order has a voucher.* |
 | T5 | P1, `ORDER_PLACED` built at `expiresAt` (a placed email sent late) / with status PAID / CANCELLED | No pay block and no Pay now button; "Status: Cancelled" / "Status: Paid"; the order link stays |
 | T6 | P1 contact name `<b>Ana</b> & Co`, a street with `"` and `&` | Escaped in the HTML; unescaped, not tag-like, in the text |
 | T7 | P1, `PAYMENT_RECEIVED`, `paidAt` 2026-11-01T07:05:00Z, method `GCASH` | Subject "[Demo] Payment received for order PCS-7KQ2M9XD"; "Amount paid: ₱23,110.00"; "Paid on Sun 1 Nov 2026, 3:05 PM with GCash."; the signed order link; the test-mode note |
@@ -239,7 +239,7 @@ Definition of done also needs: acceptance criteria checked on the Preview URL (t
 
 - The COD confirmation email, the `cod-confirm` page and "not confirmed in time": [#95](https://github.com/romulojr-dev/pc-ecommerce/issues/95).
 - Shipped and delivered emails; refund emails (a late or second payment today only sets `refundRequired`): Sprint 9.
-- Voucher lines in the email: the Discount row already appears when `discount` is above 0, so [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) needs no email change.
+- Voucher lines in the email: the Discount row already appears when `discount` is above 0, so [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) needs no email change. *Changed by [spec 037](../037-vouchers-at-checkout/spec.md): the issue asks for "Discount ({code})", so the row is labelled with the voucher's code.*
 - Auth emails (verification, password reset): [#65](https://github.com/romulojr-dev/pc-ecommerce/issues/65). Abandoned-cart email: not in the MVP (PRD).
 - Product images, a logo image, tracking pixels, unsubscribe links, locale or dark-mode variants.
 - Resending an email by hand, an outbox admin view, bounce handling, an outbox for the shop owner: Sprint 9 and later.

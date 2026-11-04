@@ -1,6 +1,6 @@
 # 037 — Vouchers at checkout
 
-Status: approved with changes (2026-11-04; see "Changes made by the review" at the end of §10). Issue: [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) (parent epic [#4](https://github.com/romulojr-dev/pc-ecommerce/issues/4), Checkout, Sprint 7). PRD: FR-17 (voucher codes: fixed or % off, min spend, expiry, usage limit), AD-8 (data only; the Admin screen is Sprint 9), Data model › `Voucher`, `Order`. Builds on [spec 029](../029-checkout-steps/spec.md) (the review), [spec 030](../030-place-an-order/spec.md) / [ADR 0009](../../adr/0009-place-orders-in-one-transaction-held-by-an-access-token.md) (`placeOrder`, the digest), [spec 033](../033-release-unpaid-orders/spec.md) (the release), [spec 028](../028-shipping-data-and-fee-rules/spec.md) (the fee; **D14 stays as it is**) and [spec 036](../036-order-emails/spec.md) (the Order placed email; **§8 changes**). Sibling: [#95](https://github.com/romulojr-dev/pc-ecommerce/issues/95) (COD), which touches the same review, digest, placement and release code and goes second.
+Status: implemented (2026-11-04; approved with changes, see "Changes made by the review" at the end of §10, and "What changed while building" there). Issue: [#94](https://github.com/romulojr-dev/pc-ecommerce/issues/94) (parent epic [#4](https://github.com/romulojr-dev/pc-ecommerce/issues/4), Checkout, Sprint 7). PRD: FR-17 (voucher codes: fixed or % off, min spend, expiry, usage limit), AD-8 (data only; the Admin screen is Sprint 9), Data model › `Voucher`, `Order`. Builds on [spec 029](../029-checkout-steps/spec.md) (the review), [spec 030](../030-place-an-order/spec.md) / [ADR 0009](../../adr/0009-place-orders-in-one-transaction-held-by-an-access-token.md) (`placeOrder`, the digest), [spec 033](../033-release-unpaid-orders/spec.md) (the release), [spec 028](../028-shipping-data-and-fee-rules/spec.md) (the fee; **D14 stays as it is**) and [spec 036](../036-order-emails/spec.md) (the Order placed email; **§8 changes**). Sibling: [#95](https://github.com/romulojr-dev/pc-ecommerce/issues/95) (COD), which touches the same review, digest, placement and release code and goes second.
 
 Long form: the story touches a new table, the review, the digest, placement, the release, the order page and an email.
 
@@ -346,3 +346,13 @@ None open. The review of 2026-11-04 settled both questions of the first draft:
 - **Demo codes:** README and Preview checklist only (Behavior 2).
 - **One `now`:** Behavior 16, §4 "Dates and time", D10 and P15.
 - **Noted for #95:** the floor applies to COD (Behavior 13, §8).
+
+### What changed while building
+
+- `computeReview` hands the placement the applied voucher's `id` and the terms the review used (`type`, `value`, `minSpend`), not just an id, so P16 compares them without a second read. None of it reaches the browser (a test checks the row id is absent from the review result).
+- The voucher CHECK tests live in `lib/orders/voucher-schema.db.test.ts`, not `lib/vouchers/`: the pure folder's import limits forbid the test database helper.
+- The `Order` CHECK is `discount = 0 OR voucherId IS NOT NULL` together with the id and code being set or null together (D13); a voucher worth ₱0.00 is allowed on an order.
+- The seed prints "Vouchers: n added." or "Vouchers: kept (already set).", and `writeSeed` takes the vouchers as an optional argument, so the older seed tests are unchanged.
+- The placement and release steps were committed together: the race test P13 needs the release's give-back.
+- The E2E ran against a scratch database in the Docker Postgres (not the Neon dev branch), in dev and against the production build. Four fake-payment-page specs (`place-order`, `order-emails`, `release`) fail now and then in that setup, **on the commit before this story as well** (two of three baseline runs lost "Pay marks the order Paid"), so that flakiness is not from vouchers.
+- Still open and not blocking: whether the payment page hides Cards below ₱20.00 (`docs/setup/payments.md`).
