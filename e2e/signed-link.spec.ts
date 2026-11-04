@@ -1,6 +1,11 @@
 import type { Page } from "@playwright/test"
 
-import { enqueueEmailFor, outboxFor, viewLinkQuery } from "./orders"
+import {
+  codConfirmLinkQuery,
+  enqueueEmailFor,
+  outboxFor,
+  viewLinkQuery,
+} from "./orders"
 import { readStock, setStock } from "./stock"
 import { expect, test } from "./test"
 
@@ -119,8 +124,12 @@ test("a bad link is the same 404 as a wrong key (X2)", async ({ page }) => {
     `/orders/${number}?${flipped}`,
     // expired
     `/orders/${number}?${viewLinkQuery(number, { expiresInSeconds: -60 })}`,
-    // the COD purpose, signed correctly, opens no order page here
+    // a view signature under the COD purpose
     `/orders/${number}?${good.replace("p=view", "p=cod-confirm")}`,
+    // the COD purpose, signed correctly, on an order that isn't a cash order
+    // (docs/specs/038-cash-on-delivery: the purpose opens the confirmation
+    // page of cash orders and nothing else)
+    `/orders/${number}?${codConfirmLinkQuery(number)}`,
     // someone else's link
     `/orders/PCS-00000000?${viewLinkQuery("PCS-00000000")}`,
     // a key and a link together
@@ -134,7 +143,9 @@ test("a bad link is the same 404 as a wrong key (X2)", async ({ page }) => {
       text: await page.locator("main").innerText(),
     })
   }
-  expect(seen.map((s) => s.status)).toEqual([404, 404, 404, 404, 404, 404, 404])
+  expect(seen.map((s) => s.status)).toEqual([
+    404, 404, 404, 404, 404, 404, 404, 404,
+  ])
   expect(new Set(seen.map((s) => s.text)).size).toBe(1)
 })
 
@@ -167,8 +178,10 @@ test("Pay now through the link reaches the payment page and Paid (X3)", async ({
 
 test("a due outbox row is claimed by a page's sweep (X4)", async ({ page }) => {
   const number = await placeOrder(page)
-  // COD_CONFIRM has no template until #95: the row fails final, loudly, and
-  // the order is untouched (the order's own "Order placed" row is sent)
+  // A second row for the order, as a trigger's transaction would write it: the
+  // page's sweep claims it and the registry renders it (COD_CONFIRM is
+  // registered since docs/specs/038-cash-on-delivery; for an online order it
+  // says where the order stands), and the order is untouched
   await enqueueEmailFor(number, "COD_CONFIRM")
 
   await expect(async () => {
@@ -176,9 +189,9 @@ test("a due outbox row is claimed by a page's sweep (X4)", async ({ page }) => {
     const rows = await outboxFor(number)
     expect(rows.find((row) => row.type === "COD_CONFIRM")).toEqual({
       type: "COD_CONFIRM",
-      status: "FAILED",
-      attempts: 5,
-      lastErrorCode: "no-template",
+      status: "SENT",
+      attempts: 1,
+      lastErrorCode: null,
     })
   }).toPass({ timeout: 30_000 })
 

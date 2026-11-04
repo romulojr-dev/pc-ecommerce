@@ -73,9 +73,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 10. E2E
-- [ ] `e2e/cod.spec.ts` X1–X7 (own recipient per order; part, stock and deadline helpers)
-- [ ] `e2e/signed-link.spec.ts` updated
-- [ ] `pnpm build` then `CI=1 pnpm test:e2e`, and `pnpm test:e2e` against dev, pass
+- [x] `e2e/cod.spec.ts` X1–X7 (`e2e/settings.ts` moves the COD limit for X4; `orderLinkPathFor` and `codConfirmLinkQuery` in `e2e/orders.ts`) (own recipient per order; part, stock and deadline helpers)
+- [x] `e2e/signed-link.spec.ts` updated
+- [x] Run against a scratch database in the Docker Postgres (not the Neon dev branch): the whole suite in dev with one worker (165 of 166, the one failure a share-build navigation timeout that passes alone, 12 of 12), `pnpm build`, and the order-related specs against the production build with `CI=1` (39 of 39). With parallel workers the dev server was too slow and 18 unrelated specs timed out; they passed serially
 
 ## 11. Docs
 - [ ] `docs/prd.md` (FR-20, FR-21, COD row, `StoreSettings` and `Order` rows)
