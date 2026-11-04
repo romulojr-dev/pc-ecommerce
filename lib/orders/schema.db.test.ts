@@ -444,6 +444,9 @@ describe("cancelled orders", () => {
   it("has the partial index the release's query uses", async () => {
     const [index] = await db.$queryRaw<{ indexdef: string }[]>`
       SELECT "indexdef" FROM pg_indexes WHERE "indexname" = 'Order_expiresAt_idx'`
-    expect(index?.indexdef).toContain("WHERE (status = 'PENDING_PAYMENT'")
+    // Both pending statuses since docs/specs/038-cash-on-delivery
+    expect(index?.indexdef).toContain("'PENDING_PAYMENT'::\"OrderStatus\"")
+    expect(index?.indexdef).toContain("'PENDING_CONFIRMATION'::\"OrderStatus\"")
+    expect(index?.indexdef).toContain('("expiresAt")')
   })
 })

@@ -6,6 +6,7 @@ import { db, resetCatalog } from "@/test-support/db"
 
 import { getShippingConfig } from "./config"
 import { shippingFee } from "./fee"
+import { toDbZone } from "./zone-enum"
 
 // getShippingConfig (docs/specs/028-shipping-data-and-fee-rules, D16)
 
@@ -52,7 +53,13 @@ describe("getShippingConfig", () => {
   })
 
   it("returns no rates when the table is empty, and every zone is then no-rate", async () => {
-    await db.storeSettings.create({ data: { ...shippingSeed.store, id: 1 } })
+    await db.storeSettings.create({
+      data: {
+        ...shippingSeed.store,
+        codZones: shippingSeed.store.codZones.map((zone) => toDbZone[zone]),
+        id: 1,
+      },
+    })
 
     const { rates, settings } = await getShippingConfig()
 

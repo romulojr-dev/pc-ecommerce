@@ -16,6 +16,13 @@ export type ShippingSeed = {
     storeHours: string
     storeInfo: string
     orderExpiryHours: number
+    // Cash on delivery (docs/specs/038-cash-on-delivery, FR-25)
+    codEnabled: boolean
+    // Centavos; null means no limit
+    codMaxTotal: number | null
+    codZones: ShippingZone[]
+    codPickupEnabled: boolean
+    codConfirmHours: number
   }
   rates: {
     zone: ShippingZone
@@ -47,6 +54,14 @@ const store: ShippingSeed["store"] = {
   storeInfo:
     "Demo store for a portfolio project. This is not a real shop and no order is fulfilled. Questions: hello@pcsilicon.example",
   orderExpiryHours: 24,
+  // The same values as the migration's column defaults, which is how the row
+  // that already exists got them (a test keeps the two in step)
+  codEnabled: true,
+  // ₱50,000.00
+  codMaxTotal: 5_000_000,
+  codZones: ["metro-manila", "luzon"],
+  codPickupEnabled: true,
+  codConfirmHours: 24,
 }
 
 // Weight limits in grams: 1 kg, 3 kg, 10 kg, 20 kg, then no limit

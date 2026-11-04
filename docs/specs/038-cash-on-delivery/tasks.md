@@ -21,12 +21,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema, migrations, seed
-- [ ] `schema.prisma`: `PENDING_CONFIRMATION`, `PaymentOption`, `Order.paymentOption` and `confirmedAt`, `StoreSettings` COD fields with defaults, the two-status partial index
-- [ ] Migration `cod_status` (enum value only) and migration `cod_orders` (`--create-only`): columns, index swap, CHECKs (option/status pairing, COD `paidAt`, `confirmedAt`, the two existing checks recreated, `codMaxTotal`, `codConfirmHours`)
-- [ ] `pnpm db:migrate`, `pnpm db:drift` and `pnpm test:db:migrate` pass (migrations applied twice)
-- [ ] Seed store block, `validate-shipping`, `getShippingConfig`, test-support settings helper
-- [ ] DB tests D1–D6, D9, D10 and the seed test D2
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `schema.prisma`: `PENDING_CONFIRMATION`, `PaymentOption`, `Order.paymentOption` and `confirmedAt`, `StoreSettings` COD fields with defaults, the two-status partial index
+- [x] Migration `cod_status` (enum value only) and migration `cod_orders` (`--create-only`): columns, index swap, CHECKs (option/status pairing, COD `paidAt`, `confirmedAt`, the two existing checks recreated, `codMaxTotal`, `codConfirmHours`)
+- [x] Migrations applied and `pnpm db:drift` clean on a scratch database in the Docker Postgres (the Neon dev branch was not touched; `pnpm test:db` applies them to the test database)
+- [x] Seed store block, `validate-shipping`, `getShippingConfig`, test-support settings helper
+- [x] DB tests D1–D6, D9, D10 and the seed test D2
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 3. The review
 - [ ] `checkoutInputSchema` `payment`; draft `payment` and `draftPayload`

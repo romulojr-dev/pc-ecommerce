@@ -42,6 +42,12 @@ describe("the shipping seed", () => {
       storeAddress: shippingSeed.store.storeAddress,
       storeHours: shippingSeed.store.storeHours,
       storeInfo: shippingSeed.store.storeInfo,
+      // D2: the cash-on-delivery demo values (docs/specs/038-cash-on-delivery)
+      codEnabled: true,
+      codMaxTotal: 5_000_000,
+      codZones: ["METRO_MANILA", "LUZON"],
+      codPickupEnabled: true,
+      codConfirmHours: 24,
     })
     expect(await db.storeSettings.count()).toBe(1)
   })
@@ -57,7 +63,13 @@ describe("the shipping seed", () => {
     })
     await db.storeSettings.update({
       where: { id: 1 },
-      data: { freeShippingThreshold: null, storeHours: "Open all week" },
+      data: {
+        freeShippingThreshold: null,
+        storeHours: "Open all week",
+        codMaxTotal: null,
+        codZones: ["MINDANAO"],
+        codEnabled: false,
+      },
     })
     const ratesBefore = await db.shippingRate.findMany({
       orderBy: { id: "asc" },
@@ -77,6 +89,10 @@ describe("the shipping seed", () => {
     ).toMatchObject({
       freeShippingThreshold: null,
       storeHours: "Open all week",
+      // D2: Admin's COD edits survive a re-seed too
+      codMaxTotal: null,
+      codZones: ["MINDANAO"],
+      codEnabled: false,
     })
   })
 

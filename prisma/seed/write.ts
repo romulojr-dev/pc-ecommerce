@@ -162,7 +162,13 @@ async function writeShipping(
   shipping: ShippingSeed
 ) {
   const settings = await tx.storeSettings.createMany({
-    data: [{ id: 1, ...shipping.store }],
+    data: [
+      {
+        id: 1,
+        ...shipping.store,
+        codZones: shipping.store.codZones.map((zone) => toDbZone[zone]),
+      },
+    ],
     skipDuplicates: true,
   })
   let shippingRates = 0
