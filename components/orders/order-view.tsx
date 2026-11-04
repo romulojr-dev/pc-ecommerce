@@ -7,9 +7,20 @@ import {
   OrderTotalsRows,
 } from "@/components/orders/order-parts"
 import { addressLines } from "@/lib/checkout/copy"
-import { ORDER_COPY, orderHeading } from "@/lib/orders/copy"
+import {
+  checkEmailText,
+  COD_ORDER_COPY,
+  codConfirmedText,
+  ORDER_COPY,
+  orderHeading,
+  paymentOptionText,
+} from "@/lib/orders/copy"
 import { payByText, placedOnText } from "@/lib/orders/time"
-import { orderTimeline, statusLabel } from "@/lib/orders/timeline"
+import {
+  type OrderStatusName,
+  orderTimeline,
+  statusLabel,
+} from "@/lib/orders/timeline"
 import type { OrderPageData } from "@/lib/orders/view"
 import { PAY_COPY, paidLine } from "@/lib/payments/copy"
 import type { PaymentView } from "@/lib/payments/payment-view"
@@ -27,7 +38,18 @@ export type OrderPayment = {
   instructions: string
   // Who "Still confirming" waits for
   gatewayName: string
+  // The address the confirmation email comes from, named on a cash order that
+  // waits for it (docs/specs/038-cash-on-delivery, Behavior 25)
+  confirmSender: string
 }
+
+// A confirmed cash order that hasn't been delivered yet: what to pay and when
+const CONFIRMED_NOTE: readonly OrderStatusName[] = [
+  "COD_CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "READY_FOR_PICKUP",
+]
 
 export function OrderView({
   order,
@@ -42,6 +64,8 @@ export function OrderView({
   const expired = view === "expired" || order.cancelReason === "EXPIRED"
   const status = view === "expired" ? "CANCELLED" : order.status
   const timeline = orderTimeline({ ...order, status })
+  const cash = order.paymentOption === "COD"
+  const pickup = order.fulfillment === "PICKUP"
   const lines = order.address ? addressLines({ ...order.address }) : null
 
   return (
@@ -62,7 +86,13 @@ export function OrderView({
         <OrderTimeline timeline={timeline} />
         {(expired || order.paidAt || order.refundRequired) && (
           <div className="flex flex-col gap-1 text-sm">
-            {expired && <p>{ORDER_COPY.cancelledExpired}</p>}
+            {expired && (
+              <p>
+                {cash
+                  ? COD_ORDER_COPY.cancelledNotConfirmed
+                  : ORDER_COPY.cancelledExpired}
+              </p>
+            )}
             {order.paidAt && (
               <p>{paidLine(order.paidAt, order.paymentMethod)}</p>
             )}
@@ -74,6 +104,14 @@ export function OrderView({
               </p>
             )}
           </div>
+        )}
+        {status === "PENDING_CONFIRMATION" && (
+          <p className="text-sm font-medium">
+            {checkEmailText(payment.confirmSender, order.expiresAt)}
+          </p>
+        )}
+        {CONFIRMED_NOTE.includes(status) && (
+          <p className="text-sm">{codConfirmedText(order.total, pickup)}</p>
         )}
         {view === "needs-check" && (
           <p className="text-sm font-medium">{PAY_COPY.needsCheck}</p>
@@ -153,6 +191,14 @@ export function OrderView({
             voucherCode={order.voucherCode}
             total={order.total}
           />
+          {cash && (
+            <dl className="border-t pt-3">
+              <div className="flex justify-between gap-4">
+                <dt>{COD_ORDER_COPY.paymentRow}</dt>
+                <dd>{paymentOptionText(pickup)}</dd>
+              </div>
+            </dl>
+          )}
         </aside>
       </div>
     </div>

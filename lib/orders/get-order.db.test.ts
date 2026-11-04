@@ -115,6 +115,36 @@ describe("the right link", () => {
     )
   })
 
+  it("carries how it is paid: online, with no confirmation time", async () => {
+    const { number, key } = await placeRyzens(delivery)
+
+    expect(await getOrderForPage(number, key)).toMatchObject({
+      paymentOption: "ONLINE",
+      confirmedAt: null,
+    })
+  })
+
+  it("a cash order reads as Pending confirmation, with its confirmation time once confirmed (docs/specs/038-cash-on-delivery)", async () => {
+    const { number, key } = await placeRyzens({ ...delivery, payment: "cod" })
+
+    expect(await getOrderForPage(number, key)).toMatchObject({
+      status: "PENDING_CONFIRMATION",
+      paymentOption: "COD",
+      confirmedAt: null,
+      payments: { latest: null, needsCheck: false },
+    })
+
+    const at = new Date("2026-11-04T04:30:00Z")
+    await db.order.update({
+      where: { orderNumber: number },
+      data: { status: "COD_CONFIRMED", confirmedAt: at },
+    })
+    expect(await getOrderForPage(number, key)).toMatchObject({
+      status: "COD_CONFIRMED",
+      confirmedAt: at,
+    })
+  })
+
   it("a pickup order carries the store's current address and hours (D5)", async () => {
     const { number, key } = await placeRyzens(pickup)
     await db.storeSettings.update({

@@ -44,6 +44,8 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
     viaLink: false,
     status: "PENDING_PAYMENT",
     fulfillment: "DELIVERY",
+    paymentOption: "ONLINE",
+    confirmedAt: null,
     createdAt: new Date("2026-10-31T07:42:00Z"),
     // 24 hours later
     expiresAt: new Date("2026-11-01T07:42:00Z"),
@@ -80,7 +82,8 @@ const render = (
   o: OrderPageData,
   now = NOW,
   param: PaymentParam | null = null,
-  instructions = XENDIT_INSTRUCTIONS
+  instructions = XENDIT_INSTRUCTIONS,
+  confirmSender = "orders@mail.pcsilicon.tech"
 ) =>
   renderToStaticMarkup(
     <OrderView
@@ -89,6 +92,7 @@ const render = (
         view: paymentView(o.status, o.expiresAt, param, now, o.payments),
         instructions,
         gatewayName: "Xendit",
+        confirmSender,
       }}
     />
   )
@@ -608,5 +612,142 @@ describe("an order that wasn't paid in time", () => {
     )
     expect(t).not.toContain(EXPIRED)
     expect(t).toContain("Paid on")
+  })
+})
+
+// docs/specs/038-cash-on-delivery: O1–O4
+describe("a cash order", () => {
+  // placed 2026-11-04 10:00 Manila, to be confirmed by 2026-11-05 10:00 Manila
+  const PLACED = new Date("2026-11-04T02:00:00Z")
+  const DEADLINE = new Date("2026-11-05T02:00:00Z")
+  const BEFORE = new Date("2026-11-04T05:00:00Z")
+  const cash = (over: Partial<OrderPageData> = {}) =>
+    order({
+      paymentOption: "COD",
+      status: "PENDING_CONFIRMATION",
+      createdAt: PLACED,
+      expiresAt: DEADLINE,
+      ...over,
+    })
+
+  it("O1: pending, shows the timeline, the check-your-email text and no way to pay", () => {
+    const html = render(cash(), BEFORE)
+    const plain = text(html)
+
+    expect(plain).toContain("Pending confirmation")
+    expect(plain).toContain("COD confirmed")
+    expect(plain).not.toContain("Pending payment")
+    expect(html).toContain('aria-current="step"')
+    // the one current step is Pending confirmation
+    expect(html.match(/aria-current="step"/g)).toHaveLength(1)
+    expect(plain).toContain(
+      "Check your email (from orders@mail.pcsilicon.tech) to confirm this order. If it doesn't arrive, the order cancels itself at Thu 5 Nov 2026, 10:00 AM and you can place a new one."
+    )
+    // no Pay now, no payment panel, no test-mode banner, no confirm button
+    expect(plain).not.toContain("Pay now")
+    expect(plain).not.toContain("Test mode")
+    expect(plain).not.toContain("Confirm order")
+    expect(plain).not.toContain("Retry payment")
+    // the save-the-link prompt as for any order opened with its key
+    expect(html).toContain("Your order link")
+    // the Payment row
+    expect(plain).toContain("Payment Cash on delivery")
+  })
+
+  it("O1a/O1b: names whatever sender the store sends from", () => {
+    const html = render(
+      cash(),
+      BEFORE,
+      null,
+      XENDIT_INSTRUCTIONS,
+      "shop@example.com"
+    )
+    expect(text(html)).toContain("(from shop@example.com)")
+  })
+
+  it("O1c: the same when opened by a signed link, without the save-the-link prompt", () => {
+    const html = render(cash({ viaLink: true }), BEFORE)
+
+    expect(text(html)).toContain(
+      "Check your email (from orders@mail.pcsilicon.tech)"
+    )
+    expect(html).not.toContain("Your order link")
+  })
+
+  it("O2: confirmed, shows when, and what to pay", () => {
+    const confirmedAt = new Date("2026-11-04T04:30:00Z")
+    const html = render(cash({ status: "COD_CONFIRMED", confirmedAt }), BEFORE)
+    const plain = text(html)
+
+    expect(plain).toContain("Confirmed Wed 4 Nov 2026, 12:30 PM")
+    expect(plain).toContain(
+      "You confirmed this order. Pay ₱23,110.00 in cash when it arrives."
+    )
+    expect(plain).not.toContain("Check your email")
+    expect(html.match(/aria-current="step"/g)).toHaveLength(1)
+  })
+
+  it("O3: a pickup order reads Pay on pickup and when to collect", () => {
+    const html = render(
+      cash({
+        fulfillment: "PICKUP",
+        address: null,
+        store: { address: "Unit 4, Makati", hours: "Mon-Sat" },
+        shippingFee: 0,
+        total: 2_299_000,
+        status: "COD_CONFIRMED",
+        confirmedAt: new Date("2026-11-04T04:30:00Z"),
+      }),
+      BEFORE
+    )
+    const plain = text(html)
+
+    expect(plain).toContain("Payment Pay on pickup")
+    expect(plain).toContain("Pay ₱22,990.00 in cash when you collect it.")
+    expect(plain).toContain("Ready for pickup")
+    expect(plain).toContain("Unit 4, Makati")
+  })
+
+  it("O4: pending past its deadline reads cancelled, with the not-confirmed text", () => {
+    const html = render(cash(), DEADLINE)
+    const plain = text(html)
+
+    expect(plain).toContain("Cancelled")
+    expect(plain).toContain(
+      "This order was cancelled because it wasn't confirmed in time. Place a new order if you still want these parts."
+    )
+    expect(plain).not.toContain("Check your email")
+    expect(plain).not.toContain("wasn't paid in time")
+  })
+
+  it("O4: a released order says the same, whatever the clock", () => {
+    const html = render(
+      cash({ status: "CANCELLED", cancelReason: "EXPIRED" }),
+      BEFORE
+    )
+
+    expect(text(html)).toContain("wasn't confirmed in time")
+  })
+
+  it("O4: a confirmed order past its deadline stays confirmed", () => {
+    const html = render(
+      cash({
+        status: "COD_CONFIRMED",
+        confirmedAt: new Date("2026-11-04T04:30:00Z"),
+      }),
+      new Date("2027-01-01T00:00:00Z")
+    )
+    const plain = text(html)
+
+    expect(plain).not.toContain("Cancelled")
+    expect(plain).toContain("You confirmed this order")
+  })
+
+  it("an online order shows no Payment row and none of the cash text", () => {
+    const plain = text(render(order()))
+
+    expect(plain).not.toContain("Cash on delivery")
+    expect(plain).not.toContain("Check your email")
+    expect(plain).not.toContain("Confirmed ")
   })
 })

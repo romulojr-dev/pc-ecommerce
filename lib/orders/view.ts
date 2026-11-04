@@ -1,6 +1,10 @@
 import type { PaymentsSummary } from "@/lib/payments/payment-view"
 
-import type { FulfillmentName, OrderStatusName } from "./timeline"
+import type {
+  FulfillmentName,
+  OrderStatusName,
+  PaymentOptionName,
+} from "./timeline"
 
 // What the order page shows (docs/specs/030-place-an-order, Behavior 18), as
 // plain data read from the order's snapshots. Pure: the page's loader fills it
@@ -22,6 +26,11 @@ export type OrderPageData = {
   viaLink: boolean
   status: OrderStatusName
   fulfillment: FulfillmentName
+  // How it is paid: online, or cash on delivery / on pickup (docs/specs/038-
+  // cash-on-delivery)
+  paymentOption: PaymentOptionName
+  // When a cash order was confirmed from its email
+  confirmedAt: Date | null
   createdAt: Date
   expiresAt: Date
   contact: { name: string; email: string; mobile: string }

@@ -37,8 +37,19 @@ export function OrderTimeline({ timeline }: { timeline: Timeline }) {
                 <span className="size-2 rounded-full bg-primary" />
               ) : null}
             </span>
-            {step.label}
-            {step.state === "done" && <span className="sr-only"> (done)</span>}
+            <span className="flex flex-col">
+              <span>
+                {step.label}
+                {step.state === "done" && (
+                  <span className="sr-only"> (done)</span>
+                )}
+              </span>
+              {step.detail && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {step.detail}
+                </span>
+              )}
+            </span>
           </li>
         ))}
         {timeline.branch && (

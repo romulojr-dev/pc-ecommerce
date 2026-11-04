@@ -57,6 +57,8 @@ export async function getOrderForPage(
     viaLink: given.kind === "link",
     status: order.status satisfies OrderStatusName,
     fulfillment: order.fulfillment satisfies FulfillmentName,
+    paymentOption: order.paymentOption,
+    confirmedAt: order.confirmedAt,
     createdAt: order.createdAt,
     expiresAt: order.expiresAt,
     contact: {

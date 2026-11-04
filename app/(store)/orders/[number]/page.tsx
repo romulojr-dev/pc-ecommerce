@@ -9,6 +9,8 @@ import { credentialFromParams } from "@/lib/orders/credential"
 import { confirmTitle, orderTitle } from "@/lib/orders/copy"
 import { loadCodConfirm } from "@/lib/orders/get-cod-confirm"
 import { loadOrder } from "@/lib/orders/get-order"
+import { senderAddress } from "@/lib/email/sender"
+import { env } from "@/lib/env"
 import { sweepAfterResponse } from "@/lib/orders/release"
 import { gateway } from "@/lib/payments/gateway"
 import { parsePaymentParam, paymentView } from "@/lib/payments/payment-view"
@@ -115,7 +117,12 @@ export default async function OrderPage({
     <Container className="py-8">
       <OrderView
         order={order}
-        payment={{ view, instructions: testInstructions, gatewayName: name }}
+        payment={{
+          view,
+          instructions: testInstructions,
+          gatewayName: name,
+          confirmSender: senderAddress(env.EMAIL_FROM),
+        }}
       />
     </Container>
   )

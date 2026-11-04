@@ -61,10 +61,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. Order page
-- [ ] `OrderPageData` and `getOrderForPage`: `paymentOption`, `confirmedAt`
-- [ ] `OrderView`: display status, check-your-email text with the sender, confirmed and cancelled lines, Payment row, no panel or banner for cash; `OrderTimeline` draws the detail
-- [ ] Tests O1–O4 (incl. O1a–O1c); `get-order.db.test.ts` updated
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `OrderPageData` and `getOrderForPage`: `paymentOption`, `confirmedAt`
+- [x] `OrderView`: a cash order Pending confirmation past its deadline reads cancelled (through `paymentView`, now returning `expired` for it, so `displayStatus` serves the email and the confirm page), check-your-email text with the sender, confirmed and cancelled lines, Payment row, no panel or banner for cash; `OrderTimeline` draws the detail
+- [x] Tests O1–O4 (incl. O1a–O1c); `get-order.db.test.ts` updated
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. The review UI
 - [ ] `components/checkout/payment-choice.tsx`; the Payment section, Payment row and cash place-note in `ReviewView`
