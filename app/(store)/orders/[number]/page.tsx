@@ -3,9 +3,11 @@ import { notFound } from "next/navigation"
 import { connection } from "next/server"
 
 import { Container } from "@/components/layout/container"
+import { CodConfirmView } from "@/components/orders/cod-confirm-view"
 import { OrderView } from "@/components/orders/order-view"
 import { credentialFromParams } from "@/lib/orders/credential"
-import { orderTitle } from "@/lib/orders/copy"
+import { confirmTitle, orderTitle } from "@/lib/orders/copy"
+import { loadCodConfirm } from "@/lib/orders/get-cod-confirm"
 import { loadOrder } from "@/lib/orders/get-order"
 import { sweepAfterResponse } from "@/lib/orders/release"
 import { gateway } from "@/lib/payments/gateway"
@@ -24,6 +26,17 @@ type Query = Awaited<PageProps<"/orders/[number]">["searchParams"]>
 const credentialOf = ({ key, sig, exp, p }: Query) =>
   credentialFromParams({ key, sig, exp, p })
 
+// A cash order's confirmation link, `p=cod-confirm` (docs/specs/038-cash-on-
+// delivery, Behavior 17): it opens the confirmation page and nothing else.
+// A link with that purpose that isn't a clean single-valued link falls through
+// to the order page's own 404.
+function codLinkOf(query: Query) {
+  const credential = credentialOf(query)
+  return credential.kind === "link" && credential.purpose === "cod-confirm"
+    ? { sig: credential.sig, exp: credential.exp, p: credential.purpose }
+    : null
+}
+
 // A bad link is a 404 here too, so the page and its metadata agree. The read
 // is shared with the page (React cache).
 export async function generateMetadata({
@@ -31,7 +44,18 @@ export async function generateMetadata({
   searchParams,
 }: PageProps<"/orders/[number]">): Promise<Metadata> {
   const { number } = await params
-  if (!(await loadOrder(number, credentialOf(await searchParams)))) notFound()
+  const query = await searchParams
+  const cod = codLinkOf(query)
+  if (cod) {
+    if (!(await loadCodConfirm(number, cod.sig, cod.exp, cod.p))) notFound()
+    return {
+      title: confirmTitle(number),
+      description: "Confirm your PC Silicon order.",
+      robots: { index: false, follow: false },
+      referrer: "no-referrer",
+    }
+  }
+  if (!(await loadOrder(number, credentialOf(query)))) notFound()
 
   return {
     title: orderTitle(number),
@@ -53,6 +77,21 @@ export default async function OrderPage({
   const { number } = await params
   const query = await searchParams
   const { payment } = query
+
+  const cod = codLinkOf(query)
+  if (cod) {
+    const data = await loadCodConfirm(number, cod.sig, cod.exp, cod.p)
+    if (!data) notFound()
+    // Unconfirmed cash orders past their deadline are released after the
+    // response, like unpaid online ones (docs/specs/033-release-unpaid-orders)
+    sweepAfterResponse(new Date())
+    return (
+      <Container className="py-8">
+        <CodConfirmView data={data} link={cod} />
+      </Container>
+    )
+  }
+
   const order = await loadOrder(number, credentialOf(query))
   if (!order) notFound()
   // Expired orders, this one included, are released after the response

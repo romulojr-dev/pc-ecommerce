@@ -78,3 +78,6 @@ export const orderHeading = (orderNumber: string): string =>
 
 export const orderTitle = (orderNumber: string): string =>
   `Order ${orderNumber}`
+
+export const confirmTitle = (orderNumber: string): string =>
+  `Confirm order ${orderNumber}`

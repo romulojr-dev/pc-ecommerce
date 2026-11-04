@@ -54,11 +54,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Confirm
-- [ ] `lib/orders/confirm-cod.ts` (`confirmCodOrder`, one conditional update setting `confirmedAt`), `logCodEvent`
-- [ ] `getCodConfirmPage`, `confirmCodOrderAction`, the `p=cod-confirm` branch in the order page and its metadata
-- [ ] `cod-confirm-view.tsx` and `cod-confirm-button.tsx`
-- [ ] DB tests C1–C8 and the race C10 (20 runs); U14; `credentials`, `credential-payment` and `signed-link` tests updated
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `lib/orders/confirm-cod.ts` (`confirmCodOrder`, one conditional update setting `confirmedAt`), `logCodEvent`
+- [x] `getCodConfirmPage`, `confirmCodOrderAction`, the `p=cod-confirm` branch in the order page and its metadata
+- [x] `cod-confirm-view.tsx` and `cod-confirm-button.tsx`; the items list and totals rows moved out of `order-view.tsx` into `order-parts.tsx` so both pages share them
+- [x] DB tests C1–C8 and C10 in `confirm-cod.db.test.ts` (the 20-run race plus the three interleavings forced with the row lock: confirm between the release's check and lock, confirm waiting on the release's lock, release skipping a confirmation's lock); U14, U19; O8 in `cod-confirm-view.test.tsx`. `credentials`, `credential-payment` and `signed-link` tests needed no change (the purpose still opens nothing else; C8 pins it)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. Order page
 - [ ] `OrderPageData` and `getOrderForPage`: `paymentOption`, `confirmedAt`
