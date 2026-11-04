@@ -66,6 +66,19 @@ const contactSchema = z.object({
     }),
 })
 
+// The voucher code as typed (docs/specs/037-vouchers-at-checkout, §4 Matching
+// and input): trimmed, empty means none. A mistyped code is never an error
+// here, it is a refusal on the review; only a payload far past any code is
+// malformed.
+const voucherCodeSchema = z
+  .string()
+  .max(200)
+  .optional()
+  .transform((value) => {
+    const code = value?.trim()
+    return code ? code : undefined
+  })
+
 const addressSchema = z.object({
   regionCode: code(CHECKOUT_COPY.region),
   provinceCode: code(CHECKOUT_COPY.province),
@@ -85,8 +98,13 @@ export const checkoutInputSchema = z.discriminatedUnion("method", [
     method: z.literal("delivery"),
     contact: contactSchema,
     address: addressSchema,
+    voucherCode: voucherCodeSchema,
   }),
-  z.object({ method: z.literal("pickup"), contact: contactSchema }),
+  z.object({
+    method: z.literal("pickup"),
+    contact: contactSchema,
+    voucherCode: voucherCodeSchema,
+  }),
 ])
 
 export type CheckoutInput = z.output<typeof checkoutInputSchema>

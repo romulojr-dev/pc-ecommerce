@@ -197,7 +197,7 @@ export async function placeOrder(
 
       // 3. The review's own checks on the locked cart, then the comparison
       //    with what the shopper saw
-      const core = await computeReview(tx, cartId, details)
+      const core = await computeReview(tx, cartId, details, now)
       if (!core.ok) {
         throw core.reason === "invalid"
           ? new Refusal({ ok: false, reason: "invalid", fields: core.fields })
@@ -208,6 +208,8 @@ export async function placeOrder(
         throw refuse("changed")
       }
       if (reviewDigest(review) !== digest) throw refuse("changed")
+      // Placing with a voucher comes in the next step of spec 037
+      if (review.voucher.kind !== "none") throw refuse("changed")
       await step("checks")
 
       // 4. Take the stock: one conditional update per product, in id order.

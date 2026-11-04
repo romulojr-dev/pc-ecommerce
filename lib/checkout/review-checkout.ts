@@ -6,6 +6,7 @@ import { newAccessToken, newIdempotencyKey } from "@/lib/orders/secrets"
 import { resolveAddress } from "@/lib/psgc/address"
 import { getShippingConfig } from "@/lib/shipping/config"
 import { manilaToday } from "@/lib/stock"
+import { normalizeVoucherCode } from "@/lib/vouchers"
 
 import { type PlaceAddress, failingLevel, normalizeAddress } from "./address"
 import { STEP_COPY } from "./copy"
@@ -16,7 +17,8 @@ import {
   checkoutInputSchema,
   fieldErrors,
 } from "./input"
-import { buildReview, type CheckoutReview } from "./review"
+import { buildReview, type CheckoutReview, type VoucherRequest } from "./review"
+import { loadVoucher } from "./voucher"
 
 // The server side of step 2 (docs/specs/029-checkout-steps, Behavior 16–21,
 // D1): re-checks the details and the cart on every call and builds the review.
@@ -96,6 +98,9 @@ export type ReviewCore =
       address: CheckoutAddress | null
       store: { address: string; hours: string } | null
       holdHours: number
+      // The applied voucher's row, for the placement's count; never sent to
+      // the browser (docs/specs/037-vouchers-at-checkout, plan)
+      voucherId: string | null
     }
   | { ok: false; reason: "invalid"; fields: Record<string, string> }
   | { ok: false; reason: "empty" }
@@ -104,11 +109,14 @@ export type ReviewCore =
 // 029): the cart view, the shipping config, the pickup setting, the address
 // and the pure `buildReview`. Throws on a database error; the callers decide
 // what to do with it. `client` is `db`, or the transaction a placement holds
-// (reads inside it need no second connection).
+// (reads inside it need no second connection). `now` is the caller's one
+// clock: the voucher's dates are judged against it (docs/specs/037-vouchers-
+// at-checkout, D10).
 export async function computeReview(
   client: DbClient,
   cartId: string | null,
-  details: CheckoutInput
+  details: CheckoutInput,
+  now: Date
 ): Promise<ReviewCore> {
   const view = await getCartView(cartId, manilaToday(), client)
   if (view.entries.length === 0) return { ok: false, reason: "empty" }
@@ -143,6 +151,18 @@ export async function computeReview(
     }
   }
 
+  // The code, if one was typed: a text that can't be a code is looked up as
+  // nothing, and so is refused as unknown
+  let request: VoucherRequest = { requested: false }
+  if (details.voucherCode !== undefined) {
+    const code = normalizeVoucherCode(details.voucherCode)
+    request = {
+      requested: true,
+      voucher: code ? await loadVoucher(client, code) : null,
+      now,
+    }
+  }
+
   const review = buildReview(
     view,
     await weightsOf(view, client),
@@ -153,11 +173,16 @@ export async function computeReview(
           regionName: address.region.name,
         }
       : { method: "pickup" },
-    config
+    config,
+    request
   )
   return {
     ok: true,
     review,
+    voucherId:
+      review.voucher.kind === "applied" && request.requested
+        ? (request.voucher?.id ?? null)
+        : null,
     address,
     store:
       details.method === "pickup"
@@ -172,7 +197,8 @@ export async function computeReview(
 
 export async function reviewCheckout(
   cartId: string | null,
-  input: unknown
+  input: unknown,
+  now = new Date()
 ): Promise<ReviewResult> {
   const parsed = checkoutInputSchema.safeParse(input)
   if (!parsed.success) {
@@ -181,7 +207,7 @@ export async function reviewCheckout(
   const details = parsed.data
 
   try {
-    const core = await computeReview(db, cartId, details)
+    const core = await computeReview(db, cartId, details, now)
     if (!core.ok) return core
     return {
       ok: true,

@@ -36,6 +36,8 @@ function result(
       subtotal: 2_299_000,
       weightGrams: 900,
       shipping: { ok: true, fee: 0, basis: "pickup" },
+      discount: 0,
+      voucher: { kind: "none" },
       total: 2_299_000,
       threshold: null,
       problems,

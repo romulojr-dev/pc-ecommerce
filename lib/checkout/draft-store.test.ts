@@ -62,6 +62,24 @@ describe("the draft", () => {
     )
   })
 
+  it("sends the voucher code only when there is one (spec 037, D6)", () => {
+    expect(draftPayload(filled)).not.toHaveProperty("voucherCode")
+    expect(draftPayload({ ...filled, voucherCode: "  " })).not.toHaveProperty(
+      "voucherCode"
+    )
+    expect(draftPayload({ ...filled, voucherCode: "WELCOME10" })).toMatchObject(
+      { voucherCode: "WELCOME10" }
+    )
+    expect(
+      draftPayload({ ...filled, method: "pickup", voucherCode: "SAVE500" })
+    ).toMatchObject({ method: "pickup", voucherCode: "SAVE500" })
+  })
+
+  it("reads a draft saved before vouchers as having no code", () => {
+    expect(parseDraft({ email: "a@b.co" }).voucherCode).toBe("")
+    expect(emptyDraft().voucherCode).toBe("")
+  })
+
   it("clears a level and the levels below it, keeping street and ZIP", () => {
     const cleared = clearFrom(filled, "provinceCode")
     expect(cleared).toMatchObject({
