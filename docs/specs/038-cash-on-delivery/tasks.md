@@ -36,11 +36,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. The `COD_CONFIRM` email
-- [ ] `emailView` for `COD_CONFIRM` (subject by fulfillment, lead, details, button only while confirmable, status lines); `EMAIL_COPY`; `cancelledLead` by payment option
-- [ ] `lib/email/templates/cod-confirm.ts` registered; `EmailContext.confirmUrl` built in `send.ts`
-- [ ] Existing tests updated (`view.test.ts`, `send.db.test.ts`, `release-cron.db.test.ts`, `test-support/email-orders.ts`)
-- [ ] Tests U17, U18, U21, D8
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `emailView` for `COD_CONFIRM` (subject by fulfillment, lead, details, button only while confirmable, status lines); `EMAIL_COPY`; `cancelledLead` by payment option
+- [x] `lib/email/templates/cod-confirm.ts` registered; `EmailContext.confirmUrl` built in `send.ts`
+- [x] Existing tests updated (`view.test.ts`, `release-cron.db.test.ts`, `test-support/email-orders.ts`; `send.db.test.ts` injects its templates and needed nothing). `e2e/signed-link.spec.ts` X4 still expects `no-template` and is updated in step 10
+- [x] Tests U17, U18, U21, D8
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Placement
 - [ ] `placeOrder`: `changed` for a cash request not chosen; status, `paymentOption`, `expiresAt` and the email type by the chosen option; `PlaceResult` carries the option

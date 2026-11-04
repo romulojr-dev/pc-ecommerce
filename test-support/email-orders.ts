@@ -6,6 +6,8 @@ import type { EmailViewInput } from "@/lib/email/view"
 
 export const SITE = "https://pcsilicon.tech"
 export const VIEW = `${SITE}/orders/PCS-7KQ2M9XD?sig=SIG&exp=1793000000&p=view`
+// The cash order's confirm link (docs/specs/038-cash-on-delivery)
+export const CONFIRM = `${SITE}/orders/PCS-7KQ2M9XD?sig=SIG&exp=1793000000&p=cod-confirm`
 // 2026-11-01T07:00:30Z, Sun 1 Nov 2026, 3:00 PM in Manila
 export const NOW = new Date("2026-11-01T07:00:30Z")
 
@@ -26,6 +28,8 @@ export const p1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
   ({
     orderNumber: "PCS-7KQ2M9XD",
     status: "PENDING_PAYMENT",
+    paymentOption: "ONLINE",
+    confirmedAt: null,
     fulfillment: "DELIVERY",
     contactName: "Ana Santos",
     street: "12 Mabini St",
@@ -56,6 +60,7 @@ export const input = (
   store: null,
   now: NOW,
   viewUrl: `${SITE}/orders/${order.orderNumber}?sig=SIG&exp=1793000000&p=view`,
+  confirmUrl: `${SITE}/orders/${order.orderNumber}?sig=SIG&exp=1793000000&p=cod-confirm`,
   siteUrl: SITE,
   ...overrides,
 })
@@ -93,3 +98,12 @@ export const STORE = {
   address: "Unit 4, 88 Sample St, Makati",
   hours: "Mon-Sat 10:00 AM-7:00 PM",
 }
+
+// C1: spec 038. The same two Ryzen, paid in cash on delivery: Pending
+// confirmation, to be confirmed by 2026-11-02 3:00 PM Manila
+export const cod1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
+  p1({ status: "PENDING_CONFIRMATION", paymentOption: "COD", ...overrides })
+
+// C2: pay on pickup, one build of three parts
+export const cod2 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
+  p2({ status: "PENDING_CONFIRMATION", paymentOption: "COD", ...overrides })

@@ -7,8 +7,9 @@ import { groupName } from "@/lib/cart/copy"
 import { addressLines, shippingValue } from "@/lib/checkout/copy"
 import { formatPeso } from "@/lib/format"
 import { absoluteUrl } from "@/lib/seo/urls"
-import { discountLabel } from "@/lib/orders/copy"
-import { isPastDue, payByText } from "@/lib/orders/time"
+import { confirmPayLine, discountLabel } from "@/lib/orders/copy"
+import { displayStatus } from "@/lib/orders/display-status"
+import { dateTimeText, isPastDue, payByText } from "@/lib/orders/time"
 import { statusLabel } from "@/lib/orders/timeline"
 import { orderEntries, type OrderPageItem } from "@/lib/orders/view"
 import { paidLine } from "@/lib/payments/copy"
@@ -17,6 +18,9 @@ import {
   amountPaid,
   cancelledLead,
   cancelledSubject,
+  codConfirmLead,
+  codConfirmSubject,
+  confirmByLine,
   EMAIL_COPY,
   greeting,
   placedLead,
@@ -81,6 +85,7 @@ export const EMAIL_VIEW_TYPES: readonly EmailType[] = [
   "ORDER_PLACED",
   "PAYMENT_RECEIVED",
   "ORDER_CANCELLED",
+  "COD_CONFIRM",
 ]
 
 const slotLabel = (slot: string | null): string | null =>
@@ -111,7 +116,7 @@ function entriesOf(items: readonly OrderPageItem[]): EmailEntry[] {
 
 export type EmailViewInput = Pick<
   EmailContext,
-  "order" | "store" | "now" | "viewUrl" | "siteUrl"
+  "order" | "store" | "now" | "viewUrl" | "confirmUrl" | "siteUrl"
 >
 
 const common = {
@@ -119,7 +124,12 @@ const common = {
   footer: EMAIL_COPY.footer,
 }
 
-function placed({ order, store, now, viewUrl }: EmailViewInput): EmailView {
+// What the order was: its lines, totals and where it goes, drawn from the
+// order's snapshots. The same for "Order placed" and the cash confirmation.
+function orderBody(
+  order: EmailViewInput["order"],
+  store: EmailViewInput["store"]
+): Pick<EmailView, "entries" | "totals" | "where"> {
   const items: OrderPageItem[] = order.items.map((item) => ({
     name: item.nameSnapshot,
     unitPrice: item.priceSnapshot,
@@ -127,11 +137,6 @@ function placed({ order, store, now, viewUrl }: EmailViewInput): EmailView {
     buildId: item.buildId,
     slot: item.slot,
   }))
-
-  // Payable only while the order is Pending payment and before its deadline;
-  // an email sent late describes the order as it is now (D2)
-  const payable =
-    order.status === "PENDING_PAYMENT" && !isPastDue(order.expiresAt, now)
 
   let where: EmailWhere
   if (order.fulfillment === "PICKUP") {
@@ -181,6 +186,15 @@ function placed({ order, store, now, viewUrl }: EmailViewInput): EmailView {
     { label: EMAIL_COPY.total, value: formatPeso(order.total) },
   ].map((row, index, all) => ({ ...row, strong: index === all.length - 1 }))
 
+  return { entries: entriesOf(items), totals, where }
+}
+
+function placed({ order, store, now, viewUrl }: EmailViewInput): EmailView {
+  // Payable only while the order is Pending payment and before its deadline;
+  // an email sent late describes the order as it is now (D2)
+  const payable =
+    order.status === "PENDING_PAYMENT" && !isPastDue(order.expiresAt, now)
+
   return {
     subject: placedSubject(order.orderNumber),
     greeting: greeting(order.contactName),
@@ -191,9 +205,51 @@ function placed({ order, store, now, viewUrl }: EmailViewInput): EmailView {
     statusLine: payable ? null : statusLine(statusLabel(order.status)),
     action: payable ? { label: EMAIL_COPY.payNow, href: viewUrl } : null,
     links: [{ label: EMAIL_COPY.viewOrder, href: viewUrl }],
-    entries: entriesOf(items),
-    totals,
-    where,
+    ...orderBody(order, store),
+    linkNote: EMAIL_COPY.linkNote,
+    ...common,
+  }
+}
+
+// The cash order's confirmation (docs/specs/038-cash-on-delivery, Behavior
+// 15). Like every email it describes the order as it is when sent: the
+// button shows only while the order is Pending confirmation and before its
+// deadline, otherwise a status line says where it stands.
+function codConfirm({
+  order,
+  store,
+  now,
+  viewUrl,
+  confirmUrl,
+}: EmailViewInput): EmailView {
+  const pickup = order.fulfillment === "PICKUP"
+  const confirmable =
+    order.status === "PENDING_CONFIRMATION" && !isPastDue(order.expiresAt, now)
+  // A confirmable order with no link is a bug in the caller, not a state to
+  // print around
+  if (confirmable && !confirmUrl) {
+    throw new Error("A cash order's confirmation needs its confirm link")
+  }
+
+  return {
+    subject: codConfirmSubject(order.orderNumber, pickup),
+    greeting: greeting(order.contactName),
+    lead: codConfirmLead(order.orderNumber, pickup),
+    details: confirmable
+      ? [
+          confirmByLine(dateTimeText(order.expiresAt)),
+          confirmPayLine(order.total, pickup),
+        ]
+      : [],
+    statusLine: confirmable
+      ? null
+      : statusLine(statusLabel(displayStatus(order, now))),
+    action:
+      confirmable && confirmUrl
+        ? { label: EMAIL_COPY.confirmOrder, href: confirmUrl }
+        : null,
+    links: [{ label: EMAIL_COPY.viewOrder, href: viewUrl }],
+    ...orderBody(order, store),
     linkNote: EMAIL_COPY.linkNote,
     ...common,
   }
@@ -230,7 +286,11 @@ function cancelled({ order, siteUrl }: EmailViewInput): EmailView {
   return {
     subject: cancelledSubject(order.orderNumber),
     greeting: greeting(order.contactName),
-    lead: cancelledLead(order.orderNumber, order.cancelReason),
+    lead: cancelledLead(
+      order.orderNumber,
+      order.cancelReason,
+      order.paymentOption
+    ),
     details: [],
     statusLine: null,
     action: null,
@@ -252,6 +312,8 @@ export function emailView(type: EmailType, input: EmailViewInput): EmailView {
       return received(input)
     case "ORDER_CANCELLED":
       return cancelled(input)
+    case "COD_CONFIRM":
+      return codConfirm(input)
     default:
       throw new Error(`No email view for ${type}`)
   }

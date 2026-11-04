@@ -148,13 +148,18 @@ describe("the run", () => {
 })
 
 // docs/specs/035-email-foundation-signed-links, Behavior 3: the cron also
-// sends the emails that are due. A COD_CONFIRM row has no template until #95,
-// so it fails final as no-template; that it was claimed and settled is the
-// point (docs/specs/036-order-emails registered the other three).
+// sends the emails that are due. The row here is a cash order's confirmation
+// (docs/specs/038-cash-on-delivery), rendered by the real registry and handed
+// to the fake transport: that it was claimed, sent and settled is the point.
 describe("the emails", () => {
   it("sends due outbox rows after the release and never fails the run", async () => {
+    const { orderData } = await import("@/test-support/orders")
     const order = await db.order.create({
-      data: (await import("@/test-support/orders")).orderData(),
+      data: orderData({
+        paymentOption: "COD",
+        status: "PENDING_CONFIRMATION",
+        expiresAt: new Date(NOW.getTime() + 86_400_000),
+      }),
     })
     const row = await db.emailOutbox.create({
       data: {
@@ -170,10 +175,11 @@ describe("the emails", () => {
     expect(answer.status).toBe(200)
     expect(
       await db.emailOutbox.findUniqueOrThrow({ where: { id: row.id } })
-    ).toMatchObject({
-      status: "FAILED",
-      lastErrorCode: "no-template",
-      attempts: 5,
-    })
+    ).toMatchObject({ status: "SENT", attempts: 1 })
+    expect(
+      await db.fakeEmail.findFirstOrThrow({
+        where: { idempotencyKey: `${order.id}:COD_CONFIRM` },
+      })
+    ).toMatchObject({ subject: expect.stringContaining("Confirm your") })
   })
 })
