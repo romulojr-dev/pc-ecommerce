@@ -16,6 +16,7 @@ import { logSafeFailure } from "./log"
 import { newOrderNumber } from "./number"
 import { finishRelease, prepareRelease, releaseInPurchase } from "./release"
 import { hashCartId, hashToken, tokenMatches } from "./secrets"
+import { takeVoucherUse } from "./voucher-use"
 
 // Place an order (docs/specs/030-place-an-order, Behavior 7–15, §4 Placement;
 // ADR 0009). The one writer of an order: the server action only forwards here.
@@ -23,9 +24,9 @@ import { hashCartId, hashToken, tokenMatches } from "./secrets"
 //
 //   lock the cart → replay check → release expired orders holding the
 //   cart's parts (docs/specs/033-release-unpaid-orders) → the review's own
-//   checks → compare the
-//   digest → take the stock → insert the order → its items → the stock
-//   movements → empty the cart
+//   checks → compare the digest → take the stock → count the voucher's use
+//   (docs/specs/037-vouchers-at-checkout) → insert the order → its items → the
+//   stock movements → empty the cart
 //
 // Anyone can reach the action, so nothing is trusted: the cart is the
 // cookie's, the prices and totals are recomputed, and the idempotency key and
@@ -46,6 +47,7 @@ export type PlaceStep =
   | "replay"
   | "checks"
   | "stock"
+  | "voucher"
   | "order"
   | "items"
   | "email"
@@ -197,7 +199,7 @@ export async function placeOrder(
 
       // 3. The review's own checks on the locked cart, then the comparison
       //    with what the shopper saw
-      const core = await computeReview(tx, cartId, details)
+      const core = await computeReview(tx, cartId, details, now)
       if (!core.ok) {
         throw core.reason === "invalid"
           ? new Refusal({ ok: false, reason: "invalid", fields: core.fields })
@@ -205,6 +207,15 @@ export async function placeOrder(
       }
       const { review, address } = core
       if (!review.canPlace || !review.shipping.ok || review.total === null) {
+        throw refuse("changed")
+      }
+      // A code that was sent and is not applied is never placed without its
+      // discount: the shopper reads the new review instead (spec 037,
+      // Behavior 14)
+      if (
+        details.voucherCode !== undefined &&
+        review.voucher.kind !== "applied"
+      ) {
         throw refuse("changed")
       }
       if (reviewDigest(review) !== digest) throw refuse("changed")
@@ -236,6 +247,25 @@ export async function placeOrder(
         }
       }
       await step("stock")
+
+      // 4b. Count the voucher's use, with the same `now` its validation used.
+      //     The update reports the terms it counted against; terms that moved
+      //     since the review refuse, like a price that moved (spec 037,
+      //     Behavior 16).
+      if (review.voucher.kind === "applied") {
+        const used = core.voucher
+        const taken = used && (await takeVoucherUse(tx, { id: used.id, now }))
+        if (
+          !used ||
+          !taken ||
+          taken.type !== used.type ||
+          taken.value !== used.value ||
+          taken.minSpend !== used.minSpend
+        ) {
+          throw refuse("changed")
+        }
+      }
+      await step("voucher")
 
       // The subtotal is the sum of the lines the order will hold
       const subtotal = lines.reduce(
@@ -277,7 +307,10 @@ export async function placeOrder(
         weightGrams: review.weightGrams,
         subtotal,
         shippingFee: review.shipping.fee,
-        discount: 0,
+        discount: review.discount,
+        ...(review.voucher.kind === "applied" && core.voucher
+          ? { voucherId: core.voucher.id, voucherCode: review.voucher.code }
+          : {}),
         total: review.total,
         expiresAt: new Date(now.getTime() + core.holdHours * 3_600_000),
       }

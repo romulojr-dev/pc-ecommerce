@@ -1,5 +1,7 @@
 import { flagText, groupName } from "@/lib/cart/copy"
 import { formatPeso } from "@/lib/format"
+import { MIN_ONLINE_TOTAL } from "@/lib/payments/amount"
+import type { VoucherRefusal } from "@/lib/vouchers"
 
 import type { ReviewProblem } from "./problems"
 
@@ -36,6 +38,43 @@ export const STEP_COPY = {
 // How long an unpaid order's parts are held, under Place order
 export function holdText(hours: number): string {
   return `Your parts are held for ${hours === 1 ? "1 hour" : `${hours} hours`} after you place your order.`
+}
+
+// The voucher box on the review (docs/specs/037-vouchers-at-checkout, §5)
+export const VOUCHER_COPY = {
+  label: "Voucher code",
+  apply: "Apply",
+  applying: "Checking…",
+  remove: "Remove",
+  removing: "Removing…",
+  empty: "Enter a code.",
+  unknown: "We don't recognize that code. Check it and try again.",
+  notStarted: "That code isn't active yet.",
+  ended: "That code has ended.",
+  usedUp: "That code has been used up.",
+  failed: "We couldn't check that code. Try again.",
+  // The polite live region while Apply or Remove is in flight
+  checking: "Checking your code…",
+} as const
+
+export const voucherAppliedText = (code: string) => `${code} applied`
+
+// Why a code was refused, as the shopper reads it
+export function voucherRefusalText(refusal: VoucherRefusal): string {
+  switch (refusal.reason) {
+    case "unknown":
+      return VOUCHER_COPY.unknown
+    case "not-started":
+      return VOUCHER_COPY.notStarted
+    case "ended":
+      return VOUCHER_COPY.ended
+    case "used-up":
+      return VOUCHER_COPY.usedUp
+    case "min-spend":
+      return `Spend ${formatPeso(refusal.shortBy)} more to use this code.`
+    case "below-minimum":
+      return `This code would bring your total below ${formatPeso(MIN_ONLINE_TOTAL)}, the least we can take online. Add to your cart or use another code.`
+  }
 }
 
 export const CART_BUTTON_COPY = {

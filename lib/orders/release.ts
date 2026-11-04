@@ -22,6 +22,7 @@ import {
   type SessionCheck,
   SWEEP_LIMIT,
 } from "./release-rules"
+import { giveBackVoucherUses } from "./voucher-use"
 
 // Releasing unpaid orders (docs/specs/033-release-unpaid-orders, FR-24): an
 // order still Pending payment at expiresAt is cancelled and its stock goes
@@ -32,7 +33,8 @@ import {
 //      missed payment makes the order Paid instead (D1).
 //   2. Release (in a transaction: the purchase's own, or the sweep's): lock
 //      the cleared orders that are still due with SKIP LOCKED, cancel them,
-//      expire their open payments, return their stock.
+//      expire their open payments, return their stock and their vouchers'
+//      uses.
 //   3. After the commit: revalidate the products tag, log.
 //
 // Gateway calls never run inside a database transaction (rule Gateway calls).
@@ -274,6 +276,11 @@ export async function releaseExpiredOrders(
       })),
     })
   }
+
+  // Each cancelled order's voucher use goes back, after the stock (products
+  // are locked first, then vouchers) and whatever the voucher's dates are now
+  // (docs/specs/037-vouchers-at-checkout, Behavior 18)
+  await giveBackVoucherUses(tx, ids)
 
   // One "Order cancelled" email per order this transaction cancelled, written
   // with the cancellation: a rolled-back release leaves none, and an order a

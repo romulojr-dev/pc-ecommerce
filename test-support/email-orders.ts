@@ -37,6 +37,8 @@ export const p1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
     subtotal: 2_299_000,
     shippingFee: 12_000,
     discount: 0,
+    voucherId: null,
+    voucherCode: null,
     total: 2_311_000,
     expiresAt: new Date("2026-11-02T07:00:00Z"),
     paidAt: null,

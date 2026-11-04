@@ -25,6 +25,11 @@ export const ORDER_COPY = {
   total: "Total",
 } as const
 
+// The summary's discount row, named for the voucher it came from
+// (docs/specs/037-vouchers-at-checkout, Behavior 19)
+export const discountLabel = (code: string): string =>
+  `${ORDER_COPY.discount} (${code})`
+
 export const orderHeading = (orderNumber: string): string =>
   `Order ${orderNumber}`
 

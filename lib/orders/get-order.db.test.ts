@@ -98,6 +98,7 @@ describe("the right link", () => {
       subtotal: 2_299_000,
       shippingFee: 12_000,
       discount: 0,
+      voucherCode: null,
       total: 2_311_000,
     })
     expect(order?.items).toEqual([

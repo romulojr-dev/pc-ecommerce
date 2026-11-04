@@ -28,7 +28,7 @@ const eslintConfig = defineConfig([
   // server-only, Next.js or React code. Tests reach seed data through
   // test-support.
   {
-    files: ["lib/builder/**", "lib/specs/**"],
+    files: ["lib/builder/**", "lib/specs/**", "lib/vouchers/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -49,7 +49,7 @@ const eslintConfig = defineConfig([
                 "react-dom/**",
               ],
               message:
-                "lib/builder and lib/specs run in the browser and on the server: import only zod, lib/specs and plain TypeScript.",
+                "lib/builder, lib/specs and lib/vouchers run in the browser and on the server: import only zod, lib/specs and plain TypeScript.",
             },
           ],
         },

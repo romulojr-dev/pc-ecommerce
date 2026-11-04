@@ -212,6 +212,16 @@ is a backstop.
   token in `x-callback-token`; no event id or signature.
   ([handling-webhooks](https://docs.xendit.co/docs/handling-webhooks.md))
 - Channels: `GCASH`, `PAYMAYA` (PHP 1 to 100,000), `CARDS` (PHP 20 to 700,000).
+  ([Cards](https://docs.xendit.co/docs/cards-8),
+  [GCash](https://docs.xendit.co/docs/gcash),
+  [Maya](https://docs.xendit.co/docs/maya))
+- The payment page offers all three at once, so an order must clear the highest
+  minimum: vouchers refuse a code that would leave a total under **₱20.00**
+  (`MIN_ONLINE_TOTAL`, [spec 037](../specs/037-vouchers-at-checkout/spec.md),
+  D15). The test-mode session for ₱19.99 was still created (below), so session
+  creation itself does not enforce the Cards minimum; whether the payment page
+  hides Cards under ₱20.00 is not checked yet (a one-off look at a `--keep`
+  session, noted in spec 037's tasks).
 
 ## Confirmed in test mode (2026-11-01, `pnpm payments:check`)
 

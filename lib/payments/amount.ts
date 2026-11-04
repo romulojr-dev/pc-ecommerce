@@ -9,6 +9,14 @@
 // far above any gateway's limit (Xendit cards: ₱700,000)
 export const MAX_CENTAVOS = 999_999_999_999_999
 
+// The least an order total can be and still be paid online: ₱20.00
+// (docs/specs/037-vouchers-at-checkout, Behavior 13, D15). The payment page
+// offers GCash, Maya and cards together; Xendit documents PHP 1 to 100,000 for
+// the first two and PHP 20 to 700,000 for Cards (docs.xendit.co/docs/cards-8,
+// /gcash, /maya; docs/setup/payments.md), so a total must clear the highest
+// minimum. A payment must also be above zero in the database.
+export const MIN_ONLINE_TOTAL = 2_000
+
 // Centavos → the number sent: 1999 → 19.99, 6906000 → 69060, 10 → 0.1.
 // The pesos part is (c − c % 100) / 100, an exact division of a multiple of
 // 100; the text is parsed once, so the number is the double nearest that

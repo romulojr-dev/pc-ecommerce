@@ -100,8 +100,21 @@ describe("Order (S2, S4)", () => {
   })
 
   it("adds a discount into the total", async () => {
+    const voucher = await db.voucher.create({
+      data: {
+        code: "SAVE1000",
+        type: "FIXED",
+        value: 100_000,
+        startsAt: new Date("2026-01-01T00:00:00+08:00"),
+      },
+    })
     await db.order.create({
-      data: orderData({ discount: 100_000, total: 2_211_000 }),
+      data: orderData({
+        discount: 100_000,
+        total: 2_211_000,
+        voucherId: voucher.id,
+        voucherCode: "SAVE1000",
+      }),
     })
   })
 

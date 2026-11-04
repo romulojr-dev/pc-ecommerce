@@ -435,6 +435,35 @@ describe("the emails as the sender builds them", () => {
     ])
   })
 
+  it("O2: Order placed shows Discount (CODE) for an order placed with a voucher", async () => {
+    const { ryzen } = await parts()
+    const voucher = await db.voucher.create({
+      data: {
+        code: "WELCOME10",
+        type: "PERCENT",
+        value: 10,
+        startsAt: new Date("2026-01-01T00:00:00+08:00"),
+        usedCount: 1,
+      },
+    })
+    const order = await heldOrder([{ productId: ryzen, quantity: 2 }], {
+      orderNumber: "PCS-7KQ2M9XD",
+      accessTokenHash: releaseTokenHash(),
+      discount: 229_900,
+      total: 2_081_100,
+      voucherId: voucher.id,
+      voucherCode: "WELCOME10",
+    } as Parameters<typeof heldOrder>[1])
+    await enqueue(order.id, "ORDER_PLACED")
+
+    expect(await send()).toMatchObject({ sent: 1 })
+
+    const [email] = await fakeEmails()
+    expect(email.text).toContain("Discount (WELCOME10)")
+    expect(email.text).toContain("−₱2,299.00")
+    expect(email.html).toContain("Discount (WELCOME10)")
+  })
+
   it("S2: Payment received follows, with the amount, and its link opens the order", async () => {
     const { order, session } = await dueP1()
     await completeFakeSession(session!, PLACED)

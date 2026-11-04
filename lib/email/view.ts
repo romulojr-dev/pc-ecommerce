@@ -7,6 +7,7 @@ import { groupName } from "@/lib/cart/copy"
 import { addressLines, shippingValue } from "@/lib/checkout/copy"
 import { formatPeso } from "@/lib/format"
 import { absoluteUrl } from "@/lib/seo/urls"
+import { discountLabel } from "@/lib/orders/copy"
 import { isPastDue, payByText } from "@/lib/orders/time"
 import { statusLabel } from "@/lib/orders/timeline"
 import { orderEntries, type OrderPageItem } from "@/lib/orders/view"
@@ -170,7 +171,9 @@ function placed({ order, store, now, viewUrl }: EmailViewInput): EmailView {
     ...(order.discount > 0
       ? [
           {
-            label: EMAIL_COPY.discount,
+            label: order.voucherCode
+              ? discountLabel(order.voucherCode)
+              : EMAIL_COPY.discount,
             value: `−${formatPeso(order.discount)}`,
           },
         ]

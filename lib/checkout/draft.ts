@@ -22,6 +22,9 @@ export const draftSchema = z.object({
   barangayCode: z.string().default(""),
   street: z.string().default(""),
   zip: z.string().default(""),
+  // The applied voucher code (docs/specs/037-vouchers-at-checkout, D6); only an
+  // applied code is kept
+  voucherCode: z.string().default(""),
 })
 
 export type CheckoutDraft = z.output<typeof draftSchema>
@@ -36,17 +39,23 @@ export function parseDraft(value: unknown): CheckoutDraft {
 }
 
 // The draft as the payload step 2 sends and the server checks again. Pickup
-// carries no address.
+// carries no address. The voucher code is sent only when there is one.
 export function draftPayload(draft: CheckoutDraft) {
   const contact = {
     email: draft.email,
     name: draft.name,
     mobile: draft.mobile,
   }
-  if (draft.method === "pickup") return { method: "pickup" as const, contact }
+  const voucher = draft.voucherCode.trim()
+    ? { voucherCode: draft.voucherCode }
+    : {}
+  if (draft.method === "pickup") {
+    return { method: "pickup" as const, contact, ...voucher }
+  }
   return {
     method: "delivery" as const,
     contact,
+    ...voucher,
     address: {
       regionCode: draft.regionCode,
       provinceCode: draft.provinceCode,

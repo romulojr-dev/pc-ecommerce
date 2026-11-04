@@ -65,6 +65,7 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
     subtotal: 2_299_000,
     shippingFee: 12_000,
     discount: 0,
+    voucherCode: null,
     total: 2_311_000,
     paidAt: null,
     paymentMethod: null,
@@ -259,9 +260,38 @@ describe("V10: every status", () => {
     }
   })
 
-  it("shows a Discount line only above zero", () => {
-    const t = text(render(order({ discount: 100_000, total: 2_211_000 })))
-    expect(t).toContain("Discount −₱1,000.00")
+  it("shows a Discount line only above zero, named for its voucher (O1)", () => {
+    const t = text(
+      render(
+        order({
+          discount: 100_000,
+          total: 2_211_000,
+          voucherCode: "WELCOME10",
+        })
+      )
+    )
+    expect(t).toContain("Discount (WELCOME10) −₱1,000.00")
+  })
+
+  it("O1: lists Subtotal, Shipping, Discount (CODE), Total in that order", () => {
+    const t = text(
+      render(
+        order({
+          subtotal: 2_299_000,
+          discount: 229_900,
+          total: 2_081_100,
+          voucherCode: "WELCOME10",
+        })
+      )
+    )
+    expect(t).toContain(
+      "Subtotal ₱22,990.00 Shipping ₱120.00 Discount (WELCOME10) −₱2,299.00 Total ₱20,811.00"
+    )
+  })
+
+  it("O3: shows no Discount line for a voucher worth nothing", () => {
+    const t = text(render(order({ discount: 0, voucherCode: "WELCOME10" })))
+    expect(t).not.toContain("Discount")
   })
 })
 

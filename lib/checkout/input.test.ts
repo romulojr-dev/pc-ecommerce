@@ -160,4 +160,47 @@ describe("checkoutInputSchema", () => {
   ])("refuses a payload that is not one: %#", (input) => {
     expect(checkoutInputSchema.safeParse(input).success).toBe(false)
   })
+
+  // docs/specs/037-vouchers-at-checkout, §4 Matching and input
+  describe("the voucher code", () => {
+    it("is none when absent, empty or blank", () => {
+      for (const voucherCode of [undefined, "", "   ", " \t \n "]) {
+        const result = checkoutInputSchema.parse({ ...delivery(), voucherCode })
+        expect(result.voucherCode).toBeUndefined()
+      }
+    })
+
+    it("is trimmed and otherwise kept as typed", () => {
+      const result = checkoutInputSchema.parse({
+        ...delivery(),
+        voucherCode: "  welcome10 ",
+      })
+      expect(result.voucherCode).toBe("welcome10")
+    })
+
+    it("never fails the form for a mistyped code (V11)", () => {
+      for (const voucherCode of ["NOPE", "WELCOME 10", "ab", "x".repeat(33)]) {
+        expect(
+          checkoutInputSchema.safeParse({ ...delivery(), voucherCode }).success
+        ).toBe(true)
+      }
+    })
+
+    it("takes a code with pickup too", () => {
+      const result = checkoutInputSchema.parse({
+        method: "pickup",
+        contact,
+        voucherCode: "SAVE500",
+      })
+      expect(result.voucherCode).toBe("SAVE500")
+    })
+
+    it("refuses a payload far past any code (V15)", () => {
+      const errors = errorsOf({ ...delivery(), voucherCode: "A".repeat(300) })
+      expect(errors.voucherCode).toBeDefined()
+      expect(
+        checkoutInputSchema.safeParse({ ...delivery(), voucherCode: 5 }).success
+      ).toBe(false)
+    })
+  })
 })

@@ -5,6 +5,7 @@ import type { CheckoutReview } from "@/lib/checkout/review"
 import type { ReviewProblem } from "@/lib/checkout/problems"
 
 import { type ReviewOk, ReviewView } from "./review-view"
+import { idleVoucherBox, type VoucherBoxState } from "./voucher-box"
 
 // docs/specs/030-place-an-order: Z1 and Place order's states, as markup
 
@@ -13,6 +14,9 @@ function result(
     ordersEnabled?: boolean
     problems?: ReviewProblem[]
     holdHours?: number
+    voucher?: CheckoutReview["voucher"]
+    discount?: number
+    threshold?: number | null
   } = {}
 ): ReviewOk {
   const problems = options.problems ?? []
@@ -36,8 +40,10 @@ function result(
       subtotal: 2_299_000,
       weightGrams: 900,
       shipping: { ok: true, fee: 0, basis: "pickup" },
-      total: 2_299_000,
-      threshold: null,
+      discount: options.discount ?? 0,
+      voucher: options.voucher ?? { kind: "none" },
+      total: 2_299_000 - (options.discount ?? 0),
+      threshold: options.threshold ?? null,
       problems,
       warnings: [],
       canPlace: problems.length === 0,
@@ -45,7 +51,10 @@ function result(
   }
 }
 
-const render = (r: ReviewOk, props: { placing?: boolean } = {}): string =>
+const render = (
+  r: ReviewOk,
+  props: { placing?: boolean; voucher?: VoucherBoxState } = {}
+): string =>
   renderToStaticMarkup(
     <ReviewView result={r} onCheckAgain={() => {}} {...props} />
   )
@@ -112,6 +121,64 @@ describe("Place order", () => {
 
   it("disables Check again while placing", () => {
     const html = render(result(), { placing: true })
+    expect(isDisabled(buttonLabelled(html, "Check again"))).toBe(true)
+  })
+})
+
+// docs/specs/037-vouchers-at-checkout: O4 and the summary's rows
+describe("the summary with a voucher", () => {
+  const applied = {
+    voucher: { kind: "applied", code: "WELCOME10", discount: 229_900 },
+    discount: 229_900,
+  } as const
+
+  it("O4: shows the code applied with Remove, and no Apply", () => {
+    const html = render(result(applied))
+    expect(html).toContain("WELCOME10 applied")
+    expect(html).toContain(">Remove</button>")
+    expect(html).not.toContain(">Apply</button>")
+    expect(html).not.toContain("Voucher code")
+  })
+
+  it("O4: lists Subtotal, Shipping, Discount (CODE), Total in that order", () => {
+    const html = render(result(applied))
+    const at = (text: string) => html.indexOf(text)
+    expect(html).toContain("Discount (WELCOME10)")
+    expect(html).toContain("−₱2,299.00")
+    expect(at("Subtotal")).toBeLessThan(at("Shipping"))
+    expect(at("Shipping")).toBeLessThan(at("Discount (WELCOME10)"))
+    expect(at("Discount (WELCOME10)")).toBeLessThan(at(">Total<"))
+  })
+
+  it("O4: leaves the threshold note exactly as it was", () => {
+    const html = render(result({ ...applied, threshold: 7_500_000 }))
+    expect(html).toContain("Free shipping on orders of ₱75,000.00 or more.")
+    expect(html).not.toContain("after your discount")
+  })
+
+  it("shows the field and Apply when no code is applied, with no Discount row", () => {
+    const html = render(result())
+    expect(html).toContain("Voucher code")
+    expect(html).toContain(">Apply</button>")
+    expect(html).not.toContain("Discount")
+    expect(html).not.toContain("applied")
+  })
+
+  it("shows no Discount row for a refused code", () => {
+    const html = render(
+      result({
+        voucher: { kind: "refused", refusal: { reason: "unknown" } },
+      })
+    )
+    expect(html).not.toContain("Discount")
+    expect(html).toContain(">Apply</button>")
+  })
+
+  it("disables Place order and Check again while a voucher request is in flight", () => {
+    const html = render(result(), {
+      voucher: { ...idleVoucherBox, busy: "apply" },
+    })
+    expect(isDisabled(placeButton(html))).toBe(true)
     expect(isDisabled(buttonLabelled(html, "Check again"))).toBe(true)
   })
 })

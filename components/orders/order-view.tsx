@@ -7,7 +7,7 @@ import type { Slot } from "@/lib/builder"
 import { groupName } from "@/lib/cart/copy"
 import { addressLines, shippingValue } from "@/lib/checkout/copy"
 import { formatPeso } from "@/lib/format"
-import { ORDER_COPY, orderHeading } from "@/lib/orders/copy"
+import { discountLabel, ORDER_COPY, orderHeading } from "@/lib/orders/copy"
 import { payByText, placedOnText } from "@/lib/orders/time"
 import { orderTimeline, statusLabel } from "@/lib/orders/timeline"
 import {
@@ -219,7 +219,11 @@ export function OrderView({
             </div>
             {order.discount > 0 && (
               <div className="flex justify-between gap-4">
-                <dt>{ORDER_COPY.discount}</dt>
+                <dt>
+                  {order.voucherCode
+                    ? discountLabel(order.voucherCode)
+                    : ORDER_COPY.discount}
+                </dt>
                 <dd className="tabular-nums">−{formatPeso(order.discount)}</dd>
               </div>
             )}

@@ -11,9 +11,11 @@ import { builderCategories } from "@/lib/specs"
 
 import { seedFiles } from "./seed/data"
 import { shippingSeed } from "./seed/data/shipping"
+import { voucherSeed } from "./seed/data/vouchers"
 import { formatErrors } from "./seed/format-errors"
 import { findReservedCategorySlugs, validateSeed } from "./seed/validate"
 import { validateShippingSeed } from "./seed/validate-shipping"
+import { validateVoucherSeed } from "./seed/validate-vouchers"
 import { SeedWriteError, writeSeed } from "./seed/write"
 
 // pnpm db:seed [--reset]: loads the catalog fixture set into the dev
@@ -65,6 +67,12 @@ async function main(): Promise<number> {
     return 1
   }
 
+  const voucherErrors = validateVoucherSeed(voucherSeed)
+  if (voucherErrors.length > 0) {
+    console.error(`${voucherErrors.join("\n")}\nNothing was written.`)
+    return 1
+  }
+
   // A reset deletes shared builds too (docs/specs/022-share-build). The
   // production seed is run by hand, so the guard also checks the host.
   if (reset) {
@@ -93,6 +101,7 @@ async function main(): Promise<number> {
   const counts = await writeSeed(db, validation.files, {
     reset,
     shipping: shippingSeed,
+    vouchers: voucherSeed,
   })
   const kept = counts.updated > 0 ? "; stock, price and status kept" : ""
   console.log(
@@ -111,6 +120,11 @@ async function main(): Promise<number> {
     counts.settingsCreated
       ? "Store settings: created."
       : "Store settings: kept (already set)."
+  )
+  console.log(
+    counts.vouchers > 0
+      ? `Vouchers: ${counts.vouchers} added.`
+      : "Vouchers: kept (already set)."
   )
   return 0
 }

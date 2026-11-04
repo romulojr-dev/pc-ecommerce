@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest"
 import { reviewDigest } from "./digest"
 import type { CheckoutReview } from "./review"
 
-// docs/specs/030-place-an-order: D2–D4, U6
+// docs/specs/030-place-an-order: D2–D4, U6; docs/specs/037-vouchers-at-checkout,
+// Behavior 15
 
 type Single = {
   productId: string
@@ -25,6 +26,8 @@ function review(
     fee?: number | null
     subtotal?: number
     total?: number | null
+    voucher?: CheckoutReview["voucher"]
+    discount?: number
     warnings?: number
     flag?: boolean
   } = {}
@@ -35,6 +38,8 @@ function review(
     fee = 12_000,
     subtotal = 2_299_000,
     total = 2_311_000,
+    voucher = { kind: "none" },
+    discount = 0,
   } = options
   const entries: unknown[] = singles.map((s) => ({
     kind: "single",
@@ -64,6 +69,8 @@ function review(
       fee === null ? { ok: false, reason: "no-rate" } : { ok: true, fee },
     subtotal,
     total,
+    voucher,
+    discount,
     warnings: Array.from({ length: options.warnings ?? 0 }),
   } as unknown as CheckoutReview
 }
@@ -109,6 +116,42 @@ describe("reviewDigest", () => {
     ],
   ])("differs when %s changes (D2)", (_name, change) => {
     expect(reviewDigest(review(change))).not.toBe(reviewDigest(review()))
+  })
+
+  describe("the voucher (spec 037, Behavior 15)", () => {
+    const applied = (code: string, discount: number) => ({
+      voucher: { kind: "applied", code, discount } as const,
+      discount,
+      total: 2_311_000 - discount,
+    })
+
+    it("differs with a code applied", () => {
+      expect(reviewDigest(review(applied("WELCOME10", 229_900)))).not.toBe(
+        reviewDigest(review())
+      )
+    })
+
+    it("differs when the code differs, even for the same discount", () => {
+      expect(reviewDigest(review(applied("WELCOME10", 50_000)))).not.toBe(
+        reviewDigest(review(applied("SAVE500", 50_000)))
+      )
+    })
+
+    it("differs when the discount differs for the same code", () => {
+      expect(reviewDigest(review(applied("WELCOME10", 229_900)))).not.toBe(
+        reviewDigest(review(applied("WELCOME10", 229_800)))
+      )
+    })
+
+    it("is the same for a refused code as for none", () => {
+      expect(
+        reviewDigest(
+          review({
+            voucher: { kind: "refused", refusal: { reason: "unknown" } },
+          })
+        )
+      ).toBe(reviewDigest(review()))
+    })
   })
 
   it("ignores warnings, names and flags (D3)", () => {

@@ -10,7 +10,7 @@ import type { CheckoutReview } from "./review"
 // equals the fresh digest only confirms the shopper accepts the current state.
 //
 // It covers the lines (kind, build, slot, product, quantity, unit price), the
-// shipping fee, the subtotal and the total. It leaves out names, flags, stock,
+// shipping fee, the subtotal, the voucher code and discount, and the total. It leaves out names, flags, stock,
 // warnings and the address text (the address fixes the zone, and the zone is
 // in the fee). Lines are sorted, so cart order doesn't matter.
 
@@ -61,6 +61,10 @@ export function reviewDigest(review: CheckoutReview): string {
     lines,
     shippingFee: review.shipping.ok ? review.shipping.fee : null,
     subtotal: review.subtotal,
+    // The code applied, if any, and what it takes off (docs/specs/037-
+    // vouchers-at-checkout, Behavior 15)
+    voucher: review.voucher.kind === "applied" ? review.voucher.code : null,
+    discount: review.discount,
     total: review.total,
   })
   return createHash("sha256").update(text, "utf8").digest("hex")
