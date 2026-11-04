@@ -3,6 +3,7 @@ import { formatPeso } from "@/lib/format"
 import { MIN_ONLINE_TOTAL } from "@/lib/payments/amount"
 import type { VoucherRefusal } from "@/lib/vouchers"
 
+import type { CodUnavailable } from "./cod-eligibility"
 import type { ReviewProblem } from "./problems"
 
 // Shopper copy for checkout steps 1 and 2 (docs/specs/029-checkout-steps, §5).
@@ -76,6 +77,69 @@ export function voucherRefusalText(refusal: VoucherRefusal): string {
       return `This code would bring your total below ${formatPeso(MIN_ONLINE_TOTAL)}, the least we can take online. Add to your cart or use another code.`
   }
 }
+
+// The Payment section of the review (docs/specs/038-cash-on-delivery, §5)
+export const COD_COPY = {
+  heading: "Payment",
+  summaryLabel: "Payment",
+  online: "Pay online",
+  onlineHint: "GCash, Maya or card. You'll pay on the next page.",
+  cashOnDelivery: "Cash on delivery",
+  payOnPickup: "Pay on pickup",
+  failed: "We couldn't update your payment choice. Try again.",
+  fallback: "We've switched you to online payment.",
+} as const
+
+// The cash option's name: pay on pickup when the order is picked up
+export const codOptionName = (pickup: boolean): string =>
+  pickup ? COD_COPY.payOnPickup : COD_COPY.cashOnDelivery
+
+// The line under the cash option when it can be chosen
+export const codHint = (pickup: boolean, total: number): string =>
+  pickup
+    ? `Pay ${formatPeso(total)} at the store when you collect your order.`
+    : `Pay ${formatPeso(total)} in cash when your order arrives.`
+
+// The note under Place order when cash is chosen
+export function codPlaceNote(hours: number): string {
+  const time = hours === 1 ? "1 hour" : `${hours} hours`
+  return `Your parts are held for ${time} after you place your order. Confirm your order from the email we send you, or it is cancelled.`
+}
+
+// Why cash isn't offered, as the shopper reads it. `regionName` is the
+// delivery region; `limit` is the store's limit; `total` the order's.
+export function codReasonText(
+  reason: CodUnavailable,
+  {
+    pickup,
+    regionName,
+    limit,
+    total,
+  }: {
+    pickup: boolean
+    regionName: string | null
+    limit: number | null
+    total: number | null
+  }
+): string {
+  const option = codOptionName(pickup)
+  switch (reason.reason) {
+    case "disabled":
+      return `${option} isn't available right now.`
+    case "pickup-off":
+      return `${COD_COPY.payOnPickup} isn't available right now.`
+    case "zone":
+      return `${option} isn't available in ${regionName ?? "your region"}.`
+    case "no-total":
+      return `${option} isn't available until we can deliver to this address.`
+    case "over-limit":
+      return `${option} is for orders up to ${formatPeso(limit ?? 0)}. Your total is ${formatPeso(total ?? 0)}.`
+  }
+}
+
+// A saved cash choice that is no longer offered: the reason, then the switch
+export const codFallbackText = (reasonText: string): string =>
+  `${reasonText} ${COD_COPY.fallback}`
 
 export const CART_BUTTON_COPY = {
   flagged: "Fix or remove the lines marked above to check out.",

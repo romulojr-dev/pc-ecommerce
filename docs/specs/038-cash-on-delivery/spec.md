@@ -303,6 +303,8 @@ Seed values: **Ryzen 5 7600** ₱11,495.00 (450 g), **LANCOOL 216 Black** ₱5,7
 | Not offered: over limit | Cash on delivery is for orders up to {₱50,000.00}. Your total is {₱X}. |
 | Not offered: no total | Cash on delivery isn't available until we can deliver to this address. |
 | Falls back after a saved choice | {the reason above} We've switched you to online payment. |
+
+For a pickup order the "Cash on delivery" in the disabled, no-total and over-limit texts reads "Pay on pickup" (the option's own name); the pickup-off text always says "Pay on pickup".
 | Choice request failed | We couldn't update your payment choice. Try again. |
 | Summary row | Payment · Cash on delivery / Pay on pickup |
 | Note under Place order (cash) | Your parts are held for {24 hours} after you place your order. Confirm your order from the email we send you, or it is cancelled. |

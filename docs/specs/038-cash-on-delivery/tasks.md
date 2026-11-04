@@ -9,16 +9,16 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Commit `spec.md`, `plan.md` and `tasks.md` on `95-cash-on-delivery-confirmed-by-email`
 
 ## 1. Pure code
-- [ ] `lib/checkout/cod-eligibility.ts` (`codEligibility`: disabled → pickup-off → zone → no-total → over-limit, with `overBy`)
-- [ ] `lib/orders/timeline.ts`: `PENDING_CONFIRMATION`, own "COD confirmed" label, COD sequences for delivery and pickup, `paymentOption` and `confirmedAt` input, "Confirmed {time}" detail; drop `POSITION_ALIAS`
-- [ ] `lib/orders/display-status.ts` (Pending of either kind at or after `expiresAt` reads Cancelled; COD confirmed never does)
-- [ ] `lib/orders/release-rules.ts`: `isDue` for both pending statuses
-- [ ] `lib/orders/cod-confirm-view.ts` (`confirmView`)
-- [ ] `codConfirmExp` in `lib/orders/signed-link.ts`; `mintCodConfirmLink` / `verifyCodConfirmLink` in `lib/orders/order-links.ts`
-- [ ] `lib/email/sender.ts` (`senderAddress` from `EMAIL_FROM`)
-- [ ] `COD_COPY` and `codReasonText` in `lib/checkout/copy.ts`; order-page and confirm-page strings in `lib/orders/copy.ts`
-- [ ] Unit tests U1–U9, U10–U14, U19, U20 and copy tests
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/checkout/cod-eligibility.ts` (`codEligibility`: disabled → pickup-off → zone → no-total → over-limit, with `overBy`)
+- [x] `lib/orders/timeline.ts`: `PENDING_CONFIRMATION`, own "COD confirmed" label, COD sequences for delivery and pickup, `paymentOption` and `confirmedAt` input, "Confirmed {time}" detail; drop `POSITION_ALIAS`
+- [x] `lib/orders/display-status.ts` (Pending of either kind at or after `expiresAt` reads Cancelled; COD confirmed never does)
+- [x] `lib/orders/release-rules.ts`: `isDue` for both pending statuses
+- [x] `lib/orders/cod-confirm-view.ts` (`confirmView`)
+- [x] `codConfirmExp` in `lib/orders/signed-link.ts`; `mintCodConfirmLink` / `verifyCodConfirmLink` in `lib/orders/order-links.ts`
+- [x] `lib/email/sender.ts` (`senderAddress` from `EMAIL_FROM`)
+- [x] `COD_COPY` and `codReasonText` in `lib/checkout/copy.ts`; order-page and confirm-page strings in `lib/orders/copy.ts`
+- [x] Unit tests U1–U9, U10–U14, U19, U20 and copy tests
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema, migrations, seed
 - [ ] `schema.prisma`: `PENDING_CONFIRMATION`, `PaymentOption`, `Order.paymentOption` and `confirmedAt`, `StoreSettings` COD fields with defaults, the two-status partial index

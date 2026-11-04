@@ -37,6 +37,24 @@ describe("isDue", () => {
     ).toBe(false)
   })
 
+  it.each([
+    ["2026-11-02T06:59:59.999Z", false],
+    ["2026-11-02T07:00:00.000Z", true],
+  ])("U13: a Pending confirmation order at %s → due %s", (now, due) => {
+    expect(
+      isDue({ ...pending, status: "PENDING_CONFIRMATION" }, new Date(now))
+    ).toBe(due)
+  })
+
+  it("U13: a COD confirmed order is not due, however late", () => {
+    expect(
+      isDue(
+        { ...pending, status: "COD_CONFIRMED" },
+        new Date("2027-11-02T07:00:00Z")
+      )
+    ).toBe(false)
+  })
+
   it("E5: an order with a payment that needs checking is never due", () => {
     expect(
       isDue({ ...pending, flagged: true }, new Date("2026-11-03T00:00:00Z"))

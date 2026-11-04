@@ -75,6 +75,21 @@ export function newViewLink(
   return signOrderLink(secret, orderNumber, "view", exp)
 }
 
+// The expiry of a `cod-confirm` link (docs/specs/038-cash-on-delivery, D10):
+// the order's `expiresAt` in whole seconds, rounded down, so a link never
+// outlives its order
+export const codConfirmExp = (expiresAt: Date): number =>
+  Math.floor(expiresAt.getTime() / 1000)
+
+// A `cod-confirm` link for an order. Nothing about it is stored: the same
+// order and deadline always give the same link.
+export const newCodConfirmLink = (
+  secret: string,
+  orderNumber: string,
+  expiresAt: Date
+): LinkParams =>
+  signOrderLink(secret, orderNumber, "cod-confirm", codConfirmExp(expiresAt))
+
 export type LinkVerdict = "ok" | "invalid" | "expired"
 
 // Checks a link. The signature is compared in constant time and none of the
