@@ -49,9 +49,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. The release
-- [ ] Due and lock queries in `release.ts` take both pending statuses
-- [ ] DB tests R1–R10 and C9; `dueOrdersHolding` in `e2e/orders.ts` counts both
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Due and lock queries in `release.ts` take both pending statuses
+- [x] DB tests R1–R10 and C9; `dueOrdersHolding` in `e2e/orders.ts` counts both
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Confirm
 - [ ] `lib/orders/confirm-cod.ts` (`confirmCodOrder`, one conditional update setting `confirmedAt`), `logCodEvent`

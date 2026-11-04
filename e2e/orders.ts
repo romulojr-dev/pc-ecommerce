@@ -34,7 +34,7 @@ export async function dueOrdersHolding(productName: string): Promise<number> {
        JOIN "OrderItem" i ON i."orderId" = o."id"
        JOIN "Product" p ON p."id" = i."productId"
        WHERE p."name" = $1
-         AND o."status" = 'PENDING_PAYMENT'
+         AND o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
          AND o."expiresAt" <= (now() AT TIME ZONE 'UTC')`,
       [productName]
     )
