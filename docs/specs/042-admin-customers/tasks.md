@@ -63,17 +63,17 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. E2E
-- [ ] `e2e/admin-customers.spec.ts`, Owner: count and total of a fixture customer, search by name, View orders shows only that customer, clear the filter
-- [ ] Demo: masked rows, disabled field, `?customer=` read-only message, `buyer=c1` list and the order detail fetched as HTML and RSC with no raw fixture value
-- [ ] Each order has its own recipient except where a test needs a shared one; helpers write through the E2E database guard
+- [x] `e2e/admin-customers.spec.ts`, Owner: count and total of a fixture customer, search by name, View orders shows only that customer, clear the filter
+- [x] Demo: masked rows, disabled field, `?customer=` read-only message, `buyer=c1` list and the order detail fetched as HTML and RSC with no raw fixture value
+- [x] Each order has its own recipient except where a test needs a shared one; helpers write through the E2E database guard
 
 ## 10. Documentation
-- [ ] CLAUDE.md bullet for this story
-- [ ] Spec: "What changed while building"; status line
-- [ ] Spec 041 carries the "changed by 042" note (added with the spec review; verify)
-- [ ] README only if it lists admin screens
+- [x] CLAUDE.md bullet for this story
+- [x] Spec: "What changed while building"; status line
+- [x] Spec 041 carries the "changed by 042" note (added with the spec review; verify)
+- [x] README only if it lists admin screens
 
 ## 11. Final checks
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build` pass
-- [ ] `pnpm test:e2e` (admin project) passes
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build` pass
+- [x] `pnpm test:e2e` (admin project) passes
 - [ ] Push, open the PR from the template, check the acceptance list on the preview URL at 1024 px and 1280 px
