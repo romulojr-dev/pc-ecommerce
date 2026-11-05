@@ -38,9 +38,23 @@ export function orderData(overrides: OrderOverrides = {}) {
     total: 2_311_000,
     expiresAt: new Date("2026-11-01T07:42:00Z"),
   }
-  return { ...base, ...overrides } as Parameters<
-    typeof db.order.create
-  >[0]["data"]
+  const merged: Record<string, unknown> = { ...base, ...overrides }
+  // A row in a fulfillment status carries the times and parcel details the
+  // CHECKs require (docs/specs/043-order-fulfillment-transitions, R6, R17). A
+  // test of the CHECKs passes the column explicitly (null included) to opt out.
+  const status = merged.status as string | undefined
+  const fill = (key: string, value: unknown) => {
+    if (!(key in overrides)) merged[key] = value
+  }
+  if (status === "SHIPPED" || status === "DELIVERED") {
+    fill("shippedAt", new Date("2026-11-02T03:00:00Z"))
+    fill("courier", "LBC")
+    fill("trackingNumber", "123456784821")
+  }
+  if (status === "DELIVERED" || status === "PICKED_UP") {
+    fill("completedAt", new Date("2026-11-03T03:00:00Z"))
+  }
+  return merged as Parameters<typeof db.order.create>[0]["data"]
 }
 
 // A pickup order: no address, no zone

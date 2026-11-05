@@ -92,13 +92,22 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatusName, string> = {
 }
 
 export type EmailTypeName =
-  "ORDER_PLACED" | "PAYMENT_RECEIVED" | "ORDER_CANCELLED" | "COD_CONFIRM"
+  | "ORDER_PLACED"
+  | "PAYMENT_RECEIVED"
+  | "ORDER_CANCELLED"
+  | "COD_CONFIRM"
+  | "ORDER_SHIPPED"
+  | "READY_FOR_PICKUP"
+  | "ORDER_DELIVERED"
 
 export const EMAIL_TYPE_LABELS: Record<EmailTypeName, string> = {
   ORDER_PLACED: "Order placed",
   PAYMENT_RECEIVED: "Payment received",
   ORDER_CANCELLED: "Order cancelled",
   COD_CONFIRM: "Cash order confirmation",
+  ORDER_SHIPPED: "Order shipped",
+  READY_FOR_PICKUP: "Ready for pickup",
+  ORDER_DELIVERED: "Order delivered",
 }
 
 export type EmailStatusName =

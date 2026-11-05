@@ -16,10 +16,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema
-- [ ] Migration: `courier`, `trackingNumber`, `processingAt`, `shippedAt`, `readyAt`, `completedAt` on `Order`; `EmailType` values `ORDER_SHIPPED`, `ORDER_DELIVERED`, `READY_FOR_PICKUP`; three CHECKs (R6)
-- [ ] `schema.prisma` fields and comments; `test-support/orders.ts` takes the new optional fields
-- [ ] Integration tests E29, E29a, E29b, E29c (each CHECK rejects a violating row and still holds after REFUNDED)
-- [ ] `pnpm db:drift`, `pnpm test:db` pass
+- [x] Migration: `courier`, `trackingNumber`, `processingAt`, `shippedAt`, `readyAt`, `completedAt` on `Order`; `EmailType` values `ORDER_SHIPPED`, `ORDER_DELIVERED`, `READY_FOR_PICKUP`; three CHECKs (R6)
+- [x] `schema.prisma` fields and comments; `test-support/orders.ts` takes the new optional fields
+- [x] Integration tests E29, E29a, E29b, E29c (each CHECK rejects a violating row and still holds after REFUNDED)
+- [x] `pnpm db:drift`, `pnpm test:db` pass
 
 ## 3. The transition (server)
 - [ ] Input schemas: courier and tracking rules (R5), transition input
