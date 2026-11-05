@@ -45,6 +45,41 @@ export function maskFreeText(text?: string): Masked {
   return HIDDEN_IN_DEMO
 }
 
+// A tracking number identifies a parcel for anyone holding it: Demo sees the
+// last four after bullets ("•••• 4821"). Under 8 characters it shows only the
+// bullets, so a short number is never revealed whole (docs/specs/043-order-
+// fulfillment-transitions, R6a, D6).
+export function maskTracking(trackingNumber: string): Masked {
+  const chars = Array.from(trackingNumber.trim())
+  return asMasked(
+    chars.length >= 8 ? `•••• ${chars.slice(-4).join("")}` : "••••"
+  )
+}
+
+// The courier and tracking number an order was shipped with. The courier is
+// not personal and is shown in full; Demo's tracking number is `Masked`.
+export type ParcelView =
+  | { masked: false; courier: string; trackingNumber: string }
+  | { masked: true; courier: string; trackingNumber: Masked }
+
+export function parcelView(
+  role: AdminRole,
+  raw: { courier: string | null; trackingNumber: string | null }
+): ParcelView | null {
+  if (!raw.courier || !raw.trackingNumber) return null
+  return role === "demo"
+    ? {
+        masked: true,
+        courier: raw.courier,
+        trackingNumber: maskTracking(raw.trackingNumber),
+      }
+    : {
+        masked: false,
+        courier: raw.courier,
+        trackingNumber: raw.trackingNumber,
+      }
+}
+
 // ---- Order contact and address ----
 
 export type RawContact = {
@@ -140,6 +175,7 @@ const MOBILE_KEYS = new Set([
   "phone",
   "customermobile",
 ])
+const TRACKING_KEYS = new Set(["trackingnumber"])
 const ADDRESS_KEYS = new Set([
   "street",
   "zip",
@@ -168,6 +204,7 @@ function maskJsonValue(key: string, value: unknown): unknown {
     if (EMAIL_KEYS.has(k)) return maskEmail(value)
     if (NAME_KEYS.has(k)) return maskName(value)
     if (MOBILE_KEYS.has(k)) return maskMobile(value)
+    if (TRACKING_KEYS.has(k)) return maskTracking(value)
     if (ADDRESS_KEYS.has(k) || FREE_TEXT_KEYS.has(k)) return HIDDEN_IN_DEMO
   } else if (value !== null && value !== undefined) {
     if (ADDRESS_KEYS.has(k) || FREE_TEXT_KEYS.has(k)) return HIDDEN_IN_DEMO

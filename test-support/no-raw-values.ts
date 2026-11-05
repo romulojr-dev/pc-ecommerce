@@ -36,6 +36,13 @@ export const FIXTURE_CUSTOMER = {
   note: "Call before delivery, gate 4",
 } as const
 
+// The parcel of a shipped fixture order (docs/specs/043-order-fulfillment-
+// transitions): Demo sees the courier and only the last four of the number
+export const FIXTURE_PARCEL = {
+  courier: "LBC",
+  trackingNumber: "123456784821",
+} as const
+
 export const FIXTURE_RAW_VALUES = [
   FIXTURE_CUSTOMER.name,
   "Reyes",
@@ -46,4 +53,6 @@ export const FIXTURE_RAW_VALUES = [
   FIXTURE_CUSTOMER.street,
   "Mabini",
   FIXTURE_CUSTOMER.note,
+  FIXTURE_PARCEL.trackingNumber,
+  "123456784",
 ]
