@@ -68,7 +68,12 @@ export async function readPassword(
 ): Promise<string> {
   if (!stdin.isTTY) return readPasswordFromStream(stdin)
 
-  const first = await promptHidden(stdin, stdout, staffMessages.passwordPrompt)
+  // An empty Enter is asked again (up to three times): on Windows the Enter
+  // that started the command can arrive as the first keypress
+  let first = ""
+  for (let attempt = 0; attempt < 3 && first.length === 0; attempt++) {
+    first = await promptHidden(stdin, stdout, staffMessages.passwordPrompt)
+  }
   if (first.length === 0)
     throw new PasswordInputError(staffMessages.emptyPassword)
   const again = await promptHidden(stdin, stdout, staffMessages.repeatPrompt)
