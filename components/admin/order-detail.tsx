@@ -141,10 +141,7 @@ function TimelineSection({ order, now }: { order: OrderDetail; now: Date }) {
     order.shippedAt
       ? FULFILLMENT_COPY.events.shipped(dateTimeText(order.shippedAt))
       : null,
-    order.parcel ? FULFILLMENT_COPY.events.courier(order.parcel.courier) : null,
-    order.parcel
-      ? FULFILLMENT_COPY.events.tracking(order.parcel.trackingNumber)
-      : null,
+    // the courier and tracking number are on the Shipped step of the timeline
     order.readyAt
       ? FULFILLMENT_COPY.events.ready(dateTimeText(order.readyAt))
       : null,

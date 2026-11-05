@@ -280,7 +280,7 @@ export function FulfillmentPanel({
                           )}
                     </DialogTitle>
                     <DialogDescription className="sr-only">
-                      {choice.lines.join(" ")}
+                      {FULFILLMENT_COPY.describe}
                     </DialogDescription>
                   </DialogHeader>
                   {choice.ship ? (

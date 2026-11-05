@@ -72,8 +72,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm test`, `pnpm test:db` pass
 
 ## 10. E2E
-- [ ] `e2e/admin-orders-transitions.spec.ts`: online delivery walk, cash pickup walk (cash line, Customers total), stale second tab, Shipped two-step dialog, Demo disabled and masked, customer timeline, `/dev/emails`
-- [ ] Runs against the Docker Postgres with inline variables (no `.env.local` change)
+- [x] `e2e/admin-orders-transitions.spec.ts`: online delivery walk, cash pickup walk (cash line, Customers total), stale second tab, Shipped two-step dialog, Demo disabled and masked, customer timeline, `/dev/emails`
+- [x] Runs against the Docker Postgres with inline variables (no `.env.local` change)
 
 ## 11. Documentation
 - [ ] CLAUDE.md bullet: transitions, cap exemption, the CHECK, masking, `completedAt`

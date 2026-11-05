@@ -20,6 +20,7 @@ export const FULFILLMENT_COPY = {
   checkTitle: "Check these details",
   courier: "Courier",
   trackingNumber: "Tracking number",
+  describe: "Review this change, then confirm it.",
   noUndo: "This can't be undone.",
   emailed: "An email goes to the customer.",
   notEmailed: "No email is sent for this step.",
