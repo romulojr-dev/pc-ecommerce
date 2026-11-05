@@ -71,7 +71,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Spec status set to implemented, with "What changed while building"
 
 ## 10. Preview checks (merge gates)
-- [ ] Temporary `_probe` route deleted
+- [x] Temporary `probe-env` route deleted
 - [ ] Forged `X-Forwarded-For` check: the `RateLimit` key shows a real client IP (else `ipAddressHeaders` set and repeated); result and Vercel page cited in ADR 0012 and the PR
 - [ ] Owner, staff and demo sign in on the preview; response headers; cookie `Secure` and `HttpOnly`; Deployment Protection on
 - [ ] Acceptance criteria checked on the Preview URL

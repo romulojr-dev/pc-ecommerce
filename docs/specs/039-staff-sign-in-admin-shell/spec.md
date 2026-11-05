@@ -406,4 +406,4 @@ Found by the verification in plan task 1 (22 probe tests against Better Auth 1.7
 - **The cron body gained `emails` (rows claimed), `authCleanup` and `failed`** (Rule 30); the existing cron tests changed with it, and a cancellation's email now shows in `emails`.
 - **The static "every admin page reaches the guard" test (R7) arrived with the pages** (task 6); `/admin` unknown paths use a catch-all page that calls `requireAdminSession()` and `notFound()` so the not-found page renders inside the shell.
 - **E2E projects:** `setup` (one sign-in per role), `admin` (depends on it) and `chromium` (the rest, independent), so a database without the E2E accounts stops only the admin specs.
-- **The temporary `app/api/probe-env` route** exists on this branch only for the preview check and is deleted in the last task.
+- **The temporary `app/api/probe-env` route** existed on this branch only for the preview check (`VERCEL_URL` present, 2026-11-05) and is deleted.
