@@ -1,6 +1,8 @@
-import { readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { join } from "node:path"
 
 import { adminMarkerOf } from "@/lib/admin/marker"
+import { can, isAdminAction, isReadAction } from "@/lib/admin/permissions"
 
 // Finds UNGUARDED admin entry points (docs/specs/040-admin-permissions-audit-
 // masking, R8): it imports each module and lists every exported function that
@@ -71,4 +73,50 @@ export async function scanModules(
     }
   }
   return { unguarded, guarded }
+}
+
+// ---- Discovery and placement (R8, R9) ----
+
+const SKIP_DIRS = new Set(["node_modules", ".next", "generated", ".git"])
+const SOURCE_FILE = /\.(ts|tsx)$/
+
+export function sourceFiles(dir: string): string[] {
+  if (!existsSync(dir)) return []
+  return readdirSync(dir).flatMap((name) => {
+    if (SKIP_DIRS.has(name)) return []
+    const path = join(dir, name)
+    if (statSync(path).isDirectory()) return sourceFiles(path)
+    return SOURCE_FILE.test(name) ? [path] : []
+  })
+}
+
+const MUTATING_EXPORT =
+  /export\s+(?:async\s+function|const|function)\s+(POST|PUT|PATCH|DELETE)\b|export\s*\{[^}]*\b(POST|PUT|PATCH|DELETE)\b[^}]*\}/
+
+// A route.ts that exports a write method, found by its source so the file
+// needn't be imported
+export function exportsWriteMethod(source: string): boolean {
+  return MUTATING_EXPORT.test(source)
+}
+
+// A "use server" directive anywhere (a function-level one inside a page or a
+// component counts), not only at the top of a file
+export function hasAnyUseServerDirective(source: string): boolean {
+  return /^\s*["']use server["']\s*;?\s*$/m.test(source)
+}
+
+// Problems with the markers of the guarded functions found: an action the
+// table doesn't know, or a write action Demo is allowed to do
+export function checkGuarded(guarded: Guarded[]): string[] {
+  const problems: string[] = []
+  for (const { file, export: name, action } of guarded) {
+    if (!isAdminAction(action)) {
+      problems.push(`${file} ${name}: marker names unknown action "${action}"`)
+      continue
+    }
+    if (!isReadAction(action) && can("demo", action)) {
+      problems.push(`${file} ${name}: "${action}" is a write Demo may do`)
+    }
+  }
+  return problems
 }

@@ -37,11 +37,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 5. Enumeration test on the real folders, placement and lint
-- [ ] Unit: discovery, fixtures caught (E17), unknown action in marker (E18), zero-modules guard
-- [ ] db: every marked function called as Demo with empty input leaves every table's row count unchanged
-- [ ] Placement test with the named allowlist (R9b, E23)
-- [ ] ESLint: admin "use server" only in `actions.ts`; `adminAction` / `adminRoute` imports only from admin `actions.ts` / `route.ts`; fixture lint tests
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Unit: discovery, fixtures caught (E17), unknown action in marker (E18), zero-modules guard
+- [x] db: every marked function called as Demo with empty input leaves every table's row count unchanged
+- [x] Placement test with the named allowlist (R9b, E23)
+- [x] ESLint: admin "use server" only in `actions.ts`; `adminAction` / `adminRoute` imports only from admin `actions.ts` / `route.ts`; fixture lint tests
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Audit
 - [ ] Migration: `AuditLog`, update/delete-refusing trigger, `StockMovement.actorId` FK (`Restrict`); `schema.prisma` comment replaced; `pnpm db:drift` clean
