@@ -55,9 +55,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. The cron: cleanup and isolated jobs
-- [ ] `cleanAuthTables`; `runReleaseCron` runs release, emails and auth-cleanup in separate `try/catch`, all always run, 500 and a log naming the failed job(s)
-- [ ] Tests I26, I27, I27b–I27f; existing release-cron tests updated
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `cleanAuthTables`; `runReleaseCron` runs release, emails and auth-cleanup in separate `try/catch`, all always run, 500 and a log naming the failed job(s)
+- [x] Tests I26, I27, I27b–I27f; existing release-cron tests updated
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. E2E
 - [ ] `e2e/accounts.ts`; Playwright `setup` project with `storageState` per role and the missing-account message; `.gitignore`

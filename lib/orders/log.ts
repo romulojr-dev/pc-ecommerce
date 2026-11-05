@@ -42,7 +42,9 @@ export function logReleaseEvent(fields: ReleaseLogFields): void {
 
 // The cron's summary line, or its refusal
 export function logCronEvent(
-  fields: { released: number; skipped: number } | { outcome: "unauthorized" }
+  fields:
+    | { released: number; skipped: number; emails: number; failed?: string[] }
+    | { outcome: "unauthorized" }
 ): void {
   console.info(JSON.stringify({ event: "order.release.cron", ...fields }))
 }

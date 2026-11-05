@@ -34,6 +34,8 @@ vi.mock("next/cache", async (importOriginal) => ({
 let info: { mock: { calls: unknown[][] } }
 beforeEach(async () => {
   await resetCatalog()
+  // The cron also cleans these (docs/specs/039-staff-sign-in-admin-shell)
+  await db.$executeRaw`TRUNCATE TABLE "RateLimit", "Session", "Account", "Verification", "User" CASCADE`
   info = vi.spyOn(console, "info").mockImplementation(() => {})
   vi.spyOn(console, "error").mockImplementation(() => {})
 })
@@ -41,6 +43,14 @@ afterEach(() => vi.restoreAllMocks())
 afterAll(() => db.$disconnect())
 
 const SECRET = "c".repeat(32)
+// What a run with nothing to do answers
+const CLEAN = {
+  released: 0,
+  skipped: 0,
+  emails: 0,
+  authCleanup: { sessions: 0, rateLimits: 0 },
+  failed: [],
+}
 const NOW = EXPIRES
 const lagging = () => fakeGateway({ now: () => PLACED })
 const run = (authorization: string | null, gateway = lagging()) =>
@@ -90,11 +100,12 @@ describe("the run", () => {
 
     expect(await run(`Bearer ${SECRET}`)).toEqual({
       status: 200,
-      body: { released: 2, skipped: 0 },
+      // The two cancellations each queue an email, and the cron sends them
+      body: { ...CLEAN, released: 2, emails: 2 },
     })
     expect(await run(`Bearer ${SECRET}`)).toEqual({
       status: 200,
-      body: { released: 0, skipped: 0 },
+      body: CLEAN,
     })
   })
 
@@ -119,14 +130,15 @@ describe("the run", () => {
 
     expect(await run(`Bearer ${SECRET}`, gateway)).toEqual({
       status: 200,
-      body: { released: 29, skipped: 1 },
+      // The per-recipient cap lets five of the 29 cancellation emails out
+      body: { ...CLEAN, released: 29, skipped: 1, emails: 5 },
     })
     expect(close.mock.calls.filter(([id]) => id === session)).toHaveLength(1)
     const summary = info.mock.calls
       .map(([line]) => JSON.parse(String(line)))
       .filter((line) => line.event === "order.release.cron")
     expect(summary).toEqual([
-      { event: "order.release.cron", released: 29, skipped: 1 },
+      { event: "order.release.cron", released: 29, skipped: 1, emails: 5 },
     ])
   })
 
@@ -143,7 +155,7 @@ describe("the run", () => {
         clock: () => (time += 60_000),
         budgetMs: 50_000,
       })
-    ).toEqual({ status: 200, body: { released: 0, skipped: 0 } })
+    ).toEqual({ status: 200, body: CLEAN })
   })
 })
 
