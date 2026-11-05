@@ -65,10 +65,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Run against a scratch database in the Docker Postgres (dev server, and the production build with `CI=1`)
 
 ## 9. Docs
-- [ ] `docs/setup/admin-accounts.md`
-- [ ] README and CLAUDE.md
-- [ ] ADR 0012 ("Changed by spec 039 (#104)" notes, copied-sessions risk accepted) and the PRD `User` row
-- [ ] Spec status set to implemented, with "What changed while building"
+- [x] `docs/setup/admin-accounts.md`
+- [x] README and CLAUDE.md
+- [x] ADR 0012 ("Changed by spec 039 (#104)" notes, copied-sessions risk accepted) and the PRD `User` row
+- [x] Spec status set to implemented, with "What changed while building"
 
 ## 10. Preview checks (merge gates)
 - [ ] Temporary `_probe` route deleted

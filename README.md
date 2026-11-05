@@ -193,6 +193,24 @@ deployed. Unpaid orders are cancelled at their deadline by the purchases that
 need their stock, by a sweep after pages that show stock, and by a daily cron
 (`CRON_SECRET`, see the setup page).
 
+## Admin sign-in
+
+`/admin` is for the shop's staff ([spec 039](docs/specs/039-staff-sign-in-admin-shell/spec.md),
+[ADR 0012](docs/adr/0012-staff-auth-on-better-auth.md)). Nobody signs up:
+accounts are made with `pnpm staff:create` (owner or staff) and
+`pnpm db:seed --accounts-only` (the demo user), and each database needs its
+own. [docs/setup/admin-accounts.md](docs/setup/admin-accounts.md) has the
+commands, the Vercel settings and how to check sign-in on a preview URL.
+
+**Demo account** (read-only, public): email `demo@pcsilicon.tech`, password the
+value of `DEMO_ACCOUNT_PASSWORD`. It is shown on the sign-in page of every
+environment where that variable is set, with a "Use demo account" button.
+
+After pulling this, add `BETTER_AUTH_SECRET` to `.env.local` (at least 32 bytes;
+`.env.example` has a placeholder), or `pnpm dev` stops at startup. Sign-in is
+limited to 3 attempts per 10 seconds per IP in every environment, so tests that
+sign in send their own `X-Forwarded-For`.
+
 ## AI agent skills
 
 The Prisma agent skills used by Claude Code are not committed. `.agents/` holds

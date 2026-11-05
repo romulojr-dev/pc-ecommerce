@@ -1,6 +1,6 @@
 # 039 — Staff sign-in on Better Auth, the admin shell and the demo account
 
-Status: approved with three fixes (2026-11-05; see "Changes made by the review" at the end of §10). Issue: [#104](https://github.com/romulojr-dev/pc-ecommerce/issues/104) (parent epic [#5](https://github.com/romulojr-dev/pc-ecommerce/issues/5), Admin, Sprint 8, size L). PRD: AD-11 (roles), NFR Security. [ADR 0012](../../adr/0012-staff-auth-on-better-auth.md) (accepted in #103). Part 1 of 2: permissions, the guard, audit and masking are [#105](https://github.com/romulojr-dev/pc-ecommerce/issues/105).
+Status: implemented (2026-11-05; approved with three fixes, see "Changes made by the review" at the end of §10, and "What changed while building" there). Issue: [#104](https://github.com/romulojr-dev/pc-ecommerce/issues/104) (parent epic [#5](https://github.com/romulojr-dev/pc-ecommerce/issues/5), Admin, Sprint 8, size L). PRD: AD-11 (roles), NFR Security. [ADR 0012](../../adr/0012-staff-auth-on-better-auth.md) (accepted in #103). Part 1 of 2: permissions, the guard, audit and masking are [#105](https://github.com/romulojr-dev/pc-ecommerce/issues/105).
 
 Long form: the story adds a package, six tables, an auth configuration, a rate limit, a proxy, a route group, three scripts, a seed mode, a cron job and a setup document. **It asks to change ADR 0012 and the PRD's `User` row** (§9, "Conflicts").
 
@@ -391,3 +391,19 @@ Answers applied (2026-11-05):
 Other changes: pooled and unpooled Neon hosts compare equal in the production guard, and a remote dev branch needs `PRODUCTION_DATABASE_HOST` (Rule 27, U8b–U8d); the preview `X-Forwarded-For` check is a merge gate (Rule 13); `requireAdminSession()` rejects disabled users on every request, tested with a live session (Rule 15, I17, I17b); ADR 0012 and the PRD `User` row are fixed in this PR (§9); `BETTER_AUTH_SECRET` differs per environment (D18); sessions are absolute (Rule 5, I5b, I5c, D21); cookie attributes are tested (Rule 5, I5d, E16); the proxy skips `/admin/login` and `/api/auth/*` (Rule 14, R3, R4, E13); sign-out deletes only the caller's session (Rule 20, I29, I29b, E15). The criteria-to-examples table lists each as a "(review)" row.
 
 Approval fixes (2026-11-05): the cron runs every job and then returns 500 naming the failed job(s) (Rule 30, I27b–I27f); a disabled user's session is deleted on first use and re-enabling needs a fresh sign-in (Rule 15, R-3, I17, I17c); `VERCEL_URL` is required on Preview and `VERCEL_BRANCH_URL` is optional and trusted only when present, with the Vercel page cited and its silence on Git-only availability stated (Rule 7, U3b, I11c).
+
+### What changed while building
+
+Found by the verification in plan task 1 (22 probe tests against Better Auth 1.7.17) and while building:
+
+- **`disabledPaths` cannot switch off endpoints with a path parameter** (`/callback/:id`, `/reset-password/:token`): it matches exact strings, so both still answered (302 and 400). Rule 4 now holds through an allowlist in the route handler (`lib/auth/route-guard.ts`: sign-in, sign-out, get-session, by exact path and method); `disabledPaths` stays as a second lock and a test fails when the installed version has an endpoint in neither list.
+- **Origin and CSRF checks are off by default under `NODE_ENV=test`.** `advanced.disableOriginCheck: false` and `disableCSRFCheck: false` are set explicitly, so tests and CI's production build run the checks (Rule 7, I10, I11). A request with no `Origin` and no cookie is not checked (a browser always sends one); with a cookie it is refused.
+- **Absolute sessions need `disableSessionRefresh: true`** beside `expiresIn` and `updateAge` (Rule 5, I5b).
+- **The sign-in limit is Better Auth's own default** (`/sign-in*`: 3 per 10 s); it is set explicitly anyway. Better Auth trusts `x-forwarded-for` only when it holds a single address; a chain, or no header in production, shares one `no-trusted-ip` bucket (D8 holds without a wrapper). Under test it falls back to `127.0.0.1`. This makes the Vercel check (Rule 13) matter in both directions: a header Vercel keeps lets a client choose its bucket, one Vercel appends to puts everyone in one bucket.
+- **`VERCEL_URL` is present and equals the host with Deployment Protection on** (preview probe, 2026-11-05); `VERCEL_BRANCH_URL` is set on that preview too.
+- **`next dev`'s server keeps a client-sent `x-forwarded-for`** (`??=`): E2E tests send their own single-address header per sign-in.
+- **The database limiter already prunes expired `RateLimit` rows** as it runs; the cron cleanup stays because the acceptance criteria require it.
+- **The cron body gained `emails` (rows claimed), `authCleanup` and `failed`** (Rule 30); the existing cron tests changed with it, and a cancellation's email now shows in `emails`.
+- **The static "every admin page reaches the guard" test (R7) arrived with the pages** (task 6); `/admin` unknown paths use a catch-all page that calls `requireAdminSession()` and `notFound()` so the not-found page renders inside the shell.
+- **E2E projects:** `setup` (one sign-in per role), `admin` (depends on it) and `chromium` (the rest, independent), so a database without the E2E accounts stops only the admin specs.
+- **The temporary `app/api/probe-env` route** exists on this branch only for the preview check and is deleted in the last task.
