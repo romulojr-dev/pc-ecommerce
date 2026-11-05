@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  CAP_EXEMPT_TYPES,
   capDecision,
   dueDecision,
   isRetryableCode,
@@ -111,5 +112,41 @@ describe("isRetryableCode", () => {
 describe("timing", () => {
   it("keeps the transport timeout well inside the lease", () => {
     expect(TRANSPORT_TIMEOUT_MS * 2).toBeLessThan(LEASE_MS)
+  })
+})
+
+// docs/specs/043-order-fulfillment-transitions: R9
+describe("the cap exemption", () => {
+  it("never skips a staff-triggered type, however many are counted", () => {
+    for (const type of [
+      "ORDER_SHIPPED",
+      "ORDER_DELIVERED",
+      "READY_FOR_PICKUP",
+    ]) {
+      expect(capDecision(0, type)).toBe("send")
+      expect(capDecision(5, type)).toBe("send")
+      expect(capDecision(50, type)).toBe("send")
+    }
+  })
+
+  it("is exactly those three types", () => {
+    expect([...CAP_EXEMPT_TYPES].sort()).toEqual([
+      "ORDER_DELIVERED",
+      "ORDER_SHIPPED",
+      "READY_FOR_PICKUP",
+    ])
+  })
+
+  it("still skips every other type at the cap, and a call with no type", () => {
+    for (const type of [
+      "ORDER_PLACED",
+      "PAYMENT_RECEIVED",
+      "ORDER_CANCELLED",
+      "COD_CONFIRM",
+    ]) {
+      expect(capDecision(4, type)).toBe("send")
+      expect(capDecision(5, type)).toBe("skip")
+    }
+    expect(capDecision(5)).toBe("skip")
   })
 })

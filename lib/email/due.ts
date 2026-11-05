@@ -60,8 +60,21 @@ export type CapDecision = "send" | "skip"
 
 // `counted`: the recipient's other rows that count (sent or sending within the
 // window)
-export const capDecision = (counted: number): CapDecision =>
-  counted >= EMAIL_CAP ? "skip" : "send"
+// Emails a staff member triggers by moving an order (docs/specs/043-order-
+// fulfillment-transitions, R9). The cap never skips them, but they still
+// count in the recipient's 24-hour count: only the skip is exempt.
+export const CAP_EXEMPT_TYPES: readonly string[] = [
+  "ORDER_SHIPPED",
+  "ORDER_DELIVERED",
+  "READY_FOR_PICKUP",
+]
+
+export const capDecision = (counted: number, type?: string): CapDecision =>
+  type !== undefined && CAP_EXEMPT_TYPES.includes(type)
+    ? "send"
+    : counted >= EMAIL_CAP
+      ? "skip"
+      : "send"
 
 // Whether a failure is worth another try: a timeout, a network error, a 429, a
 // 5xx, or Resend's 409 for a concurrent request with the same key

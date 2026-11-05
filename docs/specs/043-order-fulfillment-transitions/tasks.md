@@ -39,9 +39,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Cap exemption
-- [ ] Exempt-type list in `lib/email/due.ts` with a unit test; `claim()` skips the skip only
-- [ ] Integration tests E18 (five), E18a (exempt rows still count), E19 (six), E20 (four)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Exempt-type list in `lib/email/due.ts` with a unit test; `claim()` skips the skip only
+- [x] Integration tests E18 (five), E18a (exempt rows still count), E19 (six), E20 (four)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Customer timeline and order page
 - [ ] Order-page DTO and `getOrderForPage` select the new fields (named fields only)
