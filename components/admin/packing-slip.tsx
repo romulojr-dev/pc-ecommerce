@@ -3,6 +3,7 @@ import Link from "next/link"
 import { PrintButton } from "@/components/admin/print-button"
 import { buttonVariants } from "@/components/ui/button"
 import { ADMIN_COPY } from "@/lib/admin/copy"
+import { FULFILLMENT_COPY } from "@/lib/admin/fulfillment-copy"
 import {
   FULFILLMENT_LABELS,
   slipEntries,
@@ -133,6 +134,19 @@ export function PackingSlipView({
       </header>
 
       <ShipTo slip={slip} />
+
+      {slip.parcel ? (
+        <section className="flex flex-col gap-1">
+          <p>
+            {FULFILLMENT_COPY.slip.courier}:{" "}
+            <span className="font-medium">{slip.parcel.courier}</span>
+          </p>
+          <p>
+            {FULFILLMENT_COPY.slip.trackingNumber}:{" "}
+            <span className="font-medium">{slip.parcel.trackingNumber}</span>
+          </p>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-1">
         <h2 className="text-base font-semibold">{copy.items}</h2>

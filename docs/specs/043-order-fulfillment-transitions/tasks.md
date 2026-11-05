@@ -50,19 +50,19 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Admin detail, dialogs and packing slip
-- [ ] `OrderDetail` fields and `transitions` for the viewer's role; events list lines
-- [ ] Fulfillment section; one-step confirm dialog; two-step Shipped dialog with the courier datalist (J&T Express, LBC, Ninja Van, Flash Express, 2GO)
-- [ ] Success, stale (Reload), not-allowed, not-found and failure messages; busy state; focus
-- [ ] Packing slip shows courier and tracking
-- [ ] Render tests for each state and role (Demo disabled, no-button lines)
-- [ ] `no-db-in-pages.test.ts` and `admin-pages.test.ts` pass
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `OrderDetail` fields and `transitions` for the viewer's role; events list lines
+- [x] Fulfillment section; one-step confirm dialog; two-step Shipped dialog with the courier datalist (J&T Express, LBC, Ninja Van, Flash Express, 2GO)
+- [x] Success, stale (Reload), not-allowed, not-found and failure messages; busy state; focus
+- [x] Packing slip shows courier and tracking
+- [x] Render tests for each state and role (Demo disabled, no-button lines)
+- [x] `no-db-in-pages.test.ts` and `admin-pages.test.ts` pass
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 8. Masking
-- [ ] `maskTracking` ("•••• 4821", under 8 characters "••••"); `trackingNumber` audit key; Masked DTO fields
-- [ ] Fixture tracking number in `test-support/no-raw-values.ts`
-- [ ] Tests E30a, E30b; Demo detail, slip and audit checked with `expectNoRawValues`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `maskTracking` ("•••• 4821", under 8 characters "••••"); `trackingNumber` audit key; Masked DTO fields
+- [x] Fixture tracking number in `test-support/no-raw-values.ts`
+- [x] Tests E30a, E30b; Demo detail, slip and audit checked with `expectNoRawValues`
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. Fixtures (deliberate test-data change, R17)
 - [ ] Search every fixture that inserts `SHIPPED`, `DELIVERED` or `PICKED_UP` rows (the status CHECKs need `shippedAt` / `completedAt` / courier / tracking); done inside task 2 where the CHECKs would otherwise fail the suite

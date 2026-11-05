@@ -7,6 +7,7 @@ import { resetCatalog } from "@/test-support/db"
 import {
   expectNoRawValues,
   FIXTURE_CUSTOMER,
+  FIXTURE_PARCEL,
   FIXTURE_RAW_VALUES,
 } from "@/test-support/no-raw-values"
 import { orderData } from "@/test-support/orders"
@@ -23,12 +24,16 @@ const role = vi.hoisted(() => ({ current: "demo" as "demo" | "owner" }))
 
 vi.mock("next/server", () => ({ connection: async () => {} }))
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {} }),
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND")
   },
   redirect: (to: string) => {
     throw new Error(`NEXT_REDIRECT ${to}`)
   },
+}))
+vi.mock("@/app/admin/(shell)/orders/[number]/actions", () => ({
+  transitionOrderAction: async () => ({ ok: false, message: "unused" }),
 }))
 vi.mock("@/lib/admin/session", () => ({
   requireAdminAccess: async () => ({
@@ -58,6 +63,11 @@ beforeEach(async () => {
       contactMobile: FIXTURE_CUSTOMER.mobile,
       street: FIXTURE_CUSTOMER.street,
       expiresAt: new Date(Date.now() + 86_400_000),
+      // shipped, so the parcel is on the detail and the slip (spec 043, E30a)
+      status: "SHIPPED",
+      paidAt: new Date("2026-11-02T06:10:00Z"),
+      shippedAt: new Date("2026-11-02T07:30:00Z"),
+      ...FIXTURE_PARCEL,
     }),
   })
   await db.orderItem.create({
@@ -118,6 +128,7 @@ describe("E30: Demo sees no customer value on any of the three pages", () => {
     const { list, detail, slip } = await pages()
     expect(sent(list as React.ReactElement).markup).toContain("Ana Reyes")
     const detailSent = sent(detail as React.ReactElement)
+    expect(detailSent.markup).toContain(FIXTURE_PARCEL.trackingNumber)
     expect(detailSent.markup).toContain(FIXTURE_CUSTOMER.email)
     expect(detailSent.markup).toContain(FIXTURE_CUSTOMER.street)
     const slipSent = sent(slip as React.ReactElement)
@@ -156,7 +167,7 @@ describe("E30: Demo sees no customer value on any of the three pages", () => {
       "NEXT_REDIRECT /admin/orders"
     )
     const empty = (await AdminOrdersPage(
-      listProps({ status: "SHIPPED", page: "4" })
+      listProps({ status: "REFUNDED", page: "4" })
     )) as React.ReactElement
     expect(sent(empty).markup).toContain("No orders match these filters.")
   })

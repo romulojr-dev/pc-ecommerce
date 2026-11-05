@@ -5,6 +5,7 @@ import { connection } from "next/server"
 import { NoAccess } from "@/components/admin/no-access"
 import { OrderDetailView } from "@/components/admin/order-detail"
 import { ADMIN_COPY } from "@/lib/admin/copy"
+import { disabledReason } from "@/lib/admin/denial"
 import { backHrefOf } from "@/lib/admin/orders-params"
 import { can } from "@/lib/admin/permissions"
 import { getOrderDetail } from "@/lib/admin/queries/orders"
@@ -38,6 +39,10 @@ export default async function AdminOrderDetailPage({
       order={order}
       now={now}
       backHref={backHrefOf(back)}
+      moveDisabledReason={disabledReason(
+        session.user.adminRole,
+        "orders.transition"
+      )}
       slipHref={
         slip
           ? `/admin/orders/${encodeURIComponent(order.orderNumber)}/packing-slip`

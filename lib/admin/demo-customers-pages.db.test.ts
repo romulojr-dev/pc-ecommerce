@@ -23,12 +23,16 @@ const role = vi.hoisted(() => ({
 
 vi.mock("next/server", () => ({ connection: async () => {} }))
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {} }),
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND")
   },
   redirect: (to: string) => {
     throw new Error(`NEXT_REDIRECT ${to}`)
   },
+}))
+vi.mock("@/app/admin/(shell)/orders/[number]/actions", () => ({
+  transitionOrderAction: async () => ({ ok: false, message: "unused" }),
 }))
 vi.mock("@/lib/admin/session", () => ({
   requireAdminAccess: async () => ({

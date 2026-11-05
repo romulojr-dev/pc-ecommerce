@@ -15,7 +15,10 @@ import {
   OrderTotalsRows,
 } from "@/components/orders/order-parts"
 import { OrderTimeline } from "@/components/orders/order-timeline"
+import { FulfillmentPanel } from "@/components/admin/fulfillment-panel"
 import { ADMIN_COPY } from "@/lib/admin/copy"
+import { FULFILLMENT_COPY } from "@/lib/admin/fulfillment-copy"
+import { fulfillmentView } from "@/lib/admin/fulfillment-view"
 import { buyerHref } from "@/lib/admin/customers-view"
 import {
   amountToCollect,
@@ -132,6 +135,24 @@ function TimelineSection({ order, now }: { order: OrderDetail; now: Date }) {
       ? copy.events.cancelled(dateTimeText(order.cancelledAt))
       : null,
     order.cancelReason === "EXPIRED" ? copy.events.notPaidInTime : null,
+    order.processingAt
+      ? FULFILLMENT_COPY.events.processing(dateTimeText(order.processingAt))
+      : null,
+    order.shippedAt
+      ? FULFILLMENT_COPY.events.shipped(dateTimeText(order.shippedAt))
+      : null,
+    order.parcel ? FULFILLMENT_COPY.events.courier(order.parcel.courier) : null,
+    order.parcel
+      ? FULFILLMENT_COPY.events.tracking(order.parcel.trackingNumber)
+      : null,
+    order.readyAt
+      ? FULFILLMENT_COPY.events.ready(dateTimeText(order.readyAt))
+      : null,
+    order.completedAt
+      ? order.fulfillment === "PICKUP"
+        ? FULFILLMENT_COPY.events.pickedUp(dateTimeText(order.completedAt))
+        : FULFILLMENT_COPY.events.delivered(dateTimeText(order.completedAt))
+      : null,
   ].filter((event): event is string => event !== null)
   const pending =
     order.status === "PENDING_PAYMENT" ||
@@ -149,6 +170,12 @@ function TimelineSection({ order, now }: { order: OrderDetail; now: Date }) {
           fulfillment: order.fulfillment,
           paymentOption: order.paymentOption,
           confirmedAt: order.confirmedAt,
+          processingAt: order.processingAt,
+          shippedAt: order.shippedAt,
+          readyAt: order.readyAt,
+          completedAt: order.completedAt,
+          courier: order.parcel?.courier,
+          trackingNumber: order.parcel?.trackingNumber,
         })}
       />
       <ul className="flex flex-col gap-0.5 text-sm text-muted-foreground">
@@ -268,9 +295,12 @@ export function OrderDetailView({
   now,
   backHref,
   slipHref,
+  moveDisabledReason,
 }: {
   order: OrderDetail
   now: Date
+  // Why this role may not move orders (Demo), or null when it may (B4)
+  moveDisabledReason: string | null
   // The list as the staff member left it (B11)
   backHref: string
   // Null when the role has no packing slip
@@ -322,6 +352,13 @@ export function OrderDetailView({
           {copy.checkFlag}
         </p>
       ) : null}
+
+      <FulfillmentPanel
+        orderNumber={order.orderNumber}
+        status={order.status}
+        view={fulfillmentView(order)}
+        disabledReason={moveDisabledReason}
+      />
 
       <Section title={copy.items}>
         <OrderItemsList items={order.items} />

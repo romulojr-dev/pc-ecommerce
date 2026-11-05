@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import {
   backHrefOf,
@@ -7,6 +7,13 @@ import {
   DEFAULT_ORDER_PARAMS,
 } from "@/lib/admin/orders-params"
 import type { OrderDetail } from "@/lib/admin/queries/orders"
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {} }),
+}))
+vi.mock("@/app/admin/(shell)/orders/[number]/actions", () => ({
+  transitionOrderAction: async () => ({ ok: false, message: "unused" }),
+}))
 
 import { OrderDetailView } from "./order-detail"
 import { orderHref } from "./order-list"
@@ -27,6 +34,11 @@ const order = (over: Partial<OrderDetail> = {}): OrderDetail => ({
   expiresAt: new Date("2026-11-03T06:00:00Z"),
   paidAt: null,
   confirmedAt: null,
+  processingAt: null,
+  shippedAt: null,
+  readyAt: null,
+  completedAt: null,
+  parcel: null,
   cancelledAt: null,
   cancelReason: null,
   contact: {
@@ -68,13 +80,18 @@ const order = (over: Partial<OrderDetail> = {}): OrderDetail => ({
   ...over,
 })
 
-const view = (o: OrderDetail, slipHref: string | null = "/slip") =>
+const view = (
+  o: OrderDetail,
+  slipHref: string | null = "/slip",
+  moveDisabledReason: string | null = null
+) =>
   renderToStaticMarkup(
     <OrderDetailView
       order={o}
       now={NOW}
       backHref="/admin/orders?status=PAID"
       slipHref={slipHref}
+      moveDisabledReason={moveDisabledReason}
     />
   )
 
