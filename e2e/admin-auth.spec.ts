@@ -322,16 +322,24 @@ test.describe("staff", () => {
 test.describe("demo", () => {
   test.use({ storageState: authFile("demo") })
 
-  test("E7: the shell opens and shows no customer, order or price data", async ({
+  // Changed by spec 041: the page is the order list now, so Demo sees order
+  // numbers and totals, and only the customer stays hidden. The orders are the
+  // ones the other specs placed, when they have run. e2e/admin-orders.spec.ts
+  // checks the masks on orders of its own.
+  test("E7: the shell opens and shows no raw customer data", async ({
     page,
   }) => {
     await page.goto("/admin/orders")
     await expect(page.getByTestId("admin-person")).toHaveText(
       `${ACCOUNTS.demo.name} · ${ACCOUNTS.demo.label}`
     )
+    // Only the list has this field. Visible, not just present: the streamed list
+    // waits in a hidden container, and until then the body text is the skeleton
+    const customer = page.getByLabel("Customer")
+    await expect(customer).toBeVisible()
+    await expect(customer).toBeDisabled()
     const text = await page.locator("body").innerText()
-    expect(text).not.toMatch(/₱|PCS-[0-9A-Z]{8}/)
-    expect(text).not.toMatch(/@example\.com/)
+    expect(text).not.toMatch(/Ana Santos|@example\.com|\+639\d{9}/)
   })
 })
 
