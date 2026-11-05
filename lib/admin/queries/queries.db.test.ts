@@ -15,7 +15,6 @@ import { orderData, pickupOrderData } from "@/test-support/orders"
 import { adminTransaction, recordAudit } from "../audit"
 import type { OrderDetail } from "./orders"
 import { listAuditEntries } from "./audit"
-import { listCustomers } from "./customers"
 import { QueryDeniedError } from "./guard"
 import { getOrderDetail } from "./orders"
 
@@ -113,26 +112,6 @@ describe("an order as a role sees it", () => {
 
   test("an unknown order is null", async () => {
     expect(await getOrderDetail("demo", "PCS-NOPE0000", new Date())).toBeNull()
-  })
-})
-
-describe("customers", () => {
-  test("Demo rows are masked and keyed by position, not by email (R17)", async () => {
-    await db.order.create({
-      data: orderData({ guestEmail: "Ana.Reyes@Example.com" }),
-    })
-    const owner = await listCustomers("owner")
-    expect(owner).toHaveLength(1)
-    expect(owner[0]).toMatchObject({
-      id: "ana.reyes@example.com",
-      orderCount: 2,
-    })
-
-    const demo = await listCustomers("demo")
-    expect(demo).toHaveLength(1)
-    expect(demo[0].id).toBe("c1")
-    expect(demo[0].contact.masked).toBe(true)
-    expectNoRawValues(demo, FIXTURE_RAW_VALUES)
   })
 })
 

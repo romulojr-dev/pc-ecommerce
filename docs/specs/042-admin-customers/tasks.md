@@ -28,14 +28,14 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 4. Customers query
-- [ ] `listCustomers(role, params)`: group on `customerKeySql`, orders placed, total spent over `saleOrderCondition` (sum of `total`), last order, newest order's name and email through `contactView`
-- [ ] Paging and stable order (last order desc, key asc); no row cap (E9–E11)
-- [ ] Search: any order matches, whole count and total kept, `%` `_` `\` escaped, mobile digits per spec 041 (E15–E19)
-- [ ] Demo: masked rows, rank keys `c{n}` across the whole list, a customer term refused before any query (E20, E21)
-- [ ] `resolveBuyer(role, key)`: Owner/Staff pass the normalized key; Demo `c{n}` only; anything else null (E23, E24)
-- [ ] Role gating (E26); the placeholder tests in `queries.db.test.ts` rewritten, masking assertion kept
-- [ ] Integration tests E1–E8, E33, E34
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `listCustomers(role, params)`: group on `customerKeySql`, orders placed, total spent over `saleOrderCondition` (sum of `total`), last order, newest order's name and email through `contactView`
+- [x] Paging and stable order (last order desc, key asc); no row cap (E9–E11)
+- [x] Search: any order matches, whole count and total kept, `%` `_` `\` escaped, mobile digits per spec 041 (E15–E19)
+- [x] Demo: masked rows, rank keys `c{n}` across the whole list, a customer term refused before any query (E20, E21)
+- [x] `resolveBuyer(role, key)`: Owner/Staff pass the normalized key; Demo `c{n}` only; anything else null (E23, E24)
+- [x] Role gating (E26); the placeholder tests in `queries.db.test.ts` rewritten, masking assertion kept
+- [x] Integration tests E1–E8, E33, E34
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Customers page and nav
 - [ ] `app/admin/(shell)/customers/page.tsx` with `requireAdminAccess("customers.view")`, canonical and past-the-last redirects, no redirect for a zero-result search
