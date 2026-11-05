@@ -48,11 +48,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Login page and shell
-- [ ] Sample routes and components deleted; header Account icon removed; `sidebar` out of the reserved list
-- [ ] `/admin/login` (demo box, Use demo account, states of Rule 31), the shell, Orders placeholder, not-found, metadata
-- [ ] Static test that every admin page and layout calls `requireAdminSession` and `connection()` (R7, D9)
-- [ ] Tests R8–R12, I30, component tests
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Sample routes and components deleted; header Account icon removed; `sidebar` out of the reserved list
+- [x] `/admin/login` (demo box, Use demo account, states of Rule 31), the shell, Orders placeholder, not-found, metadata
+- [x] Static test that every admin page and layout calls `requireAdminSession` and `connection()` (R7, D9)
+- [x] Tests R8–R12, I30, component tests
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. The cron: cleanup and isolated jobs
 - [ ] `cleanAuthTables`; `runReleaseCron` runs release, emails and auth-cleanup in separate `try/catch`, all always run, 500 and a log naming the failed job(s)

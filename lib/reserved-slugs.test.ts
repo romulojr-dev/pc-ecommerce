@@ -48,3 +48,12 @@ describe("RESERVED_SLUGS", () => {
     ).toEqual([])
   })
 })
+
+describe("the sample routes (docs/specs/039-staff-sign-in-admin-shell, R10)", () => {
+  test("admin, login and signup stay reserved; sidebar is free", () => {
+    expect(isReservedSlug("admin")).toBe(true)
+    expect(isReservedSlug("login")).toBe(true)
+    expect(isReservedSlug("signup")).toBe(true)
+    expect(isReservedSlug("sidebar")).toBe(false)
+  })
+})
