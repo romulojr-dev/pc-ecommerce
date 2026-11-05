@@ -16,11 +16,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [ ] **Report to the user: which import approach worked (mocks / lazy session import / separate project) or the options if none did. Do not start task 2 until they answer**
 
 ## 2. Permissions (pure)
-- [ ] `lib/admin/permissions.ts`: `AdminRole`, `AdminAction` (24), table, `can()`, `ADMIN_ACTIONS`, read-action list
-- [ ] ESLint import limits cover `permissions.ts` and `mask.ts`; fixture lint test
-- [ ] Role mapper in `lib/admin/session.ts`; `AdminSession` gains `role`
-- [ ] T2 (E1–E3, every cell, every action in the table, unknown role/action false)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/admin/permissions.ts`: `AdminRole`, `AdminAction` (24), table, `can()`, `ADMIN_ACTIONS`, read-action list
+- [x] ESLint import limits cover `permissions.ts` and `mask.ts`; fixture lint test
+- [x] Role mapper in `lib/admin/session.ts`; `AdminSession` gains `role`
+- [x] T2 (E1–E3, every cell, every action in the table, unknown role/action false)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. The wrappers
 - [ ] `lib/admin/guard.ts`: `adminAction`, `adminRoute`, marker, messages ("This account is read-only", "Only owners can do this"), origin check on write methods only, denial answers, name-and-code logging

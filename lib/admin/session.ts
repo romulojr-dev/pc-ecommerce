@@ -7,6 +7,7 @@ import { cache } from "react"
 import type { UserRole } from "@/generated/prisma/client"
 import { auth } from "@/lib/auth/auth"
 import { db } from "@/lib/db"
+import { type AdminRole, adminRoleOf } from "@/lib/admin/permissions"
 
 // The real check behind /admin (docs/specs/039-staff-sign-in-admin-shell,
 // Rules 14 and 15). proxy.ts only looks for a cookie; every admin page and
@@ -17,7 +18,14 @@ export const ADMIN_LOGIN_PATH = "/admin/login"
 
 export type AdminSession = {
   sessionId: string
-  user: { id: string; name: string; email: string; role: UserRole }
+  user: {
+    id: string
+    name: string
+    email: string
+    role: UserRole
+    // The same role as the permission table knows it
+    adminRole: AdminRole
+  }
 }
 
 const ROLES: readonly string[] = ["OWNER", "STAFF", "DEMO"]
@@ -46,6 +54,8 @@ export async function loadAdminSession(
   // The role comes from the user row, never from a request; an unknown value
   // means a bad row, so nobody gets in on it
   if (!user.role || !ROLES.includes(user.role)) return null
+  const adminRole = adminRoleOf(user.role)
+  if (!adminRole) return null
 
   return {
     sessionId: found.session.id,
@@ -54,6 +64,7 @@ export async function loadAdminSession(
       name: user.name,
       email: user.email,
       role: user.role as UserRole,
+      adminRole,
     },
   }
 }

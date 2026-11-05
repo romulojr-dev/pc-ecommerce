@@ -1,6 +1,6 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import { defineConfig, globalIgnores } from "eslint/config"
+import nextVitals from "eslint-config-next/core-web-vitals"
+import nextTs from "eslint-config-next/typescript"
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -28,7 +28,14 @@ const eslintConfig = defineConfig([
   // server-only, Next.js or React code. Tests reach seed data through
   // test-support.
   {
-    files: ["lib/builder/**", "lib/specs/**", "lib/vouchers/**"],
+    files: [
+      "lib/builder/**",
+      "lib/specs/**",
+      "lib/vouchers/**",
+      "lib/admin/permissions.ts",
+      "lib/admin/mask.ts",
+      "lib/admin/marker.ts",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -49,7 +56,7 @@ const eslintConfig = defineConfig([
                 "react-dom/**",
               ],
               message:
-                "lib/builder, lib/specs and lib/vouchers run in the browser and on the server: import only zod, lib/specs and plain TypeScript.",
+                "lib/builder, lib/specs, lib/vouchers and the admin permission, mask and marker files run in the browser and on the server: import only zod, lib/specs and plain TypeScript.",
             },
           ],
         },
@@ -64,6 +71,6 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
-]);
+])
 
-export default eslintConfig;
+export default eslintConfig
