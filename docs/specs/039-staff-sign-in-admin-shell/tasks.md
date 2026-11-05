@@ -19,9 +19,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Probe: `generateId: false` with `@default(cuid())` gives cuid ids
 - [x] Probe: `input: false` on `role` and `disabledAt`
 - [x] Probe: trusted origins, absent `Origin`, sign-out deletes only the caller's session, `disableSignUp`. **Finding:** Better Auth skips the origin and CSRF checks under `NODE_ENV=test` unless `advanced.disableOriginCheck: false` is set explicitly
-- [ ] Temporary `app/api/probe-env` route (an `_probe` folder would be private in the App Router) on the preview: `VERCEL_URL` present with Deployment Protection on, equal to the request host; `VERCEL_BRANCH_URL` presence recorded
+- [x] Temporary `app/api/probe-env` route (an `_probe` folder would be private in the App Router) on the preview: `VERCEL_URL` present with Deployment Protection on, equal to the request host; `VERCEL_BRANCH_URL` presence recorded. **Result (2026-11-05):** `vercelEnv` preview, `VERCEL_URL` set and equal to the host, `VERCEL_BRANCH_URL` set (not equal to the deployment host the request used, as expected)
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
-- [ ] **Report to the user: pass/fail per probe. Do not start task 2 until they answer**
+- [x] **Report to the user: pass/fail per probe. Do not start task 2 until they answer** (reported; user confirmed the preview result and asked to continue)
 
 ## 2. Environment and pure code
 - [ ] `lib/auth/env-schema.ts` and `lib/env.ts` (`BETTER_AUTH_SECRET`, `VERCEL_URL`, `VERCEL_BRANCH_URL`, `DEMO_ACCOUNT_PASSWORD`); `.env.example`, `ci.yml`, `vitest.db.config.ts`
