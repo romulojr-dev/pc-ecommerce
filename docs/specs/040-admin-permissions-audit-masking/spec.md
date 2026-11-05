@@ -1,6 +1,6 @@
 # 040 — Admin roles, permission guard, audit log and customer-data masking
 
-Status: draft, revised after review (2026-11-05), waiting for approval. Issue: [#105](https://github.com/romulojr-dev/pc-ecommerce/issues/105) (parent epic [#5](https://github.com/romulojr-dev/pc-ecommerce/issues/5), Admin, Sprint 8). PRD: AD-11 (roles), AD-10 (audit log), NFR Security (role checks on every admin route and server action). Part 2 of 2: sign-in and the shell are [spec 039](../039-staff-sign-in-admin-shell/spec.md) (#104, implemented). [ADR 0012](../../adr/0012-staff-auth-on-better-auth.md).
+Status: implemented in code (2026-11-05), waiting for the preview check; see "What changed while building" at the end. Issue: [#105](https://github.com/romulojr-dev/pc-ecommerce/issues/105) (parent epic [#5](https://github.com/romulojr-dev/pc-ecommerce/issues/5), Admin, Sprint 8). PRD: AD-11 (roles), AD-10 (audit log), NFR Security (role checks on every admin route and server action). Part 2 of 2: sign-in and the shell are [spec 039](../039-staff-sign-in-admin-shell/spec.md) (#104, implemented). [ADR 0012](../../adr/0012-staff-auth-on-better-auth.md).
 
 ## 1. Summary
 
@@ -234,3 +234,13 @@ All seven earlier questions are settled by the review (accepted, changed or conf
 
 1. **Staff-denial wording (D14).** The review's single message "This account is read-only" fits Demo only. Recommendation: Staff sees "Only owners can do this" for owner-only actions. Confirm, or say to use the read-only text for everyone.
 2. **GET handlers and the marker (D3).** Recommendation: keep requiring the marker on admin `GET` routes, so every export in an admin `route.ts` is wrapped. Say if you want only the write methods checked.
+
+## 11. What changed while building
+
+- **Wording.** A role that is neither Demo nor a Staff user denied an owner-only action (an unknown role) hears "You can't do this." (`CANNOT_MESSAGE`); the spec had no text for it. The no-access page uses the spec's strings.
+- **The role on the session.** `AdminSession.user` gained `adminRole` (the table's lower-case role) beside `role` (the database's `UserRole`); `adminRoleOf` in `lib/admin/permissions.ts` is the one mapper (pure, so it is tested there).
+- **Import approach for the enumeration test (task 1).** Mocks of `@/lib/env` and `@/lib/db` are enough; `next/headers` and `next/cache` import as they are. The guard itself loads its session and origins lazily, so a module that only declares actions needs nothing at import.
+- **A wrapped export builds.** `export const x = adminAction(...)` inside a `"use server"` file passed `pnpm build` on Next 16.4.
+- **`adminRoute` GET.** GET handlers must carry the marker (D3) but are not origin-checked.
+- **No-access E2E.** No Admin screen needs a view action Staff lacks yet, so there is no route to open; the no-access page is covered by a render test, and the E2E (`e2e/admin-roles.spec.ts`) covers landing, nav and the Demo notice for the three roles.
+- **Customers.** Demo rows are keyed `c1`, `c2`, … by position.

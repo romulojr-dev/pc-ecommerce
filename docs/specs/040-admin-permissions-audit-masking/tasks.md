@@ -57,7 +57,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. E2E, docs and preview
-- [ ] E2E T13: three roles land on Orders; Demo notice; Staff no-access page
-- [ ] CLAUDE.md, README, ADR 0012, PRD `AuditLog` row, `docs/setup/admin-accounts.md`
-- [ ] `pnpm build`, `pnpm test:e2e`, `pnpm db:drift`
+- [x] E2E T13 written (`e2e/admin-roles.spec.ts`): three roles land on Orders; Demo notice. The Staff no-access page has no route yet; render-tested instead. **Not run locally**: the admin project needs `E2E_ACCOUNT_PASSWORD` and `DEMO_ACCOUNT_PASSWORD` and the E2E accounts on the app's database
+- [x] CLAUDE.md, README, ADR 0012, PRD `AuditLog` row, `docs/setup/admin-accounts.md`
+- [x] `pnpm build`, `pnpm db:drift` pass; [ ] `pnpm test:e2e` (CI)
 - [ ] Acceptance criteria checked on the preview URL

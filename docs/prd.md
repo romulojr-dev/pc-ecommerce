@@ -280,7 +280,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
 | `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: `codEnabled`, `codMaxTotal` in centavos on the total after the discount including shipping, null for no limit, `codZones`, `codPickupEnabled`, `codConfirmHours`). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |
-| `AuditLog` | actorId, entity, entityId, action, before, after, createdAt |
+| `AuditLog` | actorId (staff `User`, Restrict), entity, entityId, action, before, after, createdAt. Append-only (a trigger refuses UPDATE and DELETE); written in the same transaction as the change; never stores secrets |
 
 Order items and addresses are **snapshots**, so later price or address edits never change past orders. Products are retired through `status`, never deleted, so builds, carts and orders that point at them stay valid.
 

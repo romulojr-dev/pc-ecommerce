@@ -127,9 +127,8 @@ demo@pcsilicon.tech` on each database and update `DEMO_ACCOUNT_PASSWORD`.
 | Email | `demo@pcsilicon.tech` |
 | Password | the value of `DEMO_ACCOUNT_PASSWORD` (shown on `/admin/login` with a "Use demo account" button) |
 
-It is read-only and, once the Admin panel's permissions land
-([#105](https://github.com/romulojr-dev/pc-ecommerce/issues/105)), sees masked
-customer data. The password is public on purpose. Several reviewers can be
+It can open every screen the owner can, can't change anything and can't search
+by customer, and it sees masked customer data ([spec 040](../specs/040-admin-permissions-audit-masking/spec.md)). The password is public on purpose. Several reviewers can be
 signed in at once, and signing out ends only your own session.
 
 ## E2E accounts

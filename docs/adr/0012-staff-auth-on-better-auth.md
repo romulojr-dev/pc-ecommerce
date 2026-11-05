@@ -1,6 +1,6 @@
 # ADR 0012 — Staff auth on Better Auth
 
-Status: **Accepted** · Date: 2026-11-05 · Story: #103 · Implemented by #104 (auth) and #105 (Admin)
+Status: **Accepted** · Date: 2026-11-05 · Story: #103 · Implemented by #104 (auth) and #105 (permissions, audit and masking: [spec 040](../specs/040-admin-permissions-audit-masking/spec.md))
 
 ## Context
 
