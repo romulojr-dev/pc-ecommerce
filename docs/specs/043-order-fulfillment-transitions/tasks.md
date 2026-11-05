@@ -65,13 +65,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. Fixtures (deliberate test-data change, R17)
-- [ ] Search every fixture that inserts `SHIPPED`, `DELIVERED` or `PICKED_UP` rows (the status CHECKs need `shippedAt` / `completedAt` / courier / tracking); done inside task 2 where the CHECKs would otherwise fail the suite
-- [ ] `lib/admin/queries/customers.db.test.ts`: the two `DELIVERED` inserts gain `shippedAt`, courier, tracking
-- [ ] `lib/admin/queries/orders-buyer.db.test.ts`: the `SHIPPED` insert
-- [ ] `lib/orders/cod-schema.db.test.ts`: the `SHIPPED` / `DELIVERED` cases
-- [ ] `components/admin/order-detail.test.tsx`, `components/orders/order-view.test.tsx`, `lib/orders/timeline.test.ts`: DTOs gain the new fields
-- [ ] `e2e/admin-order-fixtures.ts`: status, courier and tracking options
-- [ ] `pnpm test`, `pnpm test:db` pass
+- [x] `test-support/orders.ts` (`orderData`) fills `shippedAt` / `completedAt`, courier and tracking for `SHIPPED`, `DELIVERED` and `PICKED_UP` unless a test passes the column (done with the CHECKs in task 2); this covers `customers.db.test.ts`, `cod-schema.db.test.ts` and `sale-sql.db.test.ts`
+- [x] `lib/admin/demo-pages.db.test.ts`: the fixture order is Shipped with the fixture parcel; its empty-filter case uses Refunded (done in task 7)
+- [x] Component and unit tests that build an order DTO gain the new fields (done in tasks 6 and 7)
+- [x] The 041 / 042 E2E fixtures need no change (pending, Paid and COD confirmed only); the new fixtures are task 10's
+- [x] `pnpm test`, `pnpm test:db` pass
 
 ## 10. E2E
 - [ ] `e2e/admin-orders-transitions.spec.ts`: online delivery walk, cash pickup walk (cash line, Customers total), stale second tab, Shipped two-step dialog, Demo disabled and masked, customer timeline, `/dev/emails`
