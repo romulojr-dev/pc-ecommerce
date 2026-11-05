@@ -12,6 +12,8 @@
 /coverage
 /test-results/
 /playwright-report/
+# Signed-in browser state saved by the E2E setup project
+/e2e/.auth/
 /blob-report/
 
 # next.js

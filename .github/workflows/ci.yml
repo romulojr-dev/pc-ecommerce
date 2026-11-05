@@ -100,6 +100,15 @@ jobs:
       - name: Seed database
         run: pnpm db:seed
 
+      # The accounts the admin sign-in E2E uses (docs/specs/039-staff-sign-in-
+      # admin-shell): the demo user from the seed, owner and staff from the
+      # staff script, with the password on standard input
+      - name: Create E2E accounts
+        run: |
+          pnpm db:seed --accounts-only
+          echo "$E2E_ACCOUNT_PASSWORD" | pnpm staff:create --email e2e-owner@example.test --name "E2E Owner" --role owner
+          echo "$E2E_ACCOUNT_PASSWORD" | pnpm staff:create --email e2e-staff@example.test --name "E2E Staff" --role staff
+
       - name: Unit tests
         run: pnpm test
 

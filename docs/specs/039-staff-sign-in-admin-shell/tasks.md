@@ -60,9 +60,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. E2E
-- [ ] `e2e/accounts.ts`; Playwright `setup` project with `storageState` per role and the missing-account message; `.gitignore`
-- [ ] `e2e/admin-auth.spec.ts` E1–E16; `ci.yml` creates the accounts before E2E
-- [ ] Run against a scratch database in the Docker Postgres (dev server, and the production build with `CI=1`)
+- [x] `e2e/accounts.ts`; Playwright `setup` project with `storageState` per role and the missing-account message; `.gitignore`
+- [x] `e2e/admin-auth.spec.ts` E1–E16; `ci.yml` creates the accounts before E2E
+- [x] Run against a scratch database in the Docker Postgres (dev server, and the production build with `CI=1`)
 
 ## 9. Docs
 - [ ] `docs/setup/admin-accounts.md`
