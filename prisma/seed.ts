@@ -4,6 +4,9 @@ import "./seed/load-env"
 import { existsSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
+import { ensureDemoUser } from "@/lib/auth/accounts"
+import { decideScriptTarget } from "@/lib/auth/script-guard"
+import { describeDemo, staffMessages } from "@/lib/auth/staff-messages"
 import { db } from "@/lib/db"
 import { env } from "@/lib/env"
 import { assertResetAllowed, ResetRefusedError } from "@/lib/reset-guard"
@@ -21,16 +24,34 @@ import { SeedWriteError, writeSeed } from "./seed/write"
 // pnpm db:seed [--reset]: loads the catalog fixture set into the dev
 // database. See docs/specs/001-spec-schemas-and-seed/spec.md.
 
-const USAGE = "Usage: pnpm db:seed [--reset]"
+const USAGE = [
+  "Usage: pnpm db:seed [--reset]",
+  "       pnpm db:seed --accounts-only [--production]",
+].join("\n")
 
 async function main(): Promise<number> {
   const args = process.argv.slice(2)
-  const unknown = args.filter((arg) => arg !== "--reset")
+  const known = ["--reset", "--accounts-only", "--production"]
+  const unknown = args.filter((arg) => !known.includes(arg))
   if (unknown.length > 0) {
     console.error(`Unknown option: ${unknown.join(" ")}\n${USAGE}`)
     return 1
   }
   const reset = args.includes("--reset")
+
+  // Only the demo account; no catalog table is read or written
+  // (docs/specs/039-staff-sign-in-admin-shell, Rule 28)
+  if (args.includes("--accounts-only")) {
+    if (reset) {
+      console.error(staffMessages.accountsOnlyWithReset)
+      return 1
+    }
+    return seedAccountsOnly(args.includes("--production"))
+  }
+  if (args.includes("--production")) {
+    console.error(`--production only goes with --accounts-only.\n${USAGE}`)
+    return 1
+  }
 
   // Error messages name these paths, so they must be right
   const missing = seedFiles.filter(
@@ -127,6 +148,36 @@ async function main(): Promise<number> {
       : "Vouchers: kept (already set)."
   )
   return 0
+}
+
+// The demo user, only when missing, with the password from
+// DEMO_ACCOUNT_PASSWORD. The host is named first, and the production rule is
+// the staff scripts' (lib/auth/script-guard.ts).
+async function seedAccountsOnly(production: boolean): Promise<number> {
+  const target = decideScriptTarget({
+    databaseUrl: env.DATABASE_URL,
+    productionHost: env.PRODUCTION_DATABASE_HOST,
+    production,
+  })
+  console.log(
+    staffMessages.hostLine(target.host ?? new URL(env.DATABASE_URL).host)
+  )
+  if (!target.ok) {
+    console.error(target.message)
+    return 1
+  }
+
+  const password = env.DEMO_ACCOUNT_PASSWORD
+  if (!password) {
+    console.log(staffMessages.demoSkipped)
+    return 0
+  }
+  const { text, exit } = describeDemo(
+    await db.$transaction((tx) => ensureDemoUser(tx, password))
+  )
+  if (exit === 0) console.log(text)
+  else console.error(text)
+  return exit
 }
 
 main()

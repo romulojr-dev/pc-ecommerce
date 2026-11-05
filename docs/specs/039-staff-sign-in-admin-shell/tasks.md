@@ -42,10 +42,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Accounts library, scripts and the seed mode
-- [ ] `lib/auth/accounts.ts`; `scripts/read-password.ts`; `scripts/staff.ts`; `staff:create`, `staff:set-password`, `staff:disable` entries
-- [ ] `db:seed --accounts-only` (demo only when missing, refused with `--reset`, 12-character minimum, host line, production rule)
-- [ ] Tests U9, U11, I18–I25, I24b, I28
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `lib/auth/accounts.ts`; `scripts/read-password.ts`; `scripts/staff.ts`; `staff:create`, `staff:set-password`, `staff:disable` entries
+- [x] `db:seed --accounts-only` (demo only when missing, refused with `--reset`, 12-character minimum, host line, production rule)
+- [x] Tests U9, U11, I18–I25, I24b, I28
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Login page and shell
 - [ ] Sample routes and components deleted; header Account icon removed; `sidebar` out of the reserved list
