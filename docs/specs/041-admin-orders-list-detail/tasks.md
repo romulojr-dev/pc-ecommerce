@@ -52,11 +52,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [ ] Open the detail in a browser as Owner and Demo: waits for the E2E accounts (task 9 or the preview)
 
 ## 7. Packing slip
-- [ ] `getPackingSlip(role, number)`: no price fields in the type, `orders.packing-slip` required
-- [ ] `/admin/orders/[number]/packing-slip` page: ship-to with mobile, item checklist by build, weight, payment line ("Collect payment" with no amount), "Do not ship" banner unless Processing
-- [ ] Print styles: shell nav and header hidden in print, no page break inside an item row; Print and Back buttons hidden in print
-- [ ] Tests: E24, E25, E26 (all 11 statuses), E27, no `₱` in the markup, E28
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `getPackingSlip(role, number)`: no price fields in the type, `orders.packing-slip` required
+- [x] `/admin/orders/[number]/packing-slip` page: ship-to with mobile, item checklist by build, weight, payment line ("Collect payment" with no amount), "Do not ship" banner unless Processing
+- [x] Print styles: shell nav and header hidden in print, no page break inside an item row; Print and Back buttons hidden in print
+- [x] Tests: E24, E25, E26 (all 11 statuses), E27, no `₱` in the markup, E28
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [ ] Print preview of one slip in a browser (sidebar and header gone, black on white, buttons hidden): CSS is in place but untested without a browser; checked in task 9 or on the preview
 
 ## 8. Demo across all three pages
 - [ ] One shared fixture order with distinctive raw values
@@ -76,6 +77,6 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 11. Final checks and PR
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`
-- [ ] `git push -u origin HEAD`, then the PR from `.github/pull-request-template.md` (when asked)
+- [ ] `git push -u origin HEAD`, then the PR from `.github/pull-request-template .md` (when asked)
 - [ ] Preview URL: every acceptance criterion at 1024 px and 1280 px, print preview of one slip
 - [ ] I can explain what this story changed

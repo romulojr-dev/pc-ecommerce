@@ -116,3 +116,44 @@ export const FULFILLMENT_LABELS: Record<FulfillmentName, string> = {
   DELIVERY: "Delivery",
   PICKUP: "Store pickup",
 }
+
+// ---- The packing slip's items ----
+
+export type SlipItemLine = {
+  name: string
+  quantity: number
+  buildId: string | null
+  slot: string | null
+}
+
+export type SlipEntry =
+  | { kind: "single"; item: SlipItemLine }
+  // number is 1-based, only when the order has two or more build groups
+  | { kind: "build"; number: number | null; parts: SlipItemLine[] }
+
+// Like orderEntries (the order page's grouping) but with no prices: a single
+// line stays a line, and a build's parts gather where its first part was
+export function slipEntries(items: readonly SlipItemLine[]): SlipEntry[] {
+  const entries: SlipEntry[] = []
+  const groups = new Map<string, Extract<SlipEntry, { kind: "build" }>>()
+  for (const item of items) {
+    if (item.buildId === null) {
+      entries.push({ kind: "single", item })
+      continue
+    }
+    let group = groups.get(item.buildId)
+    if (!group) {
+      group = { kind: "build", number: null, parts: [] }
+      groups.set(item.buildId, group)
+      entries.push(group)
+    }
+    group.parts.push(item)
+  }
+  if (groups.size >= 2) {
+    let number = 0
+    for (const entry of entries) {
+      if (entry.kind === "build") entry.number = ++number
+    }
+  }
+  return entries
+}

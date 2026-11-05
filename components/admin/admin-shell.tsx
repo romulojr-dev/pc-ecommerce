@@ -56,7 +56,7 @@ export function AdminShell({
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4 print:hidden">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="h-4" />
           <div className="ml-auto flex items-center gap-3">

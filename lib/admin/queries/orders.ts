@@ -17,6 +17,7 @@ import {
   type ContactView,
   contactView,
   type Masked,
+  maskMobile,
   maskName,
 } from "../mask"
 import type {
@@ -375,5 +376,104 @@ export async function getOrderDetail(
       receivedAmount: p.receivedAmount,
     })),
     emails: row.emails,
+  }
+}
+
+// ---- The packing slip ----
+
+// The courier needs the name and the mobile number, and the address; the
+// email is not on a slip and is not even read. No price field exists on this
+// type at all (docs/specs/041-admin-orders-list-detail, R12).
+export type SlipContact =
+  | { masked: false; name: string; mobile: string }
+  | { masked: true; name: Masked; mobile: Masked }
+
+export type PackingSlip = {
+  orderNumber: string
+  createdAt: Date
+  status: OrderStatusName
+  fulfillment: FulfillmentName
+  paymentOption: PaymentOptionName
+  paidAt: Date | null
+  contact: SlipContact
+  address: AddressView
+  weightGrams: number
+  items: SlipItem[]
+}
+
+export type SlipItem = {
+  name: string
+  quantity: number
+  buildId: string | null
+  slot: string | null
+}
+
+const slipSelect = {
+  orderNumber: true,
+  createdAt: true,
+  status: true,
+  fulfillment: true,
+  paymentOption: true,
+  paidAt: true,
+  contactName: true,
+  contactMobile: true,
+  regionName: true,
+  zone: true,
+  provinceName: true,
+  cityName: true,
+  barangayName: true,
+  street: true,
+  zip: true,
+  weightGrams: true,
+  items: {
+    orderBy: { position: "asc" },
+    select: {
+      nameSnapshot: true,
+      quantity: true,
+      buildId: true,
+      slot: true,
+    },
+  },
+} as const satisfies Prisma.OrderSelect
+
+// A malformed number is null with no database read; an unknown one is null
+export async function getPackingSlip(
+  role: AdminRole,
+  orderNumber: string
+): Promise<PackingSlip | null> {
+  assertCan(role, "orders.packing-slip")
+  if (!orderNumberShape(orderNumber)) return null
+  const row = await db.order.findUnique({
+    where: { orderNumber },
+    select: slipSelect,
+  })
+  if (!row) return null
+  return {
+    orderNumber: row.orderNumber,
+    createdAt: row.createdAt,
+    status: row.status,
+    fulfillment: row.fulfillment,
+    paymentOption: row.paymentOption,
+    paidAt: row.paidAt,
+    contact:
+      role === "demo"
+        ? {
+            masked: true,
+            name: maskName(row.contactName),
+            mobile: maskMobile(row.contactMobile),
+          }
+        : {
+            masked: false,
+            name: row.contactName,
+            mobile: row.contactMobile,
+          },
+    address: addressView(role, row),
+    weightGrams: row.weightGrams,
+    items: row.items.map((item) => ({
+      name: item.nameSnapshot,
+      quantity: item.quantity,
+      buildId: item.buildId,
+      slot: item.slot,
+    })),
   }
 }

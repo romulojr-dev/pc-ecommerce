@@ -10,6 +10,7 @@ import {
   PAYMENT_STATUS_LABELS,
   paymentCell,
   readyToPack,
+  slipEntries,
   slipPaymentLine,
   slipWarning,
 } from "./orders-view"
@@ -132,5 +133,43 @@ describe("labels", () => {
     expect(ADMIN_COPY.orders.count(1)).toBe("1 order")
     expect(ADMIN_COPY.orders.count(30)).toBe("30 orders")
     expect(ADMIN_COPY.orders.pageOf(1, 2)).toBe("Page 1 of 2")
+  })
+})
+
+describe("slipEntries", () => {
+  const line = (name: string, buildId: string | null, slot: string | null) => ({
+    name,
+    quantity: 1,
+    buildId,
+    slot,
+  })
+
+  it("keeps a single line a line and gathers a build where it began", () => {
+    const entries = slipEntries([
+      line("SSD", null, null),
+      line("CPU", "b1", "cpu"),
+      line("Fan", null, null),
+      line("Board", "b1", "motherboard"),
+    ])
+    expect(entries.map((e) => e.kind)).toEqual(["single", "build", "single"])
+    const group = entries[1]
+    expect(group.kind === "build" && group.parts.map((p) => p.name)).toEqual([
+      "CPU",
+      "Board",
+    ])
+    expect(group.kind === "build" && group.number).toBeNull()
+  })
+
+  it("numbers the groups only when there are two or more", () => {
+    const entries = slipEntries([
+      line("CPU", "b1", "cpu"),
+      line("CPU 2", "b2", "cpu"),
+    ])
+    expect(entries.map((e) => e.kind === "build" && e.number)).toEqual([1, 2])
+  })
+
+  it("carries no price", () => {
+    const [entry] = slipEntries([line("SSD", null, null)])
+    expect(JSON.stringify(entry)).not.toMatch(/price/i)
   })
 })
