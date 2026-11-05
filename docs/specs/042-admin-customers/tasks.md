@@ -8,10 +8,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Commit `plan.md` and `tasks.md`
 
 ## 1. "Counts as a sale" in one place (gate for the Dashboard story)
-- [ ] `lib/orders/sale-rules.ts`: `countsAsSale({ status, paidAt })`
-- [ ] `lib/orders/sale-sql.ts`: `saleOrderCondition()` (alias `o`)
-- [ ] Agreement test E32 over all 11 statuses × `paidAt` null / set, pure vs SQL on real rows
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `lib/orders/sale-rules.ts`: `countsAsSale({ status, paidAt })`
+- [x] `lib/orders/sale-sql.ts`: `saleOrderCondition()` (alias `o`)
+- [x] Agreement test E32 over all 11 statuses × `paidAt` null / set, pure vs SQL on real rows
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 2. "Same customer" in SQL (gate: stop and report if SQL and `normalizeRecipient` disagree)
 - [ ] `lib/orders/customer-key-sql.ts`: `customerKeySql`
