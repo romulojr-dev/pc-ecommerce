@@ -29,11 +29,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test:db` pass
 
 ## 4. List query
-- [ ] `listOrders(role, params, now)`: allow-listed select, count, paging, status/payment filters, number search, customer search, Demo refusal before any query (also with `number` present), due ids from `dueOrderCondition`, flags
-- [ ] Replace `searchOrders` / `getOrderPerson`; move their tests
-- [ ] Integration tests: E1, E3, E3a, E4, E6–E11, E12–E17, role gating
-- [ ] Agreement test E31 extended with the admin badge
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `listOrders(role, params, now)`: allow-listed select, count, paging, status/payment filters, number search, customer search, Demo refusal before any query (also with `number` present), due ids from `dueOrderCondition`, flags
+- [x] Replace `searchOrders` (its tests moved); `getOrderPerson` stays until task 6 replaces it with `getOrderDetail`
+- [x] Integration tests: E1, E3, E3a, E4, E6–E11, E12–E17, role gating
+- [x] Agreement test E31 extended with the admin badge (in `orders-list.db.test.ts`)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. List page
 - [ ] `/admin/orders` page: GET filter form (labelled, works without JS), table with caption, pagination, "Clear filters", canonical redirects
@@ -44,7 +44,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 6. Detail
 - [ ] `getOrderDetail(role, number, now)` with named selects (items as `OrderPageItem`, payments newest first incl. `OPENING`/`FAILED`, emails, event times, flags, due, amount to collect)
-- [ ] `/admin/orders/[number]` page: header, items by build, totals with voucher, amount to collect for cash orders, contact, address or pickup, timeline with deadline, payments, emails, flag callouts; no `loading.tsx`
+- [ ] `/admin/orders/[number]` page: header, items by build, totals with voucher, amount to collect for cash orders, contact, address or pickup, timeline with deadline, payments, emails, flag callouts; no `loading.tsx` 
 - [ ] Malformed number 404s with no database read; unknown number 404s (E28)
 - [ ] Tests: E18–E21, E23, E26a; allow-list serialization test E22 with a fully populated order (token hash, idempotency key, cart hash, `PaymentEvent` payload, recipient hash)
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass

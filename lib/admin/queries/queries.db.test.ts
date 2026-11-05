@@ -17,7 +17,7 @@ import type { OrderPersonView } from "./orders"
 import { listAuditEntries } from "./audit"
 import { listCustomers } from "./customers"
 import { QueryDeniedError } from "./guard"
-import { getOrderPerson, searchOrders } from "./orders"
+import { getOrderPerson } from "./orders"
 
 // docs/specs/040-admin-permissions-audit-masking, T11: E11 to E15 through the
 // real query layer
@@ -113,43 +113,6 @@ describe("an order as a role sees it", () => {
 
   test("an unknown order is null", async () => {
     expect(await getOrderPerson("demo", "PCS-NOPE0000")).toBeNull()
-  })
-})
-
-describe("searching orders", () => {
-  test("Demo cannot search by customer, and no query runs (E13)", async () => {
-    const result = await searchOrders("demo", {
-      customer: "ana.reyes@example.com",
-    })
-    expect(result).toEqual({
-      ok: false,
-      error: "forbidden",
-      message: "This account is read-only",
-    })
-    // Not even a name fragment or a mobile
-    for (const customer of ["Reyes", "+639171234567", "ana"]) {
-      expect(await searchOrders("demo", { customer })).toMatchObject({
-        ok: false,
-      })
-    }
-  })
-
-  test("Demo can search by order number, with masked results", async () => {
-    const result = await searchOrders("demo", { orderNumber: "7K3M9Q" })
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      expect(result.orders.map((o) => o.orderNumber)).toEqual([NUMBER])
-      expectNoRawValues(result, FIXTURE_RAW_VALUES)
-    }
-  })
-
-  test("Owner and Staff can search by customer", async () => {
-    for (const role of ["owner", "staff"] as const) {
-      const result = await searchOrders(role, { customer: "reyes" })
-      expect(result.ok && result.orders.map((o) => o.orderNumber)).toEqual([
-        NUMBER,
-      ])
-    }
   })
 })
 
