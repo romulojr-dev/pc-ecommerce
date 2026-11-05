@@ -79,6 +79,7 @@ describe("loadAdminSession", () => {
         name: "owner@example.com",
         email: "owner@example.com",
         role: "OWNER",
+        adminRole: "owner",
       },
     })
   })

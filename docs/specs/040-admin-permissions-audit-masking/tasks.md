@@ -23,13 +23,13 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. The wrappers
-- [ ] `lib/admin/guard.ts`: `adminAction`, `adminRoute`, marker, messages ("This account is read-only", "Only owners can do this"), origin check on write methods only, denial answers, name-and-code logging
-- [ ] Order of operations proven with spies: denied request does no query beyond the session and never reads the body (T3, E5, E6)
-- [ ] T14: own origin runs; sibling subdomain, foreign and missing origin refused; GET not checked (E20–E22)
-- [ ] Invalid input answers `invalid` only for a permitted role (E8)
-- [ ] A wrapped export builds under `pnpm build` in Next 16.4 (risk 2); fallback shape chosen if not
-- [ ] T4 integration (E5–E7) with real sessions: nothing written, nothing audited, disabled user refused
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm build` pass
+- [x] `lib/admin/guard.ts`: `adminAction`, `adminRoute`, marker, messages ("This account is read-only", "Only owners can do this"), origin check on write methods only, denial answers, name-and-code logging
+- [x] Order of operations proven with spies: denied request does no query beyond the session and never reads the body (T3, E5, E6)
+- [x] T14: own origin runs; sibling subdomain, foreign and missing origin refused; GET not checked (E20–E22)
+- [x] Invalid input answers `invalid` only for a permitted role (E8)
+- [x] A wrapped export builds under `pnpm build` in Next 16.4 (risk 2); fallback shape chosen if not
+- [x] T4 integration (E5–E7) with real sessions: nothing written, nothing audited, disabled user refused
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm build` pass
 
 ## 4. Page-level guard and shell
 - [ ] `requireAdminAccess(action)`, no-access page and copy, nav filtered by `can()`, Demo notice, disabled-control helper
