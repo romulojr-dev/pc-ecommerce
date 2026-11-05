@@ -76,9 +76,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Runs against the Docker Postgres with inline variables (no `.env.local` change)
 
 ## 11. Documentation
-- [ ] CLAUDE.md bullet: transitions, cap exemption, the CHECK, masking, `completedAt`
-- [ ] "Changed by spec 043" notes in specs 035, 036 and 041
-- [ ] Spec "What changed while building"; README only if it lists admin screens
+- [x] CLAUDE.md bullet: transitions, cap exemption, the CHECK, masking, `completedAt`
+- [x] "Changed by spec 043" notes in specs 035, 036 and 041
+- [x] Spec "What changed while building"; README only if it lists admin screens
 
 ## 12. Final checks
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`, `pnpm test:e2e` (admin project)

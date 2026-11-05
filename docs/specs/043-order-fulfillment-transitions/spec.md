@@ -258,3 +258,14 @@ The test-mode sentence, footer and link note are spec 036's `EMAIL_COPY`. The ca
 ## 10. Open questions
 
 None. The five from the first draft were settled in review: tracking stays immutable (D11), no email for Processing or Picked up (D3), FR-21 edited (D12), courier free text with suggestions (D14), success wording (B8). The optional status CHECKs flagged in the first review are in (D11).
+
+## 11. What changed while building
+
+- **Tasks 7 and 8 were done in the order masking, then screen.** `maskTracking` and the `Masked` parcel type were committed before the Fulfillment section, so no commit shows Demo a raw tracking number.
+- **The events list does not repeat the courier and tracking number.** The timeline directly above it already shows them on the Shipped step (B11); showing both made two lines with the same text. The events list keeps the times.
+- **`orderData` fills the new columns** for Shipped, Delivered and Picked up (R17), so no fixture file needed an edit of its own; the CHECK tests opt out by passing the column.
+- **The Shipped dialog's first step has a Review button**, not Confirm, so the only Confirm is on the step that shows both values prominently.
+- **The dialog's description is a short fixed sentence** ("Review this change, then confirm it."), because the list of lines already says the rest and a screen reader would hear it twice.
+- **`capDecision(counted, type?)`** takes the type; with none it behaves as before.
+- **Local E2E ran against a throwaway database** (`pcsilicon_e2e` in the Docker Postgres, inline variables, no `.env.local` change). The whole `admin` project passed on `next dev`.
+- **The fulfillment emails read the order as it is when sent**, including `shippedAt`, `readyAt` and `completedAt`, so a missing time or parcel is a thrown render error, not a blank (R14).
