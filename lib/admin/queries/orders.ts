@@ -35,7 +35,7 @@ import {
   resolvePage,
 } from "../orders-params"
 import { type AdminRole, can } from "../permissions"
-import { findBuyerOrders } from "./customers"
+import { customerLinkKey, findBuyerOrders } from "./customers"
 import { assertCan, type Denied, denied } from "./guard"
 
 // Orders as Admin shows them, with customer fields masked for Demo
@@ -241,6 +241,10 @@ export type OrderDetail = {
   cancelledAt: Date | null
   cancelReason: "EXPIRED" | null
   contact: ContactView
+  // The key of "View this customer's orders" (docs/specs/042-admin-customers,
+  // B15): the normalized email for Owner and Staff, the customer's rank key
+  // for Demo, never the email; null when the role can't open Customers
+  customerKey: string | null
   address: AddressView
   zone: string | null
   weightGrams: number
@@ -359,6 +363,7 @@ export async function getOrderDetail(
     cancelledAt: row.cancelledAt,
     cancelReason: row.cancelReason,
     contact: contactView(role, row),
+    customerKey: await customerLinkKey(role, row.guestEmail),
     address: addressView(role, row),
     zone: row.zone,
     weightGrams: row.weightGrams,

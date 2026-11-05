@@ -52,10 +52,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Order detail link
-- [ ] `getOrderDetail` returns `customerKey` (email key for Owner and Staff, rank key for Demo; absent without `customers.view`)
-- [ ] Contact block link "View this customer's orders"
-- [ ] Tests E30, E31; spec 041's allow-list serialization test E22 stays green
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `getOrderDetail` returns `customerKey` (email key for Owner and Staff, rank key for Demo; absent without `customers.view`)
+- [x] Contact block link "View this customer's orders"
+- [x] Tests E30, E31; spec 041's allow-list serialization test E22 stays green
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. Demo across the surfaces
 - [ ] Fixture customer with distinctive values (email and its parts)
