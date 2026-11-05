@@ -51,10 +51,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Masking and the query layer
-- [ ] `lib/admin/mask.ts` and the Demo DTO types; `lib/admin/queries/` (order contact and address, customers, audit entries, order search refusing a customer term for Demo)
-- [ ] `expectNoRawValues` helper; import-ban test for `app/admin` and `components/admin` (T12)
-- [ ] Tests T9, T11 (E11–E15)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `lib/admin/mask.ts` and the Demo DTO types; `lib/admin/queries/` (order contact and address, customers, audit entries, order search refusing a customer term for Demo)
+- [x] `expectNoRawValues` helper; import-ban test for `app/admin` and `components/admin` (T12)
+- [x] Tests T9, T11 (E11–E15)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. E2E, docs and preview
 - [ ] E2E T13: three roles land on Orders; Demo notice; Staff no-access page
