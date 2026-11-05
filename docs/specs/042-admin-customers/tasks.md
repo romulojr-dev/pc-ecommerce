@@ -58,9 +58,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 8. Demo across the surfaces
-- [ ] Fixture customer with distinctive values (email and its parts)
-- [ ] `expectNoRawValues` on the RSC payload of the customers page, `buyer=c1` and the order detail (E20, E22, E31)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Fixture customer with distinctive values (email and its parts)
+- [x] `expectNoRawValues` on the RSC payload of the customers page, `buyer=c1` and the order detail (E20, E22, E31)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. E2E
 - [ ] `e2e/admin-customers.spec.ts`, Owner: count and total of a fixture customer, search by name, View orders shows only that customer, clear the filter
