@@ -368,16 +368,37 @@ describe("the index the release's query uses", () => {
     for (let i = 0; i < 40; i++) await cashOrder(p, 1)
     await db.$executeRawUnsafe('ANALYZE "Order"')
 
-    const plan = await db.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe("SET LOCAL enable_seqscan = off")
-      const rows = await tx.$queryRawUnsafe<{ "QUERY PLAN": string }[]>(
-        `EXPLAIN SELECT o."id" FROM "Order" o
+    // Thrown to roll the transaction back, carrying the plan out
+    class Plan extends Error {
+      constructor(readonly text: string) {
+        super("plan")
+      }
+    }
+    const plan = await db
+      .$transaction(async (tx) => {
+        await tx.$executeRawUnsafe("SET LOCAL enable_seqscan = off")
+        // Admin's list indexes (docs/specs/041-admin-orders-list-detail, R10)
+        // are also candidates for this query on a table this small. This test
+        // is about the partial index, so the other one is dropped inside the
+        // transaction, which is rolled back by throwing.
+        await tx.$executeRawUnsafe('DROP INDEX "Order_status_createdAt_id_idx"')
+        const rows = await tx.$queryRawUnsafe<{ "QUERY PLAN": string }[]>(
+          `EXPLAIN SELECT o."id" FROM "Order" o
          WHERE o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
            AND o."expiresAt" <= now()
          ORDER BY o."expiresAt", o."id" LIMIT 10`
+        )
+        throw new Plan(rows.map((row) => row["QUERY PLAN"]).join("\n"))
+      })
+      .then(
+        () => {
+          throw new Error("the plan was not captured")
+        },
+        (error: unknown) => {
+          if (error instanceof Plan) return error.text
+          throw error
+        }
       )
-      return rows.map((row) => row["QUERY PLAN"]).join("\n")
-    })
 
     expect(plan).toContain("Order_expiresAt_idx")
   })

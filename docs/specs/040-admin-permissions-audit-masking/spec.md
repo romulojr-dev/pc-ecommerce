@@ -244,3 +244,4 @@ All seven earlier questions are settled by the review (accepted, changed or conf
 - **`adminRoute` GET.** GET handlers must carry the marker (D3) but are not origin-checked.
 - **No-access E2E.** No Admin screen needs a view action Staff lacks yet, so there is no route to open; the no-access page is covered by a render test, and the E2E (`e2e/admin-roles.spec.ts`) covers landing, nav and the Demo notice for the three roles.
 - **Customers.** Demo rows are keyed `c1`, `c2`, … by position.
+- **Changed by [spec 041](../041-admin-orders-list-detail/spec.md) (#106).** `searchOrders` and `getOrderPerson` are replaced by `listOrders` and `getOrderDetail`; the masking and the Demo refusal before any query are kept and tested in the new functions.

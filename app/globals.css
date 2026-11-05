@@ -130,3 +130,17 @@
     @apply font-sans;
     }
 }
+
+/* The packing slip prints on its own: the admin sidebar goes, and the page is
+   black on white whatever the theme (docs/specs/041-admin-orders-list-detail,
+   B16). */
+@media print {
+  [data-slot="sidebar"] {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}

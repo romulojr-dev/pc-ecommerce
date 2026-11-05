@@ -15,6 +15,8 @@ describe("import limits on the pure admin files", { timeout: 30_000 }, () => {
     "lib/admin/permissions.ts",
     "lib/admin/mask.ts",
     "lib/admin/marker.ts",
+    "lib/admin/orders-params.ts",
+    "lib/admin/orders-view.ts",
   ])("%s may not import the database, env, next or react", async (file) => {
     for (const source of [
       "@/lib/db",

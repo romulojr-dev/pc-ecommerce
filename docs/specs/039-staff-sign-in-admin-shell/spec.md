@@ -170,7 +170,7 @@ The accounts come from `e2e/accounts.ts`: three users (`e2e-owner@example.test`,
 | E4 | staff clicks **Sign out** | `/admin/login`; going Back and reloading `/admin/orders` ends on login |
 | E5 | wrong password (own forged IP) | the generic message in a live region, password field cleared and focused, still on login |
 | E6 | 4 wrong passwords in 10 s (own forged IP) | the 4th shows the rate-limit message with a number of seconds |
-| E7 | demo `storageState` | shell opens; the page has no customer, order or price data |
+| E7 | demo `storageState` | shell opens; the page has no customer, order or price data. *Changed by spec 041 (#106): the page is the order list, so it shows order numbers and totals, and no raw customer data* |
 | E8 | `/login`, `/signup`, `/sidebar` | 404 |
 | E9 | storefront home | no Account icon |
 | E10 | `/admin/login?next=//evil.com`, sign in | lands on `/admin/orders` |

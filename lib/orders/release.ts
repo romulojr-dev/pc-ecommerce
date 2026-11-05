@@ -13,6 +13,7 @@ import { reconcileSession } from "@/lib/payments/reconcile"
 import type { PaymentEnvironment } from "@/lib/payments/session-request"
 import type { Prisma } from "@/generated/prisma/client"
 
+import { dueOrderCondition } from "./due-sql"
 import { logReleaseEvent, logSafeFailure, type ReleaseLogFields } from "./log"
 import {
   PURCHASE_BUDGET_MS,
@@ -128,11 +129,7 @@ export async function checkExpiredOrders({
   const due = await db.$queryRaw<DueOrder[]>`
     SELECT o."id", o."orderNumber"
     FROM "Order" o
-    WHERE o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
-      AND o."expiresAt" <= ${now}
-      AND NOT EXISTS (
-        SELECT 1 FROM "Payment" p
-        WHERE p."orderId" = o."id" AND p."problem" IS NOT NULL)
+    WHERE ${dueOrderCondition(now)}
       AND (${scoped} = false OR EXISTS (
         SELECT 1 FROM "OrderItem" i
         WHERE i."orderId" = o."id"
@@ -222,11 +219,7 @@ export async function releaseExpiredOrders(
     SELECT o."id", o."orderNumber"
     FROM "Order" o
     WHERE o."id" = ANY(${orderIds}::text[])
-      AND o."status" IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
-      AND o."expiresAt" <= ${now}
-      AND NOT EXISTS (
-        SELECT 1 FROM "Payment" p
-        WHERE p."orderId" = o."id" AND p."problem" IS NOT NULL)
+      AND ${dueOrderCondition(now)}
     ORDER BY o."id"
     FOR UPDATE OF o SKIP LOCKED`
   const ids = locked.map(({ id }) => id)

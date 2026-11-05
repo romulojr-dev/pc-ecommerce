@@ -404,6 +404,11 @@ model Order {
 
   @@index([cartIdHash])
   @@index([voucherId])
+  // Admin order list: newest first, alone and by status or payment option
+  // (docs/specs/041-admin-orders-list-detail, R10)
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([status, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([paymentOption, createdAt(sort: Desc), id(sort: Desc)])
   // The release's one query: orders waiting on payment or confirmation, by when
   // they expire
   // (the text is how Postgres prints the predicate, so db:drift sees no change)

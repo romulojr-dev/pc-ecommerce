@@ -204,6 +204,8 @@ commands, the Vercel settings and how to check sign-in on a preview URL.
 
 **Roles** ([spec 040](docs/specs/040-admin-permissions-audit-masking/spec.md)): an owner can do everything; staff manage orders, see customers and adjust inventory; the demo account can open every screen the owner can, can't change anything and can't search by customer, and customer names, emails, phones and addresses are masked for it. Every change is checked on the server and recorded in an append-only audit log.
 
+**Orders** ([spec 041](docs/specs/041-admin-orders-list-detail/spec.md)): `/admin/orders` lists orders newest first with filters (status, online or cash, order number, and for owner and staff customer name, email or mobile), `/admin/orders/<number>` shows an order with its payments, emails and flags, and `/admin/orders/<number>/packing-slip` is a print-ready page with no prices. The list shows an order's real status, with a "Due for release" badge once an unpaid order is past its deadline. Changing an order's status is a later story.
+
 **Demo account** (read-only, public): email `demo@pcsilicon.tech`, password the
 value of `DEMO_ACCOUNT_PASSWORD`. It is shown on the sign-in page of every
 environment where that variable is set, with a "Use demo account" button.
