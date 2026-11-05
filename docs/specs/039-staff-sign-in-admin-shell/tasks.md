@@ -24,10 +24,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] **Report to the user: pass/fail per probe. Do not start task 2 until they answer** (reported; user confirmed the preview result and asked to continue)
 
 ## 2. Environment and pure code
-- [ ] `lib/auth/env-schema.ts` and `lib/env.ts` (`BETTER_AUTH_SECRET`, `VERCEL_URL`, `VERCEL_BRANCH_URL`, `DEMO_ACCOUNT_PASSWORD`); `.env.example`, `ci.yml`, `vitest.db.config.ts`
-- [ ] `trustedOriginsFor`, `safeNext`, script guard (normalized hosts), password policy, rate-limit rule table, cleanup cutoffs
-- [ ] Unit tests U1–U12, U3b, U3c, U8b–U8d, env messages, script argument parser
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/auth/env-schema.ts` and `lib/env.ts` (`BETTER_AUTH_SECRET`, `VERCEL_URL`, `VERCEL_BRANCH_URL`, `DEMO_ACCOUNT_PASSWORD`); `.env.example`, `ci.yml`, `vitest.db.config.ts`
+- [x] `trustedOriginsFor`, `safeNext`, script guard (normalized hosts), password policy, rate-limit rule table, cleanup cutoffs
+- [x] Unit tests U1–U12, U3b, U3c, U8b–U8d, env messages, script argument parser
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. The auth instance and its route
 - [ ] `lib/auth/auth.ts`, `client.ts`, `cookie.ts`; `app/api/auth/[...all]/route.ts`; headers in `next.config.ts`

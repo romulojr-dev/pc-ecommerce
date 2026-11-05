@@ -53,6 +53,13 @@ jobs:
       # (docs/specs/035-email-foundation-signed-links)
       EMAIL_TRANSPORT: fake
       ORDER_LINK_SECRET: ci-dummy-order-link-secret-0123456789abcdef
+      # The staff session secret (at least 32 bytes, different from the link
+      # secret) and the dummy passwords of the demo and E2E accounts, which
+      # live only in this job's throwaway database
+      # (docs/specs/039-staff-sign-in-admin-shell)
+      BETTER_AUTH_SECRET: ci-dummy-better-auth-secret-0123456789-abcdef
+      DEMO_ACCOUNT_PASSWORD: ci-dummy-demo-password-0123
+      E2E_ACCOUNT_PASSWORD: ci-dummy-e2e-password-0123
 
     steps:
       - uses: actions/checkout@v7
