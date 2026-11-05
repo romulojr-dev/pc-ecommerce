@@ -4,15 +4,15 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 0. Housekeeping
 - [x] Spec approved (Staff wording confirmed; D3 kept); issue #105 reworded; PRD AD-11 and spec 039 note edited
-- [ ] Plan approved
-- [ ] Commit `spec.md`, `plan.md`, `tasks.md` and the spec 039 / PRD edits
+- [x] Plan approved
+- [x] Commit `spec.md`, `plan.md`, `tasks.md` and the spec 039 / PRD edits
 
 ## 1. Prove the enumeration test setup (gate: stop and report if importing is impractical)
-- [ ] `test-support/admin-guard-scan.ts`: `findUnguarded(paths)` imports modules and lists exported functions without the marker
-- [ ] Fixtures in `test-support/admin-fixtures/`: unguarded "use server" module, unguarded route with `POST`, guarded module (marker set by hand)
-- [ ] Under Vitest, import one **real** "use server" module (`app/(store)/cart/actions.ts`) and the unguarded fixture with no `next/headers`, db client or env validation failing at import; the test shows the fixtures (and the real unguarded module) reported and the guarded fixture passing
-- [ ] Directive detection reads the first statement, not the text (`lib/auth/auth.ts` has the words in a comment)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `test-support/admin-guard-scan.ts`: `findUnguarded(paths)` imports modules and lists exported functions without the marker
+- [x] Fixtures in `test-support/admin-fixtures/`: unguarded "use server" module, unguarded route with `POST`, guarded module (marker set by hand)
+- [x] Under Vitest, import one **real** "use server" module (`app/(store)/cart/actions.ts`) and the unguarded fixture with no `next/headers`, db client or env validation failing at import; the test shows the fixtures (and the real unguarded module) reported and the guarded fixture passing
+- [x] Directive detection reads the first statement, not the text (`lib/auth/auth.ts` has the words in a comment)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 - [ ] **Report to the user: which import approach worked (mocks / lazy session import / separate project) or the options if none did. Do not start task 2 until they answer**
 
 ## 2. Permissions (pure)
