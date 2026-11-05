@@ -8,19 +8,19 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Commit `spec.md`, `plan.md` and `tasks.md` on `104-staff-sign-in-on-better-auth-the-admin-shell-and-the-demo-account`
 
 ## 1. Verify Better Auth 1.7.17 (gate: stop and report if any probe fails)
-- [ ] `better-auth` installed at exactly `1.7.17`; `better-auth/adapters/prisma` resolves without the adapter package (else add `@better-auth/prisma-adapter`, exact)
-- [ ] `.github/dependabot.yml` with the `better-auth` / `@better-auth/*` group; T-pin and T-dependabot tests
-- [ ] Draft Prisma models and migration; `db:drift` clean on a scratch database
-- [ ] Probe: `disabledPaths` blocks every endpoint except sign-in, sign-out, get-session (full endpoint list of the pinned version)
-- [ ] Probe: rate limit applies to the HTTP sign-in, database storage, IP-and-path key, 3 per 10 s, on in test and production config; behavior with no IP recorded
-- [ ] Probe: `expiresIn` / `updateAge` give absolute 8-hour sessions
-- [ ] Probe: `verification.storeIdentifier: "hashed"`
-- [ ] Probe: cookie names and attributes in both modes; what `getSessionCookie` reads in each
-- [ ] Probe: `generateId: false` with `@default(cuid())` gives cuid ids
-- [ ] Probe: `input: false` on `role` and `disabledAt`
-- [ ] Probe: trusted origins, absent `Origin`, sign-out deletes only the caller's session, `disableSignUp`
-- [ ] Temporary `_probe` route on the preview: `VERCEL_URL` present with Deployment Protection on, equal to the request host; `VERCEL_BRANCH_URL` presence recorded
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `better-auth` installed at exactly `1.7.17`; `better-auth/adapters/prisma` resolves without the adapter package (else add `@better-auth/prisma-adapter`, exact)
+- [x] `.github/dependabot.yml` with the `better-auth` / `@better-auth/*` group; T-pin and T-dependabot tests
+- [x] Draft Prisma models and migration; `db:drift` clean on a scratch database
+- [x] Probe: `disabledPaths` blocks every endpoint except sign-in, sign-out, get-session (full endpoint list of the pinned version). **Finding:** it matches exact strings, so `/callback/:id` and `/reset-password/:token` still respond; a route-level allowlist blocks them (verified)
+- [x] Probe: rate limit applies to the HTTP sign-in, database storage, IP-and-path key, 3 per 10 s, on in test and production config; behavior with no IP recorded
+- [x] Probe: `expiresIn` / `updateAge` give absolute 8-hour sessions
+- [x] Probe: `verification.storeIdentifier: "hashed"`
+- [x] Probe: cookie names and attributes in both modes; what `getSessionCookie` reads in each
+- [x] Probe: `generateId: false` with `@default(cuid())` gives cuid ids
+- [x] Probe: `input: false` on `role` and `disabledAt`
+- [x] Probe: trusted origins, absent `Origin`, sign-out deletes only the caller's session, `disableSignUp`. **Finding:** Better Auth skips the origin and CSRF checks under `NODE_ENV=test` unless `advanced.disableOriginCheck: false` is set explicitly
+- [ ] Temporary `app/api/probe-env` route (an `_probe` folder would be private in the App Router) on the preview: `VERCEL_URL` present with Deployment Protection on, equal to the request host; `VERCEL_BRANCH_URL` presence recorded
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 - [ ] **Report to the user: pass/fail per probe. Do not start task 2 until they answer**
 
 ## 2. Environment and pure code
