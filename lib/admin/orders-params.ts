@@ -84,6 +84,22 @@ export function orderParamsHref(params: OrderParams): string {
   return query ? `${ORDERS_PATH}?${query}` : ORDERS_PATH
 }
 
+// The list as it was left, carried to the detail as `back` so "Back to orders"
+// returns to it (B11). The detail rebuilds the link from the parsed values
+// only, so `back` can never name another place.
+export function backQueryOf(params: OrderParams): string {
+  return new URLSearchParams(serializeOrderParams(params)).toString()
+}
+
+export function backHrefOf(value: string | string[] | undefined): string {
+  const query = first(value) ?? ""
+  const raw: Record<string, string> = {}
+  for (const [key, entry] of new URLSearchParams(query.slice(0, 500))) {
+    if (!(key in raw)) raw[key] = entry
+  }
+  return orderParamsHref(parseOrderParams(raw))
+}
+
 // Whether the URL is already the canonical one: the same keys and values, each
 // key once. Otherwise the page redirects to orderParamsHref (B8).
 export function isCanonicalOrderQuery(

@@ -3,11 +3,13 @@ import "server-only"
 import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
 import { dueOrderCondition } from "@/lib/orders/due-sql"
+import { orderNumberShape } from "@/lib/orders/number"
 import type {
   FulfillmentName,
   OrderStatusName,
   PaymentOptionName,
 } from "@/lib/orders/timeline"
+import type { OrderPageItem } from "@/lib/orders/view"
 
 import {
   type AddressView,
@@ -17,6 +19,12 @@ import {
   type Masked,
   maskName,
 } from "../mask"
+import type {
+  EmailStatusName,
+  EmailTypeName,
+  PaymentProblemName,
+  PaymentStatusName,
+} from "../orders-view"
 import {
   customerQueryOf,
   hasCustomerTerm,
@@ -30,75 +38,10 @@ import { assertCan, type Denied, denied } from "./guard"
 
 // Orders as Admin shows them, with customer fields masked for Demo
 // (docs/specs/040-admin-permissions-audit-masking, Behavior 13-16). The only
-// way an admin page reads an order's contact or address.
-
-const orderPersonSelect = {
-  orderNumber: true,
-  status: true,
-  fulfillment: true,
-  paymentOption: true,
-  total: true,
-  createdAt: true,
-  guestEmail: true,
-  contactName: true,
-  contactMobile: true,
-  regionName: true,
-  zone: true,
-  provinceName: true,
-  cityName: true,
-  barangayName: true,
-  street: true,
-  zip: true,
-} as const
-
-export type OrderPersonView = {
-  orderNumber: string
-  status: string
-  fulfillment: "DELIVERY" | "PICKUP"
-  paymentOption: string
-  total: number
-  createdAt: Date
-  contact: ContactView
-  address: AddressView
-}
-
-type Row = Omit<OrderPersonView, "contact" | "address"> & {
-  guestEmail: string
-  contactName: string
-  contactMobile: string
-  regionName: string | null
-  zone: string | null
-  provinceName: string | null
-  cityName: string | null
-  barangayName: string | null
-  street: string | null
-  zip: string | null
-}
-
-function toView(role: AdminRole, row: Row): OrderPersonView {
-  return {
-    orderNumber: row.orderNumber,
-    status: row.status,
-    fulfillment: row.fulfillment,
-    paymentOption: row.paymentOption,
-    total: row.total,
-    createdAt: row.createdAt,
-    contact: contactView(role, row),
-    address: addressView(role, row),
-  }
-}
-
-export async function getOrderPerson(
-  role: AdminRole,
-  orderNumber: string
-): Promise<OrderPersonView | null> {
-  assertCan(role, "orders.view")
-  const row = await db.order.findUnique({
-    where: { orderNumber },
-    select: orderPersonSelect,
-  })
-  return row ? toView(role, row) : null
-}
+// way an admin page reads an order's contact or address. Every query selects
+// named fields and never spreads a row: the token hash, idempotency key, cart
+// hash, webhook payloads and recipient hashes are not selected anywhere
+// (docs/specs/041-admin-orders-list-detail, R11).
 
 // ---- The list (docs/specs/041-admin-orders-list-detail) ----
 
@@ -235,5 +178,202 @@ export async function listOrders(
         needsCheck: row.payments.length > 0,
       },
     })),
+  }
+}
+
+// ---- The detail ----
+
+export type PaymentAttempt = {
+  referenceId: string
+  provider: "XENDIT" | "FAKE"
+  status: PaymentStatusName
+  // Centavos
+  amount: number
+  // GCASH, PAYMAYA, CARDS (FAKE in tests), once paid
+  method: string | null
+  // The gateway's ids, to find the payment in its dashboard (D8)
+  sessionId: string | null
+  gatewayPaymentId: string | null
+  createdAt: Date
+  paidAt: Date | null
+  sessionExpiresAt: Date
+  problem: PaymentProblemName | null
+  // What the gateway received when it isn't the order's amount
+  receivedAmount: number | null
+}
+
+export type EmailRecord = {
+  type: EmailTypeName
+  status: EmailStatusName
+  attempts: number
+  // A short code, never a message
+  lastErrorCode: string | null
+  sentAt: Date | null
+  createdAt: Date
+}
+
+export type OrderDetail = {
+  orderNumber: string
+  status: OrderStatusName
+  dueForRelease: boolean
+  flags: { refundRequired: boolean; needsCheck: boolean }
+  fulfillment: FulfillmentName
+  paymentOption: PaymentOptionName
+  paymentMethod: string | null
+  createdAt: Date
+  expiresAt: Date
+  paidAt: Date | null
+  confirmedAt: Date | null
+  cancelledAt: Date | null
+  cancelReason: "EXPIRED" | null
+  contact: ContactView
+  address: AddressView
+  zone: string | null
+  weightGrams: number
+  // In the order's position order; names and prices are the snapshots
+  items: OrderPageItem[]
+  subtotal: number
+  shippingFee: number
+  discount: number
+  voucherCode: string | null
+  total: number
+  // Newest first, every attempt including ones that never opened a session
+  payments: PaymentAttempt[]
+  // Oldest first
+  emails: EmailRecord[]
+}
+
+const detailSelect = {
+  id: true,
+  orderNumber: true,
+  status: true,
+  fulfillment: true,
+  paymentOption: true,
+  paymentMethod: true,
+  createdAt: true,
+  expiresAt: true,
+  paidAt: true,
+  confirmedAt: true,
+  cancelledAt: true,
+  cancelReason: true,
+  refundRequired: true,
+  guestEmail: true,
+  contactName: true,
+  contactMobile: true,
+  regionName: true,
+  zone: true,
+  provinceName: true,
+  cityName: true,
+  barangayName: true,
+  street: true,
+  zip: true,
+  weightGrams: true,
+  subtotal: true,
+  shippingFee: true,
+  discount: true,
+  voucherCode: true,
+  total: true,
+  items: {
+    orderBy: { position: "asc" },
+    select: {
+      nameSnapshot: true,
+      priceSnapshot: true,
+      quantity: true,
+      buildId: true,
+      slot: true,
+    },
+  },
+  payments: {
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: {
+      referenceId: true,
+      provider: true,
+      status: true,
+      amount: true,
+      method: true,
+      providerRef: true,
+      gatewayPaymentId: true,
+      createdAt: true,
+      paidAt: true,
+      expiresAt: true,
+      problem: true,
+      receivedAmount: true,
+    },
+  },
+  emails: {
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: {
+      type: true,
+      status: true,
+      attempts: true,
+      lastErrorCode: true,
+      sentAt: true,
+      createdAt: true,
+    },
+  },
+} as const satisfies Prisma.OrderSelect
+
+// A malformed number is null with no database read; an unknown one is null
+export async function getOrderDetail(
+  role: AdminRole,
+  orderNumber: string,
+  now: Date
+): Promise<OrderDetail | null> {
+  assertCan(role, "orders.view")
+  if (!orderNumberShape(orderNumber)) return null
+  const row = await db.order.findUnique({
+    where: { orderNumber },
+    select: detailSelect,
+  })
+  if (!row) return null
+  const due = await dueAmong([row.id], now)
+  return {
+    orderNumber: row.orderNumber,
+    status: row.status,
+    dueForRelease: due.has(row.id),
+    flags: {
+      refundRequired: row.refundRequired,
+      needsCheck: row.payments.some((p) => p.problem === "AMOUNT_MISMATCH"),
+    },
+    fulfillment: row.fulfillment,
+    paymentOption: row.paymentOption,
+    paymentMethod: row.paymentMethod,
+    createdAt: row.createdAt,
+    expiresAt: row.expiresAt,
+    paidAt: row.paidAt,
+    confirmedAt: row.confirmedAt,
+    cancelledAt: row.cancelledAt,
+    cancelReason: row.cancelReason,
+    contact: contactView(role, row),
+    address: addressView(role, row),
+    zone: row.zone,
+    weightGrams: row.weightGrams,
+    items: row.items.map((item) => ({
+      name: item.nameSnapshot,
+      unitPrice: item.priceSnapshot,
+      quantity: item.quantity,
+      buildId: item.buildId,
+      slot: item.slot,
+    })),
+    subtotal: row.subtotal,
+    shippingFee: row.shippingFee,
+    discount: row.discount,
+    voucherCode: row.voucherCode,
+    total: row.total,
+    payments: row.payments.map((p) => ({
+      referenceId: p.referenceId,
+      provider: p.provider,
+      status: p.status,
+      amount: p.amount,
+      method: p.method,
+      sessionId: p.providerRef,
+      gatewayPaymentId: p.gatewayPaymentId,
+      createdAt: p.createdAt,
+      paidAt: p.paidAt,
+      sessionExpiresAt: p.expiresAt,
+      problem: p.problem,
+      receivedAmount: p.receivedAmount,
+    })),
+    emails: row.emails,
   }
 }

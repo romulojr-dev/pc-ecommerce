@@ -44,11 +44,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [ ] Run the page in a browser (redirects, Demo `?customer=` message, real rows): needs the E2E accounts in `.env.local`, so it waits for task 9 or the preview
 
 ## 6. Detail
-- [ ] `getOrderDetail(role, number, now)` with named selects (items as `OrderPageItem`, payments newest first incl. `OPENING`/`FAILED`, emails, event times, flags, due, amount to collect)
-- [ ] `/admin/orders/[number]` page: header, items by build, totals with voucher, amount to collect for cash orders, contact, address or pickup, timeline with deadline, payments, emails, flag callouts; no `loading.tsx` 
-- [ ] Malformed number 404s with no database read; unknown number 404s (E28)
-- [ ] Tests: E18–E21, E23, E26a; allow-list serialization test E22 with a fully populated order (token hash, idempotency key, cart hash, `PaymentEvent` payload, recipient hash)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `getOrderDetail(role, number, now)` with named selects (items as `OrderPageItem`, payments newest first incl. `OPENING`/`FAILED`, emails, event times, flags, due, amount to collect)
+- [x] `/admin/orders/[number]` page: header, items by build, totals with voucher, amount to collect for cash orders, contact, address or pickup, timeline with deadline, payments, emails, flag callouts; no `loading.tsx` (the list, its `loading.tsx` and `error.tsx` moved into an `orders/(list)` route group so they do not wrap the detail) 
+- [x] Malformed number 404s with no database read; unknown number 404s (E28)
+- [x] Tests: E18–E21, E23, E26a; allow-list serialization test E22 with a fully populated order (token hash, idempotency key, cart hash, `PaymentEvent` payload, recipient hash)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [ ] Open the detail in a browser as Owner and Demo: waits for the E2E accounts (task 9 or the preview)
 
 ## 7. Packing slip
 - [ ] `getPackingSlip(role, number)`: no price fields in the type, `orders.packing-slip` required

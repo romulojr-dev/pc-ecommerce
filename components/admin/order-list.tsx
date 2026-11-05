@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import { ADMIN_COPY } from "@/lib/admin/copy"
 import {
+  backQueryOf,
   hasActiveFilters,
   ORDERS_PATH,
   type OrderParams,
@@ -30,8 +31,11 @@ import { cn, focusRing } from "@/lib/utils"
 
 export const RESULTS_ID = "orders-results"
 
-export function orderHref(orderNumber: string): string {
-  return `${ORDERS_PATH}/${encodeURIComponent(orderNumber)}`
+// The detail's link, remembering the list's filters and page for its Back link
+export function orderHref(orderNumber: string, params?: OrderParams): string {
+  const back = params ? backQueryOf(params) : ""
+  const path = `${ORDERS_PATH}/${encodeURIComponent(orderNumber)}`
+  return back ? `${path}?back=${encodeURIComponent(back)}` : path
 }
 
 export function OrderListView({
@@ -95,7 +99,7 @@ export function OrderListView({
                 <TableRow key={row.orderNumber}>
                   <TableCell>
                     <Link
-                      href={orderHref(row.orderNumber)}
+                      href={orderHref(row.orderNumber, params)}
                       className={cn(
                         "font-medium underline underline-offset-4",
                         focusRing

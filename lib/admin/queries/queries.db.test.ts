@@ -13,11 +13,11 @@ import {
 import { orderData, pickupOrderData } from "@/test-support/orders"
 
 import { adminTransaction, recordAudit } from "../audit"
-import type { OrderPersonView } from "./orders"
+import type { OrderDetail } from "./orders"
 import { listAuditEntries } from "./audit"
 import { listCustomers } from "./customers"
 import { QueryDeniedError } from "./guard"
-import { getOrderPerson } from "./orders"
+import { getOrderDetail } from "./orders"
 
 // docs/specs/040-admin-permissions-audit-masking, T11: E11 to E15 through the
 // real query layer
@@ -42,7 +42,7 @@ afterAll(() => db.$disconnect())
 
 // A stand-in for a page: draws the view the way a component would, and the
 // props it would hand a client component
-function renderPage(order: OrderPersonView) {
+function renderPage(order: OrderDetail) {
   const { contact, address } = order
   const place =
     address.kind === "pickup"
@@ -63,7 +63,7 @@ function renderPage(order: OrderPersonView) {
 
 describe("an order as a role sees it", () => {
   test("Owner sees the real values (E11)", async () => {
-    const order = await getOrderPerson("owner", NUMBER)
+    const order = await getOrderDetail("owner", NUMBER, new Date())
     expect(order?.contact).toEqual({
       masked: false,
       name: "Ana Reyes",
@@ -74,7 +74,7 @@ describe("an order as a role sees it", () => {
   })
 
   test("Demo gets masks, and nothing real in the DTO or the markup (E11, E14)", async () => {
-    const order = await getOrderPerson("demo", NUMBER)
+    const order = await getOrderDetail("demo", NUMBER, new Date())
     expect(order?.contact).toEqual({
       masked: true,
       name: "A••• R•••",
@@ -92,7 +92,7 @@ describe("an order as a role sees it", () => {
   })
 
   test("the helper does catch a leak", async () => {
-    const owner = await getOrderPerson("owner", NUMBER)
+    const owner = await getOrderDetail("owner", NUMBER, new Date())
     expect(() => expectNoRawValues(owner, FIXTURE_RAW_VALUES)).toThrow()
     expect(() =>
       expectNoRawValues(renderPage(owner!), FIXTURE_RAW_VALUES)
@@ -102,17 +102,17 @@ describe("an order as a role sees it", () => {
   test("a pickup order for Demo (E12)", async () => {
     await db.order.create({
       data: pickupOrderData({
-        orderNumber: "PCS-PICKUP01",
+        orderNumber: "PCS-PCKP0001",
         guestEmail: "pick@example.com",
       }),
     })
-    const order = await getOrderPerson("demo", "PCS-PICKUP01")
+    const order = await getOrderDetail("demo", "PCS-PCKP0001", new Date())
     expect(order?.address).toEqual({ kind: "pickup" })
     expect(order?.contact.masked).toBe(true)
   })
 
   test("an unknown order is null", async () => {
-    expect(await getOrderPerson("demo", "PCS-NOPE0000")).toBeNull()
+    expect(await getOrderDetail("demo", "PCS-NOPE0000", new Date())).toBeNull()
   })
 })
 
