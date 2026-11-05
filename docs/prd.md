@@ -59,12 +59,12 @@ The MVP is a complete buy flow plus the PC Builder; everything else is layered o
 | --- | --- | --- | --- |
 | Catalog | The 8 builder-component categories (CPU, motherboard, memory, GPU, storage, PSU, case, CPU cooler), product pages, specs, images, stock status | Non-builder categories (case fans, monitors, peripherals, networking, prebuilt PCs) with a grouped mega-menu; product compare (up to 4), recently viewed | Price history chart |
 | Search | Keyword search + faceted filters per category | Typo-tolerant search, autocomplete | AI "build me a PC for PHP 40k" assistant |
-| PC Builder | Step-by-step builder, compatibility engine, wattage estimate, save & share build, add build to cart | Prebuilt templates (budget / 1080p / 1440p / workstation) | Community gallery of builds, FPS estimates |
-| Cart & checkout | Cart, guest + account checkout, delivery (fee by region) or free store pickup, vouchers | Abandoned-cart email | Loyalty points |
+| PC Builder | Step-by-step builder, compatibility engine, wattage estimate, share build by link, add build to cart | Prebuilt templates (budget / 1080p / 1440p / workstation) | Community gallery of builds, FPS estimates |
+| Cart & checkout | Cart, guest checkout, delivery (fee by region) or free store pickup, vouchers | Abandoned-cart email | Loyalty points |
 | Payments | GCash, Maya, cards, installments / BNPL (all sandbox), COD | Partial COD (deposit online, rest on delivery) for high-value orders | — |
-| Accounts | Sign up / login, addresses, order history, saved builds | Wishlist, back-in-stock and price-drop alerts | — |
+| Accounts | — (guest checkout only; staff sign in to Admin) | Customer accounts (FR-18, FR-19): sign up / login, addresses, order history, saved builds; wishlist, back-in-stock and price-drop alerts | — |
 | Post-purchase | Order status page, email notifications | Warranty / RMA request form, product reviews | Live chat |
-| Admin | Products, inventory, orders, vouchers, basic sales dashboard | Bulk CSV import/export, roles (owner vs staff) | Analytics: top builds, conversion funnel |
+| Admin | Products, inventory, orders, vouchers, basic sales dashboard, staff roles (owner / staff / demo, AD-11) | Bulk CSV import/export | Analytics: top builds, conversion funnel |
 
 **Screen priority:** the MVP is designed, built and tested for desktop first. Mobile-optimized layouts for every page, including the PC Builder, are a Phase 2 item, delivered before any other Phase 2 work.
 
@@ -76,7 +76,7 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 - **FR-1** Category menu in the header. MVP: the 8 builder-component categories (CPU, Motherboard, Memory, Graphics Card, Storage, Power Supply, Case, CPU Cooler) in a single-column menu. Phase 2: add Case Fans, Monitor, Peripherals (keyboard, mouse, headset), Networking and Prebuilt PCs, shown in a grouped mega-menu.
 - **FR-2** Home page: hero promo banner, "Build your PC" call-to-action, featured deals, best sellers, shop by brand, trust strip (authentic, warranty, secure payment, nationwide delivery).
-- **FR-3** Persistent header search, cart count and account menu; mobile bottom-sheet menu.
+- **FR-3** Persistent header search, cart count (Phase 2: account menu); mobile bottom-sheet menu.
 
 ### Catalog, search and filters
 
@@ -96,15 +96,15 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 
 - **FR-12** Cart supports single items and whole builds (a build shows as one grouped line that can be expanded).
 - **FR-13** Stock is re-checked at checkout; out-of-stock lines are flagged before payment.
-- **FR-14** Checkout in 3 steps: contact and delivery (delivery or store pickup, address) → review (fee, stock and build checks) → payment (gateway-hosted). Guest checkout allowed; account creation offered after.
+- **FR-14** Checkout in 3 steps: contact and delivery (delivery or store pickup, address) → review (fee, stock and build checks) → payment (gateway-hosted). Guest checkout only in the MVP (Phase 2: account creation offered after).
 - **FR-15** PH address form: region → province → city/municipality → barangay dropdowns, plus street and ZIP.
 - **FR-16** Shipping fee by zone (Metro Manila, Luzon, Visayas, Mindanao) and weight; free shipping threshold configurable.
 - **FR-17** Voucher codes: fixed or % off, min spend, expiry, usage limit.
 
 ### Accounts and orders
 
-- **FR-18** Email + password and Google sign-in; email verification; password reset.
-- **FR-19** Address book, order history, saved builds.
+- **FR-18** *(Phase 2)* Email + password and Google sign-in; email verification; password reset.
+- **FR-19** *(Phase 2)* Address book, order history, saved builds.
 - **FR-20** Order status timeline: an online order runs Pending payment → Paid; a cash order runs Pending confirmation → COD confirmed (it is paid when delivered or picked up, which Admin records). Then Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded. A cash order's timeline shows when it was confirmed.
 - **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, delivered; A cash order gets one email, "Confirm your cash-on-delivery order" ("pay-on-pickup" for pickup), with a signed confirmation link, in place of the order confirmation.
 
@@ -118,7 +118,7 @@ The builder lets a shopper fill each slot (one part per slot, except Memory, whi
 2. Pick parts slot by slot: CPU → Motherboard → Memory → Storage → GPU → Case → PSU → CPU Cooler (fans, OS, peripherals optional). Slots can be filled in any order. Storage holds several drives; Memory holds one kit with a quantity; every other slot holds one part.
 3. Each slot opens a filtered product list showing **only compatible, in-stock parts by default**, with a toggle to "show all" (incompatible items greyed out with the reason).
 4. A sticky summary shows total price, estimated wattage vs PSU capacity, and a compatibility status: OK / Warnings / Errors.
-5. Save the build (account) or share it via link (no account needed).
+5. Share the build via link (no account needed). Saving a build to an account is Phase 2.
 6. "Add build to cart" adds every part in one action.
 
 ### Compatibility rules (MVP)
@@ -157,15 +157,15 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 | GCash / Maya | Redirect to wallet authorization page, return to order page | Paid (on webhook) |
 | Credit / debit card | Gateway-hosted card form with 3-D Secure | Paid (on webhook) |
 | Installments / BNPL | Gateway BNPL options (e.g. BillEase, SPayLater) and card installment terms where the gateway offers them; not among the MVP's allowed channels | Paid (on webhook) |
-| Cash on delivery (or pay on pickup) | No online step; stock is reserved at placement and the order is Pending confirmation until the customer presses Confirm order on the page the signed link in the order email opens (a POST, so a link scanner changes nothing). Unconfirmed orders auto-cancel and release stock after a set time (`codConfirmHours`); confirmed ones never auto-expire. Offered only within the admin's limits (FR-25) | COD confirmed → Paid when admin marks delivered (or picked up) |
+| Cash on delivery (or pay on pickup) | No online step; stock is reserved at placement and the order is Pending confirmation until the customer presses Confirm order on the page the signed link in the order email opens (a POST, so a link scanner changes nothing). Unconfirmed orders auto-cancel and release stock after a set time (`codConfirmHours`); confirmed ones never auto-expire. Offered only within the admin's limits (FR-25) | COD confirmed; never Paid. Admin sets `paidAt` when it marks the order delivered (or picked up) |
 
 ### Requirements
 
-- **FR-22** Payment status is set only from the gateway (verified webhook or server-side status check), never from the browser redirect.
+- **FR-22** The Paid status is set only from the gateway (verified webhook or server-side status check), never from the browser redirect. A cash order never enters Paid; its `paidAt` is set when Admin marks it delivered or picked up.
 - **FR-23** Idempotent webhook handler (same event processed once) and a payment record per attempt.
 - **FR-24** Unpaid online orders auto-cancel after a set time (default 24 h) and release reserved stock.
 - **FR-25** COD limits configurable by admin: max order value and allowed zones.
-- **FR-26** Refund recorded in admin (manual in sandbox) and reflected on the order timeline.
+- **FR-26** The owner records a refund in admin (manual in sandbox). It shows on the order timeline, and recording it never changes a gateway-derived payment status.
 - **FR-27** A visible "Test mode" banner on checkout, with gateway test card / wallet instructions for demo reviewers.
 
 ### Fulfillment
@@ -180,7 +180,7 @@ A protected `/admin` area, built with the same shadcn/ui components, lets the sh
 
 - **AD-1 Dashboard:** today's and 30-day sales, order count, average order value, low-stock list, recent orders.
 - **AD-2 Products:** create/edit with category-specific spec fields (required fields enforced for builder rules), images upload, SEO title/description, publish/draft toggle.
-- **AD-3 Categories:** name, slug, parent, sort order. Each category's spec fields (name, type, unit, filterable?, used by builder?) are defined in code, because the builder rules read them by name; adding or changing a field is a code change ([ADR 0002](adr/0002-spec-schemas-in-code.md)).
+- **AD-3 Categories:** edit only: name, parent and sort order; a slug is editable only for non-builder categories; no create or delete in the MVP. Each category's spec fields (name, type, unit, filterable?, used by builder?) are defined in code, because the builder rules read them by name; adding or changing a field is a code change ([ADR 0002](adr/0002-spec-schemas-in-code.md)).
 - **AD-4 Brands:** name, logo.
 - **AD-5 Inventory:** stock quantity, low-stock threshold, stock adjustments with reason (received, damaged, correction) logged.
 - **AD-6 Orders:** list with filters by status/payment method; order detail; status transitions; add courier + tracking number; cancel / refund; print packing slip.
@@ -188,7 +188,7 @@ A protected `/admin` area, built with the same shadcn/ui components, lets the sh
 - **AD-8 Vouchers:** create and track usage.
 - **AD-9 Settings:** shipping zones and rates, pickup on/off with store address and hours, COD limits (COD also allowed as pay-on-pickup), free-shipping threshold, store info.
 - **AD-10 Audit log:** who changed price, stock or order status, and when.
-- **AD-11 Roles (Phase 2):** Owner (all) vs Staff (orders + inventory only).
+- **AD-11 Roles:** Owner can do everything. Staff can manage orders, see customers and adjust inventory. Demo can view everything Owner can view and change nothing, with customer data masked ([ADR 0012](adr/0012-staff-auth-on-better-auth.md)).
 
 ## Non-functional requirements
 
@@ -199,7 +199,7 @@ A protected `/admin` area, built with the same shadcn/ui components, lets the sh
 | SEO | Server-rendered product and category pages, unique titles/meta, Product JSON-LD (price, availability), sitemap.xml, clean URLs like `/gpu/rtx-5070-12gb` |
 | Accessibility | WCAG 2.1 AA: keyboard navigation, focus states, alt text, color contrast (shadcn/Radix primitives help here) |
 | Security | Hashed passwords, CSRF-safe auth, role checks on every admin route and server action, webhook signature verification, rate-limited login and checkout, no card data stored (gateway-hosted fields) |
-| Privacy | Follow the PH Data Privacy Act of 2012: privacy notice, consent checkbox at sign-up, account deletion on request, collect only what checkout needs |
+| Privacy | Follow the PH Data Privacy Act of 2012: privacy notice, consent checkbox at sign-up and account deletion on request (both Phase 2, with customer accounts), collect only what checkout needs |
 | Reliability | Stock decremented in a database transaction to prevent overselling; orders and payments never hard-deleted |
 | Quality | TypeScript strict; unit tests for compatibility rules and pricing; E2E tests (Playwright) for browse → build → checkout → webhook |
 | Observability | Error tracking (e.g. Sentry) and structured server logs for payments |
@@ -224,7 +224,7 @@ flowchart TB
     end
 
     PG[("PostgreSQL<br/>via Prisma ORM")]
-    CL["Cloudinary<br/>product images"]
+    CL["Vercel Blob<br/>product images"]
     PM["Xendit<br/>GCash, Maya, cards"]
     RS["Resend<br/>order emails"]
 
@@ -250,11 +250,11 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | Database | PostgreSQL (Neon or Supabase hosted) | JSONB column for product specs + GIN index for filtering |
 | ORM | Prisma (or Drizzle) | Typed schema, migrations, seed script for demo catalog |
 | Validation | Zod | Same schemas validate forms, server actions and spec fields |
-| Auth | Auth.js or Better Auth | Email/password + Google; `role` on user for admin |
+| Auth | Better Auth ([ADR 0012](adr/0012-staff-auth-on-better-auth.md)) | Staff-only email/password sign-in for Admin; `role` on user. Customer sign-in (Google) is Phase 2 |
 | Search | Postgres full-text search in MVP | Move to Meilisearch / Typesense in Phase 2 if needed |
-| Builder state | Zustand (persisted to localStorage), synced to DB when logged in | Shareable build URL via the build snapshot's share slug |
-| Images | Cloudinary or UploadThing | Responsive images via next/image |
-| Email | Resend + React Email | Order and auth emails |
+| Builder state | Zustand (persisted to localStorage); syncing to an account is Phase 2 | Shareable build URL via the build snapshot's share slug |
+| Images | Vercel Blob through a server upload route | Responsive images via next/image |
+| Email | Resend + React Email | Order emails (no auth emails; [ADR 0012](adr/0012-staff-auth-on-better-auth.md)) |
 | Payments | Xendit API (test mode); PayMongo the alternative | Payment sessions + webhooks |
 | Hosting | Vercel | Preview deploys per pull request |
 
@@ -262,21 +262,21 @@ The rules engine runs in the browser for instant feedback and again on the serve
 
 | Table | Key fields |
 | --- | --- |
-| `User` | id, email, name, passwordHash, role (customer / staff / owner), createdAt |
-| `Address` | userId, fullName, phone, region, province, city, barangay, street, zip, isDefault |
+| `User` | Staff only: id, email, name, role (`owner` / `staff` / `demo`), createdAt. The password is held by Better Auth's `Account` table. Customer accounts are Phase 2 |
+| `Address` *(Phase 2)* | userId, fullName, phone, region, province, city, barangay, street, zip, isDefault |
 | `Category` | id, name, slug, parentId, sortOrder (spec fields are defined in code as Zod schemas per category, not stored here; see [ADR 0002](adr/0002-spec-schemas-in-code.md)) |
 | `Brand` | id, name, slug, logoUrl |
 | `Product` | id, categoryId, brandId, name, slug, sku, price, salePrice, stock, lowStockAt, specs (JSONB), weightGrams, warrantyMonths, status (draft / active) |
 | `ProductImage` | productId, url, alt, sortOrder |
 | `Build` | id, shareSlug, contentHash, createdAt. An immutable snapshot of a build's parts: sharing or carting the same contents again reuses the row (same content hash, same slug) |
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
-| `SavedBuild` | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
+| `SavedBuild` *(Phase 2)* | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
 | `Cart` / `CartItem` | cartId (cookie or userId), productId, quantity, buildId (nullable, for grouping) |
-| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the access token, which is only in the order link, or a signed link from an email), userId / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, voucherId and voucherCode (snapshot), total, payment option (online / COD), confirmedAt (when a cash order was confirmed from its email), paymentMethod (the gateway channel paid with), shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
+| `Order` | id, orderNumber (short, random, non-sequential), accessTokenHash (guest access: the access token, which is only in the order link, or a signed link from an email), userId (Phase 2) / guestEmail, contact name and mobile number, fulfillment (delivery / pickup), status, subtotal, shippingFee, discount, voucherId and voucherCode (snapshot), total, payment option (online / COD), confirmedAt (when a cash order was confirmed from its email), paymentMethod (the gateway channel paid with), shippingAddress (snapshot, with PSGC codes), zone and weight (snapshot), expiresAt (unpaid auto-cancel), paidAt, refundRequired (a payment arrived after cancellation, or a second one after Paid), idempotencyKey, courier, trackingNumber |
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
 | `Payment` | orderId, provider, providerRef, method, amount, status, paidAt, received amount and currency, problem (amount mismatch, late, second payment), createdAt. One row per payment attempt; the webhook bodies are in `PaymentEvent` |
 | `PaymentEvent` | eventId (unique; Xendit sends none, so it is `{event}:{session id}`), type, payload, paymentId, receivedAt. Each processed gateway webhook event, so the same event is processed once (FR-23) |
-| `Voucher` | code (upper-case, unique), type (fixed / percent), value (centavos for fixed, whole percent 1–100 for percent), minSpend (centavos, 0 for none), startsAt, endsAt (null: never ends), usageLimit (null: unlimited), usedCount (orders holding the code that are not cancelled: taken when an order is placed, given back when it is cancelled unpaid) |
+| `Voucher` | code (upper-case, unique), type (fixed / percent), value (centavos for fixed, whole percent 1–100 for percent), minSpend (centavos, 0 for none), startsAt, endsAt (null: never ends), usageLimit (null: unlimited), usedCount (orders holding the code that are not cancelled: taken when an order is placed, given back when it is cancelled for any reason, by expiry or by Admin) |
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
 | `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: `codEnabled`, `codMaxTotal` in centavos on the total after the discount including shipping, null for no limit, `codZones`, `codPickupEnabled`, `codConfirmHours`). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |
@@ -361,8 +361,8 @@ Nine sprints (1–2 weeks each) for one developer, planned on the GitHub Project
 | 5 | PC Builder, Checkout | Share a build by link, "Fits your build" hints (FR-10), cart (FR-12), add build to cart |
 | 6 | Checkout | 3-step checkout (FR-14 to FR-16), stock re-check (FR-13), orders, Xendit sandbox and webhooks (FR-22 to FR-24, FR-27) |
 | 7 | Checkout | Transactional emails (FR-21: order placed, payment received, order cancelled) with signed order links, vouchers (FR-17), COD with email confirmation (FR-25) |
-| 8 | Accounts | Accounts (FR-18), address book, order history and saved builds (FR-19) |
-| 9 | Admin + launch | Admin panel, "Shipped" and "Delivered" emails with the status transitions, refunds (FR-26), full E2E suite, success-metric checks, production deploy and demo |
+| 8 | Admin | Staff sign-in and roles (AD-11), Admin panel (AD-1 to AD-10), "Shipped" and "Delivered" emails with the status transitions, refunds (FR-26) |
+| 9 | Launch | Full E2E suite, success-metric checks, production deploy and demo |
 
 ```mermaid
 flowchart LR
@@ -372,17 +372,17 @@ flowchart LR
     S5["<b>Builder + cart</b><br/>Sprint 5<br/>Share builds<br/>Fits-your-build hints<br/>Cart + add build"]
     S6["<b>Checkout</b><br/>Sprint 6<br/>Checkout steps<br/>Orders<br/>Xendit sandbox"]
     S7["<b>Checkout</b><br/>Sprint 7<br/>Order emails<br/>Vouchers<br/>COD"]
-    S8["<b>Accounts</b><br/>Sprint 8<br/>Sign-in<br/>Address book<br/>Orders + saved builds"]
-    S9["<b>Admin + launch</b><br/>Sprint 9<br/>Admin panel<br/>E2E tests<br/>Deploy + demo"]
+    S8["<b>Admin</b><br/>Sprint 8<br/>Staff sign-in + roles<br/>Admin panel<br/>Refunds"]
+    S9["<b>Launch</b><br/>Sprint 9<br/>E2E tests<br/>Success metrics<br/>Deploy + demo"]
 
     S1 --> S2 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
 
     style S5 stroke-width:3px
 ```
 
-The seed script stands in for the admin panel until Sprint 9, so catalog, builder and checkout work never waits on admin screens.
+The seed script stands in for the admin panel until Sprint 8, so catalog, builder and checkout work never waits on admin screens.
 
-After the MVP ships, Phase 2 items are planned as their own backlog, prioritized in this order: product compare and wishlist, prebuilt build templates, partial COD, warranty / RMA flow, then admin roles and CSV import. Phase 3 items are optional stretch goals.
+After the MVP ships, Phase 2 items are planned as their own backlog, prioritized in this order: customer accounts (with wishlist and alerts), product compare, prebuilt build templates, partial COD, warranty / RMA flow, then CSV import. Phase 3 items are optional stretch goals.
 
 ## Risks
 
