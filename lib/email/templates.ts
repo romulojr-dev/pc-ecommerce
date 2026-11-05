@@ -2,8 +2,11 @@ import type { EmailType, Prisma } from "@/generated/prisma/client"
 
 import { codConfirm } from "./templates/cod-confirm"
 import { orderCancelled } from "./templates/order-cancelled"
+import { orderDelivered } from "./templates/order-delivered"
 import { orderPlaced } from "./templates/order-placed"
+import { orderShipped } from "./templates/order-shipped"
 import { paymentReceived } from "./templates/payment-received"
+import { readyForPickup } from "./templates/ready-for-pickup"
 
 // What each email type renders (docs/specs/035-email-foundation-signed-links,
 // §6 Functions): built from the order row at send time, so a row never goes
@@ -46,4 +49,7 @@ export const templates: EmailTemplates = {
   PAYMENT_RECEIVED: paymentReceived,
   ORDER_CANCELLED: orderCancelled,
   COD_CONFIRM: codConfirm,
+  ORDER_SHIPPED: orderShipped,
+  READY_FOR_PICKUP: readyForPickup,
+  ORDER_DELIVERED: orderDelivered,
 }

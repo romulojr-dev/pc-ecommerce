@@ -6,6 +6,8 @@ Status: implemented (2026-11-03; approved with changes, see the change list at t
 
 Long form: the story touches three writers, a renderer, an order-page string and a dev page.
 
+> *Changed by spec 043 (#108): the registry also holds `ORDER_SHIPPED`, `READY_FOR_PICKUP` and `ORDER_DELIVERED`, enqueued by Admin's order transitions; Picked up sends no email.*
+
 ## 1. Summary
 
 Spec 035 built the outbox and the sender but registered no template, so no shopper has received an email yet. This story registers the three: **Order placed** (when `placeOrder` commits), **Payment received** (only when `reconcileSession` makes the order Paid) and **Order cancelled** (when the release cancels an unpaid order). Each is a React Email template with a plain-text twin and the test-mode note, built from the order row at send time, and each is enqueued inside the transaction that causes it, so a replay, a retry or a second run can never send a second one. It also adds the `/dev/emails` page (fake transport only) to read them, and changes the order page's save-the-link prompt to say an email is on its way.

@@ -19,6 +19,8 @@ import {
   type Masked,
   maskMobile,
   maskName,
+  type ParcelView,
+  parcelView,
 } from "../mask"
 import type {
   EmailStatusName,
@@ -240,6 +242,14 @@ export type OrderDetail = {
   confirmedAt: Date | null
   cancelledAt: Date | null
   cancelReason: "EXPIRED" | null
+  // The fulfillment moves (docs/specs/043-order-fulfillment-transitions);
+  // completedAt is Delivered or Picked up, labeled from the fulfillment
+  processingAt: Date | null
+  shippedAt: Date | null
+  readyAt: Date | null
+  completedAt: Date | null
+  // Demo's tracking number is masked to its last four (R6a)
+  parcel: ParcelView | null
   contact: ContactView
   // The key of "View this customer's orders" (docs/specs/042-admin-customers,
   // B15): the normalized email for Owner and Staff, the customer's rank key
@@ -274,6 +284,12 @@ const detailSelect = {
   confirmedAt: true,
   cancelledAt: true,
   cancelReason: true,
+  processingAt: true,
+  shippedAt: true,
+  readyAt: true,
+  completedAt: true,
+  courier: true,
+  trackingNumber: true,
   refundRequired: true,
   guestEmail: true,
   contactName: true,
@@ -362,6 +378,11 @@ export async function getOrderDetail(
     confirmedAt: row.confirmedAt,
     cancelledAt: row.cancelledAt,
     cancelReason: row.cancelReason,
+    processingAt: row.processingAt,
+    shippedAt: row.shippedAt,
+    readyAt: row.readyAt,
+    completedAt: row.completedAt,
+    parcel: parcelView(role, row),
     contact: contactView(role, row),
     customerKey: await customerLinkKey(role, row.guestEmail),
     address: addressView(role, row),
@@ -413,6 +434,8 @@ export type PackingSlip = {
   fulfillment: FulfillmentName
   paymentOption: PaymentOptionName
   paidAt: Date | null
+  // Once shipped; the tracking number is masked for Demo
+  parcel: ParcelView | null
   contact: SlipContact
   address: AddressView
   weightGrams: number
@@ -433,6 +456,8 @@ const slipSelect = {
   fulfillment: true,
   paymentOption: true,
   paidAt: true,
+  courier: true,
+  trackingNumber: true,
   contactName: true,
   contactMobile: true,
   regionName: true,
@@ -473,6 +498,7 @@ export async function getPackingSlip(
     fulfillment: row.fulfillment,
     paymentOption: row.paymentOption,
     paidAt: row.paidAt,
+    parcel: parcelView(role, row),
     contact:
       role === "demo"
         ? {

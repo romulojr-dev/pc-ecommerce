@@ -168,7 +168,7 @@ async function claim(
           AND (("status" = 'SENT' AND "sentAt" > ${capSince})
             OR ("status" = 'SENDING' AND "claimedAt" > ${capSince}))`
 
-      if (capDecision(count) === "skip") {
+      if (capDecision(count, row.type) === "skip") {
         await tx.emailOutbox.update({
           where: { id: row.id },
           data: { status: "SKIPPED" },

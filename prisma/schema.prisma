@@ -395,6 +395,18 @@ model Order {
   // adds CHECKs: a cancelled order has both, a pending one has neither
   cancelledAt    DateTime?
   cancelReason   OrderCancelReason?
+  // Fulfillment (docs/specs/043-order-fulfillment-transitions): the time of
+  // each staff move, and the courier and tracking number entered with Shipped.
+  // completedAt is the hand-over: Delivered for a delivery order, Picked up for
+  // a pickup order (the status gives the label). The migration adds CHECKs:
+  // shippedAt implies courier and trackingNumber; Shipped and Delivered imply
+  // shippedAt; Delivered and Picked up imply completedAt. None names Refunded.
+  processingAt   DateTime?
+  shippedAt      DateTime?
+  readyAt        DateTime?
+  completedAt    DateTime?
+  courier        String?
+  trackingNumber String?
   items          OrderItem[]
   stockMovements StockMovement[]
   payments       Payment[]
@@ -587,6 +599,9 @@ enum EmailType {
   PAYMENT_RECEIVED
   ORDER_CANCELLED
   COD_CONFIRM
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  READY_FOR_PICKUP
 }
 
 enum EmailStatus {

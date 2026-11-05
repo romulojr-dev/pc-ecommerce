@@ -10,7 +10,7 @@ This is a large story, not a short-form one: it adds a table, a send path, a sec
 
 ## 1. Summary
 
-A shopper can come back to an order from a **signed link** (`/orders/{number}?sig=…&exp=…&p=view`) that an email will carry, in addition to the secret `?key=` link from checkout. The order page, its status route, Pay now / Retry and the fake payment page accept **one order credential: the access token or a valid `view` link**. Alongside, an **email outbox** records "send this email for this order" inside the transaction that causes it, and a sender delivers it **after the commit** through Resend (or a recording fake), with a lease, a retry limit and a **cap of 5 emails per recipient per 24 hours**, so a failed, skipped or slow email never changes checkout, payment or release.
+A shopper can come back to an order from a **signed link** (`/orders/{number}?sig=…&exp=…&p=view`) that an email will carry, in addition to the secret `?key=` link from checkout. The order page, its status route, Pay now / Retry and the fake payment page accept **one order credential: the access token or a valid `view` link**. Alongside, an **email outbox** records "send this email for this order" inside the transaction that causes it, and a sender delivers it **after the commit** through Resend (or a recording fake), with a lease, a retry limit and a **cap of 5 emails per recipient per 24 hours** *(changed by spec 043 (#108): the staff-triggered Shipped, Ready for pickup and Delivered emails are never skipped by the cap, though they still count toward it)*, so a failed, skipped or slow email never changes checkout, payment or release.
 
 ## 2. Behavior
 

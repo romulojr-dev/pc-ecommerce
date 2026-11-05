@@ -9,6 +9,8 @@ import {
   maskFreeText,
   maskMobile,
   maskName,
+  maskTracking,
+  parcelView,
   type RawAddress,
 } from "./mask"
 
@@ -168,5 +170,55 @@ describe("audit entries", () => {
       after: { contactMobile: "+63•••••••••", note: "Hidden in demo" },
     })
     expect(auditEntryView("owner", entry)).toBe(entry)
+  })
+})
+
+// docs/specs/043-order-fulfillment-transitions: E30a, E30b
+describe("tracking numbers", () => {
+  test("E30b: 8 or more characters show bullets and the last four", () => {
+    expect(maskTracking("123456784821")).toBe("•••• 4821")
+    expect(maskTracking("ABCD1234")).toBe("•••• 1234")
+    expect(maskTracking(" 12345678 ")).toBe("•••• 5678")
+  })
+
+  test("E30b: under 8 characters show only bullets, never the whole number", () => {
+    for (const short of ["1234", "ABC1234", "12345"]) {
+      expect(maskTracking(short)).toBe("••••")
+    }
+  })
+
+  test("the parcel: Owner and Staff see both, Demo sees the courier and a masked number", () => {
+    const raw = { courier: "LBC", trackingNumber: "123456784821" }
+    for (const role of ["owner", "staff"] as const) {
+      expect(parcelView(role, raw)).toEqual({ masked: false, ...raw })
+    }
+    expect(parcelView("demo", raw)).toEqual({
+      masked: true,
+      courier: "LBC",
+      trackingNumber: "•••• 4821",
+    })
+  })
+
+  test("no parcel until it ships", () => {
+    expect(parcelView("owner", { courier: null, trackingNumber: null })).toBe(
+      null
+    )
+    expect(parcelView("demo", { courier: "LBC", trackingNumber: null })).toBe(
+      null
+    )
+  })
+
+  test("E30b: an audit entry's trackingNumber is masked for Demo", () => {
+    expect(
+      maskAuditJson({
+        status: "SHIPPED",
+        courier: "LBC",
+        trackingNumber: "123456784821",
+      })
+    ).toEqual({
+      status: "SHIPPED",
+      courier: "LBC",
+      trackingNumber: "•••• 4821",
+    })
   })
 })

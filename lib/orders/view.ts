@@ -31,6 +31,14 @@ export type OrderPageData = {
   paymentOption: PaymentOptionName
   // When a cash order was confirmed from its email
   confirmedAt: Date | null
+  // The staff's fulfillment moves (docs/specs/043-order-fulfillment-
+  // transitions); completedAt is Delivered or Picked up
+  processingAt: Date | null
+  shippedAt: Date | null
+  readyAt: Date | null
+  completedAt: Date | null
+  courier: string | null
+  trackingNumber: string | null
   createdAt: Date
   expiresAt: Date
   contact: { name: string; email: string; mobile: string }

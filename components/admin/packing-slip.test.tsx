@@ -16,6 +16,7 @@ const slip = (over: Partial<PackingSlip> = {}): PackingSlip => ({
   fulfillment: "DELIVERY",
   paymentOption: "ONLINE",
   paidAt: new Date("2026-11-02T06:10:00Z"),
+  parcel: null,
   contact: { masked: false, name: "Ana Reyes", mobile: "+639171234567" },
   address: {
     kind: "delivery",
@@ -173,5 +174,39 @@ describe("the packing slip", () => {
     for (const raw of ["Ana", "Reyes", "9171234567", "Mabini", "Quezon"]) {
       expect(markup).not.toContain(raw)
     }
+  })
+})
+
+// docs/specs/043-order-fulfillment-transitions: B12, E30a
+describe("the slip of a shipped order", () => {
+  it("prints the courier and tracking number; Demo's is masked", () => {
+    const owner = html(
+      slip({
+        status: "SHIPPED",
+        parcel: {
+          masked: false,
+          courier: "LBC",
+          trackingNumber: "123456784821",
+        },
+      })
+    )
+    expect(owner).toContain("Courier:")
+    expect(owner).toContain("123456784821")
+    const demo = html(
+      slip({
+        status: "SHIPPED",
+        parcel: {
+          masked: true,
+          courier: "LBC",
+          trackingNumber: "•••• 4821" as never,
+        },
+      })
+    )
+    expect(demo).toContain("•••• 4821")
+    expect(demo).not.toContain("123456784821")
+  })
+
+  it("prints no parcel before it ships", () => {
+    expect(html(slip())).not.toContain("Tracking number")
   })
 })

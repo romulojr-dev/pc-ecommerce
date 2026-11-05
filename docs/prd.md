@@ -106,7 +106,7 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 - **FR-18** *(Phase 2)* Email + password and Google sign-in; email verification; password reset.
 - **FR-19** *(Phase 2)* Address book, order history, saved builds.
 - **FR-20** Order status timeline: an online order runs Pending payment → Paid; a cash order runs Pending confirmation → COD confirmed (it is paid when delivered or picked up, which Admin records). Then Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded. A cash order's timeline shows when it was confirmed.
-- **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, delivered; A cash order gets one email, "Confirm your cash-on-delivery order" ("pay-on-pickup" for pickup), with a signed confirmation link, in place of the order confirmation.
+- **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, ready for pickup, delivered (none for picked up); A cash order gets one email, "Confirm your cash-on-delivery order" ("pay-on-pickup" for pickup), with a signed confirmation link, in place of the order confirmation.
 
 ## PC Builder
 

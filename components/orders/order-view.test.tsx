@@ -46,6 +46,12 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
     fulfillment: "DELIVERY",
     paymentOption: "ONLINE",
     confirmedAt: null,
+    processingAt: null,
+    shippedAt: null,
+    readyAt: null,
+    completedAt: null,
+    courier: null,
+    trackingNumber: null,
     createdAt: new Date("2026-10-31T07:42:00Z"),
     // 24 hours later
     expiresAt: new Date("2026-11-01T07:42:00Z"),
@@ -749,5 +755,23 @@ describe("a cash order", () => {
     expect(plain).not.toContain("Cash on delivery")
     expect(plain).not.toContain("Check your email")
     expect(plain).not.toContain("Confirmed ")
+  })
+})
+
+// docs/specs/043-order-fulfillment-transitions: E24 on the page
+describe("the order page after Shipped", () => {
+  it("E24: shows the time, courier and tracking number as text", () => {
+    const html = render(
+      order({
+        status: "SHIPPED",
+        paidAt: new Date("2026-10-31T08:05:00Z"),
+        shippedAt: new Date("2026-11-02T01:30:00Z"),
+        courier: "LBC",
+        trackingNumber: "123456784821",
+      })
+    )
+    expect(html).toContain("Shipped Mon 2 Nov 2026, 9:30 AM")
+    expect(html).toContain("Courier: LBC")
+    expect(html).toContain("Tracking number: 123456784821")
   })
 })

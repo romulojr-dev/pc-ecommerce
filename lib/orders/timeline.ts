@@ -29,8 +29,11 @@ export type TimelineStep = {
   status: OrderStatusName
   label: string
   state: "done" | "current" | "upcoming"
-  // A line under the label: when a cash order was confirmed
+  // A line under the label: when a cash order was confirmed, or when a
+  // fulfillment step happened (docs/specs/043-order-fulfillment-transitions)
   detail?: string
+  // Further lines: the courier and tracking number on the Shipped step
+  lines?: string[]
 }
 
 export type OrderTimeline = {
@@ -87,6 +90,48 @@ const SEQUENCE: Record<
   },
 }
 
+const AT: Partial<
+  Record<
+    OrderStatusName,
+    [
+      prefix: string,
+      field: "processingAt" | "shippedAt" | "readyAt" | "completedAt",
+    ]
+  >
+> = {
+  PROCESSING: ["Started", "processingAt"],
+  SHIPPED: ["Shipped", "shippedAt"],
+  READY_FOR_PICKUP: ["Ready", "readyAt"],
+  DELIVERED: ["Delivered", "completedAt"],
+  PICKED_UP: ["Picked up", "completedAt"],
+}
+
+// The time of a fulfillment step, and the parcel on the Shipped step. A step
+// with nothing stored (an order that got there before these columns existed)
+// shows nothing and is not an error.
+function addFulfillment(
+  step: TimelineStep,
+  order: {
+    processingAt?: Date | null
+    shippedAt?: Date | null
+    readyAt?: Date | null
+    completedAt?: Date | null
+    courier?: string | null
+    trackingNumber?: string | null
+  }
+) {
+  const at = AT[step.status]
+  const time = at ? order[at[1]] : null
+  if (at && time) step.detail = `${at[0]} ${dateTimeText(time)}`
+  if (step.status === "SHIPPED") {
+    const lines = [
+      order.courier ? `Courier: ${order.courier}` : null,
+      order.trackingNumber ? `Tracking number: ${order.trackingNumber}` : null,
+    ].filter((line): line is string => line !== null)
+    if (lines.length > 0) step.lines = lines
+  }
+}
+
 export function orderTimeline(order: {
   status: OrderStatusName
   fulfillment: FulfillmentName
@@ -94,6 +139,14 @@ export function orderTimeline(order: {
   paymentOption?: PaymentOptionName
   // When a cash order was confirmed (docs/specs/038-cash-on-delivery, D12)
   confirmedAt?: Date | null
+  // The fulfillment moves (docs/specs/043-order-fulfillment-transitions, B20);
+  // completedAt is Delivered or Picked up, labeled from the status
+  processingAt?: Date | null
+  shippedAt?: Date | null
+  readyAt?: Date | null
+  completedAt?: Date | null
+  courier?: string | null
+  trackingNumber?: string | null
 }): OrderTimeline {
   const sequence = SEQUENCE[order.paymentOption ?? "ONLINE"][order.fulfillment]
   const make = (current: number): TimelineStep[] =>
@@ -112,6 +165,7 @@ export function orderTimeline(order: {
       ) {
         step.detail = `Confirmed ${dateTimeText(order.confirmedAt)}`
       }
+      if (step.state !== "upcoming") addFulfillment(step, order)
       return step
     })
 
