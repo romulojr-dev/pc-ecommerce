@@ -41,7 +41,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Demo: customer field disabled with the read-only text; `?customer=` shows the refusal and runs no query
 - [x] Render tests for Owner and Demo; `admin-pages` and `no-db-in-pages` tests stay green
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
-- [ ] Run the page in a browser (redirects, Demo `?customer=` message, real rows): needs the E2E accounts in `.env.local`, so it waits for task 9 or the preview
+- [x] Run the page in a browser (redirects, Demo `?customer=` message, real rows): done by `e2e/admin-orders.spec.ts`, run locally against the Docker Postgres
 
 ## 6. Detail
 - [x] `getOrderDetail(role, number, now)` with named selects (items as `OrderPageItem`, payments newest first incl. `OPENING`/`FAILED`, emails, event times, flags, due, amount to collect)
@@ -49,7 +49,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Malformed number 404s with no database read; unknown number 404s (E28)
 - [x] Tests: E18–E21, E23, E26a; allow-list serialization test E22 with a fully populated order (token hash, idempotency key, cart hash, `PaymentEvent` payload, recipient hash)
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
-- [ ] Open the detail in a browser as Owner and Demo: waits for the E2E accounts (task 9 or the preview)
+- [x] Open the detail in a browser as Owner and Demo: done by `e2e/admin-orders.spec.ts`
 
 ## 7. Packing slip
 - [x] `getPackingSlip(role, number)`: no price fields in the type, `orders.packing-slip` required
@@ -57,18 +57,18 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Print styles: shell nav and header hidden in print, no page break inside an item row; Print and Back buttons hidden in print
 - [x] Tests: E24, E25, E26 (all 11 statuses), E27, no `₱` in the markup, E28
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
-- [ ] Print preview of one slip in a browser (sidebar and header gone, black on white, buttons hidden): CSS is in place but untested without a browser; checked in task 9 or on the preview
+- [x] Print preview of one slip in a browser: the e2e emulates print media and checks the buttons, sidebar and header are hidden (a human print preview stays on the preview-URL check)
 
 ## 8. Demo across all three pages
-- [ ] One shared fixture order with distinctive raw values
-- [ ] List, detail and slip rendered as Demo; spec 040's `expectNoRawValues` passes on each page's RSC payload (E30)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] One shared fixture order with distinctive raw values
+- [x] List, detail and slip rendered as Demo; spec 040's `expectNoRawValues` passes on each page's RSC payload (E30)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. E2E
-- [ ] `e2e/admin-orders.spec.ts`, Owner: filter by status and COD, search by number and by phone variants, open detail, open slip (mobile shown, no `₱`)
-- [ ] Demo: masked values, no customer field enabled, `?customer=` gives the read-only message
-- [ ] Each order has its own recipient; helpers write through the E2E database guard
-- [ ] `pnpm test:e2e` (admin project) passes
+- [x] `e2e/admin-orders.spec.ts`, Owner: filter by status and COD, search by number and by phone variants, open detail, open slip (mobile shown, no `₱`)
+- [x] Demo: masked values, no customer field enabled, `?customer=` gives the read-only message
+- [x] Each order has its own recipient; helpers write through the E2E database guard
+- [x] `pnpm test:e2e` (admin project) passes
 
 ## 10. Documentation
 - [ ] CLAUDE.md: bullet for the admin orders screens, the shared due definition, "ready to pack", the query functions
