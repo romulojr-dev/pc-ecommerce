@@ -86,6 +86,8 @@ const eslintConfig = defineConfig([
       "lib/admin/permissions.ts",
       "lib/admin/mask.ts",
       "lib/admin/marker.ts",
+      "lib/admin/orders-params.ts",
+      "lib/admin/orders-view.ts",
     ],
     rules: {
       "no-restricted-imports": [

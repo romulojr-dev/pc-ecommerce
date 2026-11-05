@@ -14,13 +14,13 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 2. Pure modules
-- [ ] `lib/admin/orders-params.ts`: parse, canonical form, `orderParamsHref`, page rules (E2, E3, E5)
-- [ ] Customer term: trim, 3-character minimum, case-insensitive, mobile digits (strip non-digits, drop one leading `63` or `0`, at least 3 digits) (E9a, E9b)
-- [ ] `lib/admin/orders-view.ts`: badge/flag/payment-cell labels, `readyToPack` (Processing only), slip warning, amount-to-collect rule, email and payment-problem labels
-- [ ] Copy in `lib/admin/copy.ts`; placeholder order strings removed
-- [ ] Unit tests: every status for `readyToPack` and the warning text (E26), mobile variants "0917 123 4567", "+63 917 123 4567", "9171234567" give the same digits, copy completeness
-- [ ] Pure modules import no database (ESLint limits)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/admin/orders-params.ts`: parse, canonical form, `orderParamsHref`, page rules (E2, E3, E5)
+- [x] Customer term: trim, 3-character minimum, case-insensitive, mobile digits (strip non-digits, drop one leading `63` or `0`, at least 3 digits) (E9a, E9b)
+- [x] `lib/admin/orders-view.ts`: badge/flag/payment-cell labels, `readyToPack` (Processing only), slip warning, amount-to-collect rule, email and payment-problem labels
+- [x] Copy in `lib/admin/copy.ts` (the placeholder `body` stays until task 5, which replaces the page and the e2e text that reads it)
+- [x] Unit tests: every status for `readyToPack` and the warning text (E26), mobile variants "0917 123 4567", "+63 917 123 4567", "9171234567" give the same digits, copy completeness
+- [x] Pure modules import no database (ESLint limits)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Indexes
 - [ ] Schema declarations and migration: `Order(createdAt desc, id desc)`, `(status, createdAt desc)`, `(paymentOption, createdAt desc)`
