@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { trustedOriginsFor } from "./origins"
+import { baseUrlFor, trustedOriginsFor } from "./origins"
 
 // docs/specs/039-staff-sign-in-admin-shell, U3c
 
@@ -94,5 +94,37 @@ describe("trustedOriginsFor", () => {
         VERCEL_BRANCH_URL: "SAME.vercel.app",
       })
     ).toEqual(["https://same.vercel.app"])
+  })
+})
+
+describe("baseUrlFor", () => {
+  test("production is the site, a preview its own host, local is localhost", () => {
+    expect(
+      baseUrlFor({ NEXT_PUBLIC_SITE_URL: `${SITE}/`, VERCEL_ENV: "production" })
+    ).toBe(SITE)
+    expect(
+      baseUrlFor({
+        NEXT_PUBLIC_SITE_URL: SITE,
+        VERCEL_ENV: "preview",
+        VERCEL_URL: "pc-abc-team.vercel.app",
+      })
+    ).toBe("https://pc-abc-team.vercel.app")
+    expect(baseUrlFor({ NEXT_PUBLIC_SITE_URL: SITE })).toBe(
+      "http://localhost:3000"
+    )
+  })
+
+  test("the base URL is always one of the trusted origins", () => {
+    for (const env of [
+      { NEXT_PUBLIC_SITE_URL: SITE, VERCEL_ENV: "production" },
+      {
+        NEXT_PUBLIC_SITE_URL: SITE,
+        VERCEL_ENV: "preview",
+        VERCEL_URL: "pc-abc-team.vercel.app",
+      },
+      { NEXT_PUBLIC_SITE_URL: SITE },
+    ]) {
+      expect(trustedOriginsFor(env)).toContain(baseUrlFor(env))
+    }
   })
 })

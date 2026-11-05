@@ -35,3 +35,16 @@ export function trustedOriginsFor(env: OriginEnv): string[] {
   }
   return [LOCAL_ORIGIN]
 }
+
+// The URL Better Auth treats as its own: it decides the cookie's Secure flag
+// and __Secure- prefix (https only), so http://localhost in dev and in CI's
+// production build gets a cookie the browser keeps
+export function baseUrlFor(env: OriginEnv): string {
+  if (env.VERCEL_ENV === "production") {
+    return new URL(env.NEXT_PUBLIC_SITE_URL).origin
+  }
+  if (env.VERCEL_ENV === "preview") {
+    return originOfHost(env.VERCEL_URL) ?? LOCAL_ORIGIN
+  }
+  return LOCAL_ORIGIN
+}

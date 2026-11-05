@@ -30,10 +30,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. The auth instance and its route
-- [ ] `lib/auth/auth.ts`, `client.ts`, `cookie.ts`; `app/api/auth/[...all]/route.ts`; headers in `next.config.ts`
-- [ ] Probe folded into the real instance; endpoint-set test kept
-- [ ] Integration tests I1–I16, I5b–I5d, I9, I11b, I11c, I29, I29b
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `lib/auth/auth.ts`, `client.ts`, `cookie.ts`; `app/api/auth/[...all]/route.ts`; headers in `next.config.ts`
+- [x] Probe folded into the real instance; endpoint-set test kept
+- [x] Integration tests I1–I16, I5b–I5d, I9, I11b, I11c, I29, I29b
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. The session guard and the proxy
 - [ ] `getAdminSession()` / `requireAdminSession()` (disabled user rejected on every call and that session deleted)

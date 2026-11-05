@@ -35,6 +35,23 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "no-referrer" },
         ],
       },
+      // Staff sign-in and the admin shell: nothing is cached and no URL is
+      // sent on as a referrer (docs/specs/039-staff-sign-in-admin-shell,
+      // Rule 16)
+      {
+        source: "/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
+      {
+        source: "/api/auth/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
       // The recorded test emails carry signed order links
       // (docs/specs/036-order-emails, Behavior 15)
       {
