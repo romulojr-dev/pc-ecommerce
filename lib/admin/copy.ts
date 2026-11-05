@@ -41,7 +41,10 @@ export const ADMIN_COPY = {
   },
   orders: {
     heading: "Orders",
-    body: "The order list comes with the Admin panel.",
+    caption: "Orders, newest first",
+    paginationLabel: "Order pages",
+    previous: "Previous",
+    next: "Next",
     count: (total: number) => (total === 1 ? "1 order" : `${total} orders`),
     pageOf: (page: number, pages: number) => `Page ${page} of ${pages}`,
     filters: {
@@ -75,7 +78,6 @@ export const ADMIN_COPY = {
       payment: "Payment",
       fulfillment: "Fulfillment",
       total: "Total",
-      flags: "Flags",
     },
     detail: {
       items: "Items",

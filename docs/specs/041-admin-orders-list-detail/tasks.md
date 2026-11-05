@@ -36,11 +36,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. List page
-- [ ] `/admin/orders` page: GET filter form (labelled, works without JS), table with caption, pagination, "Clear filters", canonical redirects
-- [ ] `loading.tsx` skeleton, `error.tsx`, empty states (no orders / no match, zero results render page 1 without redirect)
-- [ ] Demo: customer field disabled with the read-only text; `?customer=` shows the refusal and runs no query
-- [ ] Render tests for Owner and Demo; `admin-pages` and `no-db-in-pages` tests stay green
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `/admin/orders` page: GET filter form (labelled, works without JS), table with caption, pagination, "Clear filters", canonical redirects
+- [x] `loading.tsx` skeleton, `error.tsx`, empty states (no orders / no match, zero results render page 1 without redirect)
+- [x] Demo: customer field disabled with the read-only text; `?customer=` shows the refusal and runs no query
+- [x] Render tests for Owner and Demo; `admin-pages` and `no-db-in-pages` tests stay green
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [ ] Run the page in a browser (redirects, Demo `?customer=` message, real rows): needs the E2E accounts in `.env.local`, so it waits for task 9 or the preview
 
 ## 6. Detail
 - [ ] `getOrderDetail(role, number, now)` with named selects (items as `OrderPageItem`, payments newest first incl. `OPENING`/`FAILED`, emails, event times, flags, due, amount to collect)

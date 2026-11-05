@@ -262,9 +262,7 @@ test.describe("staff", () => {
     await expect(
       page.getByRole("heading", { name: "Orders", level: 1 })
     ).toBeVisible()
-    await expect(
-      page.getByText("The order list comes with the Admin panel.")
-    ).toBeVisible()
+    await expect(page.getByRole("button", { name: "Search" })).toBeVisible()
   })
 
   test("the shell has the Orders link, the person and Sign out", async ({
