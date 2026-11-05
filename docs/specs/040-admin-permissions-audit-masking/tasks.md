@@ -32,9 +32,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm build` pass
 
 ## 4. Page-level guard and shell
-- [ ] `requireAdminAccess(action)`, no-access page and copy, nav filtered by `can()`, Demo notice, disabled-control helper
-- [ ] `admin-pages.test.ts` accepts `requireAdminAccess`; T10
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `requireAdminAccess(action)`, no-access page and copy, nav filtered by `can()`, Demo notice, disabled-control helper
+- [x] `admin-pages.test.ts` accepts `requireAdminAccess`; T10
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 5. Enumeration test on the real folders, placement and lint
 - [ ] Unit: discovery, fixtures caught (E17), unknown action in marker (E18), zero-modules guard

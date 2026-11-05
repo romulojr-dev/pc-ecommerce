@@ -32,6 +32,12 @@ export const ADMIN_COPY = {
     signOut: "Sign out",
     signingOut: "Signing out…",
     navLabel: "Admin",
+    demoNotice: "Demo: customer details are hidden",
+  },
+  noAccess: {
+    heading: "You don't have access to this page",
+    body: "Your role can't open this area. Ask an owner if you think that's a mistake.",
+    link: "Back to orders",
   },
   orders: {
     heading: "Orders",
@@ -45,6 +51,7 @@ export const ADMIN_COPY = {
     login: "Staff sign in · PC Silicon Admin",
     orders: "Orders · PC Silicon Admin",
     notFound: "Page not found · PC Silicon Admin",
+    noAccess: "No access · PC Silicon Admin",
   },
 } as const
 
