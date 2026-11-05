@@ -16,9 +16,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema
-- [ ] Migration: `courier`, `trackingNumber`, `processingAt`, `shippedAt`, `readyAt`, `completedAt` on `Order`; `EmailType` values `ORDER_SHIPPED`, `ORDER_DELIVERED`, `READY_FOR_PICKUP`; CHECK `shippedAt IS NULL OR (courier AND trackingNumber NOT NULL)`
+- [ ] Migration: `courier`, `trackingNumber`, `processingAt`, `shippedAt`, `readyAt`, `completedAt` on `Order`; `EmailType` values `ORDER_SHIPPED`, `ORDER_DELIVERED`, `READY_FOR_PICKUP`; three CHECKs (R6)
 - [ ] `schema.prisma` fields and comments; `test-support/orders.ts` takes the new optional fields
-- [ ] Integration tests E29 and E29a (a delivered fixture order moves to Refunded)
+- [ ] Integration tests E29, E29a, E29b, E29c (each CHECK rejects a violating row and still holds after REFUNDED)
 - [ ] `pnpm db:drift`, `pnpm test:db` pass
 
 ## 3. The transition (server)
@@ -65,6 +65,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 9. Fixtures (deliberate test-data change, R17)
+- [ ] Search every fixture that inserts `SHIPPED`, `DELIVERED` or `PICKED_UP` rows (the status CHECKs need `shippedAt` / `completedAt` / courier / tracking); done inside task 2 where the CHECKs would otherwise fail the suite
 - [ ] `lib/admin/queries/customers.db.test.ts`: the two `DELIVERED` inserts gain `shippedAt`, courier, tracking
 - [ ] `lib/admin/queries/orders-buyer.db.test.ts`: the `SHIPPED` insert
 - [ ] `lib/orders/cod-schema.db.test.ts`: the `SHIPPED` / `DELIVERED` cases
