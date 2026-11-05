@@ -9,11 +9,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `docs/prd.md` FR-21 lists "ready for pickup" (D12)
 
 ## 1. The table (pure)
-- [ ] `lib/orders/transitions.ts`: `transitionsFor`, `canTransition`, `emailTypeFor`, `recordsCashPayment`, timestamp field per target
-- [ ] Unit test over all 44 status × fulfillment × payment combinations (E1); forged targets refused (E14–E16)
-- [ ] Enum-completeness test against the Prisma `OrderStatus` (R2)
-- [ ] File imports no database, env, `next` or `react` (ESLint limits)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/orders/transitions.ts`: `transitionsFor`, `canTransition`, `emailTypeFor`, `recordsCashPayment`, timestamp field per target
+- [x] Unit test over all 44 status × fulfillment × payment combinations (E1); forged targets refused (E14–E16)
+- [x] Enum-completeness test against the Prisma `OrderStatus` (R2)
+- [x] File imports no database, env, `next` or `react` (ESLint limits)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema
 - [ ] Migration: `courier`, `trackingNumber`, `processingAt`, `shippedAt`, `readyAt`, `completedAt` on `Order`; `EmailType` values `ORDER_SHIPPED`, `ORDER_DELIVERED`, `READY_FOR_PICKUP`; three CHECKs (R6)
