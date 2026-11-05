@@ -196,3 +196,13 @@ Fixtures use the throwaway-order helpers of `e2e/admin-order-fixtures.ts` and `t
 ## 10. Open questions
 
 None. The five from the first draft were settled in review (D13).
+
+## 11. What changed while building
+
+- **The query layer exposes `findBuyerOrders` and `customerLinkKey`, not `resolveBuyer`.** The spec left the shape to the plan. `findBuyerOrders(role, buyer)` resolves the key (Demo: rank to key), selects the customer's order ids and returns the newest order's name; `listOrders` hands its ids to the typed `where`. `customerLinkKey(role, email)` serves the order detail.
+- **The list's `buyer` result is `CustomerName | "unknown" | null`**, so the page can say "Orders from {name}" (masked for Demo) or "an unknown customer" without a second query.
+- **The row's contact has no mobile.** The mobile is read only to search; `CustomerContact` holds name and email (D8), and Demo's holds masks.
+- **Search escapes `%`, `_` and `\` by hand.** The list is a raw query, so Prisma's `contains` escaping doesn't apply; a test pins it.
+- **The SQL key trims the whitespace set JavaScript's `trim()` strips**, written out in the regular expression (Postgres's `btrim` strips spaces only). The address table in `customer-key-sql.db.test.ts` includes tabs, line breaks, a no-break space and a byte-order mark.
+- **E32 runs on a `VALUES` list, not order rows**, because the orders table's CHECKs forbid some status and `paidAt` pairs (a Paid order with no `paidAt`).
+- **Local E2E ran against a throwaway database in the Docker Postgres** (`pcsilicon_e2e`, inline variables, no `.env.local` change), as for spec 041.
