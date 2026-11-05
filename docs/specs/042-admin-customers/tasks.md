@@ -38,11 +38,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Customers page and nav
-- [ ] `app/admin/(shell)/customers/page.tsx` with `requireAdminAccess("customers.view")`, canonical and past-the-last redirects, no redirect for a zero-result search
-- [ ] Table with caption, GET search form (labelled, works without JS), Demo's disabled field and read-only message, "Clear search"
-- [ ] `loading.tsx` skeleton, `error.tsx`, empty states (no customers / no match) (E19, E25)
-- [ ] Render tests for Owner, Staff and Demo; `admin-pages` and `no-db-in-pages` tests stay green
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `app/admin/(shell)/customers/page.tsx` with `requireAdminAccess("customers.view")`, canonical and past-the-last redirects, no redirect for a zero-result search
+- [x] Table with caption, GET search form (labelled, works without JS), Demo's disabled field and read-only message, "Clear search"
+- [x] `loading.tsx` skeleton, `error.tsx`, empty states (no customers / no match) (E19, E25)
+- [x] Render tests for Owner, Staff and Demo; `admin-pages` and `no-db-in-pages` tests stay green
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 6. `buyer` on the orders list
 - [ ] `listOrders`: ids of the customer's orders by `customerKeySql`, then the typed `where`; Demo through `resolveBuyer`; the buyer's display name (masked for Demo) or "unknown" in the result
