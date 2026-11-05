@@ -36,10 +36,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. The session guard and the proxy
-- [ ] `getAdminSession()` / `requireAdminSession()` (disabled user rejected on every call and that session deleted)
-- [ ] `proxy.ts` (matcher `/admin/:path*`, skips `/admin/login` and `/api/auth/*`, no `runtime`)
-- [ ] Tests R1–R7, I17, I17b, I17c, static "every admin page reaches the guard" test
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `getAdminSession()` / `requireAdminSession()` (disabled user rejected on every call and that session deleted)
+- [x] `proxy.ts` (matcher `/admin/:path*`, skips `/admin/login` and `/api/auth/*`, no `runtime`)
+- [x] Tests R1–R5, I17, I17b, I17c. The static "every admin page reaches the guard" test (R7) moves to task 6, because `app/admin` does not exist yet
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Accounts library, scripts and the seed mode
 - [ ] `lib/auth/accounts.ts`; `scripts/read-password.ts`; `scripts/staff.ts`; `staff:create`, `staff:set-password`, `staff:disable` entries
@@ -50,6 +50,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 ## 6. Login page and shell
 - [ ] Sample routes and components deleted; header Account icon removed; `sidebar` out of the reserved list
 - [ ] `/admin/login` (demo box, Use demo account, states of Rule 31), the shell, Orders placeholder, not-found, metadata
+- [ ] Static test that every admin page and layout calls `requireAdminSession` and `connection()` (R7, D9)
 - [ ] Tests R8–R12, I30, component tests
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
