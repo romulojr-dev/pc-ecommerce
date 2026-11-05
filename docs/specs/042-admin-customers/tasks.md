@@ -19,13 +19,13 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test:db` pass
 
 ## 3. Pure modules
-- [ ] `lib/admin/orders-params.ts`: `buyer` (parse, serialize, canonical, `hasActiveFilters`, `back` value) and `demoKeyRank`
-- [ ] `lib/admin/customers-params.ts`: parse, canonical form, `customersHref` (E18, E27)
-- [ ] `lib/admin/customers-view.ts`: labels, plural, "Orders from …" text
-- [ ] `lib/admin/nav.ts`: `NavItem.key` widened, Customers item (`customers.view`); `shell.test.tsx` updated for all three roles (E29)
-- [ ] Copy in `lib/admin/copy.ts`, completeness test
-- [ ] Pure modules import no database (ESLint limits)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/admin/orders-params.ts`: `buyer` (parse, serialize, canonical, `hasActiveFilters`, `back` value) and `demoKeyRank`
+- [x] `lib/admin/customers-params.ts`: parse, canonical form, `customersHref` (E18, E27)
+- [x] `lib/admin/customers-view.ts`: labels, plural, "Orders from …" text
+- [x] `lib/admin/nav.ts`: `NavItem.key` widened, Customers item (`customers.view`); `shell.test.tsx` updated for all three roles (E29)
+- [x] Copy in `lib/admin/copy.ts`, completeness test
+- [x] Pure modules import no database (ESLint limits)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 4. Customers query
 - [ ] `listCustomers(role, params)`: group on `customerKeySql`, orders placed, total spent over `saleOrderCondition` (sum of `total`), last order, newest order's name and email through `contactView`

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ShoppingCartIcon } from "lucide-react"
+import { ShoppingCartIcon, UsersIcon } from "lucide-react"
 
 import {
   SidebarMenu,
@@ -13,7 +13,7 @@ import {
 // The shell navigation. The server decides which items the role can open
 // (navItemsFor, the same can() as the server checks) and passes them in; the
 // icons live here because a component cannot cross from server to client.
-const ICONS = { orders: ShoppingCartIcon } as const
+const ICONS = { orders: ShoppingCartIcon, customers: UsersIcon } as const
 
 export type AdminNavItem = {
   key: keyof typeof ICONS

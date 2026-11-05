@@ -29,6 +29,7 @@ export const ADMIN_COPY = {
   },
   shell: {
     ordersNav: "Orders",
+    customersNav: "Customers",
     signOut: "Sign out",
     signingOut: "Signing out…",
     navLabel: "Admin",
@@ -60,6 +61,11 @@ export const ADMIN_COPY = {
       customerTooShort: "Type at least 3 characters to search customers.",
       search: "Search",
       clear: "Clear filters",
+    },
+    buyer: {
+      line: (name: string) => `Orders from ${name}`,
+      unknown: "Orders from an unknown customer",
+      showAll: "Show all customers' orders",
     },
     empty: "No orders yet.",
     noMatch: "No orders match these filters.",
@@ -98,6 +104,7 @@ export const ADMIN_COPY = {
       noPayments: "No payment attempts.",
       noEmails: "No emails for this order.",
       packingSlip: "Packing slip",
+      viewCustomer: "View this customer's orders",
       back: "Back to orders",
       weight: (grams: number) => `Order weight ${grams} g`,
       zone: "Shipping zone",
@@ -158,6 +165,30 @@ export const ADMIN_COPY = {
       zone: "Zone",
     },
   },
+  customers: {
+    heading: "Customers",
+    caption: "Customers, most recent order first",
+    paginationLabel: "Customer pages",
+    count: (total: number) =>
+      total === 1 ? "1 customer" : `${total} customers`,
+    columns: {
+      customer: "Customer",
+      orders: "Orders placed",
+      spent: "Total spent",
+      last: "Last order",
+    },
+    viewOrders: "View orders",
+    search: {
+      label: "Name, email or mobile",
+      submit: "Search",
+      tooShort: "Type at least 3 characters to search customers.",
+      clear: "Clear search",
+    },
+    empty: "No customers yet. They appear after the first order.",
+    noMatch: "No customers match this search.",
+    error: "Couldn't load customers. Try again.",
+    retry: "Try again",
+  },
   notFound: {
     heading: "Page not found.",
     link: "Go to Orders",
@@ -165,6 +196,7 @@ export const ADMIN_COPY = {
   titles: {
     login: "Staff sign in · PC Silicon Admin",
     orders: "Orders · PC Silicon Admin",
+    customers: "Customers · PC Silicon Admin",
     notFound: "Page not found · PC Silicon Admin",
     noAccess: "No access · PC Silicon Admin",
   },
