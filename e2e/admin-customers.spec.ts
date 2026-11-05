@@ -73,6 +73,10 @@ test.describe("owner", () => {
 
     await page.getByRole("link", { name: "Show all customers' orders" }).click()
     await expect(page).toHaveURL(/\/admin\/orders$/)
+    // Other specs place orders at the same time, so a fixture order may be on
+    // a later page: the filter is gone, and Xavier's order is there by number
+    await expect(page.getByText(/^Orders from /)).toHaveCount(0)
+    await page.goto(`/admin/orders?number=${XAVIER.number}`)
     await expect(row(page, XAVIER.number)).toBeVisible()
   })
 
@@ -105,6 +109,21 @@ test.describe("owner", () => {
   })
 })
 
+// Demo can't search, and other specs add customers at the same time, so walk
+// the pages until the masked fixture customer shows
+async function openMaskedWanda(page: Page) {
+  await page.goto("/admin/customers")
+  const wanda = row(page, "W••• M•••")
+  const next = page.getByRole("link", { name: "Next" })
+  for (let i = 0; i < 40 && (await wanda.count()) === 0; i++) {
+    if ((await next.count()) === 0) break
+    await next.click()
+    await page.waitForLoadState("networkidle")
+  }
+  await expect(wanda).toHaveCount(1)
+  return wanda
+}
+
 test.describe("demo", () => {
   test.use({ storageState: authFile("demo") })
 
@@ -113,7 +132,7 @@ test.describe("demo", () => {
   }) => {
     await page.goto("/admin/customers")
     await expect(page.getByLabel("Name, email or mobile")).toBeDisabled()
-    await expect(page.getByText("W••• M•••").first()).toBeVisible()
+    await expect(page.getByText(/^[A-Z]••• /).first()).toBeVisible()
     await expect(page.getByText(WANDA.name)).toHaveCount(0)
 
     await page.goto("/admin/customers?customer=marasigan")
@@ -124,10 +143,8 @@ test.describe("demo", () => {
   })
 
   test("follows a masked row to that customer's orders", async ({ page }) => {
-    await page.goto("/admin/customers")
-    await row(page, "W••• M•••")
-      .getByRole("link", { name: "View orders" })
-      .click()
+    const wanda = await openMaskedWanda(page)
+    await wanda.getByRole("link", { name: "View orders" }).click()
     await expect(page).toHaveURL(/buyer=c\d+$/)
     await expect(page.getByText("Orders from W••• M•••")).toBeVisible()
     await expect(row(page, WANDA.paidNumber)).toBeVisible()
@@ -137,8 +154,8 @@ test.describe("demo", () => {
   test("is sent no raw value, not even in the RSC payload", async ({
     page,
   }) => {
-    await page.goto("/admin/customers")
-    const href = await row(page, "W••• M•••")
+    const wanda = await openMaskedWanda(page)
+    const href = await wanda
       .getByRole("link", { name: "View orders" })
       .getAttribute("href")
     expect(href).toMatch(/^\/admin\/orders\?buyer=c\d+$/)
