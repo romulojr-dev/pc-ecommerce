@@ -7,11 +7,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Commit `spec.md`, `plan.md`, `tasks.md`
 
 ## 1. One definition of "due" (gate: stop and report if a release test changes)
-- [ ] Run the existing `release*.db.test.ts` files first and note they pass
-- [ ] `lib/orders/due-sql.ts`: `dueOrderCondition(now)`; `checkExpiredOrders` and `releaseExpiredOrders` use it
-- [ ] Release tests pass unchanged
-- [ ] Agreement test (E31, first version): fragment, `isDue` and `checkExpiredOrders` agree on the fixtures (at, before, after the deadline, flagged, COD confirmed, Cancelled)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Run the existing `release*.db.test.ts` files first and note they pass
+- [x] `lib/orders/due-sql.ts`: `dueOrderCondition(now)`; `checkExpiredOrders` and `releaseExpiredOrders` use it
+- [x] Release tests pass unchanged
+- [x] Agreement test (E31, first version): fragment, `isDue` and `checkExpiredOrders` agree on the fixtures (at, before, after the deadline, flagged, COD confirmed, Cancelled)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 2. Pure modules
 - [ ] `lib/admin/orders-params.ts`: parse, canonical form, `orderParamsHref`, page rules (E2, E3, E5)
