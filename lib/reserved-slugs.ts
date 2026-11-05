@@ -10,10 +10,10 @@ export const RESERVED_SLUGS = [
   "checkout",
   "search",
   "api",
-  // Current routes
+  // Customer sign-in will use these in Phase 2; the sample pages that held
+  // them are gone (docs/specs/039-staff-sign-in-admin-shell, D11)
   "login",
   "signup",
-  "sidebar",
   // The fake payment gateway's page (docs/specs/031-pay-with-xendit)
   "test-payment",
   // The fake email transport's page (docs/specs/036-order-emails)

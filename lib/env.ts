@@ -2,6 +2,12 @@ import { createEnv } from "@t3-oss/env-nextjs"
 import { z } from "zod"
 
 import {
+  authEnvIssues,
+  betterAuthSecretSchema,
+  demoAccountPasswordSchema,
+  vercelHostSchema,
+} from "./auth/env-schema"
+import {
   emailEnvIssues,
   emailFromSchema,
   emailTransportSchema,
@@ -64,6 +70,20 @@ export const env = createEnv({
     // per environment. Rotating it revokes every link already sent. Never
     // logged.
     ORDER_LINK_SECRET: orderLinkSecretSchema,
+    // Signs the staff session cookie (docs/specs/039-staff-sign-in-admin-
+    // shell, ADR 0012), at least 32 bytes, different from ORDER_LINK_SECRET
+    // and from the other environments' value. Never logged.
+    BETTER_AUTH_SECRET: betterAuthSecretSchema,
+    // The public demo account's password (at least 12 characters): shown on
+    // /admin/login and used by `pnpm db:seed --accounts-only`. Optional;
+    // unset, there is no demo box and no demo user.
+    DEMO_ACCOUNT_PASSWORD: demoAccountPasswordSchema,
+    // Set by Vercel (bare hosts, no scheme) when "Enable access to System
+    // Environment Variables" is on: a Preview trusts these two hosts for its
+    // sign-in origin check. VERCEL_URL is required on a Preview (rules in
+    // createFinalSchema); VERCEL_BRANCH_URL is trusted only when present.
+    VERCEL_URL: vercelHostSchema,
+    VERCEL_BRANCH_URL: vercelHostSchema,
     // Set by Vercel: production, preview or development. Unset locally and in
     // CI, which count as development (lib/payments/gateway.ts).
     VERCEL_ENV: vercelEnvSchema,
@@ -89,6 +109,9 @@ export const env = createEnv({
         ctx.addIssue({ code: "custom", path: [variable], message })
       }
       for (const { variable, message } of emailEnvIssues(values)) {
+        ctx.addIssue({ code: "custom", path: [variable], message })
+      }
+      for (const { variable, message } of authEnvIssues(values)) {
         ctx.addIssue({ code: "custom", path: [variable], message })
       }
     }),

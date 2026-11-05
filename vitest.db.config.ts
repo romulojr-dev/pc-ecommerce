@@ -51,6 +51,12 @@ export default defineConfig({
       // (docs/specs/035-email-foundation-signed-links)
       EMAIL_TRANSPORT: "fake",
       ORDER_LINK_SECRET: "test-order-link-secret-0123456789abcdef-xyz",
+      // A fixed session secret, different from the link secret
+      // (docs/specs/039-staff-sign-in-admin-shell)
+      BETTER_AUTH_SECRET: "test-better-auth-secret-0123456789-abcdefghij",
+      DEMO_ACCOUNT_PASSWORD: "",
+      VERCEL_URL: "",
+      VERCEL_BRANCH_URL: "",
       VERCEL_ENV: "",
     },
   },

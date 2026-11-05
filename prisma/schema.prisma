@@ -638,3 +638,87 @@ model FakeEmail {
   text           String
   createdAt      DateTime @default(now())
 }
+
+// Staff sign-in (docs/specs/039-staff-sign-in-admin-shell, ADR 0012). Better
+// Auth's tables; ids are cuids made here (generateId is false). Staff only:
+// customers never get a User. Written by the staff scripts and the seed's
+// --accounts-only mode, never by a request.
+enum UserRole {
+  OWNER
+  STAFF
+  DEMO
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  // Stored lower-case
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          UserRole
+  // Set by `pnpm staff:disable`: blocks sign-in and every guarded read
+  disabledAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// The password hash is in `password` (providerId "credential"); the OAuth
+// columns stay null
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+// Never written: there are no auth emails. The table exists because Better
+// Auth's schema has it.
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// Sign-in rate limit, in the database because serverless instances share no
+// memory. `key` is the client IP and the path; lastRequest is milliseconds.
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}

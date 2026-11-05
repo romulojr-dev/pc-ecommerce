@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CircleUserIcon, WrenchIcon } from "lucide-react"
+import { WrenchIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { CartLink } from "@/components/layout/cart-link"
@@ -51,9 +51,6 @@ function SiteHeader({ search }: SiteHeaderProps) {
           PC Builder
         </Link>
         <CartLink className={iconLink} />
-        <Link href="/login" aria-label="Account" className={iconLink}>
-          <CircleUserIcon aria-hidden="true" />
-        </Link>
       </nav>
     </header>
   )

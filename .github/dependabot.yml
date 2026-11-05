@@ -1,0 +1,18 @@
+# Better Auth guards the admin sign-in, so it is pinned to an exact version
+# (package.json) and its packages update together in one pull request that CI
+# must pass (docs/specs/039-staff-sign-in-admin-shell, ADR 0012). Only these
+# packages are watched here; nothing else is configured.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    allow:
+      - dependency-name: better-auth
+      - dependency-name: "@better-auth/*"
+    groups:
+      better-auth:
+        patterns:
+          - better-auth
+          - "@better-auth/*"

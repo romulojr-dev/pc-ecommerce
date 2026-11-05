@@ -69,10 +69,10 @@ describe("release log lines", () => {
 
   it("writes the cron's summary and its refusal", () => {
     const read = lines()
-    logCronEvent({ released: 2, skipped: 1 })
+    logCronEvent({ released: 2, skipped: 1, emails: 0 })
     logCronEvent({ outcome: "unauthorized" })
     expect(read()).toEqual([
-      { event: "order.release.cron", released: 2, skipped: 1 },
+      { event: "order.release.cron", released: 2, skipped: 1, emails: 0 },
       { event: "order.release.cron", outcome: "unauthorized" },
     ])
   })

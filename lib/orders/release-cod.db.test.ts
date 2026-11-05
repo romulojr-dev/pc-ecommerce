@@ -244,7 +244,10 @@ describe("an unconfirmed cash order past its deadline", () => {
       environment: "development",
     })
 
-    expect(answer).toEqual({ status: 200, body: { released: 1, skipped: 0 } })
+    expect(answer).toMatchObject({
+      status: 200,
+      body: { released: 1, skipped: 0 },
+    })
     expect(await orderOf(order.id)).toMatchObject({ status: "CANCELLED" })
   })
 
@@ -324,7 +327,10 @@ describe("a confirmed cash order never expires", () => {
       environment: "development",
     })
 
-    expect(answer).toEqual({ status: 200, body: { released: 0, skipped: 0 } })
+    expect(answer).toMatchObject({
+      status: 200,
+      body: { released: 0, skipped: 0 },
+    })
     expect(await orderOf(order.id)).toMatchObject({
       status: "COD_CONFIRMED",
       cancelledAt: null,

@@ -31,13 +31,17 @@
     "images:og": "tsx scripts/generate-og-image.tsx",
     "psgc:convert": "tsx scripts/convert-psgc.ts",
     "payments:check": "tsx scripts/xendit-check.ts",
-    "webhook:replay": "tsx scripts/webhook-replay.ts"
+    "webhook:replay": "tsx scripts/webhook-replay.ts",
+    "staff:create": "tsx scripts/staff.ts create",
+    "staff:set-password": "tsx scripts/staff.ts set-password",
+    "staff:disable": "tsx scripts/staff.ts disable"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "better-auth": "1.7.17",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "dotenv": "^18.0.8",

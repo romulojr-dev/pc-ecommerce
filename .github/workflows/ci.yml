@@ -53,6 +53,13 @@ jobs:
       # (docs/specs/035-email-foundation-signed-links)
       EMAIL_TRANSPORT: fake
       ORDER_LINK_SECRET: ci-dummy-order-link-secret-0123456789abcdef
+      # The staff session secret (at least 32 bytes, different from the link
+      # secret) and the dummy passwords of the demo and E2E accounts, which
+      # live only in this job's throwaway database
+      # (docs/specs/039-staff-sign-in-admin-shell)
+      BETTER_AUTH_SECRET: ci-dummy-better-auth-secret-0123456789-abcdef
+      DEMO_ACCOUNT_PASSWORD: ci-dummy-demo-password-0123
+      E2E_ACCOUNT_PASSWORD: ci-dummy-e2e-password-0123
 
     steps:
       - uses: actions/checkout@v7
@@ -92,6 +99,15 @@ jobs:
       # Catalog fixtures for the E2E tests (spec 004)
       - name: Seed database
         run: pnpm db:seed
+
+      # The accounts the admin sign-in E2E uses (docs/specs/039-staff-sign-in-
+      # admin-shell): the demo user from the seed, owner and staff from the
+      # staff script, with the password on standard input
+      - name: Create E2E accounts
+        run: |
+          pnpm db:seed --accounts-only
+          echo "$E2E_ACCOUNT_PASSWORD" | pnpm staff:create --email e2e-owner@example.test --name "E2E Owner" --role owner
+          echo "$E2E_ACCOUNT_PASSWORD" | pnpm staff:create --email e2e-staff@example.test --name "E2E Staff" --role staff
 
       - name: Unit tests
         run: pnpm test

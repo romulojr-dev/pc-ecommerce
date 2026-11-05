@@ -262,7 +262,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 
 | Table | Key fields |
 | --- | --- |
-| `User` | Staff only: id, email, name, role (`owner` / `staff` / `demo`), createdAt. The password is held by Better Auth's `Account` table. Customer accounts are Phase 2 |
+| `User` | Staff only: id, email, name, role (`owner` / `staff` / `demo`), emailVerified, disabledAt (null while active; set by `staff:disable`), createdAt, updatedAt. The password is held by Better Auth's `Account` table, sessions in `Session`, sign-in attempts in `RateLimit`. Customer accounts are Phase 2 |
 | `Address` *(Phase 2)* | userId, fullName, phone, region, province, city, barangay, street, zip, isDefault |
 | `Category` | id, name, slug, parentId, sortOrder (spec fields are defined in code as Zod schemas per category, not stored here; see [ADR 0002](adr/0002-spec-schemas-in-code.md)) |
 | `Brand` | id, name, slug, logoUrl |
