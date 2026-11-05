@@ -71,9 +71,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm test:e2e` (admin project) passes
 
 ## 10. Documentation
-- [ ] CLAUDE.md: bullet for the admin orders screens, the shared due definition, "ready to pack", the query functions
-- [ ] Spec status line and "What changed while building"; spec 033 note about `due-sql.ts`
-- [ ] README only if it lists admin screens
+- [x] CLAUDE.md: bullet for the admin orders screens, the shared due definition, "ready to pack", the query functions
+- [x] Spec status line and "What changed while building"; spec 033 note about `due-sql.ts`
+- [x] README only if it lists admin screens
 
 ## 11. Final checks and PR
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`

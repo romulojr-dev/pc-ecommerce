@@ -4,6 +4,8 @@ Status: **Implemented** · Approved with changes in review 2026-11-01 (§11) · 
 
 > **Changed by [spec 038](../038-cash-on-delivery/spec.md) (#95):** the release also takes Pending confirmation orders past `expiresAt` (cash orders), with no gateway step, and the partial index covers both statuses. A COD confirmed order is never due.
 
+> **Changed by [spec 041](../041-admin-orders-list-detail/spec.md) (#106):** the due condition of behavior 1 (and the matching `WHERE` of step 2's lock) is now one SQL fragment, `dueOrderCondition(now)` in `lib/orders/due-sql.ts`, shared by both release queries and Admin's "Due for release" badge. What the release selects is unchanged.
+
 **Gateway: Xendit, not PayMongo.** Issue #81 says "PayMongo session" throughout. The gateway is Xendit (ADR 0010): a session is cancelled with `closeSession` (`POST /sessions/{id}/cancel`), which sends no webhook, so the release marks the `Payment` Expired itself. The issue's two comments from spec 032 (reconcile before releasing; skip orders with a flagged payment) are part of this spec, with one change from review: open sessions are **cancelled first** and only reconciled when the cancel is refused (D1).
 
 ## 1. Summary
