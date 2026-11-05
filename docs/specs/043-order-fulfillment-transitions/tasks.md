@@ -81,5 +81,5 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Spec "What changed while building"; README only if it lists admin screens
 
 ## 12. Final checks
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`, `pnpm test:e2e` (admin project)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`, `pnpm test:e2e` (admin project)
 - [ ] Push (`git push -u origin HEAD`), open the PR from the template, check the acceptance list on the preview URL at 1024 px and 1280 px
