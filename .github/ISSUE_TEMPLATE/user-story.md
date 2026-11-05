@@ -12,9 +12,18 @@ labels: story
 **Tasks**
 - [ ] 
 
+**Out of scope**
+- 
+
+**Dependencies:** none / #__
+
+**Open questions**
+- 
+
 **Definition of done**
 - [ ] Acceptance criteria checked on the preview URL
 - [ ] Works on desktop (1024 px and up); empty, loading and error states handled
 - [ ] Tests at the right level; lint and type check pass
 - [ ] Spec, README and ADRs updated if affected
 - [ ] Merged to main and deployed
+- [ ] I can explain what this story changed
