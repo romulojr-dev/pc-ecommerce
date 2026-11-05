@@ -441,8 +441,10 @@ model OrderItem {
 }
 
 // One change to a product's stock. change is negative for a reservation.
-// actorId waits for the User table (Accounts, #65); until then it is plain
-// text and always null.
+// actorId is the staff User who made the change (an Admin stock adjustment,
+// docs/specs/040-admin-permissions-audit-masking), null for the system
+// (placing and releasing orders). Customers never are actors: User is staff
+// only. Restrict, because staff are disabled, never deleted.
 model StockMovement {
   id        String              @id @default(cuid())
   productId String
@@ -452,10 +454,12 @@ model StockMovement {
   orderId   String?
   order     Order?              @relation(fields: [orderId], references: [id], onDelete: Restrict)
   actorId   String?
+  actor     User?               @relation(fields: [actorId], references: [id], onDelete: Restrict)
   createdAt DateTime            @default(now())
 
   @@index([productId])
   @@index([orderId])
+  @@index([actorId])
 }
 
 // The gateway a payment went through (docs/specs/031-pay-with-xendit, ADR
@@ -650,19 +654,21 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String
   // Stored lower-case
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String          @unique
+  emailVerified Boolean         @default(false)
   image         String?
   role          UserRole
   // Set by `pnpm staff:disable`: blocks sign-in and every guarded read
   disabledAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   sessions      Session[]
   accounts      Account[]
+  auditLogs     AuditLog[]
+  stockMoves    StockMovement[]
 }
 
 model Session {
@@ -721,4 +727,26 @@ model RateLimit {
   key         String @unique
   count       Int
   lastRequest BigInt
+}
+
+// Who changed what in Admin (docs/specs/040-admin-permissions-audit-masking,
+// AD-10). Append-only: a trigger in the migration refuses UPDATE and DELETE
+// (TRUNCATE still works, for resets). Written by recordAudit in the same
+// transaction as the change. actorId is Restrict because staff are disabled,
+// never deleted. before / after hold the changed fields only: no secrets, and
+// customer details only where the change itself is about them.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  entity    String
+  entityId  String
+  action    String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@index([actorId])
 }

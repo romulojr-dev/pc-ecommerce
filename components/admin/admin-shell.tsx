@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { ADMIN_COPY, roleLabel } from "@/lib/admin/copy"
+import { navItemsFor } from "@/lib/admin/nav"
 import type { AdminSession } from "@/lib/admin/session"
 
 // The frame of every admin page except the sign-in form: a sidebar with the
@@ -41,7 +42,15 @@ export function AdminShell({
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <AdminNav />
+              <AdminNav
+                items={navItemsFor(user.adminRole).map(
+                  ({ key, label, href }) => ({
+                    key,
+                    label,
+                    href,
+                  })
+                )}
+              />
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
@@ -51,6 +60,14 @@ export function AdminShell({
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="h-4" />
           <div className="ml-auto flex items-center gap-3">
+            {user.adminRole === "demo" ? (
+              <p
+                className="text-sm text-muted-foreground"
+                data-testid="admin-demo-notice"
+              >
+                {ADMIN_COPY.shell.demoNotice}
+              </p>
+            ) : null}
             <p className="text-sm" data-testid="admin-person">
               <span className="font-medium">{user.name}</span>{" "}
               <span className="text-muted-foreground">

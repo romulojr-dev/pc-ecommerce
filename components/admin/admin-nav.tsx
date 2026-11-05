@@ -9,24 +9,24 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { ADMIN_COPY } from "@/lib/admin/copy"
 
-// The shell's navigation. One item for now: every role can use Orders, so
-// "shows only what the role can use" holds without `can()`; #105 makes the
-// list depend on the role (docs/specs/039-staff-sign-in-admin-shell, Rule 19).
-const ITEMS = [
-  {
-    label: ADMIN_COPY.shell.ordersNav,
-    href: "/admin/orders",
-    icon: ShoppingCartIcon,
-  },
-]
+// The shell navigation. The server decides which items the role can open
+// (navItemsFor, the same can() as the server checks) and passes them in; the
+// icons live here because a component cannot cross from server to client.
+const ICONS = { orders: ShoppingCartIcon } as const
 
-export function AdminNav() {
+export type AdminNavItem = {
+  key: keyof typeof ICONS
+  label: string
+  href: string
+}
+
+export function AdminNav({ items }: { items: AdminNavItem[] }) {
   const pathname = usePathname()
   return (
     <SidebarMenu>
-      {ITEMS.map(({ label, href, icon: Icon }) => {
+      {items.map(({ key, label, href }) => {
+        const Icon = ICONS[key]
         const active = pathname === href || pathname.startsWith(`${href}/`)
         return (
           <SidebarMenuItem key={href}>

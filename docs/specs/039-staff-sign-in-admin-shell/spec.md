@@ -2,6 +2,8 @@
 
 Status: implemented (2026-11-05; approved with three fixes, see "Changes made by the review" at the end of §10, and "What changed while building" there). Issue: [#104](https://github.com/romulojr-dev/pc-ecommerce/issues/104) (parent epic [#5](https://github.com/romulojr-dev/pc-ecommerce/issues/5), Admin, Sprint 8, size L). PRD: AD-11 (roles), NFR Security. [ADR 0012](../../adr/0012-staff-auth-on-better-auth.md) (accepted in #103). Part 1 of 2: permissions, the guard, audit and masking are [#105](https://github.com/romulojr-dev/pc-ecommerce/issues/105).
 
+> **Changed by spec 040 (#105):** the role-aware nav and the landing page. D3 ("all three roles land on the same placeholder `/admin/orders`") still holds until the Dashboard story, but Rule 19 ("shows only what the role can use" by construction) is replaced by `can()` filtering the nav items and a Demo notice in the shell header ([spec 040](../040-admin-permissions-audit-masking/spec.md), Behavior 4, R20).
+
 Long form: the story adds a package, six tables, an auth configuration, a rate limit, a proxy, a route group, three scripts, a seed mode, a cron job and a setup document. **It asks to change ADR 0012 and the PRD's `User` row** (§9, "Conflicts").
 
 ## 1. Summary

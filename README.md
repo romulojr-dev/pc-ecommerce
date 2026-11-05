@@ -202,6 +202,8 @@ accounts are made with `pnpm staff:create` (owner or staff) and
 own. [docs/setup/admin-accounts.md](docs/setup/admin-accounts.md) has the
 commands, the Vercel settings and how to check sign-in on a preview URL.
 
+**Roles** ([spec 040](docs/specs/040-admin-permissions-audit-masking/spec.md)): an owner can do everything; staff manage orders, see customers and adjust inventory; the demo account can open every screen the owner can, can't change anything and can't search by customer, and customer names, emails, phones and addresses are masked for it. Every change is checked on the server and recorded in an append-only audit log.
+
 **Demo account** (read-only, public): email `demo@pcsilicon.tech`, password the
 value of `DEMO_ACCOUNT_PASSWORD`. It is shown on the sign-in page of every
 environment where that variable is set, with a "Use demo account" button.

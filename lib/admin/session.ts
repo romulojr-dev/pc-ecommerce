@@ -7,6 +7,12 @@ import { cache } from "react"
 import type { UserRole } from "@/generated/prisma/client"
 import { auth } from "@/lib/auth/auth"
 import { db } from "@/lib/db"
+import {
+  type AdminAction,
+  type AdminRole,
+  adminRoleOf,
+  can,
+} from "@/lib/admin/permissions"
 
 // The real check behind /admin (docs/specs/039-staff-sign-in-admin-shell,
 // Rules 14 and 15). proxy.ts only looks for a cookie; every admin page and
@@ -17,7 +23,14 @@ export const ADMIN_LOGIN_PATH = "/admin/login"
 
 export type AdminSession = {
   sessionId: string
-  user: { id: string; name: string; email: string; role: UserRole }
+  user: {
+    id: string
+    name: string
+    email: string
+    role: UserRole
+    // The same role as the permission table knows it
+    adminRole: AdminRole
+  }
 }
 
 const ROLES: readonly string[] = ["OWNER", "STAFF", "DEMO"]
@@ -46,6 +59,8 @@ export async function loadAdminSession(
   // The role comes from the user row, never from a request; an unknown value
   // means a bad row, so nobody gets in on it
   if (!user.role || !ROLES.includes(user.role)) return null
+  const adminRole = adminRoleOf(user.role)
+  if (!adminRole) return null
 
   return {
     sessionId: found.session.id,
@@ -54,6 +69,7 @@ export async function loadAdminSession(
       name: user.name,
       email: user.email,
       role: user.role as UserRole,
+      adminRole,
     },
   }
 }
@@ -69,4 +85,17 @@ export async function requireAdminSession(): Promise<AdminSession> {
   const session = await getAdminSession()
   if (!session) redirect(ADMIN_LOGIN_PATH)
   return session
+}
+
+// For a page that needs a view action: the session, and whether the role may
+// open the page. A page that is not allowed returns <NoAccess /> before it
+// reads anything (docs/specs/040-admin-permissions-audit-masking, Behavior 3):
+//
+//   const access = await requireAdminAccess("products.view")
+//   if (!access.allowed) return <NoAccess />
+export async function requireAdminAccess(
+  action: AdminAction
+): Promise<{ session: AdminSession; allowed: boolean }> {
+  const session = await requireAdminSession()
+  return { session, allowed: can(session.user.adminRole, action) }
 }

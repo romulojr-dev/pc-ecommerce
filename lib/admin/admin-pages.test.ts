@@ -31,10 +31,10 @@ describe("every admin page and layout", () => {
   })
 
   test.each(guardedFiles().map((path) => relative(process.cwd(), path)))(
-    "%s calls requireAdminSession",
+    "%s calls requireAdminSession or requireAdminAccess",
     (path) => {
       const source = readFileSync(join(process.cwd(), path), "utf8")
-      expect(source).toMatch(/requireAdminSession\s*\(/)
+      expect(source).toMatch(/requireAdmin(Session|Access)\s*\(/)
     }
   )
 

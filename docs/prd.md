@@ -188,7 +188,7 @@ A protected `/admin` area, built with the same shadcn/ui components, lets the sh
 - **AD-8 Vouchers:** create and track usage.
 - **AD-9 Settings:** shipping zones and rates, pickup on/off with store address and hours, COD limits (COD also allowed as pay-on-pickup), free-shipping threshold, store info.
 - **AD-10 Audit log:** who changed price, stock or order status, and when.
-- **AD-11 Roles:** Owner can do everything. Staff can manage orders, see customers and adjust inventory. Demo can view everything Owner can view and change nothing, with customer data masked ([ADR 0012](adr/0012-staff-auth-on-better-auth.md)).
+- **AD-11 Roles:** Owner can do everything. Staff can manage orders, see customers and adjust inventory. Demo can open every screen Owner can open, can't perform any action, and can't search by customer, with customer data masked ([ADR 0012](adr/0012-staff-auth-on-better-auth.md)).
 
 ## Non-functional requirements
 
@@ -280,7 +280,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
 | `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: `codEnabled`, `codMaxTotal` in centavos on the total after the discount including shipping, null for no limit, `codZones`, `codPickupEnabled`, `codConfirmHours`). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |
-| `AuditLog` | actorId, entity, entityId, action, before, after, createdAt |
+| `AuditLog` | actorId (staff `User`, Restrict), entity, entityId, action, before, after, createdAt. Append-only (a trigger refuses UPDATE and DELETE); written in the same transaction as the change; never stores secrets |
 
 Order items and addresses are **snapshots**, so later price or address edits never change past orders. Products are retired through `status`, never deleted, so builds, carts and orders that point at them stay valid.
 
