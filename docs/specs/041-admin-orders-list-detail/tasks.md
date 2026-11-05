@@ -23,10 +23,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Indexes
-- [ ] Schema declarations and migration: `Order(createdAt desc, id desc)`, `(status, createdAt desc)`, `(paymentOption, createdAt desc)`
-- [ ] `pnpm db:drift` clean
-- [ ] `EXPLAIN` integration test with 5 000 orders after `ANALYZE` (E29)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test:db` pass
+- [x] Schema declarations and migration: `Order(createdAt desc, id desc)`, `(status, createdAt desc, id desc)`, `(paymentOption, createdAt desc, id desc)` (the filtered indexes carry `id` too: without it the planner preferred the newest-first index with a filter)
+- [x] `pnpm db:drift` clean
+- [x] `EXPLAIN` integration test with 5 000 orders after `ANALYZE` (E29)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test:db` pass
 
 ## 4. List query
 - [ ] `listOrders(role, params, now)`: allow-listed select, count, paging, status/payment filters, number search, customer search, Demo refusal before any query (also with `number` present), due ids from `dueOrderCondition`, flags
