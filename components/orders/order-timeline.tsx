@@ -49,6 +49,14 @@ export function OrderTimeline({ timeline }: { timeline: Timeline }) {
                   {step.detail}
                 </span>
               )}
+              {step.lines?.map((line) => (
+                <span
+                  key={line}
+                  className="text-xs font-normal text-muted-foreground"
+                >
+                  {line}
+                </span>
+              ))}
             </span>
           </li>
         ))}

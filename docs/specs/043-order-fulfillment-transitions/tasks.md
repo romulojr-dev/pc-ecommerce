@@ -44,10 +44,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Customer timeline and order page
-- [ ] Order-page DTO and `getOrderForPage` select the new fields (named fields only)
-- [ ] `orderTimeline` details: times, courier, tracking; `completedAt` labeled from fulfillment; `OrderTimeline` renders them
-- [ ] Tests E24–E26
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Order-page DTO and `getOrderForPage` select the new fields (named fields only)
+- [x] `orderTimeline` details: times, courier, tracking; `completedAt` labeled from fulfillment; `OrderTimeline` renders them
+- [x] Tests E24–E26
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Admin detail, dialogs and packing slip
 - [ ] `OrderDetail` fields and `transitions` for the viewer's role; events list lines

@@ -59,6 +59,12 @@ export async function getOrderForPage(
     fulfillment: order.fulfillment satisfies FulfillmentName,
     paymentOption: order.paymentOption,
     confirmedAt: order.confirmedAt,
+    processingAt: order.processingAt,
+    shippedAt: order.shippedAt,
+    readyAt: order.readyAt,
+    completedAt: order.completedAt,
+    courier: order.courier,
+    trackingNumber: order.trackingNumber,
     createdAt: order.createdAt,
     expiresAt: order.expiresAt,
     contact: {

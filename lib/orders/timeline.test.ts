@@ -203,3 +203,81 @@ it("labels every status", () => {
   expect(statusLabel("COD_CONFIRMED")).toBe("COD confirmed")
   expect(statusLabel("PENDING_CONFIRMATION")).toBe("Pending confirmation")
 })
+
+// docs/specs/043-order-fulfillment-transitions: E24 to E26
+describe("fulfillment times, courier and tracking (B20)", () => {
+  // 2026-11-02 9:30 AM, 11:00 AM and 2026-11-03 2:15 PM in Manila
+  const shippedAt = new Date("2026-11-02T01:30:00Z")
+  const processingAt = new Date("2026-11-01T23:00:00Z")
+  const completedAt = new Date("2026-11-03T06:15:00Z")
+  const parcel = { courier: "LBC", trackingNumber: "123456784821" }
+
+  it("E24: Shipped shows its time, the courier and the tracking number", () => {
+    const { steps } = orderTimeline({
+      status: "SHIPPED",
+      fulfillment: "DELIVERY",
+      processingAt,
+      shippedAt,
+      ...parcel,
+    })
+    const byStatus = Object.fromEntries(steps.map((s) => [s.status, s]))
+    expect(byStatus.PROCESSING.detail).toBe("Started Mon 2 Nov 2026, 7:00 AM")
+    expect(byStatus.SHIPPED.detail).toBe("Shipped Mon 2 Nov 2026, 9:30 AM")
+    expect(byStatus.SHIPPED.lines).toEqual([
+      "Courier: LBC",
+      "Tracking number: 123456784821",
+    ])
+    // Delivered is still ahead
+    expect(byStatus.DELIVERED.state).toBe("upcoming")
+    expect(byStatus.DELIVERED.detail).toBeUndefined()
+  })
+
+  it("E25: a cash order picked up labels completedAt from its status", () => {
+    const { steps } = orderTimeline({
+      status: "PICKED_UP",
+      fulfillment: "PICKUP",
+      paymentOption: "COD",
+      confirmedAt: new Date("2026-11-04T04:30:00Z"),
+      readyAt: shippedAt,
+      completedAt,
+    })
+    const last = steps[steps.length - 1]
+    expect(last).toMatchObject({ status: "PICKED_UP", state: "current" })
+    expect(last.detail).toBe("Picked up Tue 3 Nov 2026, 2:15 PM")
+    expect(steps[1].detail).toBe("Confirmed Wed 4 Nov 2026, 12:30 PM")
+    expect(steps[3].detail).toBe("Ready Mon 2 Nov 2026, 9:30 AM")
+  })
+
+  it("a delivery order's completedAt reads Delivered", () => {
+    const { steps } = orderTimeline({
+      status: "DELIVERED",
+      fulfillment: "DELIVERY",
+      shippedAt,
+      completedAt,
+      ...parcel,
+    })
+    expect(steps[steps.length - 1].detail).toBe(
+      "Delivered Tue 3 Nov 2026, 2:15 PM"
+    )
+  })
+
+  it("E26: a step with nothing stored shows nothing and is not an error", () => {
+    const { steps } = orderTimeline({
+      status: "SHIPPED",
+      fulfillment: "DELIVERY",
+    })
+    expect(steps.every((s) => s.detail === undefined && !s.lines)).toBe(true)
+    expect(steps.find((s) => s.state === "current")?.status).toBe("SHIPPED")
+  })
+
+  it("an online order never shows a time for a step it has not reached", () => {
+    const { steps } = orderTimeline({
+      status: "PROCESSING",
+      fulfillment: "DELIVERY",
+      processingAt,
+      shippedAt,
+      ...parcel,
+    })
+    expect(steps.find((s) => s.status === "SHIPPED")?.detail).toBeUndefined()
+  })
+})
