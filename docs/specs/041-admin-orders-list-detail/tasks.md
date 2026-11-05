@@ -76,7 +76,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] README only if it lists admin screens
 
 ## 11. Final checks and PR
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`
-- [ ] `git push -u origin HEAD`, then the PR from `.github/pull-request-template .md` (when asked)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`
+- [x] `git push -u origin HEAD`, then the PR from `.github/pull-request-template.md` ([#132](https://github.com/romulojr-dev/pc-ecommerce/pull/132))
 - [ ] Preview URL: every acceptance criterion at 1024 px and 1280 px, print preview of one slip
 - [ ] I can explain what this story changed
