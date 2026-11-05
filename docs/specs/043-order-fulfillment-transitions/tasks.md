@@ -22,14 +22,14 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm db:drift`, `pnpm test:db` pass
 
 ## 3. The transition (server)
-- [ ] Input schemas: courier and tracking rules (R5), transition input
-- [ ] `transitionOrder` in one `adminTransaction`: read, table check, conditional update on the expected status, cash `paidAt` in the same statement, `recordAudit`, `enqueueEmail`
-- [ ] `app/admin/(shell)/orders/[number]/actions.ts`: `adminAction("orders.transition", …)`, `scheduleEmailSend` after commit
-- [ ] Integration tests E2–E4, E6–E10 (moves, timestamps, audit, outbox, cash `paidAt`, no `Payment` row)
-- [ ] Integration tests E11–E13 (race, double submit, stale expected status), E12a (repeated attempt, second `enqueueEmail` returns null, one row)
-- [ ] E15, E16, E31, E32; E22 under `guardTransactions`; E23 rollback when enqueue throws
-- [ ] Demo call refused with no table changed (E17); guard-enumeration tests pass
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Input schemas: courier and tracking rules (R5), transition input
+- [x] `transitionOrder` in one `adminTransaction`: read, table check, conditional update on the expected status, cash `paidAt` in the same statement, `recordAudit`, `enqueueEmail`
+- [x] `app/admin/(shell)/orders/[number]/actions.ts`: `adminAction("orders.transition", …)`, `scheduleEmailSend` after commit
+- [x] Integration tests E2–E4, E6–E10 (moves, timestamps, audit, outbox, cash `paidAt`, no `Payment` row)
+- [x] Integration tests E11–E13 (race, double submit, stale expected status), E12a (repeated attempt, second `enqueueEmail` returns null, one row)
+- [x] E15, E16, E31, E32; E22 under `guardTransactions`; E23 rollback when enqueue throws
+- [x] Demo call refused with no table changed (E17); guard-enumeration tests pass
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. Emails
 - [ ] Copy in `lib/email/copy.ts`; `emailView` for the three types; `EMAIL_VIEW_TYPES` extended
