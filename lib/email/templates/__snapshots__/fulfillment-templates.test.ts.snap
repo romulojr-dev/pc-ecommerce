@@ -1,0 +1,137 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Order delivered > says when it was delivered, by whom, and has no address block 1`] = `
+"PC Silicon
+
+This is a demo store in test mode. No real money was charged and nothing will ship.
+
+Hi Ana Santos,
+
+Your order PCS-7KQ2M9XD was delivered.
+
+Delivered Tue 3 Nov 2026, 2:15 PM
+
+Courier: LBC
+
+Tracking number: 123456784821
+
+View your order https://pcsilicon.tech/orders/PCS-7KQ2M9XD?sig=SIG&exp=1793000000&p=view
+
+----------------------------------------
+
+Items
+
+AMD Ryzen 5 7600
+
+₱11,495.00 × 2
+
+₱22,990.00
+
+----------------------------------------
+
+Keep this email. The link opens your order for 90 days.
+
+You received this email because an order was placed with this address at PC Silicon."
+`;
+
+exports[`Order shipped > names the courier and tracking number, and links to the order 1`] = `
+"PC Silicon
+
+This is a demo store in test mode. No real money was charged and nothing will ship.
+
+Hi Ana Santos,
+
+Your order PCS-7KQ2M9XD is on its way.
+
+Courier: LBC
+
+Tracking number: 123456784821
+
+Shipped Mon 2 Nov 2026, 9:30 AM
+
+View your order https://pcsilicon.tech/orders/PCS-7KQ2M9XD?sig=SIG&exp=1793000000&p=view
+
+----------------------------------------
+
+Items
+
+AMD Ryzen 5 7600
+
+₱11,495.00 × 2
+
+₱22,990.00
+
+----------------------------------------
+
+Delivery address
+
+12 Mabini St
+
+Alicia, Quezon City, Metro Manila, National Capital Region (NCR) 1100
+
+----------------------------------------
+
+Keep this email. The link opens your order for 90 days.
+
+You received this email because an order was placed with this address at PC Silicon."
+`;
+
+exports[`Ready for pickup > shows the store's address and hours and the time it was ready 1`] = `
+"PC Silicon
+
+This is a demo store in test mode. No real money was charged and nothing will ship.
+
+Hi Ana Santos,
+
+Your order PCS-4TN8V2HC is ready for pickup.
+
+Ready Mon 2 Nov 2026, 11:00 AM
+
+View your order https://pcsilicon.tech/orders/PCS-4TN8V2HC?sig=SIG&exp=1793000000&p=view
+
+----------------------------------------
+
+Items
+
+Custom PC build  ₱44,485.00
+
+CPU
+
+AMD Ryzen 5 7600
+
+₱11,495.00 × 1
+
+₱11,495.00
+
+Motherboard
+
+ASUS ROG Strix B650-A Gaming WiFi
+
+₱14,995.00 × 1
+
+₱14,995.00
+
+Graphics Card
+
+ASUS Dual GeForce RTX 4060 OC Edition 8GB
+
+₱17,995.00 × 1
+
+₱17,995.00
+
+----------------------------------------
+
+Pick up at
+
+Unit 4, 88 Sample St, Makati
+
+Mon-Sat 10:00 AM-7:00 PM
+
+Bring your order number and a valid ID when you collect your order.
+
+----------------------------------------
+
+Keep this email. The link opens your order for 90 days.
+
+You received this email because an order was placed with this address at PC Silicon."
+`;

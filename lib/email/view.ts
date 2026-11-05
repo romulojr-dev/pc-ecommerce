@@ -29,6 +29,20 @@ import {
   receivedSubject,
   statusLine,
 } from "./copy"
+import {
+  cashReadyLine,
+  courierLine,
+  deliveredAtLine,
+  deliveredLead,
+  deliveredSubject,
+  readyAtLine,
+  readyLead,
+  readySubject,
+  shippedAtLine,
+  shippedLead,
+  shippedSubject,
+  trackingLine,
+} from "./fulfillment-copy"
 import type { EmailContext } from "./templates"
 
 // What an email says, as plain data (docs/specs/036-order-emails, §6 Pure
@@ -86,6 +100,9 @@ export const EMAIL_VIEW_TYPES: readonly EmailType[] = [
   "PAYMENT_RECEIVED",
   "ORDER_CANCELLED",
   "COD_CONFIRM",
+  "ORDER_SHIPPED",
+  "READY_FOR_PICKUP",
+  "ORDER_DELIVERED",
 ]
 
 const slotLabel = (slot: string | null): string | null =>
@@ -304,6 +321,104 @@ function cancelled({ order, siteUrl }: EmailViewInput): EmailView {
   }
 }
 
+// The three fulfillment emails (docs/specs/043-order-fulfillment-transitions,
+// B18, R14). Each states a fact that already happened, with its stored time;
+// a missing time or parcel detail is a bug in the caller, not a state to print
+// around. Built from the order as it is when sent, so only a Cancelled or
+// Refunded order adds a status line: it is no longer going ahead.
+function afterwards(order: EmailViewInput["order"]): string | null {
+  return order.status === "CANCELLED" || order.status === "REFUNDED"
+    ? statusLine(statusLabel(order.status))
+    : null
+}
+
+function parcelOf(order: EmailViewInput["order"]) {
+  if (!order.courier || !order.trackingNumber) {
+    throw new Error("A shipping email needs the order's courier and tracking")
+  }
+  return { courier: order.courier, trackingNumber: order.trackingNumber }
+}
+
+function shipped({ order, store, viewUrl }: EmailViewInput): EmailView {
+  if (order.shippedAt === null) {
+    throw new Error("A shipped email needs the order's shippedAt")
+  }
+  const { courier, trackingNumber } = parcelOf(order)
+  const body = orderBody(order, store)
+  return {
+    subject: shippedSubject(order.orderNumber),
+    greeting: greeting(order.contactName),
+    lead: shippedLead(order.orderNumber),
+    details: [
+      courierLine(courier),
+      trackingLine(trackingNumber),
+      shippedAtLine(dateTimeText(order.shippedAt)),
+      ...(order.paymentOption === "COD"
+        ? [cashReadyLine(formatPeso(order.total), false)]
+        : []),
+    ],
+    statusLine: afterwards(order),
+    action: { label: EMAIL_COPY.viewOrder, href: viewUrl },
+    links: [],
+    entries: body.entries,
+    totals: null,
+    where: body.where,
+    linkNote: EMAIL_COPY.linkNote,
+    ...common,
+  }
+}
+
+function ready({ order, store, viewUrl }: EmailViewInput): EmailView {
+  if (order.readyAt === null) {
+    throw new Error("A ready-for-pickup email needs the order's readyAt")
+  }
+  const body = orderBody(order, store)
+  return {
+    subject: readySubject(order.orderNumber),
+    greeting: greeting(order.contactName),
+    lead: readyLead(order.orderNumber),
+    details: [
+      readyAtLine(dateTimeText(order.readyAt)),
+      ...(order.paymentOption === "COD"
+        ? [cashReadyLine(formatPeso(order.total), true)]
+        : []),
+    ],
+    statusLine: afterwards(order),
+    action: { label: EMAIL_COPY.viewOrder, href: viewUrl },
+    links: [],
+    entries: body.entries,
+    totals: null,
+    where: body.where,
+    linkNote: EMAIL_COPY.linkNote,
+    ...common,
+  }
+}
+
+function delivered({ order, store, viewUrl }: EmailViewInput): EmailView {
+  if (order.completedAt === null) {
+    throw new Error("A delivered email needs the order's completedAt")
+  }
+  const { courier, trackingNumber } = parcelOf(order)
+  return {
+    subject: deliveredSubject(order.orderNumber),
+    greeting: greeting(order.contactName),
+    lead: deliveredLead(order.orderNumber),
+    details: [
+      deliveredAtLine(dateTimeText(order.completedAt)),
+      courierLine(courier),
+      trackingLine(trackingNumber),
+    ],
+    statusLine: afterwards(order),
+    action: { label: EMAIL_COPY.viewOrder, href: viewUrl },
+    links: [],
+    entries: orderBody(order, store).entries,
+    totals: null,
+    where: null,
+    linkNote: EMAIL_COPY.linkNote,
+    ...common,
+  }
+}
+
 export function emailView(type: EmailType, input: EmailViewInput): EmailView {
   switch (type) {
     case "ORDER_PLACED":
@@ -314,6 +429,12 @@ export function emailView(type: EmailType, input: EmailViewInput): EmailView {
       return cancelled(input)
     case "COD_CONFIRM":
       return codConfirm(input)
+    case "ORDER_SHIPPED":
+      return shipped(input)
+    case "READY_FOR_PICKUP":
+      return ready(input)
+    case "ORDER_DELIVERED":
+      return delivered(input)
     default:
       throw new Error(`No email view for ${type}`)
   }

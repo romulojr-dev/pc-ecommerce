@@ -32,11 +32,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. Emails
-- [ ] Copy in `lib/email/copy.ts`; `emailView` for the three types; `EMAIL_VIEW_TYPES` extended
-- [ ] Templates `order-shipped`, `order-delivered`, `ready-for-pickup`; registry; `EMAIL_TYPE_LABELS`; dev emails page
-- [ ] Unit tests E27, E28 (content assertions, plain-text snapshots only)
-- [ ] Integration test per type: a `FakeEmail` through `sendPending`; pickup store settings read at send time; sender failure leaves the order (E21)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Copy in `lib/email/copy.ts`; `emailView` for the three types; `EMAIL_VIEW_TYPES` extended
+- [x] Templates `order-shipped`, `order-delivered`, `ready-for-pickup`; registry; `EMAIL_TYPE_LABELS`; dev emails page
+- [x] Unit tests E27, E28 (content assertions, plain-text snapshots only)
+- [x] Integration test per type: a `FakeEmail` through `sendPending`; pickup store settings read at send time; sender failure leaves the order (E21)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. Cap exemption
 - [ ] Exempt-type list in `lib/email/due.ts` with a unit test; `claim()` skips the skip only

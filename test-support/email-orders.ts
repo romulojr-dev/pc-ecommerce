@@ -48,6 +48,12 @@ export const p1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
     paidAt: null,
     paymentMethod: null,
     cancelReason: null,
+    processingAt: null,
+    shippedAt: null,
+    readyAt: null,
+    completedAt: null,
+    courier: null,
+    trackingNumber: null,
     items: [item({ quantity: 2 })],
     ...overrides,
   }) as EmailOrder
@@ -107,3 +113,37 @@ export const cod1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
 // C2: pay on pickup, one build of three parts
 export const cod2 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
   p2({ status: "PENDING_CONFIRMATION", paymentOption: "COD", ...overrides })
+
+// Spec 043: the fulfillment emails. F1 is P1 shipped by LBC; F2 is the pickup
+// order P2 ready at the store; F3 is P1 delivered. Times are Asia/Manila
+// 2026-11-02 9:30 AM, 2026-11-02 11:00 AM and 2026-11-03 2:15 PM.
+export const SHIPPED_AT = new Date("2026-11-02T01:30:00Z")
+export const READY_AT = new Date("2026-11-02T03:00:00Z")
+export const COMPLETED_AT = new Date("2026-11-03T06:15:00Z")
+export const PARCEL = { courier: "LBC", trackingNumber: "123456784821" }
+
+export const f1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
+  p1({
+    status: "SHIPPED",
+    paidAt: new Date("2026-11-01T07:05:00Z"),
+    paymentMethod: "GCASH",
+    shippedAt: SHIPPED_AT,
+    ...PARCEL,
+    ...overrides,
+  })
+
+export const f2 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
+  p2({
+    status: "READY_FOR_PICKUP",
+    paidAt: new Date("2026-11-01T07:05:00Z"),
+    paymentMethod: "GCASH",
+    readyAt: READY_AT,
+    ...overrides,
+  })
+
+export const f3 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
+  f1({
+    status: "DELIVERED",
+    completedAt: COMPLETED_AT,
+    ...overrides,
+  })
