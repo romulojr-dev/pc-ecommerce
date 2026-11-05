@@ -14,9 +14,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 2. "Same customer" in SQL (gate: stop and report if SQL and `normalizeRecipient` disagree)
-- [ ] `lib/orders/customer-key-sql.ts`: `customerKeySql`
-- [ ] Agreement test E28 on an address table (case, all whitespace kinds, `+tag`, leading `+`, no `@`, several `@`, dots, `+` in the domain)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test:db` pass
+- [x] `lib/orders/customer-key-sql.ts`: `customerKeySql`
+- [x] Agreement test E28 on an address table (case, all whitespace kinds, `+tag`, leading `+`, no `@`, several `@`, dots, `+` in the domain)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test:db` pass
 
 ## 3. Pure modules
 - [ ] `lib/admin/orders-params.ts`: `buyer` (parse, serialize, canonical, `hasActiveFilters`, `back` value) and `demoKeyRank`
