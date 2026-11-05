@@ -72,6 +72,6 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 10. Preview checks (merge gates)
 - [x] Temporary `probe-env` route deleted
-- [ ] Forged `X-Forwarded-For` check: the `RateLimit` key shows a real client IP (else `ipAddressHeaders` set and repeated); result and Vercel page cited in ADR 0012 and the PR
+- [x] Forged `X-Forwarded-For` check (2026-11-05: key `112.203.62.40|/sign-in/email`, the real IP, so Vercel overwrites the header and no change is needed): the `RateLimit` key shows a real client IP (else `ipAddressHeaders` set and repeated); result and Vercel page cited in ADR 0012 and the PR
 - [ ] Owner, staff and demo sign in on the preview; response headers; cookie `Secure` and `HttpOnly`; Deployment Protection on
 - [ ] Acceptance criteria checked on the Preview URL

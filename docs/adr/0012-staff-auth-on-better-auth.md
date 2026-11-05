@@ -30,7 +30,7 @@ The page **does not say** what happens to an `X-Forwarded-For` the client sends 
 
 What Better Auth 1.7.17 does with the header (verified in the story's tests): it reads `x-forwarded-for` only when it holds a **single** address; a chain such as `forged, real` is not trusted and falls into one shared `no-trusted-ip` bucket. So a client-sent header that Vercel *appends to* would put every visitor in one bucket (3 sign-ins per 10 seconds for all), and one that Vercel *keeps* would let a client pick its own bucket. Which of these happens is the open question.
 
-**Result on a preview deployment:** *pending, recorded by the story's last task.*
+**Result on a preview deployment (2026-11-05, #104):** a sign-in request sent straight to the preview with the header `X-Forwarded-For: 203.0.113.7` produced the `RateLimit` key `112.203.62.40|/sign-in/email`, the sender's real address. So **Vercel overwrites a client-sent `X-Forwarded-For` on a direct request** as well as behind a proxy ([request headers](https://vercel.com/docs/headers/request-headers), which says it does this "to prevent IP spoofing" but is silent on the direct case; this check settles it). The value is a single address, which Better Auth trusts, so the default header is kept and `advanced.ipAddress.ipAddressHeaders` is not set. The check should be repeated if Vercel's routing changes (for example a proxy placed in front of the app).
 
 ### The demo role
 
@@ -55,7 +55,7 @@ Demo lets a reviewer see Admin without being able to change it, and without seei
 ## Consequences
 
 - Every request to Admin reads the session from the database; at the shop's scale this is cheap.
-- A forged `X-Forwarded-For` may let someone dodge the sign-in limit until the preview check above is recorded; the accounts are few and passwords are at least 12 characters.
+- A forged `X-Forwarded-For` does not dodge the sign-in limit on Vercel (checked on a preview, above); the accounts are few and passwords are at least 12 characters.
 - Better Auth's tables are `User`, `Session`, `Account`, `Verification` and `RateLimit`; `Verification` is never written, and the daily cron (inside the existing release cron, each job in its own `try/catch`) deletes expired `Session` and old `RateLimit` rows.
 - A new Admin screen must call the guard and build its data through a role-aware DTO; code review checks this.
 - Customer accounts later add their own `User` kind or table; this ADR doesn't decide that.
