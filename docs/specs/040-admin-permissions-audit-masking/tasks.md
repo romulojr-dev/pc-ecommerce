@@ -44,11 +44,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Audit
-- [ ] Migration: `AuditLog`, update/delete-refusing trigger, `StockMovement.actorId` FK (`Restrict`); `schema.prisma` comment replaced; `pnpm db:drift` clean
-- [ ] `adminTransaction`, branded `AuditTx`, `recordAudit` (redaction, size cap, closed unions); `@ts-expect-error` test that `db` is rejected
-- [ ] `resetCatalog()`, `--reset` and `test-support/db.ts` name `AuditLog`; `User` rows survive
-- [ ] Tests T6, T7 (UPDATE/DELETE refused, TRUNCATE works, FKs), T8 (E4, E9, E10, E16, E19)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Migration: `AuditLog`, update/delete-refusing trigger, `StockMovement.actorId` FK (`Restrict`); `schema.prisma` comment replaced; `pnpm db:drift` clean
+- [x] `adminTransaction`, branded `AuditTx`, `recordAudit` (redaction, size cap, closed unions); `@ts-expect-error` test that `db` is rejected
+- [x] `resetCatalog()`, `--reset` and `test-support/db.ts` name `AuditLog`; `User` rows survive
+- [x] Tests T6, T7 (UPDATE/DELETE refused, TRUNCATE works, FKs), T8 (E4, E9, E10, E16, E19)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Masking and the query layer
 - [ ] `lib/admin/mask.ts` and the Demo DTO types; `lib/admin/queries/` (order contact and address, customers, audit entries, order search refusing a customer term for Demo)

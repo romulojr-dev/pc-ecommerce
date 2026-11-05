@@ -94,6 +94,8 @@ describe("the real adminAction", () => {
     // An invalid payload is still forbidden, not invalid
     expect(await writeVoucher({})).toMatchObject({ error: "forbidden" })
     expect(await db.voucher.count()).toBe(0)
+    // A refusal is not a change: nothing is audited
+    expect(await db.auditLog.count()).toBe(0)
 
     currentHeaders = new Headers({
       cookie: await signInCookie("owner@example.com"),

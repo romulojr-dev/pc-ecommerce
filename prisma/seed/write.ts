@@ -74,8 +74,12 @@ export function writeSeed(
         // and "FakeEmail" points at nothing; both are named for the reader
         // (docs/specs/035-email-foundation-signed-links). "Voucher" points at no
         // product and is not emptied by "Order" either (Order points at it), so
-        // it is named (docs/specs/037-vouchers-at-checkout).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        // it is named (docs/specs/037-vouchers-at-checkout). "AuditLog" points
+        // at a staff User, not a product: it is named so a reset clears the
+        // history of changes to the catalog it just emptied; User, Session and
+        // Account rows are never truncated (docs/specs/040-admin-permissions-
+        // audit-masking).
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "AuditLog", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)
