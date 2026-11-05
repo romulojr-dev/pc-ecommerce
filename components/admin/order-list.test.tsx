@@ -8,7 +8,7 @@ import {
 import type { OrderList, OrderListRow } from "@/lib/admin/queries/orders"
 
 import { OrderFilters } from "./order-filters"
-import { OrderListView } from "./order-list"
+import { OrderListView, RESULTS_ID } from "./order-list"
 
 // docs/specs/041-admin-orders-list-detail: B1–B9, E1, E3a, E12, E15, E16
 
@@ -35,6 +35,7 @@ const data = (
   total: rows.length,
   page: 1,
   pageCount: 1,
+  buyer: null,
   ...over,
 })
 
@@ -189,5 +190,55 @@ describe("the filter form", () => {
     expect(markup).toContain("disabled")
     expect(markup).toContain('placeholder="This account is read-only"')
     expect(markup).not.toContain('name="customer"')
+  })
+})
+
+describe("the buyer filter (docs/specs/042-admin-customers, B11, B12)", () => {
+  it("names the customer and offers Show all customers' orders", () => {
+    const out = html(
+      data([row()], { buyer: { masked: false, name: "Ana Reyes" } }),
+      params({ buyer: "ana.reyes@example.com" })
+    )
+    expect(out).toContain("Orders from Ana Reyes")
+    expect(out).toContain("Show all customers&#x27; orders")
+    expect(out).toContain('href="/admin/orders"')
+  })
+
+  it("keeps the other filters when the buyer is cleared", () => {
+    const out = html(
+      data([row()], { buyer: { masked: false, name: "Ana" } }),
+      params({ buyer: "a@b.co", status: "PAID", page: 2 })
+    )
+    expect(out).toContain('href="/admin/orders?status=PAID"')
+  })
+
+  it("an unknown customer says so, with the usual empty state", () => {
+    const out = html(data([], { buyer: "unknown" }), params({ buyer: "c999" }))
+    expect(out).toContain("Orders from an unknown customer")
+    expect(out).toContain("No orders match these filters.")
+  })
+
+  it("shows no line without a buyer", () => {
+    expect(html(data([row()]))).not.toContain("Orders from")
+  })
+
+  it("the filter form carries the buyer, so a new filter keeps the customer", () => {
+    const markup = renderToStaticMarkup(
+      <OrderFilters
+        params={params({ buyer: "c3" })}
+        canSearchCustomer={false}
+        resultsId={RESULTS_ID}
+      />
+    )
+    expect(markup).toContain('type="hidden" name="buyer" value="c3"')
+    expect(
+      renderToStaticMarkup(
+        <OrderFilters
+          params={params()}
+          canSearchCustomer
+          resultsId={RESULTS_ID}
+        />
+      )
+    ).not.toContain('name="buyer"')
   })
 })

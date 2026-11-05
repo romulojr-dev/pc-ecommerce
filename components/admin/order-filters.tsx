@@ -41,6 +41,9 @@ export function OrderFilters({
       action={`${ORDERS_PATH}#${resultsId}`}
       className="flex flex-wrap items-end gap-3"
     >
+      {params.buyer ? (
+        <input type="hidden" name="buyer" value={params.buyer} />
+      ) : null}
       <div className="flex flex-col gap-1">
         <Label htmlFor="order-status">{filters.status}</Label>
         <select

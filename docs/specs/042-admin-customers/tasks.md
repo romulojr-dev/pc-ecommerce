@@ -45,11 +45,11 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 6. `buyer` on the orders list
-- [ ] `listOrders`: ids of the customer's orders by `customerKeySql`, then the typed `where`; Demo through `resolveBuyer`; the buyer's display name (masked for Demo) or "unknown" in the result
-- [ ] Orders page: "Orders from {name}" / "an unknown customer" and "Show all customers' orders"; filter form carries `buyer` as a hidden field; "Back to orders" keeps it
-- [ ] Tests E12–E14, E22–E24; a Demo `buyer=<email>` runs no email lookup (spy)
-- [ ] Spec 041's list tests stay green
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `listOrders`: ids of the customer's orders by `customerKeySql`, then the typed `where`; Demo through `resolveBuyer`; the buyer's display name (masked for Demo) or "unknown" in the result
+- [x] Orders page: "Orders from {name}" / "an unknown customer" and "Show all customers' orders"; filter form carries `buyer` as a hidden field; "Back to orders" keeps it
+- [x] Tests E12–E14, E22–E24; a Demo `buyer=<email>` runs no email lookup (spy)
+- [x] Spec 041's list tests stay green
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Order detail link
 - [ ] `getOrderDetail` returns `customerKey` (email key for Owner and Staff, rank key for Demo; absent without `customers.view`)
