@@ -35,6 +35,7 @@ const order = (over: Partial<OrderDetail> = {}): OrderDetail => ({
     email: "ana.reyes@example.com",
     mobile: "+639171234567",
   },
+  customerKey: "ana.reyes@example.com",
   address: {
     kind: "delivery",
     masked: false,
@@ -288,6 +289,7 @@ describe("Demo", () => {
   it("E23: shows only what the DTO holds", () => {
     const markup = view(
       order({
+        customerKey: "c1",
         contact: {
           masked: true,
           name: "A••• R•••" as never,
@@ -345,6 +347,37 @@ describe("the back link", () => {
     }
     expect(backHrefOf(["status=PAID", "status=SHIPPED"])).toBe(
       "/admin/orders?status=PAID"
+    )
+  })
+})
+
+describe("the customer link (docs/specs/042-admin-customers, B15, E30, E31)", () => {
+  it("links to the customer's orders by the key", () => {
+    expect(view(order())).toContain(
+      'href="/admin/orders?buyer=ana.reyes%40example.com"'
+    )
+    expect(view(order())).toContain("View this customer&#x27;s orders")
+  })
+
+  it("Demo's link carries the rank key, not the email", () => {
+    const markup = view(
+      order({
+        customerKey: "c3",
+        contact: {
+          masked: true,
+          name: "A••• R•••" as never,
+          email: "a•••@••••.•••" as never,
+          mobile: "+63•••••••••" as never,
+        },
+      })
+    )
+    expect(markup).toContain('href="/admin/orders?buyer=c3"')
+    expect(markup).not.toContain("ana.reyes")
+  })
+
+  it("no key, no link", () => {
+    expect(view(order({ customerKey: null }))).not.toContain(
+      "View this customer"
     )
   })
 })

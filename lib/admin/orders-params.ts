@@ -37,6 +37,11 @@ export type OrderParams = {
   number: string
   // Name, email or mobile as typed; searched only from CUSTOMER_MIN characters
   customer: string
+  // One customer's orders, by the key the Customers screen gives: the
+  // normalized email for Owner and Staff, a rank key ("c3") for Demo
+  // (docs/specs/042-admin-customers, B7, B11). Not a search: it is matched
+  // exactly.
+  buyer: string
   page: number
 }
 
@@ -45,6 +50,7 @@ export const DEFAULT_ORDER_PARAMS: OrderParams = {
   payment: null,
   number: "",
   customer: "",
+  buyer: "",
   page: 1,
 }
 
@@ -64,6 +70,7 @@ export function parseOrderParams(raw: RawSearchParams): OrderParams {
     payment: PAYMENT_FILTERS.find((p) => p === payment) ?? null,
     number: text(raw.number),
     customer: text(raw.customer),
+    buyer: text(raw.buyer),
     page: parsePage(first(raw.page)),
   }
 }
@@ -75,6 +82,7 @@ export function serializeOrderParams(params: OrderParams): [string, string][] {
   if (params.payment) entries.push(["payment", params.payment])
   if (params.number) entries.push(["number", params.number])
   if (params.customer) entries.push(["customer", params.customer])
+  if (params.buyer) entries.push(["buyer", params.buyer])
   if (params.page > 1) entries.push(["page", String(params.page)])
   return entries
 }
@@ -117,7 +125,8 @@ export const hasActiveFilters = (params: OrderParams): boolean =>
   params.status !== null ||
   params.payment !== null ||
   params.number !== "" ||
-  params.customer !== ""
+  params.customer !== "" ||
+  params.buyer !== ""
 
 // ---- Customer search (R6) ----
 

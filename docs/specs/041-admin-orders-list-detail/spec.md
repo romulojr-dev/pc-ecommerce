@@ -194,7 +194,7 @@ Seed parts: `CPU-AMD-7600X` (Ryzen 5 7600X), and the order-seed helper in `e2e/o
 
 - Any status change, courier and tracking number, cancel and refund buttons: #108 (Sprint 8). Resolving "Refund required" / "Needs checking" is there too.
 - Exports, bulk actions, saved filters.
-- Customers screen (AD-7) and order history per customer: its own story; the detail doesn't link to it.
+- Customers screen (AD-7) and order history per customer: its own story; the detail doesn't link to it. *(Changed by [spec 042](../042-admin-customers/spec.md): the detail's Contact block links to the customer's orders, and the list gains a `buyer` filter.)*
 - Resending an email (#101); `PaymentEvent` viewing; the audit log screen.
 - Trigram or full-text indexes for customer search; cursor pagination.
 - Dashboard recent orders (AD-1).

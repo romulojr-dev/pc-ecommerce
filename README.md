@@ -206,6 +206,8 @@ commands, the Vercel settings and how to check sign-in on a preview URL.
 
 **Orders** ([spec 041](docs/specs/041-admin-orders-list-detail/spec.md)): `/admin/orders` lists orders newest first with filters (status, online or cash, order number, and for owner and staff customer name, email or mobile), `/admin/orders/<number>` shows an order with its payments, emails and flags, and `/admin/orders/<number>/packing-slip` is a print-ready page with no prices. The list shows an order's real status, with a "Due for release" badge once an unpaid order is past its deadline. Changing an order's status is a later story.
 
+**Customers** ([spec 042](docs/specs/042-admin-customers/spec.md)): `/admin/customers` lists each customer (a guest email) once with how many orders they placed, how much they have paid and when they last ordered, and each row opens that customer's orders. Owner and staff can search by name, email or mobile; the demo account sees masked rows and can't search.
+
 **Demo account** (read-only, public): email `demo@pcsilicon.tech`, password the
 value of `DEMO_ACCOUNT_PASSWORD`. It is shown on the sign-in page of every
 environment where that variable is set, with a "Use demo account" button.

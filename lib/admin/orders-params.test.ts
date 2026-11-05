@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  backHrefOf,
   customerQueryOf,
   customerTooShort,
   DEFAULT_ORDER_PARAMS,
@@ -179,5 +180,36 @@ describe("customer search", () => {
     expect(hasCustomerTerm("a")).toBe(true)
     expect(hasCustomerTerm("   ")).toBe(false)
     expect(hasCustomerTerm("")).toBe(false)
+  })
+})
+
+describe("buyer (docs/specs/042-admin-customers)", () => {
+  it("is parsed, trimmed, cut at 100 characters and written after customer", () => {
+    expect(parseOrderParams({ buyer: " c3 " }).buyer).toBe("c3")
+    expect(parseOrderParams({ buyer: "x".repeat(150) }).buyer).toHaveLength(100)
+    expect(
+      orderParamsHref({
+        ...DEFAULT_ORDER_PARAMS,
+        customer: "ana",
+        buyer: "a@b.co",
+        page: 2,
+      })
+    ).toBe("/admin/orders?customer=ana&buyer=a%40b.co&page=2")
+  })
+
+  it("counts as an active filter and survives the back value", () => {
+    expect(hasActiveFilters({ ...DEFAULT_ORDER_PARAMS, buyer: "c1" })).toBe(
+      true
+    )
+    expect(backHrefOf("buyer=c1&status=PAID")).toBe(
+      "/admin/orders?status=PAID&buyer=c1"
+    )
+  })
+
+  it("makes a spelled-out buyer non-canonical", () => {
+    const raw = { buyer: "c1" }
+    expect(isCanonicalOrderQuery(raw, parseOrderParams(raw))).toBe(true)
+    const bad = { buyer: " c1 " }
+    expect(isCanonicalOrderQuery(bad, parseOrderParams(bad))).toBe(false)
   })
 })

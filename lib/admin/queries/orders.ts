@@ -35,6 +35,7 @@ import {
   resolvePage,
 } from "../orders-params"
 import { type AdminRole, can } from "../permissions"
+import { customerLinkKey, findBuyerOrders } from "./customers"
 import { assertCan, type Denied, denied } from "./guard"
 
 // Orders as Admin shows them, with customer fields masked for Demo
@@ -75,6 +76,10 @@ export type OrderList = {
   // and the caller redirects when it differs from what was asked
   page: number
   pageCount: number
+  // The customer the list is filtered to (docs/specs/042-admin-customers,
+  // B11, B12): their name (masked for Demo), "unknown" for a key that names
+  // nobody, null when there is no buyer filter
+  buyer: CustomerName | "unknown" | null
 }
 
 const listSelect = {
@@ -95,13 +100,17 @@ const listSelect = {
   },
 } as const satisfies Prisma.OrderSelect
 
-function whereOf(params: OrderParams): Prisma.OrderWhereInput {
+function whereOf(
+  params: OrderParams,
+  buyerOrderIds: string[] | null
+): Prisma.OrderWhereInput {
   const customer = customerQueryOf(params.customer)
   const and: Prisma.OrderWhereInput[] = []
   if (params.status) and.push({ status: params.status })
   if (params.payment) {
     and.push({ paymentOption: params.payment === "cod" ? "COD" : "ONLINE" })
   }
+  if (buyerOrderIds) and.push({ id: { in: buyerOrderIds } })
   if (params.number) {
     and.push({ orderNumber: { contains: params.number, mode: "insensitive" } })
   }
@@ -142,7 +151,10 @@ export async function listOrders(
   ) {
     return denied(role, "orders.search-customer")
   }
-  const where = whereOf(params)
+  // The buyer's order ids come from one raw query on the shared customer key;
+  // the rest of the list is the typed query below (docs/specs/042, R5a)
+  const buyer = params.buyer ? await findBuyerOrders(role, params.buyer) : null
+  const where = whereOf(params, buyer ? buyer.orderIds : null)
   const total = await db.order.count({ where })
   const page = resolvePage(params.page, total)
   const rows = await db.order.findMany({
@@ -161,6 +173,7 @@ export async function listOrders(
     total,
     page,
     pageCount: pageCount(total),
+    buyer: buyer ? (buyer.name ?? "unknown") : null,
     rows: rows.map((row) => ({
       orderNumber: row.orderNumber,
       createdAt: row.createdAt,
@@ -228,6 +241,10 @@ export type OrderDetail = {
   cancelledAt: Date | null
   cancelReason: "EXPIRED" | null
   contact: ContactView
+  // The key of "View this customer's orders" (docs/specs/042-admin-customers,
+  // B15): the normalized email for Owner and Staff, the customer's rank key
+  // for Demo, never the email; null when the role can't open Customers
+  customerKey: string | null
   address: AddressView
   zone: string | null
   weightGrams: number
@@ -346,6 +363,7 @@ export async function getOrderDetail(
     cancelledAt: row.cancelledAt,
     cancelReason: row.cancelReason,
     contact: contactView(role, row),
+    customerKey: await customerLinkKey(role, row.guestEmail),
     address: addressView(role, row),
     zone: row.zone,
     weightGrams: row.weightGrams,

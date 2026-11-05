@@ -19,6 +19,7 @@ import {
   type OrderParams,
   orderParamsHref,
 } from "@/lib/admin/orders-params"
+import { buyerLine } from "@/lib/admin/customers-view"
 import { FULFILLMENT_LABELS, paymentCell } from "@/lib/admin/orders-view"
 import type { OrderList as OrderListData } from "@/lib/admin/queries/orders"
 import { formatPeso } from "@/lib/format"
@@ -49,6 +50,19 @@ export function OrderListView({
   const filtered = hasActiveFilters(params)
   return (
     <section aria-labelledby={RESULTS_ID} className="flex flex-col gap-3">
+      {data.buyer !== null ? (
+        <div className="flex flex-wrap items-baseline gap-3">
+          <p className="font-medium">
+            {buyerLine(data.buyer === "unknown" ? null : data.buyer.name)}
+          </p>
+          <Link
+            href={orderParamsHref({ ...params, buyer: "", page: 1 })}
+            className={cn("text-sm underline underline-offset-4", focusRing)}
+          >
+            {copy.buyer.showAll}
+          </Link>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-baseline gap-3">
         <h2
           id={RESULTS_ID}

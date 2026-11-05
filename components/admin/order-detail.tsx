@@ -16,6 +16,7 @@ import {
 } from "@/components/orders/order-parts"
 import { OrderTimeline } from "@/components/orders/order-timeline"
 import { ADMIN_COPY } from "@/lib/admin/copy"
+import { buyerHref } from "@/lib/admin/customers-view"
 import {
   amountToCollect,
   EMAIL_STATUS_LABELS,
@@ -77,6 +78,17 @@ function ContactSection({ order }: { order: OrderDetail }) {
         <Fact label={copy.emailLabel} value={contact.email} />
         <Fact label={copy.mobile} value={contact.mobile} />
       </dl>
+      {order.customerKey ? (
+        <Link
+          href={buyerHref(order.customerKey)}
+          className={cn(
+            "w-fit text-sm underline underline-offset-4",
+            focusRing
+          )}
+        >
+          {copy.viewCustomer}
+        </Link>
+      ) : null}
     </Section>
   )
 }
