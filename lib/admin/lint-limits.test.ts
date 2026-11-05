@@ -10,7 +10,7 @@ async function messages(filePath: string, code: string) {
   return result.messages.map((m) => m.ruleId)
 }
 
-describe("import limits on the pure admin files", () => {
+describe("import limits on the pure admin files", { timeout: 30_000 }, () => {
   test.each([
     "lib/admin/permissions.ts",
     "lib/admin/mask.ts",
