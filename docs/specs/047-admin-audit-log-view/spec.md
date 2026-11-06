@@ -199,3 +199,13 @@ Every acceptance criterion maps below; the checks on the preview URL stay manual
 ## 10. Open questions
 
 None. The six questions of the first draft were settled at review: actor list with users who have audit rows (D15); both indexes added up front, no actor index (D14); known keys formatted and every key needing both rules (D13, R9); the "Changed" badge kept (D16); products linked for Demo (D16); no SQL-inserted E2E fixtures (test plan).
+
+## 11. What changed while building
+
+- **The column is `entity`.** The review said `(entityType, createdAt DESC)`; the `AuditLog` column is `entity`, so the index is `(entity, createdAt DESC)`. The existing `(actorId)` index stays (no new actor index, as asked) and so does the old `(createdAt)` index.
+- **From after To keeps its URL.** Redirecting to the canonical URL (Behavior 5) would lose the notice, so a cleared range renders with its original URL and the notice; an impossible date or an unknown entity still redirects. An actor id that has no audit rows redirects without it.
+- **Changes are text in the DTO.** `AuditEntryView` carries `changes` (text rows) and no `before` / `after`; spec 040's `auditEntryView`, `RawAuditEntry` and the old `listAuditEntries` are gone, and `maskAuditJson` now reads the key registry, so unknown keys are hidden for Demo (spec 040 Behavior 17 changed; noted there).
+- **The "Changed" badge** shows only on a Demo row whose masked sides read the same, not on every Demo row.
+- **Container keys need no rule.** Only leaves are classified; a container (`specs`, a nested object) is decided by its leaves, and `specs.*` has one prefix rule.
+- **The mutation test runs the real actions** as the Owner (mocked `next/headers`, `next/cache`) and pairs each with a refused call and a forced throw after `recordAudit` (the change and its row must both roll back, checked by table fingerprints). The registry covers server actions only; an `app/api/admin` route handler fails the test until the registry learns routes.
+- **Audit rows from the E2E stay** (the log refuses deletes). The E2E makes one through a real stock adjustment and removes only its throwaway product and movement.

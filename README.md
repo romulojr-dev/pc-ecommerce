@@ -210,6 +210,8 @@ commands, the Vercel settings and how to check sign-in on a preview URL.
 
 **Inventory** ([spec 046](docs/specs/046-admin-inventory-adjustments/spec.md)): `/admin/inventory` lists every product's stock and low-stock threshold, lowest first, and filters to low stock, out of stock or both. A product's page records a delivery, a loss or a count correction with a reason, shows "Stock 12 → 112" for you to confirm first, and keeps a history of every change with the staff member, the order and a note. An adjustment adds or removes a number rather than setting one, so it can't overwrite an order placed at the same moment, and stock never goes below 0. Owner and staff can adjust; the demo account sees it read-only.
 
+**Audit log** ([spec 047](docs/specs/047-admin-audit-log-view/spec.md)): `/admin/audit` lists every recorded change newest first, 25 to a page, and filters by entity, person and date (Philippine days, both ends included). Each entry opens to a before and after table (prices as pesos, statuses by name) with a link to the product or order. It is read-only and the database refuses to edit or delete a row. The owner and the demo account can open it; staff can't. The demo account sees customer details masked and free text hidden, and any field nobody has classified is hidden for it.
+
 **Demo account** (read-only, public): email `demo@pcsilicon.tech`, password the
 value of `DEMO_ACCOUNT_PASSWORD`. It is shown on the sign-in page of every
 environment where that variable is set, with a "Use demo account" button.
