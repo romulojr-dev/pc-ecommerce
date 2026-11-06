@@ -23,6 +23,7 @@ import {
   type SessionCheck,
   SWEEP_LIMIT,
 } from "./release-rules"
+import { undoReservations } from "./undo-reservations"
 import { giveBackVoucherUses } from "./voucher-use"
 
 // Releasing unpaid orders (docs/specs/033-release-unpaid-orders, FR-24): an
@@ -187,8 +188,9 @@ export async function checkExpiredOrders({
   return result
 }
 
-// Cancel the session; one that had already ended is reconciled
-async function checkSession(
+// Cancel the session; one that had already ended is reconciled (also used by
+// Admin's cancel, docs/specs/044-admin-cancel-order, B15)
+export async function checkSession(
   gw: PaymentGateway,
   sessionId: string,
   now: Date,
@@ -247,31 +249,8 @@ export async function releaseExpiredOrders(
   })
 
   // Undo the reservations row for row (D9), one stock update per product in
-  // id order, the order placement takes them in
-  const reserved = await tx.stockMovement.findMany({
-    where: { orderId: { in: ids }, reason: "ORDER_RESERVED" },
-    select: { orderId: true, productId: true, change: true },
-  })
-  const back = new Map<string, number>()
-  for (const { productId, change } of reserved) {
-    back.set(productId, (back.get(productId) ?? 0) - change)
-  }
-  for (const productId of [...back.keys()].sort()) {
-    await tx.$executeRaw`
-      UPDATE "Product"
-      SET "stock" = "stock" + ${back.get(productId)!}, "updatedAt" = now()
-      WHERE "id" = ${productId}`
-  }
-  if (reserved.length > 0) {
-    await tx.stockMovement.createMany({
-      data: reserved.map(({ orderId, productId, change }) => ({
-        productId,
-        change: -change,
-        reason: "ORDER_RELEASED" as const,
-        orderId,
-      })),
-    })
-  }
+  // id order
+  const { withReservation } = await undoReservations(tx, ids)
 
   // Each cancelled order's voucher use goes back, after the stock (products
   // are locked first, then vouchers) and whatever the voucher's dates are now
@@ -287,7 +266,6 @@ export async function releaseExpiredOrders(
     if (email) emails.push(email.id)
   }
 
-  const withReservation = new Set(reserved.map(({ orderId }) => orderId))
   return {
     released: locked,
     notLocked,

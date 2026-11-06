@@ -123,7 +123,7 @@ describe("labels", () => {
   it("cover every payment problem, payment status, email type and status", () => {
     expect(Object.keys(PAYMENT_PROBLEM_LABELS)).toHaveLength(3)
     expect(Object.keys(PAYMENT_STATUS_LABELS)).toHaveLength(5)
-    expect(Object.keys(EMAIL_TYPE_LABELS)).toHaveLength(7)
+    expect(Object.keys(EMAIL_TYPE_LABELS)).toHaveLength(8)
     expect(Object.keys(EMAIL_STATUS_LABELS)).toHaveLength(5)
     expect(PAYMENT_PROBLEM_LABELS.AMOUNT_MISMATCH).toBe("Amount didn't match")
     expect(EMAIL_STATUS_LABELS.PENDING).toBe("Queued")

@@ -281,3 +281,95 @@ describe("fulfillment times, courier and tracking (B20)", () => {
     expect(steps.find((s) => s.status === "SHIPPED")?.detail).toBeUndefined()
   })
 })
+
+// docs/specs/044-admin-cancel-order: B22, E25. The prior status isn't stored,
+// so how far a cancelled order got comes from its timestamps.
+describe("how far a cancelled order got", () => {
+  const T = new Date("2026-11-04T04:30:00Z")
+  const states = (o: Omit<Parameters<typeof orderTimeline>[0], "status">) =>
+    orderTimeline({ ...o, status: "CANCELLED" }).steps.map(
+      (s) => `${s.status}:${s.state}`
+    )
+
+  it("an unpaid online order stopped at Pending payment", () => {
+    expect(states({ fulfillment: "DELIVERY" })).toEqual([
+      "PENDING_PAYMENT:done",
+      "PAID:upcoming",
+      "PROCESSING:upcoming",
+      "SHIPPED:upcoming",
+      "DELIVERED:upcoming",
+    ])
+  })
+
+  it("a paid online order got to Paid", () => {
+    expect(states({ fulfillment: "DELIVERY", paidAt: T })).toEqual([
+      "PENDING_PAYMENT:done",
+      "PAID:done",
+      "PROCESSING:upcoming",
+      "SHIPPED:upcoming",
+      "DELIVERED:upcoming",
+    ])
+  })
+
+  it("a processing online order got to Processing, with its time", () => {
+    const timeline = orderTimeline({
+      status: "CANCELLED",
+      fulfillment: "DELIVERY",
+      paidAt: T,
+      processingAt: T,
+      cancelledAt: T,
+    })
+    expect(timeline.steps.map((s) => s.state)).toEqual([
+      "done",
+      "done",
+      "done",
+      "upcoming",
+      "upcoming",
+    ])
+    expect(timeline.steps[2].detail).toMatch(/^Started /)
+    expect(timeline.steps.some((s) => s.state === "current")).toBe(false)
+    expect(timeline.branch).toMatchObject({
+      status: "CANCELLED",
+      detail: expect.stringMatching(/^Cancelled /),
+    })
+  })
+
+  it("a confirmed cash order got to COD confirmed; an unconfirmed one to the first step", () => {
+    expect(
+      states({ fulfillment: "DELIVERY", paymentOption: "COD", confirmedAt: T })
+    ).toEqual([
+      "PENDING_CONFIRMATION:done",
+      "COD_CONFIRMED:done",
+      "PROCESSING:upcoming",
+      "SHIPPED:upcoming",
+      "DELIVERED:upcoming",
+    ])
+    expect(states({ fulfillment: "PICKUP", paymentOption: "COD" })[0]).toBe(
+      "PENDING_CONFIRMATION:done"
+    )
+  })
+
+  it("a pickup order that was ready got to Ready for pickup", () => {
+    expect(
+      states({
+        fulfillment: "PICKUP",
+        paymentOption: "COD",
+        confirmedAt: T,
+        processingAt: T,
+        readyAt: T,
+      })
+    ).toEqual([
+      "PENDING_CONFIRMATION:done",
+      "COD_CONFIRMED:done",
+      "PROCESSING:done",
+      "READY_FOR_PICKUP:done",
+      "PICKED_UP:upcoming",
+    ])
+  })
+
+  it("a readyAt on a delivery order falls back to what the sequence has", () => {
+    expect(states({ fulfillment: "DELIVERY", paidAt: T, readyAt: T })[2]).toBe(
+      "PROCESSING:upcoming"
+    )
+  })
+})

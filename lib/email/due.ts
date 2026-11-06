@@ -67,6 +67,10 @@ export const CAP_EXEMPT_TYPES: readonly string[] = [
   "ORDER_SHIPPED",
   "ORDER_DELIVERED",
   "READY_FOR_PICKUP",
+  // A staff cancel (docs/specs/044-admin-cancel-order, R20). The release's
+  // ORDER_CANCELLED is NOT exempt: anyone can place an unpaid order for any
+  // address, so exempting it would reopen the hole the cap closes (#64).
+  "ORDER_CANCELLED_BY_STORE",
 ]
 
 export const capDecision = (counted: number, type?: string): CapDecision =>

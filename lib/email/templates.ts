@@ -2,6 +2,7 @@ import type { EmailType, Prisma } from "@/generated/prisma/client"
 
 import { codConfirm } from "./templates/cod-confirm"
 import { orderCancelled } from "./templates/order-cancelled"
+import { orderCancelledByStore } from "./templates/order-cancelled-by-store"
 import { orderDelivered } from "./templates/order-delivered"
 import { orderPlaced } from "./templates/order-placed"
 import { orderShipped } from "./templates/order-shipped"
@@ -16,7 +17,7 @@ import { readyForPickup } from "./templates/ready-for-pickup"
 // `no-template`, loudly, instead of being marked sent.
 
 export type EmailOrder = Prisma.OrderGetPayload<{
-  include: { items: true }
+  include: { items: true; payments: { select: { status: true } } }
 }>
 
 export type EmailContent = { subject: string; html: string; text: string }
@@ -48,6 +49,7 @@ export const templates: EmailTemplates = {
   ORDER_PLACED: orderPlaced,
   PAYMENT_RECEIVED: paymentReceived,
   ORDER_CANCELLED: orderCancelled,
+  ORDER_CANCELLED_BY_STORE: orderCancelledByStore,
   COD_CONFIRM: codConfirm,
   ORDER_SHIPPED: orderShipped,
   READY_FOR_PICKUP: readyForPickup,

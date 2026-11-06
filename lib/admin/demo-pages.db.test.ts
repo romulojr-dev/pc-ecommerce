@@ -34,6 +34,7 @@ vi.mock("next/navigation", () => ({
 }))
 vi.mock("@/app/admin/(shell)/orders/[number]/actions", () => ({
   transitionOrderAction: async () => ({ ok: false, message: "unused" }),
+  cancelOrderAction: async () => ({ ok: false, message: "unused" }),
 }))
 vi.mock("@/lib/admin/session", () => ({
   requireAdminAccess: async () => ({

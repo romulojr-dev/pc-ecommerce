@@ -43,11 +43,17 @@ const ALL = testTemplates([
   "ORDER_SHIPPED",
   "ORDER_DELIVERED",
   "READY_FOR_PICKUP",
+  "ORDER_CANCELLED_BY_STORE",
 ])
 
 async function dueRow(
   type:
-    "ORDER_SHIPPED" | "ORDER_PLACED" | "READY_FOR_PICKUP" | "ORDER_DELIVERED"
+    | "ORDER_SHIPPED"
+    | "ORDER_PLACED"
+    | "READY_FOR_PICKUP"
+    | "ORDER_DELIVERED"
+    | "ORDER_CANCELLED"
+    | "ORDER_CANCELLED_BY_STORE"
 ) {
   const order = await newOrder(ANA)
   return outboxRow(order.id, ANA, { type, createdAt: ago(N, MINUTE) })
@@ -114,5 +120,27 @@ describe("the exemption", () => {
     const placed = await dueRow("ORDER_PLACED")
     await send()
     expect(await statusOf(placed.id)).toBe("SKIPPED")
+  })
+})
+
+// docs/specs/044-admin-cancel-order: R20, E31, E32
+describe("the cancelled emails and the cap", () => {
+  it("E31: six unpaid orders released to one address are still capped", async () => {
+    const rows = []
+    for (let i = 0; i < 6; i++) rows.push(await dueRow("ORDER_CANCELLED"))
+    await send()
+    const statuses = await Promise.all(rows.map((row) => statusOf(row.id)))
+    expect(statuses.filter((s) => s === "SENT")).toHaveLength(5)
+    expect(statuses.filter((s) => s === "SKIPPED")).toHaveLength(1)
+  })
+
+  it("E32: a staff cancel over the cap is sent, and counts toward it", async () => {
+    await countedRows(ANA, 5, within)
+    const byStore = await dueRow("ORDER_CANCELLED_BY_STORE")
+    await send()
+    expect(await statusOf(byStore.id)).toBe("SENT")
+    const released = await dueRow("ORDER_CANCELLED")
+    await send()
+    expect(await statusOf(released.id)).toBe("SKIPPED")
   })
 })

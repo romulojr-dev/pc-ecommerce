@@ -55,6 +55,7 @@ export const p1 = (overrides: Partial<EmailOrder> = {}): EmailOrder =>
     courier: null,
     trackingNumber: null,
     items: [item({ quantity: 2 })],
+    payments: [],
     ...overrides,
   }) as EmailOrder
 

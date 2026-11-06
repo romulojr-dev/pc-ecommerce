@@ -39,7 +39,12 @@ export type TimelineStep = {
 export type OrderTimeline = {
   steps: TimelineStep[]
   // Cancelled and Refunded are their own branch after the list, never a step
-  branch: { status: "CANCELLED" | "REFUNDED"; label: string } | null
+  // Cancelled carries when, once the order has the time
+  branch: {
+    status: "CANCELLED" | "REFUNDED"
+    label: string
+    detail?: string
+  } | null
 }
 
 const LABELS: Record<OrderStatusName, string> = {
@@ -132,6 +137,28 @@ function addFulfillment(
   }
 }
 
+// The furthest step of the order's own sequence its timestamps show (B22)
+function reachedIndex(
+  sequence: OrderStatusName[],
+  order: {
+    paymentOption?: PaymentOptionName
+    confirmedAt?: Date | null
+    paidAt?: Date | null
+    processingAt?: Date | null
+    readyAt?: Date | null
+  }
+): number {
+  const at = (status: OrderStatusName) => sequence.indexOf(status)
+  if (order.readyAt && at("READY_FOR_PICKUP") >= 0) {
+    return at("READY_FOR_PICKUP")
+  }
+  if (order.processingAt) return at("PROCESSING")
+  if (order.paymentOption === "COD") {
+    return order.confirmedAt ? at("COD_CONFIRMED") : 0
+  }
+  return order.paidAt ? at("PAID") : 0
+}
+
 export function orderTimeline(order: {
   status: OrderStatusName
   fulfillment: FulfillmentName
@@ -139,6 +166,11 @@ export function orderTimeline(order: {
   paymentOption?: PaymentOptionName
   // When a cash order was confirmed (docs/specs/038-cash-on-delivery, D12)
   confirmedAt?: Date | null
+  // When an online order was paid, and when it was cancelled (docs/specs/044-
+  // admin-cancel-order, B22): with the timestamps below they show how far a
+  // cancelled order got, since the prior status isn't stored
+  paidAt?: Date | null
+  cancelledAt?: Date | null
   // The fulfillment moves (docs/specs/043-order-fulfillment-transitions, B20);
   // completedAt is Delivered or Picked up, labeled from the status
   processingAt?: Date | null
@@ -169,16 +201,31 @@ export function orderTimeline(order: {
       return step
     })
 
-  // The prior status isn't stored, so the list stops where the order must
-  // have been: a cancelled order never got past payment (or confirmation), and
-  // a refund follows a payment. The branch is the current item.
+  // The prior status isn't stored, so a cancelled order's list stops at the
+  // furthest step its timestamps show it reached (none is "current": the
+  // branch is). With no timestamp it never got past the first step: an
+  // unpaid or unconfirmed order, which is every order the release cancels.
   if (order.status === "CANCELLED") {
+    const reached = reachedIndex(sequence, order)
     return {
-      steps: make(-1).map((step, i) => ({
-        ...step,
-        state: i === 0 ? "done" : "upcoming",
-      })),
-      branch: { status: "CANCELLED", label: LABELS.CANCELLED },
+      steps: make(reached + 1).map((step, index) =>
+        index <= reached
+          ? step.state === "current"
+            ? { ...step, state: "done" as const }
+            : step
+          : {
+              status: step.status,
+              label: step.label,
+              state: "upcoming" as const,
+            }
+      ),
+      branch: {
+        status: "CANCELLED",
+        label: LABELS.CANCELLED,
+        ...(order.cancelledAt
+          ? { detail: `Cancelled ${dateTimeText(order.cancelledAt)}` }
+          : {}),
+      },
     }
   }
   if (order.status === "REFUNDED") {

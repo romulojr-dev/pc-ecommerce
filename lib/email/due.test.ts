@@ -122,6 +122,7 @@ describe("the cap exemption", () => {
       "ORDER_SHIPPED",
       "ORDER_DELIVERED",
       "READY_FOR_PICKUP",
+      "ORDER_CANCELLED_BY_STORE",
     ]) {
       expect(capDecision(0, type)).toBe("send")
       expect(capDecision(5, type)).toBe("send")
@@ -129,8 +130,9 @@ describe("the cap exemption", () => {
     }
   })
 
-  it("is exactly those three types", () => {
+  it("is exactly those four types, and not the release's ORDER_CANCELLED (R20)", () => {
     expect([...CAP_EXEMPT_TYPES].sort()).toEqual([
+      "ORDER_CANCELLED_BY_STORE",
       "ORDER_DELIVERED",
       "ORDER_SHIPPED",
       "READY_FOR_PICKUP",

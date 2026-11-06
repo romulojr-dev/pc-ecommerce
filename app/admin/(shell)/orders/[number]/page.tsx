@@ -43,6 +43,10 @@ export default async function AdminOrderDetailPage({
         session.user.adminRole,
         "orders.transition"
       )}
+      cancelDisabledReason={disabledReason(
+        session.user.adminRole,
+        "orders.cancel"
+      )}
       slipHref={
         slip
           ? `/admin/orders/${encodeURIComponent(order.orderNumber)}/packing-slip`
