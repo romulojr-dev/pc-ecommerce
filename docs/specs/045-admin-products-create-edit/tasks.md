@@ -13,9 +13,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Generated spec form fields
-- [ ] `lib/specs/form-fields.ts`: `specFormFields`, `specsFromForm`; cooler union handled
-- [ ] Tests: all eight categories, kinds, required flags, units; every seed part round-trips through the form values and `validateSpecs`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/specs/form-fields.ts`: `specFormFields`, `specsFromForm`; cooler union handled
+- [x] Tests: all eight categories, kinds, required flags, units; every seed part round-trips through the form values and `validateSpecs`
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Schema
 - [ ] `Product.editVersion Int @default(0)` in `schema.prisma` and a migration
