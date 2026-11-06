@@ -6,6 +6,8 @@ Status: implemented (2026-11-03; approved with changes, see the change list at t
 
 Long form: the story touches three writers, a renderer, an order-page string and a dev page.
 
+> *Changed by spec 044 (#109): Admin's cancel sends its own type, `ORDER_CANCELLED_BY_STORE`, with a template of its own; the release keeps `ORDER_CANCELLED`. Both leads close with "You haven't been charged." only when nothing was received, and "We'll refund your payment." otherwise.*
+
 > *Changed by spec 043 (#108): the registry also holds `ORDER_SHIPPED`, `READY_FOR_PICKUP` and `ORDER_DELIVERED`, enqueued by Admin's order transitions; Picked up sends no email.*
 
 ## 1. Summary

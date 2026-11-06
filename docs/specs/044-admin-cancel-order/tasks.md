@@ -56,8 +56,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Run with the whole admin project (68 tests) against a local Postgres in Docker, since the Neon dev branch has no E2E accounts here
 
 ## 9. Docs
-- [ ] CLAUDE.md bullet; "changed by spec 044" notes in specs 033, 035, 036
-- [ ] Spec §11 "What changed while building"; tick this file
+- [x] CLAUDE.md bullet; "changed by spec 044" notes in specs 033, 035, 036
+- [x] Spec §11 "What changed while building"; tick this file
 
 ## 10. PR
 - [ ] `git push -u origin HEAD`
