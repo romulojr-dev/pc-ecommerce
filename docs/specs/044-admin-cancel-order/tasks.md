@@ -52,8 +52,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 8. E2E
-- [ ] `e2e/admin-cancel.spec.ts` and fixtures
-- [ ] Run against the local app and Docker-free dev server as the other admin specs do
+- [x] `e2e/admin-cancel.spec.ts` and `e2e/admin-cancel-fixtures.ts` (order numbers `PCS-E2EK000n`)
+- [x] Run with the whole admin project (68 tests) against a local Postgres in Docker, since the Neon dev branch has no E2E accounts here
 
 ## 9. Docs
 - [ ] CLAUDE.md bullet; "changed by spec 044" notes in specs 033, 035, 036
