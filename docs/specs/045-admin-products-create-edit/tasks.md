@@ -4,13 +4,13 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 0. Housekeeping
 - [x] Spec reviewed (Q1–Q3 settled; D1, D3, D5 changed); [#137](https://github.com/romulojr-dev/pc-ecommerce/issues/137) created; #114 gets the seed-images criterion
-- [ ] Commit `spec.md`, `plan.md`, `tasks.md`
+- [x] Commit `spec.md`, `plan.md`, `tasks.md`
 
 ## 1. Pure rules
-- [ ] `lib/admin/money.ts`: `pesosToCentavos` (B19, R5; no float step), `centavosToPesos`; tests E12–E12h and float traps; source-reading test
-- [ ] `lib/admin/product-input.ts`: field schemas (R17), sale below price (E13, E14), pre-order date rule (E14a–E14c), locked-field rule (R8)
-- [ ] `lib/admin/products-params.ts` (E3, E4) and `lib/admin/products-view.ts`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/admin/money.ts`: `pesosToCentavos` (B19, R5; no float step), `centavosToPesos`; tests E12–E12h and float traps; source-reading test
+- [x] `lib/admin/product-input.ts`: field schemas (R17), sale below price (E13, E14), pre-order date rule (E14a–E14c), locked-field rule (R8)
+- [x] `lib/admin/products-params.ts` (E3, E4) and `lib/admin/products-view.ts`
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Generated spec form fields
 - [ ] `lib/specs/form-fields.ts`: `specFormFields`, `specsFromForm`; cooler union handled
