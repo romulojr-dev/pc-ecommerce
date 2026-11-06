@@ -12,9 +12,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Unit tests for all three; `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema
-- [ ] Migration 1: `StockMovementReason` gains `RECEIVED`, `DAMAGED`, `CORRECTION`
-- [ ] Migration 2: `StockMovement.note`, the loud pre-check, the CHECKs (R2, R6), the history index; `schema.prisma` and its comments updated
-- [ ] `schema.db.test.ts`: E45, E46; fix any fixture that breaks a CHECK; `pnpm db:drift`, `pnpm test:db` pass
+- [x] Migration 1: `StockMovementReason` gains `RECEIVED`, `DAMAGED`, `CORRECTION`
+- [x] Migration 2: `StockMovement.note`, the loud pre-check, the CHECKs (R2, R6), the history index; `schema.prisma` and its comments updated
+- [x] `stock-movement-checks.db.test.ts`: E45, E46; fix any fixture that breaks a CHECK; `pnpm db:drift`, `pnpm test:db` pass
 
 ## 3. Queries
 - [ ] `lib/admin/queries/inventory.ts` and `lib/orders`-style `low-stock-sql.ts`: `listInventory`, `getInventoryProduct`, `listMovements`; named fields, role checks, Demo note masking
