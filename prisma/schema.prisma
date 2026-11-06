@@ -441,6 +441,9 @@ model Order {
   // they expire
   // (the text is how Postgres prints the predicate, so db:drift sees no change)
   @@index([expiresAt], where: raw("(status = ANY (ARRAY['PENDING_PAYMENT'::\"OrderStatus\", 'PENDING_CONFIRMATION'::\"OrderStatus\"]))"))
+  // The dashboard's sales window: orders by when they were paid
+  // (docs/specs/048-admin-dashboard, D14); unpaid orders are not in it
+  @@index([paidAt], where: raw("(\"paidAt\" IS NOT NULL)"))
 }
 
 // One line of an order: a single item (buildId null) or a part of a build
