@@ -13,7 +13,7 @@ Status: implemented in code (2026-11-05), waiting for the preview check; see "Wh
 1. Three roles (`owner`, `staff`, `demo`) and 24 actions, fixed by the issue's table (§6). `can(role, action)` is the only place that table exists. In plain terms: **Demo can open every screen Owner can open, can't perform any action, and can't search by customer.** (The table also withholds `payments.review` and `refunds.record` from Demo; those are actions, not screens.)
 2. The UI uses the same `can()` to show or disable controls. A control is **hidden** when the whole feature is unavailable to the role (a nav item, a section) and **disabled with the role's reason** when the feature is visible but the action isn't (Demo sees Cancel greyed with "This account is read-only"). The UI check is a convenience; the server check is the rule.
 3. A person who opens an admin page whose view action their role lacks (Staff typing `/admin/products`) sees a "You don't have access to this page" page inside the shell, with a link back to Orders. No data is read.
-4. Everyone lands on Orders after sign-in, as in spec 039, until the Dashboard story (it then redirects Owner and Demo to the dashboard). The nav lists only items the role can open (today only Orders, which all roles can).
+4. *Changed by spec 048 (#120): Owner and Demo now land on the Dashboard; Staff still land on Orders.* Everyone lands on Orders after sign-in, as in spec 039, until the Dashboard story (it then redirects Owner and Demo to the dashboard). The nav lists only items the role can open (today only Orders, which all roles can).
 
 ### Mutations (server actions and route handlers)
 

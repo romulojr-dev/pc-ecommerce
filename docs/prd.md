@@ -178,7 +178,7 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 
 A protected `/admin` area, built with the same shadcn/ui components, lets the shop run without developer help.
 
-- **AD-1 Dashboard:** today's and 30-day sales, order count, average order value, low-stock list, recent orders.
+- **AD-1 Dashboard:** today's and 30-day sales, order count, average order value, low-stock list, recent orders ([spec 048](specs/048-admin-dashboard/spec.md)).
 - **AD-2 Products:** create/edit with category-specific spec fields (required fields enforced for builder rules), images upload, SEO title/description, publish/draft toggle.
 - **AD-3 Categories:** edit only: name, parent and sort order; a slug is editable only for non-builder categories; no create or delete in the MVP. Each category's spec fields (name, type, unit, filterable?, used by builder?) are defined in code, because the builder rules read them by name; adding or changing a field is a code change ([ADR 0002](adr/0002-spec-schemas-in-code.md)).
 - **AD-4 Brands:** name, logo.

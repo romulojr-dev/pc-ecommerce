@@ -184,3 +184,11 @@ Every acceptance criterion maps below; the checks on the preview URL stay manual
 ## 10. Open questions
 
 None. Settled at review: the needs-review count has no link until #111 (D12); all flagged orders are counted until #111 narrows it (D13); the partial `paidAt` index is added (D14); Orders placed is any status in the Manila-day window (D15); AOV is Paid sales ÷ sale orders (D3, D16).
+
+## 11. What changed while building
+
+- **Landing mechanism (R13).** The sign-in form knows no role, so `ADMIN_HOME` is now `/admin` and the `/admin` page redirects with `adminHomeFor(role)`; `safeNext` is not role-aware. Same behavior as written.
+- **No `(page)` route group.** The dashboard has no detail route, so `loading.tsx` and `error.tsx` sit directly in `app/admin/(shell)/dashboard/`.
+- **Existing E2E updated.** `auth.setup.ts`, `admin-auth.spec.ts` and `admin-roles.spec.ts` expected every role to land on Orders; Owner and Demo now land on the dashboard.
+- **`toOrderListRow`.** The list's row mapping was extracted from `listOrders` so the dashboard's recent orders share the masking (`dueAmong` and `listSelect` are exported).
+- **Unrelated flake seen.** `e2e/admin-audit.spec.ts` ("a real adjustment shows up first") failed once in a full parallel admin run and passed alone and on rerun; it reads "the newest audit row" while other specs write audit rows.
