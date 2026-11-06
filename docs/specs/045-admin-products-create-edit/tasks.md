@@ -39,7 +39,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Seed tests rewritten (E28–E30); CLAUDE.md `db:seed` and spec 001 table updated
 
 ## 8. UI: list
-- [ ] Nav item, copy, `/admin/products` page, filter form, table, `loading.tsx`, `error.tsx`, Demo and Staff behavior
+- [x] Nav item, copy, `/admin/products` page, filter form, table, `loading.tsx`, `error.tsx`, Demo and Staff behavior
 
 ## 9. UI: forms
 - [ ] `/admin/products/new` (category step, form), `/admin/products/[id]`, `ProductForm` with generated spec controls, errors summary, stale message, category change note, locked fields
