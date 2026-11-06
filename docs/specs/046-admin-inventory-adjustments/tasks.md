@@ -40,7 +40,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Component tests (review text, Confirm withheld at the bounds, moved-stock result line, Demo disabled); `demo-inventory-pages.db.test.ts` with `expectNoRawValues`
 
 ## 9. E2E
-- [ ] `e2e/admin-inventory.spec.ts` and fixtures (E38, E12, E10, threshold, Demo, filters)
+- [x] `e2e/admin-inventory.spec.ts` and fixtures (E38, E12, E10, threshold, Demo, filters)
 
 ## 10. Docs and PR
 - [ ] CLAUDE.md paragraph; spec 045's stock line and the `StockMovement` comment checked; README if it lists Admin screens
