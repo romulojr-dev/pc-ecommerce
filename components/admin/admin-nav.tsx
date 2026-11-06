@@ -2,7 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { PackageIcon, ShoppingCartIcon, UsersIcon } from "lucide-react"
+import {
+  PackageIcon,
+  ShoppingCartIcon,
+  UsersIcon,
+  WarehouseIcon,
+} from "lucide-react"
 
 import {
   SidebarMenu,
@@ -15,6 +20,7 @@ import {
 // icons live here because a component cannot cross from server to client.
 const ICONS = {
   products: PackageIcon,
+  inventory: WarehouseIcon,
   orders: ShoppingCartIcon,
   customers: UsersIcon,
 } as const

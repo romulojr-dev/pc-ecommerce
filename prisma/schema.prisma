@@ -304,12 +304,19 @@ enum PaymentOption {
   COD
 }
 
-// Why stock moved. Only ORDER_RESERVED is written so far; the stories that
-// release stock (#81) or adjust it (Admin) add their values.
+// Why stock moved. The two ORDER_ reasons are the system's (placing, releasing
+// and cancelling orders); the other three are staff adjustments from Admin
+// Inventory and always have an actor (docs/specs/046-admin-inventory-
+// adjustments). A RECEIVED change is positive, DAMAGED negative, CORRECTION
+// either; ORDER_RESERVED is negative and ORDER_RELEASED positive. A restock
+// after a refund is a CORRECTION with a note naming the order.
 enum StockMovementReason {
   ORDER_RESERVED
   // An unpaid order's stock given back (docs/specs/033-release-unpaid-orders)
   ORDER_RELEASED
+  RECEIVED
+  DAMAGED
+  CORRECTION
 }
 
 // Why an order was cancelled. EXPIRED is the release's alone; the others are
@@ -470,7 +477,12 @@ model OrderItem {
 // actorId is the staff User who made the change (an Admin stock adjustment,
 // docs/specs/040-admin-permissions-audit-masking), null for the system
 // (placing and releasing orders). Customers never are actors: User is staff
-// only. Restrict, because staff are disabled, never deleted.
+// only. Restrict, because staff are disabled, never deleted. note is the
+// staff member's free text (1 to 500 characters, required for a CORRECTION,
+// never on an order movement). The migration holds the CHECKs Prisma can't
+// express: change is never 0, the sign of each reason, staff reasons have an
+// actor and no order, and the note rules (docs/specs/046-admin-inventory-
+// adjustments).
 model StockMovement {
   id        String              @id @default(cuid())
   productId String
@@ -481,9 +493,11 @@ model StockMovement {
   order     Order?              @relation(fields: [orderId], references: [id], onDelete: Restrict)
   actorId   String?
   actor     User?               @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  note      String?
   createdAt DateTime            @default(now())
 
   @@index([productId])
+  @@index([productId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([orderId])
   @@index([actorId])
 }

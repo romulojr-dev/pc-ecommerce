@@ -208,6 +208,8 @@ commands, the Vercel settings and how to check sign-in on a preview URL.
 
 **Customers** ([spec 042](docs/specs/042-admin-customers/spec.md)): `/admin/customers` lists each customer (a guest email) once with how many orders they placed, how much they have paid and when they last ordered, and each row opens that customer's orders. Owner and staff can search by name, email or mobile; the demo account sees masked rows and can't search.
 
+**Inventory** ([spec 046](docs/specs/046-admin-inventory-adjustments/spec.md)): `/admin/inventory` lists every product's stock and low-stock threshold, lowest first, and filters to low stock, out of stock or both. A product's page records a delivery, a loss or a count correction with a reason, shows "Stock 12 → 112" for you to confirm first, and keeps a history of every change with the staff member, the order and a note. An adjustment adds or removes a number rather than setting one, so it can't overwrite an order placed at the same moment, and stock never goes below 0. Owner and staff can adjust; the demo account sees it read-only.
+
 **Demo account** (read-only, public): email `demo@pcsilicon.tech`, password the
 value of `DEMO_ACCOUNT_PASSWORD`. It is shown on the sign-in page of every
 environment where that variable is set, with a "Use demo account" button.
