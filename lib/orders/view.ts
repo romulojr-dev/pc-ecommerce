@@ -72,6 +72,11 @@ export type OrderPageData = {
   refundRequired: boolean
   // Why it was cancelled (docs/specs/033-release-unpaid-orders)
   cancelReason: CancelReasonName | null
+  // When it was cancelled, and whether nothing was received (no paidAt and no
+  // Paid payment, late and second payments included; docs/specs/044-admin-
+  // cancel-order, R13)
+  cancelledAt: Date | null
+  nothingReceived: boolean
   payments: PaymentsSummary
 }
 

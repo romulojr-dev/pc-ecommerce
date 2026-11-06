@@ -17,6 +17,13 @@ export const ORDER_COPY = {
   // unpaid-orders, behavior 31)
   cancelledExpired:
     "This order was cancelled because it wasn't paid in time. Place a new order if you still want these parts.",
+  // A cancelled order (docs/specs/044-admin-cancel-order, B21): why, and one of
+  // two closing sentences by whether anything was received
+  cancelledPlain: "This order was cancelled.",
+  cancelledBecause: (phrase: string): string =>
+    `This order was cancelled because ${phrase}.`,
+  notCharged: "You haven't been charged.",
+  refundFollows: "We'll refund your payment.",
   saveLink:
     "Save this link to see your order. We're also emailing you a link to it; if it doesn't arrive, this one still works.",
   linkLabel: "Your order link",

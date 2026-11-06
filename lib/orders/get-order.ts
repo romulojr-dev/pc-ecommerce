@@ -3,6 +3,7 @@ import { cache } from "react"
 import { db } from "@/lib/db"
 import { paymentsSummary } from "@/lib/payments/payment-view"
 
+import { nothingReceived } from "./cancel"
 import { credentialShape, toCredential } from "./credential"
 import { orderNumberShape } from "./number"
 import { credentialOpens } from "./order-links"
@@ -102,6 +103,8 @@ export async function getOrderForPage(
     paymentMethod: order.paymentMethod,
     refundRequired: order.refundRequired,
     cancelReason: order.cancelReason,
+    cancelledAt: order.cancelledAt,
+    nothingReceived: nothingReceived(order),
     payments: paymentsSummary(order.payments),
   }
 }

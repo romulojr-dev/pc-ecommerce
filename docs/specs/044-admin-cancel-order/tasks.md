@@ -40,10 +40,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Customer timeline and order page
-- [ ] `orderTimeline` for cancelled orders; "Cancelled {time}"
-- [ ] Order-page DTO, `getOrderForPage`, `OrderView` copy
-- [ ] Tests E24, E25
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `orderTimeline` for cancelled orders; "Cancelled {time}"
+- [x] Order-page DTO, `getOrderForPage`, `OrderView` copy
+- [x] Tests E24, E25
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Admin detail and dialog
 - [ ] `OrderDetail` fields, events list; Cancel button and dialog; result and error messages; busy state; focus

@@ -65,7 +65,14 @@ export function OrderTimeline({ timeline }: { timeline: Timeline }) {
             aria-current="step"
             className="flex items-center gap-2 font-semibold text-destructive"
           >
-            {timeline.branch.label}
+            <span className="flex flex-col">
+              <span>{timeline.branch.label}</span>
+              {timeline.branch.detail && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {timeline.branch.detail}
+                </span>
+              )}
+            </span>
           </li>
         )}
       </ol>

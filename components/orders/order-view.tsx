@@ -7,6 +7,7 @@ import {
   OrderTotalsRows,
 } from "@/components/orders/order-parts"
 import { addressLines } from "@/lib/checkout/copy"
+import { cancelReasonPhrase } from "@/lib/orders/cancel"
 import {
   checkEmailText,
   COD_ORDER_COPY,
@@ -64,6 +65,11 @@ export function OrderView({
   const expired = view === "expired" || order.cancelReason === "EXPIRED"
   const status = view === "expired" ? "CANCELLED" : order.status
   const timeline = orderTimeline({ ...order, status })
+  const cancelled = status === "CANCELLED"
+  // A staff reason has its own sentence; the release's keeps spec 033 / 038's
+  const staffReason =
+    cancelled && order.cancelReason !== null && order.cancelReason !== "EXPIRED"
+  const phrase = cancelReasonPhrase(order.cancelReason, order.paymentOption)
   const cash = order.paymentOption === "COD"
   const pickup = order.fulfillment === "PICKUP"
   const lines = order.address ? addressLines({ ...order.address }) : null
@@ -84,7 +90,7 @@ export function OrderView({
           {ORDER_COPY.statusHeading}
         </h2>
         <OrderTimeline timeline={timeline} />
-        {(expired || order.paidAt || order.refundRequired) && (
+        {(expired || cancelled || order.paidAt || order.refundRequired) && (
           <div className="flex flex-col gap-1 text-sm">
             {expired && (
               <p>
@@ -93,10 +99,23 @@ export function OrderView({
                   : ORDER_COPY.cancelledExpired}
               </p>
             )}
+            {staffReason && (
+              <p>
+                {phrase
+                  ? ORDER_COPY.cancelledBecause(phrase)
+                  : ORDER_COPY.cancelledPlain}
+              </p>
+            )}
+            {cancelled && order.nothingReceived && (
+              <p>{ORDER_COPY.notCharged}</p>
+            )}
+            {cancelled && !order.nothingReceived && order.paidAt && (
+              <p>{ORDER_COPY.refundFollows}</p>
+            )}
             {order.paidAt && (
               <p>{paidLine(order.paidAt, order.paymentMethod)}</p>
             )}
-            {order.refundRequired && (
+            {order.refundRequired && !(cancelled && order.paidAt) && (
               <p className="font-medium">
                 {status === "CANCELLED" || status === "REFUNDED"
                   ? PAY_COPY.latePayment
