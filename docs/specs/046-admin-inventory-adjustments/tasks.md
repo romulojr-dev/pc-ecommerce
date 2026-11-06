@@ -21,8 +21,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Integration tests: filters, order, paging, history, order links, first-movement date, Demo masking (E2–E6, E26–E30, E43), SQL against the pure definition
 
 ## 4. Adjust and threshold
-- [ ] `lib/admin/inventory/adjust.ts`: `adjustStock`, `setLowStockAt` (E7–E9, E12, E16, E21–E25, E33)
-- [ ] Integration tests, including rollback and "refusal shows the current stock"
+- [x] `lib/admin/inventory/adjust.ts`: `adjustStock`, `setLowStockAt` (E7–E9, E12, E16, E21–E25, E33)
+- [x] Integration tests, including rollback and "refusal shows the current stock"
 
 ## 5. Concurrency
 - [ ] Adjustment against a real `placeOrder`, both interleavings forced (E17, E18); two staff at once (E19); against release and cancel (E20); the ceiling (E41) and zero (E42)
