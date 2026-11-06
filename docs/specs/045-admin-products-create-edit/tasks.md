@@ -31,8 +31,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Actions and cache
-- [ ] `actions.ts`: `adminAction("products.write", …)` for create and update; `updateTag(PRODUCTS_TAG)` after a saved result
-- [ ] Tests: `updateTag` once on create/edit, never on invalid/stale/forbidden/unchanged (R11); Demo/Staff/foreign-origin refusals; enumeration test lists both; no delete export (R14)
+- [x] `actions.ts`: `adminAction("products.write", …)` for create and update; `updateTag(PRODUCTS_TAG)` after a saved result
+- [x] Tests: `updateTag` once on create/edit, never on invalid/stale/forbidden/unchanged (R11); Demo/Staff refusals (a foreign origin is checked by `adminRoute` only; server actions rely on Next's own origin check, so E27 does not apply); enumeration test lists both; no delete export (R14)
 
 ## 7. Seed create-only
 - [ ] `CATALOG_FIELDS` removed; categories and brands create-only; summary text
