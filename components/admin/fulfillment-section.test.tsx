@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({
 }))
 vi.mock("@/app/admin/(shell)/orders/[number]/actions", () => ({
   transitionOrderAction: async () => ({ ok: false, message: "unused" }),
+  cancelOrderAction: async () => ({ ok: false, message: "unused" }),
 }))
 
 import { OrderDetailView } from "./order-detail"
@@ -163,5 +164,84 @@ describe("the Fulfillment section", () => {
     expect(
       view(order({ status: "PICKED_UP", fulfillment: "PICKUP", completedAt }))
     ).toContain("Picked up Tue 3 Nov 2026")
+  })
+})
+
+// docs/specs/044-admin-cancel-order: B5, B13, E30
+describe("Cancel order", () => {
+  const CANCEL = "Cancel order"
+
+  it("is offered from each cancellable status and not from the others", () => {
+    for (const status of [
+      "PENDING_PAYMENT",
+      "PENDING_CONFIRMATION",
+      "PAID",
+      "COD_CONFIRMED",
+      "PROCESSING",
+      "READY_FOR_PICKUP",
+    ] as const) {
+      expect(view(order({ status })), status).toContain(CANCEL)
+    }
+    for (const status of [
+      "SHIPPED",
+      "DELIVERED",
+      "PICKED_UP",
+      "CANCELLED",
+      "REFUNDED",
+    ] as const) {
+      expect(view(order({ status })), status).not.toContain(CANCEL)
+    }
+  })
+
+  it("is disabled for Demo, with the reason", () => {
+    const markup = renderToStaticMarkup(
+      <OrderDetailView
+        order={order()}
+        now={NOW}
+        backHref="/admin/orders"
+        slipHref="/slip"
+        moveDisabledReason="This account is read-only"
+        cancelDisabledReason="This account is read-only"
+      />
+    )
+    expect(markup).toMatch(/<button[^>]*disabled[^>]*>Cancel order/)
+  })
+
+  it("has no button but a line when a payment needs review", () => {
+    const markup = view(
+      order({
+        payments: [
+          {
+            referenceId: "PCS-7K3M9Q2X-1",
+            provider: "FAKE",
+            status: "PAID",
+            amount: 2_311_000,
+            method: null,
+            sessionId: "ps-1",
+            gatewayPaymentId: null,
+            createdAt: new Date("2026-11-02T06:00:00Z"),
+            paidAt: new Date("2026-11-02T06:10:00Z"),
+            sessionExpiresAt: null,
+            problem: "SECOND_PAYMENT",
+            receivedAmount: null,
+          },
+        ] as unknown as OrderDetail["payments"],
+      })
+    )
+    expect(markup).not.toContain(CANCEL)
+    expect(markup).toContain(
+      "This order has a payment that needs review. It can&#x27;t be cancelled until that is resolved."
+    )
+  })
+
+  it("the cancelled order shows its reason in the events list", () => {
+    const markup = view(
+      order({
+        status: "CANCELLED",
+        cancelledAt: new Date("2026-11-02T07:00:00Z"),
+        cancelReason: "OUT_OF_STOCK",
+      })
+    )
+    expect(markup).toContain("Cancelled: Out of stock")
   })
 })

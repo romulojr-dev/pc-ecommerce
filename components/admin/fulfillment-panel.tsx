@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useId, useRef, useState } from "react"
 
+import { CancelOrder } from "@/components/admin/cancel-order"
 import { transitionOrderAction } from "@/app/admin/(shell)/orders/[number]/actions"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FULFILLMENT_COPY } from "@/lib/admin/fulfillment-copy"
 import {
+  type CancelView,
   type FulfillmentView,
   type Outcome,
   outcomeOf,
@@ -42,10 +44,16 @@ export function FulfillmentPanel({
   status,
   view,
   disabledReason,
+  cancel,
+  cancelDisabledReason,
 }: {
   orderNumber: string
   status: OrderStatusName
   view: FulfillmentView
+  // Cancel order (docs/specs/044-admin-cancel-order) and why this role may not
+  // use it (Demo)
+  cancel: CancelView
+  cancelDisabledReason: string | null
   // Set when the role may not move orders (Demo): the button is disabled with
   // this text and nothing is sent
   disabledReason: string | null
@@ -166,6 +174,19 @@ export function FulfillmentPanel({
       ) : view.reason ? (
         <p className="text-sm text-muted-foreground">{view.reason}</p>
       ) : null}
+
+      <CancelOrder
+        orderNumber={orderNumber}
+        status={status}
+        view={cancel}
+        disabledReason={cancelDisabledReason}
+        onDone={(text) => {
+          setDone(text)
+          router.refresh()
+          heading.current?.focus()
+        }}
+        onReload={reload}
+      />
 
       <div aria-live="polite" className="text-sm">
         {done}

@@ -18,7 +18,7 @@ import { OrderTimeline } from "@/components/orders/order-timeline"
 import { FulfillmentPanel } from "@/components/admin/fulfillment-panel"
 import { ADMIN_COPY } from "@/lib/admin/copy"
 import { FULFILLMENT_COPY } from "@/lib/admin/fulfillment-copy"
-import { fulfillmentView } from "@/lib/admin/fulfillment-view"
+import { cancelView, fulfillmentView } from "@/lib/admin/fulfillment-view"
 import { buyerHref } from "@/lib/admin/customers-view"
 import {
   amountToCollect,
@@ -35,6 +35,7 @@ import type {
   PaymentAttempt,
 } from "@/lib/admin/queries/orders"
 import { formatPeso } from "@/lib/format"
+import { cancelReasonLabel } from "@/lib/orders/cancel"
 import { dateTimeText } from "@/lib/orders/time"
 import { orderTimeline } from "@/lib/orders/timeline"
 import { cn, focusRing } from "@/lib/utils"
@@ -135,6 +136,12 @@ function TimelineSection({ order, now }: { order: OrderDetail; now: Date }) {
       ? copy.events.cancelled(dateTimeText(order.cancelledAt))
       : null,
     order.cancelReason === "EXPIRED" ? copy.events.notPaidInTime : null,
+    order.cancelReason && order.cancelReason !== "EXPIRED"
+      ? FULFILLMENT_COPY.events.cancelReason(
+          cancelReasonLabel(order.cancelReason, order.paymentOption) ??
+            order.cancelReason
+        )
+      : null,
     order.processingAt
       ? FULFILLMENT_COPY.events.processing(dateTimeText(order.processingAt))
       : null,
@@ -167,6 +174,8 @@ function TimelineSection({ order, now }: { order: OrderDetail; now: Date }) {
           fulfillment: order.fulfillment,
           paymentOption: order.paymentOption,
           confirmedAt: order.confirmedAt,
+          paidAt: order.paidAt,
+          cancelledAt: order.cancelledAt,
           processingAt: order.processingAt,
           shippedAt: order.shippedAt,
           readyAt: order.readyAt,
@@ -293,11 +302,14 @@ export function OrderDetailView({
   backHref,
   slipHref,
   moveDisabledReason,
+  cancelDisabledReason = moveDisabledReason,
 }: {
   order: OrderDetail
   now: Date
   // Why this role may not move orders (Demo), or null when it may (B4)
   moveDisabledReason: string | null
+  // The same for Cancel order; the move's reason when not given
+  cancelDisabledReason?: string | null
   // The list as the staff member left it (B11)
   backHref: string
   // Null when the role has no packing slip
@@ -355,6 +367,8 @@ export function OrderDetailView({
         status={order.status}
         view={fulfillmentView(order)}
         disabledReason={moveDisabledReason}
+        cancel={cancelView(order)}
+        cancelDisabledReason={cancelDisabledReason}
       />
 
       <Section title={copy.items}>

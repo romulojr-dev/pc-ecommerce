@@ -46,10 +46,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 7. Admin detail and dialog
-- [ ] `OrderDetail` fields, events list; Cancel button and dialog; result and error messages; busy state; focus
-- [ ] Render tests per role and state (E30)
-- [ ] `no-db-in-pages.test.ts` and `admin-pages.test.ts` pass
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `OrderDetail` fields, events list; Cancel button and dialog; result and error messages; busy state; focus
+- [x] Render tests per role and state (E30)
+- [x] `no-db-in-pages.test.ts` and `admin-pages.test.ts` pass
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 8. E2E
 - [ ] `e2e/admin-cancel.spec.ts` and fixtures
