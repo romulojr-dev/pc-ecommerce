@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   PackageIcon,
+  ScrollTextIcon,
   ShoppingCartIcon,
   UsersIcon,
   WarehouseIcon,
@@ -23,6 +24,7 @@ const ICONS = {
   inventory: WarehouseIcon,
   orders: ShoppingCartIcon,
   customers: UsersIcon,
+  audit: ScrollTextIcon,
 } as const
 
 export type AdminNavItem = {
