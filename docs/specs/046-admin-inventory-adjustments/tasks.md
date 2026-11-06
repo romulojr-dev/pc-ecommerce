@@ -17,8 +17,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `stock-movement-checks.db.test.ts`: E45, E46; fix any fixture that breaks a CHECK; `pnpm db:drift`, `pnpm test:db` pass
 
 ## 3. Queries
-- [ ] `lib/admin/queries/inventory.ts` and `lib/orders`-style `low-stock-sql.ts`: `listInventory`, `getInventoryProduct`, `listMovements`; named fields, role checks, Demo note masking
-- [ ] Integration tests: filters, order, paging, history, order links, first-movement date, Demo masking (E2–E6, E26–E30, E43), SQL against the pure definition
+- [x] `lib/admin/queries/inventory.ts` and `lib/admin/low-stock-sql.ts`: `listInventory`, `getInventoryProduct`, `listMovements`; named fields, role checks, Demo note masking
+- [x] Integration tests: filters, order, paging, history, order links, first-movement date, Demo masking (E2–E6, E26–E30, E43), SQL against the pure definition
 
 ## 4. Adjust and threshold
 - [ ] `lib/admin/inventory/adjust.ts`: `adjustStock`, `setLowStockAt` (E7–E9, E12, E16, E21–E25, E33)
