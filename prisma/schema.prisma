@@ -795,4 +795,8 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@index([actorId])
+  // The audit log screen (spec 047): newest first with an id tiebreak, and the
+  // entity filter
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([entity, createdAt(sort: Desc)])
 }
