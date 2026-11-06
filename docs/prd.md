@@ -187,7 +187,7 @@ A protected `/admin` area, built with the same shadcn/ui components, lets the sh
 - **AD-7 Customers:** list, order history per customer.
 - **AD-8 Vouchers:** create and track usage.
 - **AD-9 Settings:** shipping zones and rates, pickup on/off with store address and hours, COD limits (COD also allowed as pay-on-pickup), free-shipping threshold, store info.
-- **AD-10 Audit log:** who changed price, stock or order status, and when.
+- **AD-10 Audit log:** who changed price, stock or order status, and when ([spec 047](specs/047-admin-audit-log-view/spec.md)).
 - **AD-11 Roles:** Owner can do everything. Staff can manage orders, see customers and adjust inventory. Demo can open every screen Owner can open, can't perform any action, and can't search by customer, with customer data masked ([ADR 0012](adr/0012-staff-auth-on-better-auth.md)).
 
 ## Non-functional requirements

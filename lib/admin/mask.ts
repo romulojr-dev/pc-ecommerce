@@ -1,3 +1,4 @@
+import { demoRuleOf, effectiveDemo, type MaskKind } from "./audit-keys"
 import type { AdminRole } from "./permissions"
 
 // Customer-data masking for Demo (docs/specs/040-admin-permissions-audit-
@@ -167,90 +168,61 @@ export function addressView(role: AdminRole, raw: RawAddress): AddressView {
 
 // ---- Audit entries ----
 
-const EMAIL_KEYS = new Set(["guestemail", "email", "customeremail"])
-const NAME_KEYS = new Set(["contactname", "customername"])
-const MOBILE_KEYS = new Set([
-  "contactmobile",
-  "mobile",
-  "phone",
-  "customermobile",
-])
-const TRACKING_KEYS = new Set(["trackingnumber"])
-const ADDRESS_KEYS = new Set([
-  "street",
-  "zip",
-  "barangayname",
-  "cityname",
-  "provincename",
-  "barangaycode",
-  "citycode",
-  "provincecode",
-  "address",
-])
-const FREE_TEXT_KEYS = new Set([
-  "note",
-  "notes",
-  "comment",
-  "comments",
-  "message",
-  "memo",
-  "remarks",
-  "instructions",
-])
+// Which Demo rule a key has comes from the registry in audit-keys.ts (spec
+// 047, D13): customer keys are masked, free text and every key with no rule
+// are hidden, the keys listed as shown are kept. Walks any depth.
 
-function maskJsonValue(key: string, value: unknown): unknown {
-  const k = key.toLowerCase()
-  if (typeof value === "string") {
-    if (EMAIL_KEYS.has(k)) return maskEmail(value)
-    if (NAME_KEYS.has(k)) return maskName(value)
-    if (MOBILE_KEYS.has(k)) return maskMobile(value)
-    if (TRACKING_KEYS.has(k)) return maskTracking(value)
-    if (ADDRESS_KEYS.has(k) || FREE_TEXT_KEYS.has(k)) return HIDDEN_IN_DEMO
-  } else if (value !== null && value !== undefined) {
-    if (ADDRESS_KEYS.has(k) || FREE_TEXT_KEYS.has(k)) return HIDDEN_IN_DEMO
+export function maskByKind(kind: MaskKind, value: string): Masked {
+  switch (kind) {
+    case "name":
+      return maskName(value)
+    case "email":
+      return maskEmail(value)
+    case "mobile":
+      return maskMobile(value)
+    case "tracking":
+      return maskTracking(value)
+    case "address":
+      return HIDDEN_IN_DEMO
   }
-  return maskAuditJson(value)
 }
 
-// The audit entry's before / after for Demo: known customer keys masked,
-// free-text keys "Hidden in demo", every other key kept. Walks any depth.
-export function maskAuditJson(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map((item) => maskAuditJson(item))
-  if (value !== null && typeof value === "object") {
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === "object" && !Array.isArray(value)
+
+const isContainer = (value: unknown): boolean =>
+  isObject(value) || (Array.isArray(value) && value.some(isObject))
+
+function maskAt(path: string, value: unknown): unknown {
+  // A container is decided by its leaves, unless its own key is hidden
+  if (isContainer(value) && demoRuleOf(path) !== "hidden") {
+    return maskWalk(value, path)
+  }
+  if (value === null || value === undefined) return value
+  const rule = effectiveDemo(path)
+  if (rule === "shown") return value
+  if (rule === "hidden") return HIDDEN_IN_DEMO
+  return typeof value === "string"
+    ? maskByKind(rule.slice("masked:".length) as MaskKind, value)
+    : HIDDEN_IN_DEMO
+}
+
+function maskWalk(value: unknown, path: string): unknown {
+  if (Array.isArray(value)) return value.map((item) => maskAt(path, item))
+  if (isObject(value)) {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        maskJsonValue(key, item),
+        maskAt(path ? `${path}.${key}` : key, item),
       ])
     )
   }
   return value
 }
 
-export type AuditEntryView = {
-  id: string
-  entity: string
-  entityId: string
-  action: string
-  // Name and role only: never the actor's email
-  actor: { name: string; role: string }
-  before: unknown
-  after: unknown
-  createdAt: Date
-}
-
-export type RawAuditEntry = Omit<AuditEntryView, "actor"> & {
-  actor: { name: string; role: string }
-}
-
-export function auditEntryView(
-  role: AdminRole,
-  raw: RawAuditEntry
-): AuditEntryView {
-  if (role !== "demo") return raw
-  return {
-    ...raw,
-    before: maskAuditJson(raw.before),
-    after: maskAuditJson(raw.after),
-  }
+// The audit entry's before / after for Demo: known customer keys masked,
+// free-text keys and keys with no rule "Hidden in demo", the keys the
+// registry lists as shown kept.
+export function maskAuditJson(value: unknown): unknown {
+  return maskWalk(value, "")
 }
