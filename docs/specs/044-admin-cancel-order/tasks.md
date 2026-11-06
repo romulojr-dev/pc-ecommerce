@@ -32,12 +32,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. The cancel (server)
-- [ ] `cancelOrder`: read, gateway step (every status), one `adminTransaction`, conditional update, payments, `undoReservations`, voucher, audit (with note), email
-- [ ] `cancelOrderAction` with `adminAction("orders.cancel", …)`; email scheduled and tag revalidated after commit (only when stock returned)
-- [ ] Integration tests E2–E12, E18–E20, E22, E29, E33–E35
-- [ ] Race tests E14–E17 forced both ways
-- [ ] E27 Demo refused, guard-enumeration passes; E28 under `guardTransactions`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `cancelOrder`: read, gateway step (every status), one `adminTransaction`, conditional update, payments, `undoReservations`, voucher, audit (with note), email
+- [x] `cancelOrderAction` with `adminAction("orders.cancel", …)`; email scheduled and tag revalidated after commit (only when stock returned)
+- [x] Integration tests E2–E12, E18–E20, E22, E29, E33–E35
+- [x] Race tests E14–E17 forced both ways
+- [x] E27 Demo refused, guard-enumeration passes; E28 under `guardTransactions`
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 6. Customer timeline and order page
 - [ ] `orderTimeline` for cancelled orders; "Cancelled {time}"

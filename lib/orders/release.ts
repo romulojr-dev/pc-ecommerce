@@ -188,8 +188,9 @@ export async function checkExpiredOrders({
   return result
 }
 
-// Cancel the session; one that had already ended is reconciled
-async function checkSession(
+// Cancel the session; one that had already ended is reconciled (also used by
+// Admin's cancel, docs/specs/044-admin-cancel-order, B15)
+export async function checkSession(
   gw: PaymentGateway,
   sessionId: string,
   now: Date,
