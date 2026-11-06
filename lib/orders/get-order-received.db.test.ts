@@ -5,7 +5,7 @@ import { orderData } from "@/test-support/orders"
 import { paymentData } from "@/test-support/payments"
 
 import { getOrderForPage } from "./get-order"
-import { hashToken } from "./secrets"
+import { hashToken, newAccessToken } from "./secrets"
 
 // docs/specs/044-admin-cancel-order: R13, E24. The order page's DTO says
 // whether anything was received, counting a late payment on an expired order.
@@ -13,7 +13,7 @@ import { hashToken } from "./secrets"
 beforeEach(resetCatalog)
 afterAll(() => db.$disconnect())
 
-const TOKEN = "T".repeat(43)
+const TOKEN = newAccessToken()
 const PAID_AT = new Date("2026-11-01T07:30:00Z")
 const CANCELLED_AT = new Date("2026-11-02T08:00:00Z")
 
