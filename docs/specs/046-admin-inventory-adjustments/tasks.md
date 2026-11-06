@@ -4,12 +4,12 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 0. Housekeeping
 - [x] Spec approved with five changes and folded in; open questions settled; #110's out-of-scope line updated
-- [ ] Commit `spec.md`, `plan.md`, `tasks.md`
+- [x] Commit `spec.md`, `plan.md`, `tasks.md`
 
 ## 1. Pure rules
-- [ ] `lib/admin/inventory-input.ts`: adjustment and threshold schemas (strict), `deltaOf`, sign and bound rules (E10–E15, E23, E44)
-- [ ] `lib/admin/inventory-params.ts` (E5, E28) and `lib/admin/inventory-view.ts` (`stockLevel`, `reviewState`, `reviewText`, history row view-models, footer text)
-- [ ] Unit tests for all three; `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `lib/admin/inventory-input.ts`: adjustment and threshold schemas (strict), `deltaOf`, sign and bound rules (E10–E15, E23, E44)
+- [x] `lib/admin/inventory-params.ts` (E5, E28) and `lib/admin/inventory-view.ts` (`stockLevel`, `reviewState`, `reviewText`, history row view-models, footer text)
+- [x] Unit tests for all three; `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 2. Schema
 - [ ] Migration 1: `StockMovementReason` gains `RECEIVED`, `DAMAGED`, `CORRECTION`
