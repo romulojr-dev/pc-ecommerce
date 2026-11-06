@@ -8,10 +8,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `docs/prd.md`: Voucher row wording ("paid or unpaid"), FR-21 store-cancel email
 
 ## 1. Extract `undoReservations` (refactor)
-- [ ] `lib/orders/undo-reservations.ts`; `releaseExpiredOrders` calls it
-- [ ] Existing release tests pass with no changed expectation (R21)
-- [ ] Integration test E21 (three orders, two products, id order, row-for-row)
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `lib/orders/undo-reservations.ts`; `releaseExpiredOrders` calls it
+- [x] Existing release tests pass with no changed expectation (R21)
+- [x] Integration test E21 (three orders, two products, id order, row-for-row)
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 2. Pure rules
 - [ ] `canCancel` over every status; staff reasons; `cancelInputSchema` (note); reason phrases; `nothingReceived`
