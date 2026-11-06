@@ -57,8 +57,38 @@ export const FULFILLMENT_COPY = {
     DELIVERED: "Marked as delivered. The customer will get an email shortly.",
     PICKED_UP: "Marked as picked up.",
   } satisfies Record<TransitionTarget, string>,
+  // Cancel (docs/specs/044-admin-cancel-order, §5)
+  cancelOrder: {
+    button: "Cancel order",
+    title: (orderNumber: string) => `Cancel order ${orderNumber}?`,
+    describe: "Choose a reason, review what happens, then confirm.",
+    reason: "Reason",
+    note: "Note",
+    noteHint: "Internal note, not shown to the customer.",
+    back: "Back",
+    confirm: "Cancel order",
+    busy: "Cancelling…",
+    becomesCancelled: "The order becomes Cancelled. This can't be undone.",
+    stockBack: "Reserved stock goes back on sale.",
+    voucherBack: (code: string) => `The use of voucher ${code} goes back.`,
+    emailed: "The customer is emailed.",
+    notCharged: "The customer has not been charged.",
+    paid: (total: string) =>
+      `${total} was paid. The order will be marked Refund required. Return the money by hand, then record the refund.`,
+    sessionClosed: "The open payment session is closed first.",
+    needsReview:
+      "This order has a payment that needs review. It can't be cancelled until that is resolved.",
+    success: "Order cancelled. The customer will get an email shortly.",
+    successPaid: "Refund required: record it once the money is returned.",
+    paidMeanwhile:
+      "This order was just paid, so it wasn't cancelled. Reload to see it.",
+    gatewayFailed:
+      "Couldn't reach the payment provider, so the order wasn't cancelled. Try again.",
+    failed: "Couldn't cancel the order. Try again.",
+  },
   // The admin events list
   events: {
+    cancelReason: (label: string) => `Cancelled: ${label}`,
     processing: (time: string) => `Processing started ${time}`,
     shipped: (time: string) => `Shipped ${time}`,
     ready: (time: string) => `Ready for pickup ${time}`,

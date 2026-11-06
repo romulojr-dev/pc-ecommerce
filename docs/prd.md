@@ -106,7 +106,7 @@ IDs (FR-x) are referenced by tickets and tests. All prices are in PHP, VAT-inclu
 - **FR-18** *(Phase 2)* Email + password and Google sign-in; email verification; password reset.
 - **FR-19** *(Phase 2)* Address book, order history, saved builds.
 - **FR-20** Order status timeline: an online order runs Pending payment → Paid; a cash order runs Pending confirmation → COD confirmed (it is paid when delivered or picked up, which Admin records). Then Processing → Shipped (with tracking number) or Ready for pickup → Delivered / Picked up; plus Cancelled and Refunded. A cash order's timeline shows when it was confirmed.
-- **FR-21** Transactional emails: order confirmation, payment received, order cancelled, shipped, ready for pickup, delivered (none for picked up); A cash order gets one email, "Confirm your cash-on-delivery order" ("pay-on-pickup" for pickup), with a signed confirmation link, in place of the order confirmation.
+- **FR-21** Transactional emails: order confirmation, payment received, order cancelled (a separate email when the store cancels it, which says a refund will follow if the order was paid), shipped, ready for pickup, delivered (none for picked up); A cash order gets one email, "Confirm your cash-on-delivery order" ("pay-on-pickup" for pickup), with a signed confirmation link, in place of the order confirmation.
 
 ## PC Builder
 
@@ -276,7 +276,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `OrderItem` | orderId, productId, nameSnapshot, priceSnapshot, quantity, buildId and slot (nullable, for grouping a build's parts) |
 | `Payment` | orderId, provider, providerRef, method, amount, status, paidAt, received amount and currency, problem (amount mismatch, late, second payment), createdAt. One row per payment attempt; the webhook bodies are in `PaymentEvent` |
 | `PaymentEvent` | eventId (unique; Xendit sends none, so it is `{event}:{session id}`), type, payload, paymentId, receivedAt. Each processed gateway webhook event, so the same event is processed once (FR-23) |
-| `Voucher` | code (upper-case, unique), type (fixed / percent), value (centavos for fixed, whole percent 1–100 for percent), minSpend (centavos, 0 for none), startsAt, endsAt (null: never ends), usageLimit (null: unlimited), usedCount (orders holding the code that are not cancelled: taken when an order is placed, given back when it is cancelled for any reason, by expiry or by Admin) |
+| `Voucher` | code (upper-case, unique), type (fixed / percent), value (centavos for fixed, whole percent 1–100 for percent), minSpend (centavos, 0 for none), startsAt, endsAt (null: never ends), usageLimit (null: unlimited), usedCount (orders holding the code that are not cancelled: taken when an order is placed, given back when it is cancelled for any reason, by expiry or by Admin, paid or unpaid) |
 | `ShippingRate` | zone, maxWeightGrams (null for the open-ended top tier), fee |
 | `StoreSettings` | one row: free-shipping threshold, pickup on/off, store address and hours, store info, unpaid order expiry hours, COD limits (FR-25: `codEnabled`, `codMaxTotal` in centavos on the total after the discount including shipping, null for no limit, `codZones`, `codPickupEnabled`, `codConfirmHours`). Seeded until the admin settings screen (AD-9) |
 | `StockMovement` | productId, change, reason (order reserved / released, received, damaged, correction), orderId (nullable), actorId (nullable), createdAt |

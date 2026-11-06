@@ -99,6 +99,7 @@ export type EmailTypeName =
   | "ORDER_SHIPPED"
   | "READY_FOR_PICKUP"
   | "ORDER_DELIVERED"
+  | "ORDER_CANCELLED_BY_STORE"
 
 export const EMAIL_TYPE_LABELS: Record<EmailTypeName, string> = {
   ORDER_PLACED: "Order placed",
@@ -108,6 +109,7 @@ export const EMAIL_TYPE_LABELS: Record<EmailTypeName, string> = {
   ORDER_SHIPPED: "Order shipped",
   READY_FOR_PICKUP: "Ready for pickup",
   ORDER_DELIVERED: "Order delivered",
+  ORDER_CANCELLED_BY_STORE: "Order cancelled by the store",
 }
 
 export type EmailStatusName =

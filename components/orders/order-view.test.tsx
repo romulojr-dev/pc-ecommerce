@@ -79,6 +79,8 @@ function order(over: Partial<OrderPageData> = {}): OrderPageData {
     paymentMethod: null,
     refundRequired: false,
     cancelReason: null,
+    cancelledAt: null,
+    nothingReceived: true,
     payments: { latest: null, needsCheck: false },
     ...over,
   }
@@ -439,7 +441,15 @@ describe("after the gateway answered", () => {
   })
 
   it("V12: promises a refund for a payment after cancellation", () => {
-    const t = text(render(order({ status: "CANCELLED", refundRequired: true })))
+    const t = text(
+      render(
+        order({
+          status: "CANCELLED",
+          refundRequired: true,
+          nothingReceived: false,
+        })
+      )
+    )
     expect(t).toContain(
       "Payment received after this order was cancelled. We'll refund it."
     )
@@ -585,6 +595,8 @@ describe("an order that wasn't paid in time", () => {
           status: "CANCELLED",
           cancelReason: "EXPIRED",
           refundRequired: true,
+          // the late payment is a Paid payment
+          nothingReceived: false,
         }),
         DEADLINE
       )
@@ -773,5 +785,78 @@ describe("the order page after Shipped", () => {
     expect(html).toContain("Shipped Mon 2 Nov 2026, 9:30 AM")
     expect(html).toContain("Courier: LBC")
     expect(html).toContain("Tracking number: 123456784821")
+  })
+})
+
+// docs/specs/044-admin-cancel-order: B21, E24
+describe("a cancelled order's page", () => {
+  const PAID_AT = new Date("2026-10-31T07:50:00Z")
+  const cancelled = (over: Partial<OrderPageData> = {}) =>
+    order({
+      status: "CANCELLED",
+      cancelledAt: new Date("2026-10-31T09:00:00Z"),
+      ...over,
+    })
+
+  it("E24: an unpaid staff cancel gives the reason and says nothing was charged", () => {
+    const t = text(render(cancelled({ cancelReason: "OUT_OF_STOCK" })))
+    expect(t).toContain(
+      "This order was cancelled because one of the parts is out of stock."
+    )
+    expect(t).toContain("You haven't been charged.")
+    expect(t).not.toContain("We'll refund your payment.")
+    expect(t).not.toContain("Pay now")
+  })
+
+  it("E24: Other has no reason phrase", () => {
+    const t = text(render(cancelled({ cancelReason: "OTHER" })))
+    expect(t).toContain("This order was cancelled.")
+    expect(t).toContain("You haven't been charged.")
+  })
+
+  it("E24: a paid cancel says a refund will follow, not the late-payment line", () => {
+    const t = text(
+      render(
+        cancelled({
+          cancelReason: "CUSTOMER_REQUEST",
+          paidAt: PAID_AT,
+          refundRequired: true,
+          nothingReceived: false,
+        })
+      )
+    )
+    expect(t).toContain(
+      "This order was cancelled because you asked us to cancel it."
+    )
+    expect(t).toContain("We'll refund your payment.")
+    expect(t).not.toContain("You haven't been charged.")
+    expect(t).not.toContain("Payment received after this order was cancelled")
+  })
+
+  it("E24: an expired order that received a late payment keeps the late-payment line", () => {
+    const t = text(
+      render(
+        cancelled({
+          cancelReason: "EXPIRED",
+          refundRequired: true,
+          nothingReceived: false,
+        })
+      )
+    )
+    expect(t).toContain(
+      "Payment received after this order was cancelled. We'll refund it."
+    )
+    expect(t).not.toContain("You haven't been charged.")
+  })
+
+  it("E24: an expired unpaid order also says nothing was charged", () => {
+    const t = text(render(cancelled({ cancelReason: "EXPIRED" })))
+    expect(t).toContain("wasn't paid in time")
+    expect(t).toContain("You haven't been charged.")
+  })
+
+  it("shows when it was cancelled in the timeline", () => {
+    const t = text(render(cancelled({ cancelReason: "OTHER" })))
+    expect(t).toContain("Cancelled Sat 31 Oct 2026, 5:00 PM")
   })
 })
