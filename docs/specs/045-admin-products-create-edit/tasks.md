@@ -42,8 +42,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Nav item, copy, `/admin/products` page, filter form, table, `loading.tsx`, `error.tsx`, Demo and Staff behavior
 
 ## 9. UI: forms
-- [ ] `/admin/products/new` (category step, form), `/admin/products/[id]`, `ProductForm` with generated spec controls, errors summary, stale message, category change note, locked fields
-- [ ] Component tests
+- [x] `/admin/products/new` (category step, form), `/admin/products/[id]`, `ProductForm` with generated spec controls, errors summary, stale message, category change note, locked fields
+- [x] Component tests
 
 ## 10. E2E, docs, PR
 - [ ] `e2e/admin-products.spec.ts`
