@@ -1,5 +1,6 @@
 import "server-only"
 
+import { cancelReasonPhrase } from "@/lib/orders/cancel"
 import { ORDER_COPY } from "@/lib/orders/copy"
 
 // Shopper copy for the three order emails (docs/specs/036-order-emails, §5).
@@ -69,26 +70,18 @@ export const amountPaid = (amount: string): string => `Amount paid: ${amount}`
 
 export const statusLine = (label: string): string => `Status: ${label}`
 
-// The reason an order was cancelled, keyed by Order.cancelReason and, for
-// EXPIRED, by how the order was to be settled: an online order wasn't paid in
-// time, a cash order (docs/specs/038-cash-on-delivery) wasn't confirmed
-const CANCEL_REASONS: Record<string, Record<"ONLINE" | "COD", string>> = {
-  EXPIRED: {
-    ONLINE: "it wasn't paid in time",
-    COD: "it wasn't confirmed in time",
-  },
-}
-
+// The cancelled lead (docs/specs/044-admin-cancel-order, B20): the sentence,
+// the reason phrase when there is one, then exactly one closing sentence by
+// whether anything was received.
 export const cancelledLead = (
   orderNumber: string,
   cancelReason: string | null,
-  paymentOption: "ONLINE" | "COD" = "ONLINE"
+  paymentOption: "ONLINE" | "COD" = "ONLINE",
+  received = false
 ): string => {
-  const reason =
-    cancelReason !== null && Object.hasOwn(CANCEL_REASONS, cancelReason)
-      ? CANCEL_REASONS[cancelReason][paymentOption]
-      : null
-  return reason
-    ? `Your order ${orderNumber} was cancelled because ${reason}. You haven't been charged.`
-    : `Your order ${orderNumber} was cancelled.`
+  const phrase = cancelReasonPhrase(cancelReason, paymentOption)
+  const closing = received
+    ? "We'll refund your payment."
+    : "You haven't been charged."
+  return `Your order ${orderNumber} was cancelled${phrase ? ` because ${phrase}` : ""}. ${closing}`
 }

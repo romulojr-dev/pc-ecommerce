@@ -8,6 +8,7 @@ import { addressLines, shippingValue } from "@/lib/checkout/copy"
 import { formatPeso } from "@/lib/format"
 import { absoluteUrl } from "@/lib/seo/urls"
 import { confirmPayLine, discountLabel } from "@/lib/orders/copy"
+import { nothingReceived } from "@/lib/orders/cancel"
 import { displayStatus } from "@/lib/orders/display-status"
 import { dateTimeText, isPastDue, payByText } from "@/lib/orders/time"
 import { statusLabel } from "@/lib/orders/timeline"
@@ -99,6 +100,7 @@ export const EMAIL_VIEW_TYPES: readonly EmailType[] = [
   "ORDER_PLACED",
   "PAYMENT_RECEIVED",
   "ORDER_CANCELLED",
+  "ORDER_CANCELLED_BY_STORE",
   "COD_CONFIRM",
   "ORDER_SHIPPED",
   "READY_FOR_PICKUP",
@@ -306,7 +308,8 @@ function cancelled({ order, siteUrl }: EmailViewInput): EmailView {
     lead: cancelledLead(
       order.orderNumber,
       order.cancelReason,
-      order.paymentOption
+      order.paymentOption,
+      !nothingReceived({ paidAt: order.paidAt, payments: order.payments })
     ),
     details: [],
     statusLine: null,
@@ -426,6 +429,7 @@ export function emailView(type: EmailType, input: EmailViewInput): EmailView {
     case "PAYMENT_RECEIVED":
       return received(input)
     case "ORDER_CANCELLED":
+    case "ORDER_CANCELLED_BY_STORE":
       return cancelled(input)
     case "COD_CONFIRM":
       return codConfirm(input)

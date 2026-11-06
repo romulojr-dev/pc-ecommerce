@@ -245,7 +245,12 @@ async function deliver(
   // The email is built from the order as it is now
   const order = await db.order.findUnique({
     where: { id: row.orderId },
-    include: { items: { orderBy: { position: "asc" } } },
+    include: {
+      items: { orderBy: { position: "asc" } },
+      // Whether anything was received decides the cancelled email's closing
+      // sentence (docs/specs/044-admin-cancel-order, B20)
+      payments: { select: { status: true } },
+    },
   })
   if (!order) return fail("no-order", true)
 

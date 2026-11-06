@@ -26,10 +26,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm db:drift`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. Emails
-- [ ] `send.ts` loads payments; `EmailOrder` gains `payments`; fixtures updated
-- [ ] Copy and view: received flag, closing sentences; template, registry, `EMAIL_VIEW_TYPES`, labels, dev emails page
-- [ ] Tests E23 (content), `FakeEmail` through `sendPending` for both types
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] `send.ts` loads payments; `EmailOrder` gains `payments`; fixtures updated
+- [x] Copy and view: received flag, closing sentences; template, registry, `EMAIL_VIEW_TYPES`, labels, dev emails page
+- [x] Tests E23 (content, in `view.test.ts`); the `FakeEmail` run through `sendPending` is in task 5's cancel tests
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 5. The cancel (server)
 - [ ] `cancelOrder`: read, gateway step (every status), one `adminTransaction`, conditional update, payments, `undoReservations`, voucher, audit (with note), email

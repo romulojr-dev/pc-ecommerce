@@ -290,7 +290,9 @@ describe("emailView: ORDER_CANCELLED", () => {
       "ORDER_CANCELLED",
       input(cancelled({ cancelReason: null }))
     )
-    expect(view.lead).toBe("Your order PCS-7KQ2M9XD was cancelled.")
+    expect(view.lead).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled. You haven't been charged."
+    )
   })
 })
 
@@ -438,5 +440,69 @@ describe("emailView: types with no view", () => {
     expect(() =>
       emailView("NOT_A_TYPE" as unknown as "ORDER_PLACED", input(p1()))
     ).toThrow()
+  })
+})
+
+// docs/specs/044-admin-cancel-order: B20, E23. The staff cancel's own type and
+// the closing sentence by whether anything was received.
+describe("emailView: ORDER_CANCELLED_BY_STORE", () => {
+  const byStore = (overrides: Partial<EmailOrder> = {}) =>
+    p1({ status: "CANCELLED", cancelReason: "OUT_OF_STOCK", ...overrides })
+  const lead = (
+    order: EmailOrder,
+    type:
+      | "ORDER_CANCELLED"
+      | "ORDER_CANCELLED_BY_STORE" = "ORDER_CANCELLED_BY_STORE"
+  ) => emailView(type, input(order)).lead
+
+  it("unpaid, out of stock: the phrase and no charge", () => {
+    expect(lead(byStore())).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled because one of the parts is out of stock. You haven't been charged."
+    )
+  })
+
+  it("unpaid, customer asked: the phrase and no charge", () => {
+    expect(lead(byStore({ cancelReason: "CUSTOMER_REQUEST" }))).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled because you asked us to cancel it. You haven't been charged."
+    )
+  })
+
+  it("Other has no phrase, and the note is nowhere in the email", () => {
+    const view = emailView(
+      "ORDER_CANCELLED_BY_STORE",
+      input(byStore({ cancelReason: "OTHER" }))
+    )
+    expect(view.lead).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled. You haven't been charged."
+    )
+    // the note lives in the audit entry only: the email has nowhere to carry it
+    expect(view.details).toEqual([])
+  })
+
+  it("paid: a refund will follow, and never both closing sentences", () => {
+    const paid = byStore({
+      cancelReason: "CUSTOMER_REQUEST",
+      paidAt: new Date("2026-11-01T08:00:00Z"),
+    })
+    expect(lead(paid)).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled because you asked us to cancel it. We'll refund your payment."
+    )
+    expect(lead(paid)).not.toContain("haven't been charged")
+  })
+
+  it("a late payment on an expired order (a Paid payment, no paidAt) counts as received", () => {
+    const late = byStore({
+      cancelReason: "EXPIRED",
+      payments: [{ status: "PAID" }] as EmailOrder["payments"],
+    })
+    expect(lead(late, "ORDER_CANCELLED")).toBe(
+      "Your order PCS-7KQ2M9XD was cancelled because it wasn't paid in time. We'll refund your payment."
+    )
+  })
+
+  it("keeps the subject and the shop link of the release's email", () => {
+    const view = emailView("ORDER_CANCELLED_BY_STORE", input(byStore()))
+    expect(view.subject).toBe("[Demo] Order PCS-7KQ2M9XD was cancelled")
+    expect(view.links).toEqual([{ label: EMAIL_COPY.visitShop, href: SITE }])
   })
 })
