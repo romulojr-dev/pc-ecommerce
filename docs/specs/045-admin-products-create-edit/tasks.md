@@ -22,8 +22,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm db:drift`, `pnpm test:db` pass
 
 ## 4. Queries
-- [ ] `lib/admin/queries/products.ts`: `listProducts`, `getProductForEdit`, option lists; named fields, role check
-- [ ] Integration tests: filters, search, drafts included, paging (E1–E4), unknown id
+- [x] `lib/admin/queries/products.ts`: `listProducts`, `getProductForEdit`, option lists; named fields, role check
+- [x] Integration tests: filters, search, drafts included, paging (E1–E4), unknown id
 
 ## 5. Save
 - [ ] `createProduct` / `updateProduct`: validate, clash pre-check and race, conditional update on `editVersion`, category change, no-op, audit in the transaction (E7–E11, E15–E23c, E31)
