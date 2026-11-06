@@ -226,32 +226,3 @@ function maskWalk(value: unknown, path: string): unknown {
 export function maskAuditJson(value: unknown): unknown {
   return maskWalk(value, "")
 }
-
-// Replaced by the paginated query in task 3 of spec 047
-export type AuditEntryView = {
-  id: string
-  entity: string
-  entityId: string
-  action: string
-  // Name and role only: never the actor's email
-  actor: { name: string; role: string }
-  before: unknown
-  after: unknown
-  createdAt: Date
-}
-
-export type RawAuditEntry = Omit<AuditEntryView, "actor"> & {
-  actor: { name: string; role: string }
-}
-
-export function auditEntryView(
-  role: AdminRole,
-  raw: RawAuditEntry
-): AuditEntryView {
-  if (role !== "demo") return raw
-  return {
-    ...raw,
-    before: maskAuditJson(raw.before),
-    after: maskAuditJson(raw.after),
-  }
-}

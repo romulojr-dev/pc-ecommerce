@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest"
 
 import {
   addressView,
-  auditEntryView,
   contactView,
   maskAuditJson,
   maskEmail,
@@ -151,25 +150,6 @@ describe("audit entries", () => {
     expect(maskAuditJson({ notes: ["a", "b"] })).toEqual({
       notes: "Hidden in demo",
     })
-  })
-
-  const entry = {
-    id: "a1",
-    entity: "order",
-    entityId: "o1",
-    action: "updated",
-    actor: { name: "Ana Owner", role: "OWNER" },
-    before: { contactMobile: "+639171234567" },
-    after: { contactMobile: "+639179999999", note: "x" },
-    createdAt: new Date("2026-11-05T00:00:00Z"),
-  }
-
-  test("Demo gets masked before and after; Owner gets them as they are", () => {
-    expect(auditEntryView("demo", entry)).toMatchObject({
-      before: { contactMobile: "+63•••••••••" },
-      after: { contactMobile: "+63•••••••••", note: "Hidden in demo" },
-    })
-    expect(auditEntryView("owner", entry)).toBe(entry)
   })
 })
 

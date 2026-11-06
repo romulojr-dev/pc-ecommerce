@@ -14,7 +14,8 @@ import { orderData, pickupOrderData } from "@/test-support/orders"
 
 import { adminTransaction, recordAudit } from "../audit"
 import type { OrderDetail } from "./orders"
-import { listAuditEntries } from "./audit"
+import { DEFAULT_AUDIT_PARAMS } from "../audit-params"
+import { listAuditPage } from "./audit"
 import { QueryDeniedError } from "./guard"
 import { getOrderDetail } from "./orders"
 
@@ -116,7 +117,7 @@ describe("an order as a role sees it", () => {
 })
 
 describe("audit entries", () => {
-  test("Demo sees masked before and after and the actor without an email (E15)", async () => {
+  test("Demo sees masked changes and the actor without an email (E15)", async () => {
     const actor = await makeStaffUser("owner@example.com", "OWNER")
     await adminTransaction((tx) =>
       recordAudit(tx, {
@@ -132,28 +133,33 @@ describe("audit entries", () => {
         },
       })
     )
-    const [demo] = await listAuditEntries("demo")
-    expect(demo.after).toEqual({
+    const demoPage = await listAuditPage("demo", DEFAULT_AUDIT_PARAMS)
+    const [demo] = demoPage.entries
+    expect(
+      Object.fromEntries(demo.changes.map((c) => [c.path, c.after]))
+    ).toEqual({
       contactMobile: "+63•••••••••",
       note: "Hidden in demo",
-      status: "PROCESSING",
+      status: "Processing",
     })
-    expect(demo.actor).toEqual({ name: "owner@example.com", role: "OWNER" })
-    expectNoRawValues(demo, [
+    expect(demo.actor).toEqual({ name: "owner@example.com", role: "Owner" })
+    expectNoRawValues(demoPage, [
       FIXTURE_CUSTOMER.mobile,
       FIXTURE_CUSTOMER.note,
       "9170000000",
     ])
 
-    const [owner] = await listAuditEntries("owner")
-    expect(owner.after).toMatchObject({
-      contactMobile: FIXTURE_CUSTOMER.mobile,
-    })
+    const [owner] = (await listAuditPage("owner", DEFAULT_AUDIT_PARAMS)).entries
+    expect(owner.changes.find((c) => c.path === "contactMobile")?.after).toBe(
+      FIXTURE_CUSTOMER.mobile
+    )
   })
 })
 
 describe("the view actions are checked again in the query", () => {
   test("Staff has no audit.view; a role without the action throws", async () => {
-    await expect(listAuditEntries("staff")).rejects.toThrow(QueryDeniedError)
+    await expect(listAuditPage("staff", DEFAULT_AUDIT_PARAMS)).rejects.toThrow(
+      QueryDeniedError
+    )
   })
 })
