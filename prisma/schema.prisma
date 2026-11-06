@@ -69,6 +69,11 @@ model Product {
   // Shown in the home page's "Featured products" (docs/specs/016-home-page),
   // in place of best sellers until there is order data
   isFeatured      Boolean                  @default(false)
+  // The edit token of the admin product form (docs/specs/045-admin-products-
+  // create-edit, D5): +1 by every admin product save and by nothing else, and
+  // checked in that save's conditional update. Not updatedAt, which Prisma
+  // sets on every client update and the stock statements set by hand.
+  editVersion     Int                      @default(0)
   categoryId      String
   category        Category                 @relation(fields: [categoryId], references: [id])
   brandId         String

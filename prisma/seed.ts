@@ -124,11 +124,12 @@ async function main(): Promise<number> {
     shipping: shippingSeed,
     vouchers: voucherSeed,
   })
-  const kept = counts.updated > 0 ? "; stock, price and status kept" : ""
+  const left =
+    counts.existing > 0 ? `, ${counts.existing} left as they are` : ""
   console.log(
     `Seeded ${counts.categories} categories, ${counts.brands} brands, ${
-      counts.created + counts.updated
-    } products (${counts.created} created, ${counts.updated} updated${kept}), ${
+      counts.created + counts.existing
+    } products (${counts.created} created${left}), ${
       counts.images
     } ${counts.images === 1 ? "image" : "images"} added.`
   )

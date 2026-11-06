@@ -6,30 +6,17 @@ import type { ShippingSeed } from "./data/shipping"
 import type { VoucherSeed } from "./data/vouchers"
 import type { ValidPart, ValidSeedFile } from "./validate"
 
-// What a re-seed refreshes on a product that already exists (spec.md, "Which
-// product fields the seed writes"). Everything else (price, salePrice,
-// stock, lowStockAt, status, preorderShipsOn, slug) is set on create only,
-// because once the store runs, orders and the admin panel own those values.
-// isFeatured is refreshed too, so a re-seed sets the home page's picks
-// (docs/specs/016-home-page); it moves to create-only once the admin panel
-// manages it.
-const CATALOG_FIELDS = [
-  "isFeatured",
-  "name",
-  "description",
-  "specs",
-  "categoryId",
-  "brandId",
-  "weightGrams",
-  "warrantyMonths",
-  "boxContents",
-] as const
+// The seed only CREATES (docs/specs/045-admin-products-create-edit, D8): a
+// product, category or brand that already exists is left exactly as it is, so
+// re-seeding production never undoes an edit made in Admin. The one exception
+// is images, added to a product that has none until Admin manages them (#114).
 
 export type SeedCounts = {
   categories: number
   brands: number
   created: number
-  updated: number
+  // Products that already existed and were left as they are
+  existing: number
   // ProductImage rows added
   images: number
   // ShippingRate rows added (0 when the table already had rows)
@@ -128,14 +115,9 @@ export function writeSeed(
         } else if (imageCount === 0) {
           await tx.product.update({
             where: { sku: part.sku },
-            data: { ...pick(data, CATALOG_FIELDS), images },
+            data: { images },
           })
           imagesAdded += part.images.length
-        } else {
-          await tx.product.update({
-            where: { sku: part.sku },
-            data: pick(data, CATALOG_FIELDS),
-          })
         }
       }
 
@@ -146,7 +128,7 @@ export function writeSeed(
         categories: categoryIds.size,
         brands: brandIds.size,
         created: newParts.length,
-        updated: parts.length - newParts.length,
+        existing: parts.length - newParts.length,
         images: imagesAdded,
         ...shippingWritten,
         vouchers: vouchersAdded,
@@ -209,37 +191,40 @@ async function writeVouchers(
 }
 
 // Category rows come from the registry, so names and order match the code
+// for a new row. An existing row is left as it is (Admin edits categories).
 async function upsertCategories(tx: Prisma.TransactionClient) {
-  const ids = new Map<string, string>()
-  for (const [slug, { name, sortOrder }] of Object.entries(builderCategories)) {
-    const { id } = await tx.category.upsert({
-      where: { slug },
-      create: { slug, name, sortOrder },
-      update: { name, sortOrder },
-      select: { id: true },
-    })
-    ids.set(slug, id)
-  }
-  return ids
+  const entries = Object.entries(builderCategories)
+  await tx.category.createMany({
+    data: entries.map(([slug, { name, sortOrder }]) => ({
+      slug,
+      name,
+      sortOrder,
+    })),
+    skipDuplicates: true,
+  })
+  const rows = await tx.category.findMany({
+    where: { slug: { in: entries.map(([slug]) => slug) } },
+    select: { id: true, slug: true },
+  })
+  return new Map(rows.map(({ slug, id }) => [slug, id]))
 }
 
-// One brand per slug; the first spelling in the data names it
+// One brand per slug; the first spelling in the data names a new one. An
+// existing brand is left as it is.
 async function upsertBrands(tx: Prisma.TransactionClient, parts: ValidPart[]) {
   const names = new Map<string, string>()
   for (const { brandSlug, brand } of parts) {
     if (!names.has(brandSlug)) names.set(brandSlug, brand)
   }
-  const ids = new Map<string, string>()
-  for (const [slug, name] of names) {
-    const { id } = await tx.brand.upsert({
-      where: { slug },
-      create: { slug, name },
-      update: { name },
-      select: { id: true },
-    })
-    ids.set(slug, id)
-  }
-  return ids
+  await tx.brand.createMany({
+    data: [...names].map(([slug, name]) => ({ slug, name })),
+    skipDuplicates: true,
+  })
+  const rows = await tx.brand.findMany({
+    where: { slug: { in: [...names.keys()] } },
+    select: { id: true, slug: true },
+  })
+  return new Map(rows.map(({ slug, id }) => [slug, id]))
 }
 
 // A new part's slug may already belong to a product that isn't in the seed
@@ -288,11 +273,4 @@ function productData(part: ValidPart, categoryId: string, brandId: string) {
     categoryId,
     brandId,
   } satisfies Prisma.ProductUncheckedCreateInput
-}
-
-function pick<T extends object, K extends keyof T>(
-  object: T,
-  keys: readonly K[]
-): Pick<T, K> {
-  return Object.fromEntries(keys.map((key) => [key, object[key]])) as Pick<T, K>
 }
