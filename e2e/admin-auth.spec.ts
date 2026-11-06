@@ -167,7 +167,7 @@ test.describe("signed out", () => {
 
     // The demo account from another address still gets in
     const { context, page: other } = await signInFresh(browser, "demo")
-    await expect(other).toHaveURL(/\/admin\/orders$/)
+    await expect(other).toHaveURL(/\/admin\/dashboard$/)
     await context.close()
   })
 
@@ -221,7 +221,7 @@ test.describe("signed out", () => {
     await expect(page).toHaveURL(/\/admin\/login$/)
 
     await page.getByRole("button", { name: "Sign in" }).click()
-    await expect(page).toHaveURL(/\/admin\/orders$/)
+    await expect(page).toHaveURL(/\/admin\/dashboard$/)
     await expect(page.getByTestId("admin-person")).toHaveText(
       `${ACCOUNTS.demo.name} · ${ACCOUNTS.demo.label}`
     )
@@ -365,8 +365,8 @@ test.describe("sessions of their own", () => {
   }) => {
     const first = await signInFresh(browser, "demo")
     const second = await signInFresh(browser, "demo")
-    await expect(first.page).toHaveURL(/\/admin\/orders$/)
-    await expect(second.page).toHaveURL(/\/admin\/orders$/)
+    await expect(first.page).toHaveURL(/\/admin\/dashboard$/)
+    await expect(second.page).toHaveURL(/\/admin\/dashboard$/)
 
     await first.page.getByRole("button", { name: "Sign out" }).click()
     await expect(first.page).toHaveURL(/\/admin\/login$/)

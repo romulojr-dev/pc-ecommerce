@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  LayoutDashboardIcon,
   PackageIcon,
   ScrollTextIcon,
   ShoppingCartIcon,
@@ -20,6 +21,7 @@ import {
 // (navItemsFor, the same can() as the server checks) and passes them in; the
 // icons live here because a component cannot cross from server to client.
 const ICONS = {
+  dashboard: LayoutDashboardIcon,
   products: PackageIcon,
   inventory: WarehouseIcon,
   orders: ShoppingCartIcon,

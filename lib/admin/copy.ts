@@ -28,6 +28,7 @@ export const ADMIN_COPY = {
     use: "Use demo account",
   },
   shell: {
+    dashboardNav: "Dashboard",
     productsNav: "Products",
     inventoryNav: "Inventory",
     ordersNav: "Orders",
@@ -198,6 +199,7 @@ export const ADMIN_COPY = {
   },
   titles: {
     login: "Staff sign in · PC Silicon Admin",
+    dashboard: "Dashboard · PC Silicon Admin",
     products: "Products · PC Silicon Admin",
     inventory: "Inventory · PC Silicon Admin",
     orders: "Orders · PC Silicon Admin",

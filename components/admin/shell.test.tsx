@@ -32,9 +32,10 @@ function shell(adminRole: "owner" | "staff" | "demo") {
 }
 
 describe("the nav follows can()", () => {
-  it("Owner and Demo see Products first and the Audit log last; Staff has neither Products nor the Audit log", () => {
+  it("Owner and Demo see the Dashboard first and the Audit log last; Staff has neither the Dashboard, Products nor the Audit log", () => {
     for (const role of ["owner", "demo"] as const) {
       expect(navItemsFor(role).map((item) => item.href)).toEqual([
+        "/admin/dashboard",
         "/admin/products",
         "/admin/inventory",
         "/admin/orders",

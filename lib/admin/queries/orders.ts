@@ -85,7 +85,7 @@ export type OrderList = {
   buyer: CustomerName | "unknown" | null
 }
 
-const listSelect = {
+export const listSelect = {
   id: true,
   orderNumber: true,
   createdAt: true,
@@ -102,6 +102,37 @@ const listSelect = {
     take: 1,
   },
 } as const satisfies Prisma.OrderSelect
+
+export type ListSelectRow = Prisma.OrderGetPayload<{
+  select: typeof listSelect
+}>
+
+// One list row as the viewer may see it: Demo's customer name is masked here,
+// so the row has no field that can hold the real one
+export function toOrderListRow(
+  role: AdminRole,
+  row: ListSelectRow,
+  dueForRelease: boolean
+): OrderListRow {
+  return {
+    orderNumber: row.orderNumber,
+    createdAt: row.createdAt,
+    status: row.status,
+    dueForRelease,
+    fulfillment: row.fulfillment,
+    paymentOption: row.paymentOption,
+    paymentMethod: row.paymentMethod,
+    total: row.total,
+    customer:
+      role === "demo"
+        ? { masked: true, name: maskName(row.contactName) }
+        : { masked: false, name: row.contactName },
+    flags: {
+      refundRequired: row.refundRequired,
+      needsCheck: row.payments.length > 0,
+    },
+  }
+}
 
 function whereOf(
   params: OrderParams,
@@ -132,7 +163,7 @@ function whereOf(
 }
 
 // The ids among these that the release job would release now
-async function dueAmong(ids: string[], now: Date): Promise<Set<string>> {
+export async function dueAmong(ids: string[], now: Date): Promise<Set<string>> {
   if (ids.length === 0) return new Set()
   const due = await db.$queryRaw<{ id: string }[]>`
     SELECT o."id" FROM "Order" o
@@ -177,24 +208,7 @@ export async function listOrders(
     page,
     pageCount: pageCount(total),
     buyer: buyer ? (buyer.name ?? "unknown") : null,
-    rows: rows.map((row) => ({
-      orderNumber: row.orderNumber,
-      createdAt: row.createdAt,
-      status: row.status,
-      dueForRelease: due.has(row.id),
-      fulfillment: row.fulfillment,
-      paymentOption: row.paymentOption,
-      paymentMethod: row.paymentMethod,
-      total: row.total,
-      customer:
-        role === "demo"
-          ? { masked: true, name: maskName(row.contactName) }
-          : { masked: false, name: row.contactName },
-      flags: {
-        refundRequired: row.refundRequired,
-        needsCheck: row.payments.length > 0,
-      },
-    })),
+    rows: rows.map((row) => toOrderListRow(role, row, due.has(row.id))),
   }
 }
 

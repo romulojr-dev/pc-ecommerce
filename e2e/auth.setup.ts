@@ -31,13 +31,18 @@ for (const role of ROLES) {
     await page.getByRole("button", { name: "Sign in" }).click()
 
     // A missing account looks like a wrong password: say what to do
-    const orders = page.getByRole("heading", { name: "Orders", level: 1 })
+    // Owner and Demo land on the dashboard, Staff on the orders
+    // (docs/specs/048-admin-dashboard)
+    const landing = role === "staff" ? "Orders" : "Dashboard"
+    const orders = page.getByRole("heading", { name: landing, level: 1 })
     const refused = page.getByText("Email or password is incorrect.")
     await expect(orders.or(refused)).toBeVisible()
     if (await refused.isVisible()) throw new Error(MISSING_ACCOUNT(role))
 
-    // E1: every role lands on the placeholder, and the header names the person
-    await expect(page).toHaveURL(/\/admin\/orders$/)
+    // E1: every role lands on its first page, and the header names the person
+    await expect(page).toHaveURL(
+      role === "staff" ? /\/admin\/orders$/ : /\/admin\/dashboard$/
+    )
     await expect(page.getByTestId("admin-person")).toHaveText(
       `${account.name} · ${account.label}`
     )
