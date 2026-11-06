@@ -43,5 +43,6 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `e2e/admin-inventory.spec.ts` and fixtures (E38, E12, E10, threshold, Demo, filters)
 
 ## 10. Docs and PR
-- [ ] CLAUDE.md paragraph; spec 045's stock line and the `StockMovement` comment checked; README if it lists Admin screens
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift` pass; push; PR "Closes #116"
+- [x] CLAUDE.md paragraph; README Inventory paragraph; spec 045's stock line stays true (it says stock changes through Inventory); R1 gained the note on how the WHERE is evaluated
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build` pass
+- [ ] Push; PR "Closes #116"
