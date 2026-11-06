@@ -12,11 +12,18 @@ for (const role of ["owner", "staff", "demo"] as const satisfies Role[]) {
   test.describe(`signed in as ${role}`, () => {
     test.use({ storageState: authFile(role) })
 
-    test("lands on Orders and sees the Orders link", async ({ page }) => {
+    test("lands on its first page and sees the Orders link", async ({
+      page,
+    }) => {
       await page.goto("/admin")
-      await expect(page).toHaveURL(/\/admin\/orders$/)
+      // Owner and Demo land on the dashboard, Staff on Orders (spec 048)
+      const first = role === "staff" ? "orders" : "dashboard"
+      await expect(page).toHaveURL(new RegExp(`/admin/${first}$`))
       await expect(
-        page.getByRole("heading", { name: "Orders", level: 1 })
+        page.getByRole("heading", {
+          name: role === "staff" ? "Orders" : "Dashboard",
+          level: 1,
+        })
       ).toBeVisible()
       await expect(
         page.getByRole("link", { name: "Orders", exact: true })
