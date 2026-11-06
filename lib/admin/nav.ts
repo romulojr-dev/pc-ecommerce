@@ -6,7 +6,7 @@ import { type AdminAction, type AdminRole, can } from "./permissions"
 // Each Admin screen story adds its item here with the view action it needs.
 
 export type NavItem = {
-  key: "products" | "orders" | "customers"
+  key: "products" | "inventory" | "orders" | "customers"
   label: string
   href: string
   action: AdminAction
@@ -18,6 +18,12 @@ const ALL_ITEMS: NavItem[] = [
     label: ADMIN_COPY.shell.productsNav,
     href: "/admin/products",
     action: "products.view",
+  },
+  {
+    key: "inventory",
+    label: ADMIN_COPY.shell.inventoryNav,
+    href: "/admin/inventory",
+    action: "inventory.view",
   },
   {
     key: "orders",

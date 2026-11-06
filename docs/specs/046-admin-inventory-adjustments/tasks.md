@@ -32,8 +32,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Tests: `updateTag` once on success, never on refusal / invalid / unchanged / forbidden; Demo refusal and enumeration pick the actions up (E31)
 
 ## 7. Nav, copy and list
-- [ ] `lib/admin/inventory-copy.ts`, nav item, `/admin/inventory` page, filters, list component, `loading.tsx`, `error.tsx`
-- [ ] Markup tests; Demo and Staff views; no-db-in-pages still passes
+- [x] `lib/admin/inventory-copy.ts`, nav item, `/admin/inventory` page, filters, list component, `loading.tsx`, `error.tsx`
+- [x] Markup tests; Demo and Staff views; no-db-in-pages still passes
 
 ## 8. Product page
 - [ ] `/admin/inventory/[id]`: summary, adjust form with the review and confirm step, threshold form, history with footer and paging
