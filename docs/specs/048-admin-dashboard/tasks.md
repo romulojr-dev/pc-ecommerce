@@ -4,7 +4,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 
 ## 0. Housekeeping
 - [x] Spec approved with five additions folded in; open questions settled; #111's criteria edited
-- [ ] Commit `spec.md`, `plan.md`, `tasks.md`
+- [x] Commit `spec.md`, `plan.md`, `tasks.md`
 
 ## 1. Pure rules
 - [ ] `lib/admin/dashboard-sales.ts`: `dashboardWindows`, `salesSummary`, `averageOrder` (E1–E14, E27–E29)

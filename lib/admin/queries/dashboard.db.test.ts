@@ -262,6 +262,7 @@ describe("who may read it", () => {
 
 describe("source rules", () => {
   const query = readFileSync("lib/admin/queries/dashboard.ts", "utf8")
+  const page = readFileSync("app/admin/(shell)/dashboard/page.tsx", "utf8")
 
   it("never converts a column's zone in SQL (E30)", () => {
     for (const source of [
@@ -273,7 +274,7 @@ describe("source rules", () => {
   })
 
   it("uses no cache API (R9)", () => {
-    for (const source of [query]) {
+    for (const source of [query, page]) {
       expect(source).not.toMatch(
         /unstable_cache|cacheTag|["']use cache["']|revalidate\s*=/
       )

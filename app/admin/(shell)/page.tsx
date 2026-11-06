@@ -1,12 +1,14 @@
 import { redirect } from "next/navigation"
 import { connection } from "next/server"
 
-import { ADMIN_HOME } from "@/lib/admin/safe-next"
+import { adminHomeFor } from "@/lib/admin/dashboard-view"
 import { requireAdminSession } from "@/lib/admin/session"
 
-// /admin itself has nothing to show: staff land on the orders
+// /admin itself has nothing to show: each role goes to its first page, the
+// dashboard for Owner and Demo, the orders for Staff (docs/specs/048-admin-
+// dashboard, B2, R13)
 export default async function AdminIndexPage() {
   await connection()
-  await requireAdminSession()
-  redirect(ADMIN_HOME)
+  const session = await requireAdminSession()
+  redirect(adminHomeFor(session.user.adminRole))
 }

@@ -3,7 +3,9 @@
 // only when it is an in-site /admin path; anything else becomes the default.
 // Pure.
 
-export const ADMIN_HOME = "/admin/orders"
+// "/admin" itself sends each role to its own first page (adminHomeFor, docs/
+// specs/048-admin-dashboard, R13); the sign-in form knows no role yet
+export const ADMIN_HOME = "/admin"
 const LOGIN = "/admin/login"
 
 export function safeNext(value: string | null | undefined): string {
