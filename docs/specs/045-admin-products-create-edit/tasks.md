@@ -18,8 +18,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Schema
-- [ ] `Product.editVersion Int @default(0)` in `schema.prisma` and a migration
-- [ ] `pnpm db:drift`, `pnpm test:db` pass
+- [x] `Product.editVersion Int @default(0)` in `schema.prisma` and a migration
+- [x] `pnpm db:drift`, `pnpm test:db` pass
 
 ## 4. Queries
 - [ ] `lib/admin/queries/products.ts`: `listProducts`, `getProductForEdit`, option lists; named fields, role check
