@@ -307,10 +307,14 @@ enum StockMovementReason {
   ORDER_RELEASED
 }
 
-// Why an order was cancelled. Admin adds its own reasons in Sprint 8.
+// Why an order was cancelled. EXPIRED is the release's alone; the others are
+// the reasons staff pick (docs/specs/044-admin-cancel-order).
 enum OrderCancelReason {
   // Not paid by expiresAt (FR-24, docs/specs/033-release-unpaid-orders)
   EXPIRED
+  OUT_OF_STOCK
+  CUSTOMER_REQUEST
+  OTHER
 }
 
 // A placed order (docs/specs/030-place-an-order, ADR 0009). Everything on it
@@ -602,6 +606,9 @@ enum EmailType {
   ORDER_SHIPPED
   ORDER_DELIVERED
   READY_FOR_PICKUP
+  // A staff cancel (docs/specs/044-admin-cancel-order); the release's cancel
+  // keeps ORDER_CANCELLED, which stays capped
+  ORDER_CANCELLED_BY_STORE
 }
 
 enum EmailStatus {

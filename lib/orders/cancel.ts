@@ -43,6 +43,11 @@ export const CANCELLABLE_STATUSES = (
   Object.keys(CANCELLABLE) as OrderStatusName[]
 ).filter((status) => CANCELLABLE[status])
 
+// The OrderCancelReason enum's values, written out to keep this file free of
+// the generated client
+export type CancelReasonName =
+  "EXPIRED" | "OUT_OF_STOCK" | "CUSTOMER_REQUEST" | "OTHER"
+
 // The reasons staff pick; EXPIRED is the release's alone (R4)
 export const STAFF_CANCEL_REASONS = [
   "OUT_OF_STOCK",

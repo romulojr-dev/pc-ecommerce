@@ -20,10 +20,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Schema and the cap
-- [ ] Migration: `OrderCancelReason` ×3, `EmailType.ORDER_CANCELLED_BY_STORE`; `schema.prisma`
-- [ ] `CAP_EXEMPT_TYPES` + unit test (exempt: by-store; not exempt: `ORDER_CANCELLED`)
-- [ ] Integration tests E26 (CHECKs hold), E31 (six released, capped), E32 (staff cancel over the cap sent, counts)
-- [ ] `pnpm db:drift`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
+- [x] Migration: `OrderCancelReason` ×3, `EmailType.ORDER_CANCELLED_BY_STORE`; `schema.prisma`
+- [x] `CAP_EXEMPT_TYPES` + unit test (exempt: by-store; not exempt: `ORDER_CANCELLED`)
+- [x] Integration tests E26 (CHECKs hold), E31 (six released, capped), E32 (staff cancel over the cap sent, counts)
+- [x] `pnpm db:drift`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 4. Emails
 - [ ] `send.ts` loads payments; `EmailOrder` gains `payments`; fixtures updated

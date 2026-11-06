@@ -3,6 +3,7 @@ import "server-only"
 import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
 import { dueOrderCondition } from "@/lib/orders/due-sql"
+import type { CancelReasonName } from "@/lib/orders/cancel"
 import { orderNumberShape } from "@/lib/orders/number"
 import type {
   FulfillmentName,
@@ -241,7 +242,7 @@ export type OrderDetail = {
   paidAt: Date | null
   confirmedAt: Date | null
   cancelledAt: Date | null
-  cancelReason: "EXPIRED" | null
+  cancelReason: CancelReasonName | null
   // The fulfillment moves (docs/specs/043-order-fulfillment-transitions);
   // completedAt is Delivered or Picked up, labeled from the fulfillment
   processingAt: Date | null

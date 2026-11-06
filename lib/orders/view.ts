@@ -1,5 +1,7 @@
 import type { PaymentsSummary } from "@/lib/payments/payment-view"
 
+import type { CancelReasonName } from "./cancel"
+
 import type {
   FulfillmentName,
   OrderStatusName,
@@ -69,7 +71,7 @@ export type OrderPageData = {
   // A late or second payment to refund (FR-26)
   refundRequired: boolean
   // Why it was cancelled (docs/specs/033-release-unpaid-orders)
-  cancelReason: "EXPIRED" | null
+  cancelReason: CancelReasonName | null
   payments: PaymentsSummary
 }
 
