@@ -14,10 +14,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db` pass
 
 ## 2. Pure rules
-- [ ] `canCancel` over every status; staff reasons; `cancelInputSchema` (note); reason phrases; `nothingReceived`
-- [ ] Unit tests: 44 combinations incl. refusals (E1), completeness against the Prisma enum, input (E13), phrases and nothing-received incl. late payment (E23, E24)
-- [ ] File imports no database, env, `next` or `react`
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
+- [x] `canCancel` over every status; staff reasons; `cancelInputSchema` (note); reason phrases; `nothingReceived`
+- [x] Unit tests: 44 combinations incl. refusals (E1), completeness against the Prisma enum, input (E13), phrases and nothing-received incl. late payment (E23, E24)
+- [x] File imports no database, env, `next` or `react`
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass
 
 ## 3. Schema and the cap
 - [ ] Migration: `OrderCancelReason` ×3, `EmailType.ORDER_CANCELLED_BY_STORE`; `schema.prisma`
