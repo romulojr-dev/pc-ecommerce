@@ -25,7 +25,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Integration tests, including rollback and "refusal shows the current stock"
 
 ## 5. Concurrency
-- [ ] Adjustment against a real `placeOrder`, both interleavings forced (E17, E18); two staff at once (E19); against release and cancel (E20); the ceiling (E41) and zero (E42)
+- [x] Adjustment against a real `placeOrder`, both interleavings forced (E17, E18); two staff at once (E19); against release and cancel (E20); the ceiling (E41) and zero (E42)
 
 ## 6. Actions and cache
 - [ ] `actions.ts`: `adminAction("inventory.adjust", …)` for both; `updateTag(PRODUCTS_TAG)` after a saved result only
