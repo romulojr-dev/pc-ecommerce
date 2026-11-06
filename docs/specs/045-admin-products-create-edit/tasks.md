@@ -46,7 +46,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Component tests
 
 ## 10. E2E, docs, PR
-- [ ] `e2e/admin-products.spec.ts`
-- [ ] CLAUDE.md Admin products bullet; spec "What changed while building"
-- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`
+- [x] `e2e/admin-products.spec.ts`
+- [x] CLAUDE.md Admin products bullet; spec "What changed while building"
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:db`, `pnpm db:drift`, `pnpm build`
 - [ ] Push (`git push -u origin HEAD`) and open the PR ("Closes #112") from the template

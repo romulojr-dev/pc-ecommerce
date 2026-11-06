@@ -241,3 +241,12 @@ Real seed parts are used where they exist; amounts for new products are invented
 ## 10. Open questions
 
 None. Q1 (edit token), Q2 (pre-order date) and Q3 (schema messages, backlog [#137](https://github.com/romulojr-dev/pc-ecommerce/issues/137)) were settled in review; see D5, R17 and R4.
+
+## 11. What changed while building
+
+- **E18 / E18b** are tested with the statement `placeOrder` runs on stock (`UPDATE … "updatedAt" = now()`) and a `lowStockAt` write, not a full `placeOrder`: the check only depends on `editVersion`, and `placeOrder` has its own tests.
+- **E27 (foreign origin)** does not apply to the two actions: `adminAction` does not check the origin (Next.js checks it for server actions); only `adminRoute` does. The Demo, Staff and signed-out refusals are tested instead.
+- **E32** holds by construction (the save calls no outside service), so there is no `guardTransactions` test.
+- **`pg` `LIKE` wildcards:** Prisma's `contains` does not escape `%` and `_`, so the product search escapes them by hand (a test pins it).
+- **Edit saves** redirect to `?saved=changes`, so the page re-renders with the new `editVersion` and the form remounts; "Changes saved." comes from that URL value, which only picks a message and changes no data.
+- **E2E ran against the Docker Postgres** (the dev server with `DATABASE_URL` set to it); all 68 admin-project tests pass.
