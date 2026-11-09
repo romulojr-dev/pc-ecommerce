@@ -37,7 +37,7 @@ function assertTestDatabase() {
 export async function resetCatalog() {
   assertResetAllowed(process.env)
   assertTestDatabase()
-  await db.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "AuditLog", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+  await db.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "AuditLog", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "FakeStoredImage", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
 }
 
 // One category and one brand, for tests that only need somewhere to put products

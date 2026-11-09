@@ -105,8 +105,12 @@ model ProductImage {
   sortOrder Int     @default(0)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
-  @@index([productId])
+  // Not unique: the product row lock serializes image writes, so a reorder
+  // is a plain UPDATE (docs/specs/049-product-images-upload, R8). The CHECKs
+  // (alt 1 to 200 characters, sortOrder >= 0) are migration-only.
+  @@index([productId, sortOrder])
 }
 
 // A shared build: an immutable snapshot of a build's items, found by its
@@ -690,6 +694,17 @@ model FakeEmail {
   html           String
   text           String
   createdAt      DateTime @default(now())
+}
+
+// The fake photo store (docs/specs/049-product-images-upload, R14): the
+// uploaded file's bytes, served by GET /test-images/{name} when
+// IMAGE_STORAGE=fake. Never written with the real store.
+model FakeStoredImage {
+  // products/{random}.webp's random part and extension
+  name        String   @id
+  contentType String
+  bytes       Bytes
+  createdAt   DateTime @default(now())
 }
 
 // Staff sign-in (docs/specs/039-staff-sign-in-admin-shell, ADR 0012). Better

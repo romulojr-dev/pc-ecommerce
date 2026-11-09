@@ -18,6 +18,8 @@ export const RESERVED_SLUGS = [
   "test-payment",
   // The fake email transport's page (docs/specs/036-order-emails)
   "dev",
+  // The fake photo store's files (docs/specs/049-product-images-upload)
+  "test-images",
   // Likely routes, reserved early
   "products",
   "build",

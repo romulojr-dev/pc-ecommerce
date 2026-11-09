@@ -66,7 +66,7 @@ export function writeSeed(
         // history of changes to the catalog it just emptied; User, Session and
         // Account rows are never truncated (docs/specs/040-admin-permissions-
         // audit-masking).
-        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "AuditLog", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
+        await tx.$executeRaw`TRUNCATE TABLE "Build", "Cart", "Order", "StockMovement", "AuditLog", "Payment", "PaymentEvent", "FakeGatewaySession", "EmailOutbox", "FakeEmail", "FakeStoredImage", "Voucher", "ShippingRate", "StoreSettings", "ProductImage", "Product", "Brand", "Category" CASCADE`
       }
 
       const categoryIds = await upsertCategories(tx)

@@ -22,9 +22,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Unit tests with generated fixtures
 
 ## 4. Schema and migration
-- [ ] `ProductImage.createdAt`, CHECKs, non-unique index; `FakeStoredImage`; migration deletes only placeholder rows and reports the count
-- [ ] `resetCatalog()` / `--reset` name `FakeStoredImage`; `test-images` reserved slug
-- [ ] `.db` tests: placeholder rows deleted, real row survives (E37), CHECKs, `pnpm db:drift`
+- [x] `ProductImage.createdAt`, CHECKs, non-unique index; `FakeStoredImage`; migration deletes only placeholder rows and reports the count
+- [x] `resetCatalog()` / `--reset` name `FakeStoredImage`; `test-images` reserved slug
+- [x] `.db` tests: placeholder rows deleted, real row survives (E37), CHECKs, `pnpm db:drift`
 
 ## 5. Storage adapters and the fake's route
 - [ ] `ImageStorage` (`blobStorage`, `fakeStorage`, `imageStorage()`); own-store deletion rule (E52)
