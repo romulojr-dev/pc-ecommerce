@@ -159,12 +159,18 @@ test("a signed-out call is refused", async () => {
   })
 })
 
-test("R14: the module exports no delete action", () => {
+test("R14: the module exports no way to delete a product", () => {
   const source = readFileSync(join(__dirname, "actions.ts"), "utf8")
   const exported = [...source.matchAll(/export const (\w+)/g)].map((m) => m[1])
+  // A product is retired through its status, never deleted. The three photo
+  // actions (docs/specs/049-product-images-upload) remove a photo, not a
+  // product, and are listed by name so a new export can't slip in.
   expect(exported.sort()).toEqual([
     "createProductAction",
+    "removeProductImageAction",
+    "reorderProductImagesAction",
+    "setImageAltAction",
     "updateProductAction",
   ])
-  expect(exported.join(" ")).not.toMatch(/delete|remove/i)
+  expect(exported.join(" ")).not.toMatch(/delete|removeProduct(?!Image)/i)
 })
