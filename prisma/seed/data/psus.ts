@@ -1,5 +1,3 @@
-import { placeholderUrl } from "@/lib/placeholders"
-
 import type { SeedPart } from "../part-schema"
 
 // Prices are sample PH retail prices, in centavos. Tiers: budget under
@@ -48,7 +46,6 @@ export const psus = [
     sourceUrl:
       "https://www.corsair.com/us/en/p/psu/cp-9020263-na/rm850e-fully-modular-low-noise-atx-power-supply-cp-9020263-na",
     // Several images, for the product gallery (spec 006)
-    images: [{ url: placeholderUrl("psu") }, { url: placeholderUrl("box") }],
     specs: {
       formFactor: "ATX",
       wattageW: 850,

@@ -1,5 +1,3 @@
-import { placeholderUrl } from "@/lib/placeholders"
-
 import type { SeedPart } from "../part-schema"
 
 // lengthMm is rounded up from the manufacturer's figure. Prices are sample
@@ -37,11 +35,6 @@ export const gpus = [
     boxContents: ["Graphics card", "Quick installation guide"],
     sourceUrl: "https://www.gigabyte.com/Graphics-Card/GV-N5070WF3OC-12GD/sp",
     // Several images, for the product gallery (spec 006)
-    images: [
-      { url: placeholderUrl("gpu") },
-      { url: placeholderUrl("box") },
-      { url: placeholderUrl("detail") },
-    ],
     specs: {
       chipsetBrand: "NVIDIA",
       chipset: "GeForce RTX 5070",

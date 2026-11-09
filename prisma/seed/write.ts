@@ -8,8 +8,11 @@ import type { ValidPart, ValidSeedFile } from "./validate"
 
 // The seed only CREATES (docs/specs/045-admin-products-create-edit, D8): a
 // product, category or brand that already exists is left exactly as it is, so
-// re-seeding production never undoes an edit made in Admin. The one exception
-// is images, added to a product that has none until Admin manages them (#114).
+// re-seeding production never undoes an edit made in Admin. It writes no
+// images at all: a product without photos shows its category placeholder,
+// derived from the category, so a re-seed can never bring a placeholder back
+// after the owner removes every photo (docs/specs/049-product-images-upload,
+// D2).
 
 export type SeedCounts = {
   categories: number
@@ -17,8 +20,6 @@ export type SeedCounts = {
   created: number
   // Products that already existed and were left as they are
   existing: number
-  // ProductImage rows added
-  images: number
   // ShippingRate rows added (0 when the table already had rows)
   shippingRates: number
   // Whether the StoreSettings row was created (false when it already existed)
@@ -78,14 +79,14 @@ export function writeSeed(
         parts.map(({ part }) => part)
       )
 
-      // Existing products by SKU, with how many images each has
-      const existing = new Map(
+      // Existing products by SKU
+      const existing = new Set(
         (
           await tx.product.findMany({
             where: { sku: { in: parts.map(({ part }) => part.sku) } },
-            select: { sku: true, _count: { select: { images: true } } },
+            select: { sku: true },
           })
-        ).map(({ sku, _count }) => [sku, _count.images])
+        ).map(({ sku }) => sku)
       )
       const newParts = parts.filter(({ part }) => !existing.has(part.sku))
       await checkSlugConflicts(
@@ -93,32 +94,12 @@ export function writeSeed(
         newParts.map(({ part }) => part)
       )
 
-      let imagesAdded = 0
       for (const { part, categoryId } of parts) {
-        const data = productData(
-          part,
-          categoryId,
-          brandIds.get(part.brandSlug)!
-        )
-        // Images are added only to a product that has none: once the admin
-        // panel manages a product's images, a re-seed leaves them alone
-        const images = {
-          create: part.images.map((image, index) => ({
-            ...image,
-            sortOrder: index,
-          })),
-        }
-        const imageCount = existing.get(part.sku)
-        if (imageCount === undefined) {
-          await tx.product.create({ data: { ...data, images } })
-          imagesAdded += part.images.length
-        } else if (imageCount === 0) {
-          await tx.product.update({
-            where: { sku: part.sku },
-            data: { images },
-          })
-          imagesAdded += part.images.length
-        }
+        // Only a product that does not exist yet is written
+        if (existing.has(part.sku)) continue
+        await tx.product.create({
+          data: productData(part, categoryId, brandIds.get(part.brandSlug)!),
+        })
       }
 
       const shippingWritten = await writeShipping(tx, shipping)
@@ -129,7 +110,6 @@ export function writeSeed(
         brands: brandIds.size,
         created: newParts.length,
         existing: parts.length - newParts.length,
-        images: imagesAdded,
         ...shippingWritten,
         vouchers: vouchersAdded,
       }

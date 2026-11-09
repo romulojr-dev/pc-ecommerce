@@ -1,5 +1,3 @@
-import { placeholderUrl } from "@/lib/placeholders"
-
 import type { SeedPart } from "../part-schema"
 
 // Clearances are rounded down from the manufacturer's figure. Radiator sizes
@@ -17,10 +15,6 @@ export const cases = [
     warrantyMonths: 12,
     sourceUrl: "https://lian-li.com/product/lancool-216/",
     // Several images, for the product gallery (spec 006)
-    images: [
-      { url: placeholderUrl("case") },
-      { url: placeholderUrl("detail") },
-    ],
     specs: {
       // E-ATX only up to 280 mm wide
       motherboardFormFactors: ["E_ATX", "ATX", "MICRO_ATX", "MINI_ITX"],

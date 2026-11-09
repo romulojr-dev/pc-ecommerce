@@ -322,16 +322,6 @@ describe("part quality and builder scenarios", () => {
     expect(fitsNone(["LGA1700", "LGA1851"]), "AMD-only cooler").toBe(true)
   })
 
-  test("has 5–6 parts with several images, with 2 and with 3", () => {
-    const counts = parts
-      .map((part) => part.images.length)
-      .filter((count) => count > 1)
-    expect(counts.length).toBeGreaterThanOrEqual(5)
-    expect(counts.length).toBeLessThanOrEqual(6)
-    expect(counts).toContain(2)
-    expect(counts).toContain(3)
-  })
-
   test("keeps all 60 existing parts (spec 001 fixtures and spec 005)", () => {
     const existing = [...FIXTURE_SKUS, ...SPEC_005_SKUS]
     expect(new Set(existing).size).toBe(60)
@@ -355,16 +345,12 @@ describe("featured parts", () => {
   })
 })
 
-describe("image files", () => {
+// The seed writes no images; a product without photos shows its category
+// placeholder (docs/specs/049-product-images-upload, D1), so every builder
+// category must have its file
+describe("placeholder files", () => {
   const publicDir = fileURLToPath(new URL("../../../public", import.meta.url))
   const isFile = (url: string) => existsSync(`${publicDir}${url}`)
-
-  test("every local image the seed uses exists under public/", () => {
-    const missing = parts
-      .flatMap((part) => part.images.map((image) => image.url))
-      .filter((url) => url.startsWith("/") && !isFile(url))
-    expect([...new Set(missing)]).toEqual([])
-  })
 
   test("every builder category and view has a placeholder", () => {
     const names = [

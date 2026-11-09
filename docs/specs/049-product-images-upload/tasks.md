@@ -39,7 +39,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Markup tests (E1, E2, E30, E39)
 
 ## 7. Seed
-- [ ] Seed writes no images; remove part overrides, image schema and summary count; update tests (E37, E38)
+- [x] Seed writes no images; remove part overrides, image schema and summary count; update tests (E37, E38)
 
 ## 8. Upload route
 - [ ] `lib/admin/images/upload.ts` and `app/api/admin/images/route.ts` (B14–B17, R1–R5)

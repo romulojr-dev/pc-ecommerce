@@ -91,11 +91,25 @@ describe("a re-seed is create-only", () => {
     expect(await db.product.count()).toBe(3)
   })
 
-  it("images are still added to a product that has none", async () => {
+  it("E37, E38: the seed writes no image rows, and never brings back what the owner removed", async () => {
     await writeSeed(db, slice(1), options)
-    await db.productImage.deleteMany()
+    expect(await db.productImage.count()).toBe(0)
+
+    // The owner adds a photo to one product and removes every photo of another
+    const [kept] = await db.product.findMany({ take: 1 })
+    await db.productImage.create({
+      data: {
+        productId: kept.id,
+        url: "https://abc123.public.blob.vercel-storage.com/products/x.webp",
+        alt: kept.name,
+        sortOrder: 0,
+      },
+    })
     const counts = await writeSeed(db, slice(1), options)
-    expect(counts.images).toBeGreaterThan(0)
-    expect(await db.productImage.count()).toBe(counts.images)
+    expect(counts).not.toHaveProperty("images")
+    expect(await db.productImage.count()).toBe(1)
+    expect((await db.productImage.findFirstOrThrow()).url).toBe(
+      "https://abc123.public.blob.vercel-storage.com/products/x.webp"
+    )
   })
 })
