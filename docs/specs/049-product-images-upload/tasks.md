@@ -13,9 +13,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] ADR 0013 (Blob over Cloudinary, Hobby limits, per-environment stores, own-store deletion)
 
 ## 2. Pure rules
-- [ ] `detectImageType`, `readCappedBody`, size constants (E6–E11)
-- [ ] `displayImages` / `mainImageOf` / `placeholderImage` (E26, E30)
-- [ ] Unit tests
+- [x] `detectImageType`, `readCappedBody`, size constants (E6–E11)
+- [x] `displayImages` / `mainImageOf` / `placeholderImage` (E26, E30)
+- [x] Unit tests
 
 ## 3. Re-encoding
 - [ ] `reencodeImage` with `sharp` (E46–E51, R19): 2000 px, no enlarge, orientation applied, no metadata, 40 MP limit, first frame only
