@@ -74,6 +74,26 @@ async function psuCatalog() {
     .id
 }
 
+// A product with three photos, for the photo actions
+// (docs/specs/049-product-images-upload). The ids go in the context as text.
+async function productWithPhotos() {
+  const productId = await productWithStock(10)
+  const base = "https://abc123.public.blob.vercel-storage.com/products"
+  const ids: string[] = []
+  for (const [sortOrder, name] of ["a", "b", "c"].entries()) {
+    const row = await db.productImage.create({
+      data: {
+        productId,
+        url: `${base}/${name}.webp`,
+        alt: `Photo ${name}`,
+        sortOrder,
+      },
+    })
+    ids.push(row.id)
+  }
+  return { productId, a: ids[0], b: ids[1], c: ids[2] }
+}
+
 export const AUDIT_FIXTURES: AuditFixture[] = [
   {
     file: actionsFile("inventory"),
@@ -213,6 +233,47 @@ export const AUDIT_FIXTURES: AuditFixture[] = [
       orderNumber: NUMBER,
       expectedStatus: "PAID",
       reason: "OUT_OF_STOCK",
+    }),
+  },
+  {
+    file: actionsFile("products"),
+    export: "reorderProductImagesAction",
+    writes: [{ entity: "product", action: "images-reordered" }],
+    setup: productWithPhotos,
+    input: (ctx) => ({
+      productId: ctx.productId,
+      order: [ctx.c, ctx.a, ctx.b],
+    }),
+    // The order it already has
+    refused: (ctx) => ({
+      productId: ctx.productId,
+      order: [ctx.a, ctx.b, ctx.c],
+    }),
+  },
+  {
+    file: actionsFile("products"),
+    export: "setImageAltAction",
+    writes: [{ entity: "product", action: "image-alt-changed" }],
+    setup: productWithPhotos,
+    input: (ctx) => ({ imageId: ctx.a, alt: "AMD Ryzen 5 7600 in its box" }),
+    // Blank alt text
+    refused: (ctx) => ({ imageId: ctx.a, alt: "   " }),
+  },
+  {
+    file: actionsFile("products"),
+    export: "removeProductImageAction",
+    writes: [{ entity: "product", action: "image-removed" }],
+    setup: productWithPhotos,
+    input: (ctx) => ({
+      productId: ctx.productId,
+      imageId: ctx.b,
+      shown: [ctx.a, ctx.b, ctx.c],
+    }),
+    // A screen that missed one photo
+    refused: (ctx) => ({
+      productId: ctx.productId,
+      imageId: ctx.b,
+      shown: [ctx.a, ctx.b],
     }),
   },
 ]

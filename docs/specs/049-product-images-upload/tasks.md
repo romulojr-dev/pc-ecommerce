@@ -47,8 +47,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `.db` tests (E1, E3–E5, E9–E17, E52)
 
 ## 9. Actions
-- [ ] `reorderProductImages`, `setImageAlt`, `removeProductImage`; `adminAction("images.write")` (B10–B12, R7–R10)
-- [ ] Audit keys and fixtures; `.db` tests (E19–E29), demo enumeration
+- [x] `reorderProductImages`, `setImageAlt`, `removeProductImage`; `adminAction("images.write")` (B10–B12, R7–R10)
+- [x] Audit keys and fixtures; `.db` tests (E19–E29), demo enumeration
 
 ## 10. Admin UI and list
 - [ ] Images section on `/admin/products/[id]`; upload control; Demo disabled
