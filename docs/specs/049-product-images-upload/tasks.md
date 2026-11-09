@@ -27,10 +27,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] `.db` tests: placeholder rows deleted, real row survives (E37), CHECKs, `pnpm db:drift`
 
 ## 5. Storage adapters and the fake's route
-- [ ] `ImageStorage` (`blobStorage`, `fakeStorage`, `imageStorage()`); own-store deletion rule (E52)
-- [ ] `GET /test-images/[name]` (404 unless fake, E44, E45)
-- [ ] `next.config.ts` `images.remotePatterns` from the env; WebP only; 31-day cache (R11, R17)
-- [ ] Tests
+- [x] `ImageStorage` (`blobStorage`, `fakeStorage`, `imageStorage()`); own-store deletion rule (E52)
+- [x] `GET /test-images/[name]` (404 unless fake, E44, E45)
+- [x] `next.config.ts` `images.remotePatterns` from the env; WebP only; 31-day cache (R11, R17)
+- [x] Tests
 
 ## 6. Storefront
 - [ ] Reads map through `mainImageOf` / `displayImages`; product page passes real images or the placeholder

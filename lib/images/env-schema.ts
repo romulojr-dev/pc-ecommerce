@@ -87,3 +87,15 @@ export function imageHostsOf(values: {
   const hosts = [own, values.BLOB_PRODUCTION_HOST ?? null]
   return [...new Set(hosts.filter((host): host is string => host !== null))]
 }
+
+// next/image's remotePatterns for those hosts: https only, and only the
+// products/ folder of the store (R11). The array may be empty.
+export function imageRemotePatterns(
+  values: Parameters<typeof imageHostsOf>[0]
+): { protocol: "https"; hostname: string; pathname: string }[] {
+  return imageHostsOf(values).map((hostname) => ({
+    protocol: "https",
+    hostname,
+    pathname: "/products/**",
+  }))
+}

@@ -5,6 +5,7 @@ import {
   blobProductionHostSchema,
   imageEnvIssues,
   imageHostsOf,
+  imageRemotePatterns,
   imageStorageSchema,
 } from "./env-schema"
 
@@ -136,5 +137,26 @@ describe("imageHostsOf", () => {
     expect(
       imageHostsOf({ IMAGE_STORAGE: "fake", BLOB_READ_WRITE_TOKEN: TOKEN })
     ).toEqual([])
+  })
+})
+
+describe("imageRemotePatterns", () => {
+  test("E43: https, the products folder only, no wildcard host", () => {
+    expect(
+      imageRemotePatterns({
+        IMAGE_STORAGE: "blob",
+        BLOB_READ_WRITE_TOKEN: TOKEN,
+      })
+    ).toEqual([
+      {
+        protocol: "https",
+        hostname: "abc123.public.blob.vercel-storage.com",
+        pathname: "/products/**",
+      },
+    ])
+  })
+
+  test("E44: none for the fake", () => {
+    expect(imageRemotePatterns({ IMAGE_STORAGE: "fake" })).toEqual([])
   })
 })
