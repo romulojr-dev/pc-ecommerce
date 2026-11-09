@@ -2,7 +2,7 @@ import "server-only"
 
 import { randomBytes } from "node:crypto"
 
-import { blobHostOf } from "./env-schema"
+import type { BlobAuth } from "./env-schema"
 import { logImageEvent } from "./log"
 import { classifyStoredUrl } from "./own-store"
 
@@ -31,7 +31,10 @@ export function newImageName(): string {
 
 export const BLOB_TIMEOUT_MS = 10_000
 
-// The two functions of @vercel/blob this uses, so a test can pass doubles
+// The two functions of @vercel/blob this uses, so a test can pass doubles.
+// `auth` is spread into each call: `{ storeId }` lets the SDK use OIDC (and
+// fall back to BLOB_READ_WRITE_TOKEN in process.env), `{ token }` uses the
+// static token.
 export type BlobClient = {
   put: (
     pathname: string,
@@ -41,11 +44,10 @@ export type BlobClient = {
       addRandomSuffix: false
       allowOverwrite: false
       contentType: string
-      token: string
       abortSignal: AbortSignal
-    }
+    } & BlobAuth
   ) => Promise<{ url: string }>
-  del: (url: string, options: { token: string }) => Promise<void>
+  del: (url: string, options: BlobAuth) => Promise<void>
 }
 
 async function realBlob(): Promise<BlobClient> {
@@ -64,11 +66,13 @@ export function codeOf(error: unknown): string {
   return "error"
 }
 
+// `host` is this environment's own store host (blobStoreOf): only a file on
+// it is ever deleted
 export function blobStorage(
-  token: string,
+  store: { host: string; auth: BlobAuth },
   client: () => Promise<BlobClient> = realBlob
 ): ImageStorage {
-  const ownHost = blobHostOf(token)
+  const { host: ownHost, auth } = store
   return {
     async put(name, bytes, contentType) {
       try {
@@ -79,8 +83,8 @@ export function blobStorage(
           addRandomSuffix: false,
           allowOverwrite: false,
           contentType,
-          token,
           abortSignal: AbortSignal.timeout(BLOB_TIMEOUT_MS),
+          ...auth,
         })
         return { ok: true, url: blob.url }
       } catch (error) {
@@ -98,7 +102,7 @@ export function blobStorage(
         return "skipped"
       }
       try {
-        await (await client()).del(url, { token })
+        await (await client()).del(url, auth)
         return "deleted"
       } catch (error) {
         logImageEvent({

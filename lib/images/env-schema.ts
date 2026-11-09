@@ -16,13 +16,61 @@ export const imageStorageSchema = z.enum(["blob", "fake"], {
 
 export const BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com"
 
-// A Vercel Blob read-write token is `vercel_blob_rw_{storeId}_{random}`; the
-// store's public host is the lower-cased store id plus the suffix
+// How this environment reaches its store (ADR 0013). Vercel's default for a
+// connected store is OIDC: BLOB_STORE_ID plus the short-lived
+// VERCEL_OIDC_TOKEN, which @vercel/blob reads and refreshes itself, so the app
+// never reads it. BLOB_READ_WRITE_TOKEN, a long-lived static token, is the
+// fallback (a connection made without OIDC, or code running off Vercel). The
+// SDK takes an explicit storeId with OIDC and falls back to the token in
+// process.env when there is no OIDC token.
+export type BlobAuth = { storeId: string } | { token: string }
+
+// BLOB_STORE_ID is `store_{id}` or `{id}` (the SDK accepts both)
+const STORE_ID = /^(?:store_)?([A-Za-z0-9]+)$/
+
+export function blobStoreIdOf(value: string): string | null {
+  const match = STORE_ID.exec(value)
+  return match ? match[1] : null
+}
+
+// A Vercel Blob read-write token is `vercel_blob_rw_{storeId}_{random}`
 const TOKEN = /^vercel_blob_rw_([A-Za-z0-9]+)_[A-Za-z0-9]+$/
 
-export function blobHostOf(token: string): string | null {
+export function blobTokenStoreIdOf(token: string): string | null {
   const match = TOKEN.exec(token)
-  return match ? `${match[1].toLowerCase()}${BLOB_HOST_SUFFIX}` : null
+  return match ? match[1] : null
+}
+
+// The store's public host is the lower-cased store id plus the suffix
+function hostOfStoreId(storeId: string): string {
+  return `${storeId.toLowerCase()}${BLOB_HOST_SUFFIX}`
+}
+
+export function blobHostOf(token: string): string | null {
+  const storeId = blobTokenStoreIdOf(token)
+  return storeId ? hostOfStoreId(storeId) : null
+}
+
+type BlobValues = {
+  BLOB_STORE_ID?: string
+  BLOB_READ_WRITE_TOKEN?: string
+}
+
+// This environment's store: its host (for remotePatterns and "own store"
+// deletes) and the credentials to pass to the SDK. The store id wins when
+// both are set; imageEnvIssues makes sure they then name the same store.
+export function blobStoreOf(
+  values: BlobValues
+): { host: string; auth: BlobAuth } | null {
+  if (values.BLOB_STORE_ID) {
+    const storeId = blobStoreIdOf(values.BLOB_STORE_ID)
+    return storeId ? { host: hostOfStoreId(storeId), auth: { storeId } } : null
+  }
+  if (values.BLOB_READ_WRITE_TOKEN) {
+    const host = blobHostOf(values.BLOB_READ_WRITE_TOKEN)
+    return host ? { host, auth: { token: values.BLOB_READ_WRITE_TOKEN } } : null
+  }
+  return null
 }
 
 const HOST = /^[a-z0-9]+\.public\.blob\.vercel-storage\.com$/
@@ -34,9 +82,8 @@ export const blobProductionHostSchema = z
   .regex(HOST, "must be a Vercel Blob host (…public.blob.vercel-storage.com)")
   .optional()
 
-export type ImageEnvValues = {
+export type ImageEnvValues = BlobValues & {
   IMAGE_STORAGE?: string
-  BLOB_READ_WRITE_TOKEN?: string
   VERCEL_ENV?: string
 }
 
@@ -54,19 +101,41 @@ export function imageEnvIssues(values: ImageEnvValues): ImageEnvIssue[] {
       message: "must be blob in production",
     })
   }
-  if (values.IMAGE_STORAGE === "blob") {
-    const token = values.BLOB_READ_WRITE_TOKEN
-    if (!token) {
-      issues.push({
-        variable: "BLOB_READ_WRITE_TOKEN",
-        message: "is not set (required with IMAGE_STORAGE=blob)",
-      })
-    } else if (blobHostOf(token) === null) {
-      issues.push({
-        variable: "BLOB_READ_WRITE_TOKEN",
-        message: "is not a Vercel Blob read-write token",
-      })
-    }
+  if (values.IMAGE_STORAGE !== "blob") return issues
+  const { BLOB_STORE_ID: storeIdValue, BLOB_READ_WRITE_TOKEN: token } = values
+  if (!storeIdValue && !token) {
+    issues.push({
+      variable: "BLOB_STORE_ID",
+      message:
+        "is not set (IMAGE_STORAGE=blob needs BLOB_STORE_ID or BLOB_READ_WRITE_TOKEN)",
+    })
+    return issues
+  }
+  const storeId = storeIdValue ? blobStoreIdOf(storeIdValue) : null
+  if (storeIdValue && storeId === null) {
+    issues.push({
+      variable: "BLOB_STORE_ID",
+      message: "is not a Vercel Blob store id (store_…)",
+    })
+  }
+  const tokenStoreId = token ? blobTokenStoreIdOf(token) : null
+  if (token && tokenStoreId === null) {
+    issues.push({
+      variable: "BLOB_READ_WRITE_TOKEN",
+      message: "is not a Vercel Blob read-write token",
+    })
+  }
+  // The SDK falls back to the token when there is no OIDC token, so both
+  // must name the store the host was derived from
+  if (
+    storeId !== null &&
+    tokenStoreId !== null &&
+    storeId.toLowerCase() !== tokenStoreId.toLowerCase()
+  ) {
+    issues.push({
+      variable: "BLOB_READ_WRITE_TOKEN",
+      message: "is for a different store than BLOB_STORE_ID",
+    })
   }
   return issues
 }
@@ -75,15 +144,14 @@ export function imageEnvIssues(values: ImageEnvValues): ImageEnvIssue[] {
 // own store, and production's when the preview shares production's rows
 // (spec 049, E43, E43b). The fake serves from this site, which needs no
 // pattern. No wildcard host.
-export function imageHostsOf(values: {
-  IMAGE_STORAGE?: string
-  BLOB_READ_WRITE_TOKEN?: string
-  BLOB_PRODUCTION_HOST?: string
-}): string[] {
+export function imageHostsOf(
+  values: BlobValues & {
+    IMAGE_STORAGE?: string
+    BLOB_PRODUCTION_HOST?: string
+  }
+): string[] {
   if (values.IMAGE_STORAGE !== "blob") return []
-  const own = values.BLOB_READ_WRITE_TOKEN
-    ? blobHostOf(values.BLOB_READ_WRITE_TOKEN)
-    : null
+  const own = blobStoreOf(values)?.host ?? null
   const hosts = [own, values.BLOB_PRODUCTION_HOST ?? null]
   return [...new Set(hosts.filter((host): host is string => host !== null))]
 }

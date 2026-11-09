@@ -8,6 +8,8 @@ import { blobStorage, type BlobClient, newImageName } from "./blob-storage"
 
 const TOKEN = "vercel_blob_rw_Own123_secret"
 const OWN_HOST = "own123.public.blob.vercel-storage.com"
+const WITH_TOKEN = { host: OWN_HOST, auth: { token: TOKEN } }
+const WITH_OIDC = { host: OWN_HOST, auth: { storeId: "Own123" } }
 const OWN = `https://${OWN_HOST}/products/a.webp`
 const PRODUCTION =
   "https://prod9.public.blob.vercel-storage.com/products/a.webp"
@@ -75,7 +77,7 @@ describe("classifyStoredUrl", () => {
 describe("blobStorage.put", () => {
   it("stores under products/ with the token, public, never overwriting", async () => {
     const { doubles, factory } = client()
-    const result = await blobStorage(TOKEN, factory).put(
+    const result = await blobStorage(WITH_TOKEN, factory).put(
       "abc.webp",
       new Uint8Array([1, 2, 3]),
       "image/webp"
@@ -97,6 +99,18 @@ describe("blobStorage.put", () => {
     expect(options.abortSignal).toBeInstanceOf(AbortSignal)
   })
 
+  it("with a store id, passes storeId and no token, so the SDK uses OIDC", async () => {
+    const { doubles, factory } = client()
+    await blobStorage(WITH_OIDC, factory).put(
+      "abc.webp",
+      new Uint8Array(1),
+      "image/webp"
+    )
+    const options = doubles.put.mock.calls[0][2]
+    expect(options).toMatchObject({ storeId: "Own123" })
+    expect(options).not.toHaveProperty("token")
+  })
+
   it("E15: a failure is a short code, never the message", async () => {
     const boom = new Error(`secret ${TOKEN} leaked in a message`)
     boom.name = "BlobServiceNotAvailable"
@@ -105,7 +119,7 @@ describe("blobStorage.put", () => {
         throw boom
       }),
     })
-    const result = await blobStorage(TOKEN, factory).put(
+    const result = await blobStorage(WITH_TOKEN, factory).put(
       "abc.webp",
       new Uint8Array(1),
       "image/webp"
@@ -122,7 +136,11 @@ describe("blobStorage.put", () => {
       }),
     })
     expect(
-      await blobStorage(TOKEN, factory).put("a.webp", new Uint8Array(1), "x")
+      await blobStorage(WITH_TOKEN, factory).put(
+        "a.webp",
+        new Uint8Array(1),
+        "x"
+      )
     ).toEqual({ ok: false, code: "timeout" })
   })
 })
@@ -130,14 +148,22 @@ describe("blobStorage.put", () => {
 describe("blobStorage.delete", () => {
   it("deletes a file on its own store", async () => {
     const { doubles, factory } = client()
-    expect(await blobStorage(TOKEN, factory).delete(OWN)).toBe("deleted")
+    expect(await blobStorage(WITH_TOKEN, factory).delete(OWN)).toBe("deleted")
     expect(doubles.del).toHaveBeenCalledWith(OWN, { token: TOKEN })
+  })
+
+  it("deletes with the store id under OIDC", async () => {
+    const { doubles, factory } = client()
+    expect(await blobStorage(WITH_OIDC, factory).delete(OWN)).toBe("deleted")
+    expect(doubles.del).toHaveBeenCalledWith(OWN, { storeId: "Own123" })
   })
 
   it("E52: skips another store's file, calls nothing and logs the host", async () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => {})
     const { doubles, factory } = client()
-    expect(await blobStorage(TOKEN, factory).delete(PRODUCTION)).toBe("skipped")
+    expect(await blobStorage(WITH_TOKEN, factory).delete(PRODUCTION)).toBe(
+      "skipped"
+    )
     expect(doubles.del).not.toHaveBeenCalled()
     expect(JSON.parse(info.mock.calls[0][0] as string)).toEqual({
       event: "image.delete_skipped",
@@ -155,7 +181,7 @@ describe("blobStorage.delete", () => {
         throw boom
       }),
     })
-    expect(await blobStorage(TOKEN, factory).delete(OWN)).toBe("failed")
+    expect(await blobStorage(WITH_TOKEN, factory).delete(OWN)).toBe("failed")
     const line = error.mock.calls[0][0] as string
     expect(JSON.parse(line)).toEqual({
       event: "image.delete_failed",

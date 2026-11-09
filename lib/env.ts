@@ -87,8 +87,12 @@ export const env = createEnv({
     // "blob" or "fake", required; Production refuses the fake. The fake keeps
     // photos in the FakeStoredImage table and serves them from /test-images.
     IMAGE_STORAGE: imageStorageSchema,
-    // This environment's Vercel Blob store token, required with
-    // IMAGE_STORAGE=blob. Never logged.
+    // This environment's Vercel Blob store (ADR 0013). With IMAGE_STORAGE=blob
+    // one of the two is required: BLOB_STORE_ID (Vercel adds it when a store
+    // is connected; @vercel/blob pairs it with VERCEL_OIDC_TOKEN, which the
+    // app never reads) or the static BLOB_READ_WRITE_TOKEN fallback. Rules in
+    // lib/images/env-schema.ts. The token is never logged.
+    BLOB_STORE_ID: z.string().optional(),
     BLOB_READ_WRITE_TOKEN: z.string().optional(),
     // Preview only: production's Blob host, so a preview whose database was
     // branched from production can show production's photos (spec 049, D7).

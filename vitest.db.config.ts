@@ -53,6 +53,7 @@ export default defineConfig({
       // Always the fake photo store, whatever .env.local chooses
       // (docs/specs/049-product-images-upload)
       IMAGE_STORAGE: "fake",
+      BLOB_STORE_ID: "",
       BLOB_READ_WRITE_TOKEN: "",
       BLOB_PRODUCTION_HOST: "",
       ORDER_LINK_SECRET: "test-order-link-secret-0123456789abcdef-xyz",

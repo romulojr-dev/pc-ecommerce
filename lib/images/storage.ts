@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { env } from "@/lib/env"
 
 import { blobStorage, codeOf, type ImageStorage } from "./blob-storage"
+import { blobStoreOf } from "./env-schema"
 import { logImageEvent } from "./log"
 import { classifyStoredUrl, FAKE_IMAGE_PATH } from "./own-store"
 
@@ -51,7 +52,9 @@ export const fakeStorage: ImageStorage = {
 }
 
 export function imageStorage(): ImageStorage {
-  return env.IMAGE_STORAGE === "blob"
-    ? blobStorage(env.BLOB_READ_WRITE_TOKEN ?? "")
-    : fakeStorage
+  if (env.IMAGE_STORAGE !== "blob") return fakeStorage
+  // lib/env.ts refuses IMAGE_STORAGE=blob without a valid store id or token
+  const store = blobStoreOf(env)
+  if (!store) throw new Error("Blob storage is not configured")
+  return blobStorage(store)
 }
