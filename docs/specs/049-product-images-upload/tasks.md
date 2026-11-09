@@ -56,7 +56,7 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Markup tests
 
 ## 11. E2E
-- [ ] `e2e/admin-images.spec.ts`; footer assertion
+- [x] `e2e/admin-images.spec.ts`; footer assertion
 
 ## 12. Docs and PR
 - [ ] CLAUDE.md, README, PRD, spec 001 / 006 / 045 notes, docs/setup
