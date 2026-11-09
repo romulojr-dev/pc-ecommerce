@@ -1,6 +1,6 @@
 # 006 — Product images with placeholders
 
-Status: **Draft** · Issue: #19 · PRD refs: FR-8 (gallery), NFR Performance (Lighthouse ≥ 90, LCP < 2.5 s), Tech stack (Images: Cloudinary, next/image)
+Status: **Draft** (superseded in part by [spec 049](../049-product-images-upload/spec.md): the placeholder is no longer stored or seeded; it is derived from the category when a product has no photo) · Issue: #19 · PRD refs: FR-8 (gallery), NFR Performance (Lighthouse ≥ 90, LCP < 2.5 s), Tech stack (Images: Cloudinary, next/image)
 
 ## Summary
 

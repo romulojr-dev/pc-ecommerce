@@ -179,7 +179,7 @@ All online methods go through one PH gateway in test mode; COD is handled in-app
 A protected `/admin` area, built with the same shadcn/ui components, lets the shop run without developer help.
 
 - **AD-1 Dashboard:** today's and 30-day sales, order count, average order value, low-stock list, recent orders ([spec 048](specs/048-admin-dashboard/spec.md)).
-- **AD-2 Products:** create/edit with category-specific spec fields (required fields enforced for builder rules), images upload, SEO title/description, publish/draft toggle.
+- **AD-2 Products:** create/edit with category-specific spec fields (required fields enforced for builder rules), images upload ([spec 049](specs/049-product-images-upload/spec.md): JPEG, PNG or WebP, re-encoded to WebP, up to 8 per product; a product with none shows its category placeholder), SEO title/description, publish/draft toggle.
 - **AD-3 Categories:** edit only: name, parent and sort order; a slug is editable only for non-builder categories; no create or delete in the MVP. Each category's spec fields (name, type, unit, filterable?, used by builder?) are defined in code, because the builder rules read them by name; adding or changing a field is a code change ([ADR 0002](adr/0002-spec-schemas-in-code.md)).
 - **AD-4 Brands:** name, logo.
 - **AD-5 Inventory:** stock quantity, low-stock threshold, stock adjustments with reason (received, damaged, correction) logged.
@@ -253,7 +253,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | Auth | Better Auth ([ADR 0012](adr/0012-staff-auth-on-better-auth.md)) | Staff-only email/password sign-in for Admin; `role` on user. Customer sign-in (Google) is Phase 2 |
 | Search | Postgres full-text search in MVP | Move to Meilisearch / Typesense in Phase 2 if needed |
 | Builder state | Zustand (persisted to localStorage); syncing to an account is Phase 2 | Shareable build URL via the build snapshot's share slug |
-| Images | Vercel Blob through a server upload route | Responsive images via next/image |
+| Images | Vercel Blob through a server upload route ([ADR 0013](adr/0013-store-product-images-in-vercel-blob.md)) | Responsive images via next/image; uploads are re-encoded to WebP |
 | Email | Resend + React Email | Order emails (no auth emails; [ADR 0012](adr/0012-staff-auth-on-better-auth.md)) |
 | Payments | Xendit API (test mode); PayMongo the alternative | Payment sessions + webhooks |
 | Hosting | Vercel | Preview deploys per pull request |
@@ -267,7 +267,7 @@ The rules engine runs in the browser for instant feedback and again on the serve
 | `Category` | id, name, slug, parentId, sortOrder (spec fields are defined in code as Zod schemas per category, not stored here; see [ADR 0002](adr/0002-spec-schemas-in-code.md)) |
 | `Brand` | id, name, slug, logoUrl |
 | `Product` | id, categoryId, brandId, name, slug, sku, price, salePrice, stock, lowStockAt, specs (JSONB), weightGrams, warrantyMonths, status (draft / active) |
-| `ProductImage` | productId, url, alt, sortOrder |
+| `ProductImage` | productId, url, alt, sortOrder, createdAt. Only the owner's real photos are stored; a product without any shows its category's placeholder, derived from the category ([spec 049](specs/049-product-images-upload/spec.md)) |
 | `Build` | id, shareSlug, contentHash, createdAt. An immutable snapshot of a build's parts: sharing or carting the same contents again reuses the row (same content hash, same slug) |
 | `BuildItem` | buildId, slot (cpu, motherboard, …), productId, quantity |
 | `SavedBuild` *(Phase 2)* | userId, name, buildId, updatedAt. A build saved to an account; editing it points it at a new snapshot |
