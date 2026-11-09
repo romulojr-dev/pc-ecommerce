@@ -52,6 +52,9 @@ jobs:
       # The fake email transport and a dummy link secret; CI never sends email
       # (docs/specs/035-email-foundation-signed-links)
       EMAIL_TRANSPORT: fake
+      # The fake photo store; CI never calls Vercel Blob
+      # (docs/specs/049-product-images-upload)
+      IMAGE_STORAGE: fake
       ORDER_LINK_SECRET: ci-dummy-order-link-secret-0123456789abcdef
       # The staff session secret (at least 32 bytes, different from the link
       # secret) and the dummy passwords of the demo and E2E accounts, which

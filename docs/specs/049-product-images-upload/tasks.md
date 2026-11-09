@@ -7,10 +7,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Commit the three files
 
 ## 1. Dependencies, environment and ADR
-- [ ] `pnpm add sharp @vercel/blob`
-- [ ] `lib/images/env-schema.ts` (`IMAGE_STORAGE`, token, `BLOB_PRODUCTION_HOST`, `blobHostOf`) + unit tests (E40–E43c)
-- [ ] Wire into `lib/env.ts`; `.env.example`; test/CI/Playwright config set `IMAGE_STORAGE=fake`
-- [ ] ADR 0013 (Blob over Cloudinary, Hobby limits, per-environment stores, own-store deletion)
+- [x] `pnpm add sharp @vercel/blob`
+- [x] `lib/images/env-schema.ts` (`IMAGE_STORAGE`, token, `BLOB_PRODUCTION_HOST`, `blobHostOf`) + unit tests (E40–E43c)
+- [x] Wire into `lib/env.ts`; `.env.example`; test/CI/Playwright config set `IMAGE_STORAGE=fake`
+- [x] ADR 0013 (Blob over Cloudinary, Hobby limits, per-environment stores, own-store deletion)
 
 ## 2. Pure rules
 - [ ] `detectImageType`, `readCappedBody`, size constants (E6–E11)
