@@ -61,7 +61,12 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: path },
-    ...socialMetadata({ title, description, path, image: product.images[0] }),
+    ...socialMetadata({
+      title,
+      description,
+      path,
+      image: product.placeholder ? undefined : product.images[0],
+    }),
   }
 }
 
@@ -134,7 +139,11 @@ export default async function ProductPage({
       </Breadcrumb>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
-        <ProductGallery images={product.images} productName={product.name} />
+        <ProductGallery
+          images={product.images}
+          placeholder={product.placeholder}
+          productName={product.name}
+        />
 
         <div className="flex flex-col gap-6">
           {/* One load of the build, shared by Add to build and the fit block

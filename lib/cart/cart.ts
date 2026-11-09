@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 
 import { db } from "@/lib/db"
 import type { DbClient } from "@/lib/db-client"
+import { mainImageOf } from "@/lib/images/display"
 import {
   finishRelease,
   prepareRelease,
@@ -382,7 +383,7 @@ export async function getCartView(
       slug: product.slug,
       categorySlug: product.category.slug,
       brand: product.brand.name,
-      image: product.images[0] ?? null,
+      image: mainImageOf(product.images, product.category.slug, product.name),
       price: product.price,
       salePrice: product.salePrice,
       unitPrice: product.effectivePrice,

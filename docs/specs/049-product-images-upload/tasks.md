@@ -33,10 +33,10 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Tests
 
 ## 6. Storefront
-- [ ] Reads map through `mainImageOf` / `displayImages`; product page passes real images or the placeholder
-- [ ] Gallery: one image shows no strip, arrows or counter; placeholder has no Enlarge (B19, R18)
-- [ ] Metadata and JSON-LD; footer line (B21, B22)
-- [ ] Markup tests (E1, E2, E30, E39)
+- [x] Reads map through `mainImageOf` / `displayImages`; product page passes real images or the placeholder
+- [x] Gallery: one image shows no strip, arrows or counter; placeholder has no Enlarge (B19, R18)
+- [x] Metadata and JSON-LD; footer line (B21, B22)
+- [x] Markup tests (E1, E2, E30, E39)
 
 ## 7. Seed
 - [ ] Seed writes no images; remove part overrides, image schema and summary count; update tests (E37, E38)

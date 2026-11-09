@@ -2,6 +2,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import type { BuilderPartData } from "@/lib/build-state/parts"
 import { db } from "@/lib/db"
 import type { DbClient } from "@/lib/db-client"
+import { mainImageOf } from "@/lib/images/display"
 import { toDateString } from "@/lib/products"
 import { isBuilderCategory, validateSpecs } from "@/lib/specs"
 import { getStockStatus } from "@/lib/stock"
@@ -65,7 +66,7 @@ export function toBuilderPartData(
       { ...row, preorderShipsOn: toDateString(row.preorderShipsOn) },
       today
     ),
-    image: row.images[0] ?? null,
+    image: mainImageOf(row.images, row.category.slug, row.name),
   }
 }
 

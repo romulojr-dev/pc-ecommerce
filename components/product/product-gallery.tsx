@@ -14,8 +14,11 @@ import {
 import { cn, focusRing } from "@/lib/utils"
 
 type ProductGalleryProps = {
-  // In display order; may be empty
+  // In display order: the product's photos, or its category placeholder alone
+  // (then `placeholder` is true). May be empty for a category without
+  // placeholder artwork.
   images: { url: string; alt: string }[]
+  placeholder?: boolean
   productName: string
 }
 
@@ -23,15 +26,23 @@ type ProductGalleryProps = {
 // thumbnails to switch it, and "zoom" as the image larger in a dialog. Every
 // control is a button, so it all works with Tab, Enter and Space; the dialog
 // adds Left/Right arrows and returns focus to "Enlarge image" on close.
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+// One photo shows only the main image and Enlarge image: no thumbnail strip,
+// arrows or counter. The category placeholder is a plain image with no
+// Enlarge image either (docs/specs/049-product-images-upload, B19, R18).
+export function ProductGallery({
+  images,
+  placeholder = false,
+  productName,
+}: ProductGalleryProps) {
   const [index, setIndex] = useState(0)
 
-  if (images.length === 0) {
+  if (images.length === 0 || placeholder) {
     return (
       <ProductImage
-        image={null}
+        image={images[0] ?? null}
         productName={productName}
         sizes="(min-width: 1024px) 560px, 100vw"
+        loading="eager"
       />
     )
   }

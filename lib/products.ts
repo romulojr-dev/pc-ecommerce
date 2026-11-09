@@ -3,6 +3,7 @@ import { cache } from "react"
 import type { Prisma } from "@/generated/prisma/client"
 import { type FitPart, fitPartOf } from "@/lib/build-state/fit"
 import { db } from "@/lib/db"
+import { displayImages, mainImageOf } from "@/lib/images/display"
 import {
   type FilterOptions,
   type FilterValues,
@@ -35,7 +36,9 @@ export type ProductCardData = {
   lowStockAt: number
   // "YYYY-MM-DD" while on pre-order, else null (lib/stock.ts)
   preorderShipsOn: string | null
-  // The first image, or null when the product has none
+  // The first photo, or the category placeholder when the product has none
+  // (docs/specs/049-product-images-upload, B18); null only for a category
+  // without placeholder artwork
   image: { url: string; alt: string } | null
   // Key specs in one line, e.g. "AM5 · 6 cores · 5.1 GHz boost"
   // (docs/specs/016-home-page); null when the category has none
@@ -78,7 +81,7 @@ export function toProductCardData(row: ProductCardRow): ProductCardData {
     stock: row.stock,
     lowStockAt: row.lowStockAt,
     preorderShipsOn: toDateString(row.preorderShipsOn),
-    image: row.images[0] ?? null,
+    image: mainImageOf(row.images, row.category.slug, row.name),
     summary: specSummary(row.category.slug, row.specs),
   }
 }
@@ -220,7 +223,11 @@ export type ProductPageData = {
   warrantyMonths: number
   boxContents: string[]
   specs: Prisma.JsonValue
+  // In display order: its photos, or the category placeholder alone when it
+  // has none (`placeholder` is then true; docs/specs/049-product-images-
+  // upload, B18, B19)
   images: { url: string; alt: string }[]
+  placeholder: boolean
 }
 
 // An active product by slug (slugs are unique across categories), or null.
@@ -254,8 +261,15 @@ export const getProductPage = cache(
       },
     })
     if (!row) return null
+    const { images, placeholder } = displayImages(
+      row.images,
+      row.category.slug,
+      row.name
+    )
     return {
       ...row,
+      images,
+      placeholder,
       brand: row.brand.name,
       preorderShipsOn: toDateString(row.preorderShipsOn),
     }
