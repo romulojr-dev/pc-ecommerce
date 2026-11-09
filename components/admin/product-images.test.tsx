@@ -110,7 +110,10 @@ describe("ProductImages", () => {
 
   it("Demo sees the section with every control disabled and the read-only note", () => {
     const out = html({ images: [photo(1), photo(2)], readOnly: true })
-    expect(out).toContain("This account is read-only.")
+    // The markup escapes the apostrophe
+    expect(out).toContain("Photos can&#x27;t be changed with this account.")
+    // The form above says the other sentence; the page must not repeat it
+    expect(out).not.toContain("This account is read-only.")
     // The file input and each button carry the disabled attribute
     const inputs = out.match(/<input[^>]*>/g) ?? []
     expect(inputs.length).toBeGreaterThan(0)

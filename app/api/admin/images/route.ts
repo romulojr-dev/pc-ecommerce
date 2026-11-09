@@ -12,6 +12,9 @@ import { PRODUCTS_TAG } from "@/lib/home"
 // session and `can("images.write")` are checked before the body is read, so
 // Demo's request is refused without reading a byte. `kind=brand` comes with
 // the brands screen (#115).
+// Decoding and re-encoding a large photo can take a few seconds
+export const maxDuration = 30
+
 const querySchema = z.object({
   kind: z.literal("product"),
   id: z.string().regex(/^[a-z0-9]{10,40}$/),

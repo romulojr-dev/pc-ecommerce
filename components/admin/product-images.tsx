@@ -29,7 +29,6 @@ import {
   planUploads,
   uploadLine,
 } from "@/lib/admin/images-view"
-import { PRODUCT_COPY } from "@/lib/admin/products-copy"
 import { validateAlt } from "@/lib/images/rules"
 import { cn, focusRing } from "@/lib/utils"
 
@@ -193,9 +192,7 @@ export function ProductImages({
         {IMAGE_UI.heading}
       </h2>
       {readOnly ? (
-        <p className="rounded-md border p-3 text-sm">
-          {PRODUCT_COPY.form.readOnly}
-        </p>
+        <p className="rounded-md border p-3 text-sm">{IMAGE_UI.readOnly}</p>
       ) : null}
 
       {images.length === 0 ? (

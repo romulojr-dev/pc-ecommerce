@@ -21,6 +21,9 @@ export type ImageReason = keyof typeof IMAGE_REASONS
 // The Photos section of a product page and the list's filter (spec 049, §5)
 export const IMAGE_UI = {
   heading: "Photos",
+  // Its own words: the product form above already says "This account is
+  // read-only.", and a page may not repeat the sentence
+  readOnly: "Photos can't be changed with this account.",
   empty: (category: string) =>
     `No photos yet. The store shows the ${category} placeholder until you add one.`,
   uploadLabel: "Add photos",

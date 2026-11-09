@@ -205,7 +205,7 @@ Admin, Images section:
 - Removed: "Photo removed."
 - Reordered: announced in the section's `aria-live` region as "Photo moved to position {n}." / "Main image changed."
 - Stale: "These photos changed since you opened the page. Reload to see the current ones." with "Reload"
-- Demo note: the product form's existing read-only note.
+- Demo note: "Photos can't be changed with this account." (not the product form's "This account is read-only.", which the page already shows above, and a page may not repeat it)
 
 Admin, product list:
 
@@ -331,3 +331,17 @@ None.
 5. **Snapshots and deletion:** no snapshot holds an image URL, so best-effort deletion stays (R6, E53).
 6. **Confirmed:** photo changes invalidate `PRODUCTS_TAG` (R10, R20); `/test-images` is a 404 unless `IMAGE_STORAGE=fake` (R14, E45); a file orphaned by a crash between upload and transaction is accepted and noted (R6).
 7. **ADR 0013** records Blob over Cloudinary as well as the Hobby limits (D12).
+
+## 11. What changed while building
+
+- **No unique index on `(productId, sortOrder)`** (§6): the index is plain, and the product row lock serializes writes, so a renumbering is an ordinary `UPDATE` (plan, "Deviations").
+- **The owner's file name is never sent** (B14): the screen composes "{filename}: {reason}" itself, so the route has no `X-Filename` header to echo or validate.
+- **The route and the actions accept cuid-shaped ids only** (lowercase letters and digits, 10 to 40): real product ids are cuids, and a hand-made id with a hyphen is a 400 "Unknown upload target.". The E2E fixtures use cuid-shaped ids.
+- **`sameIds` compares sets of equal size on both sides.** A first version let a list such as `[a, a, b]` pass against `[a, b, c]` (every id is among them), which would have left a photo without a position; a unit and an integration test now cover it (B12, R8).
+- **The Blob adapter lives in `lib/images/blob-storage.ts`**, apart from `storage.ts` (which reads the database and the environment), so the adapter's unit tests need neither.
+- **The route's database tests are `lib/admin/images/upload-route.db.test.ts`**, not under `app/api/admin`: spec 047's `audit-readonly.test.ts` forbids any file there from mentioning the audit log. The audit coverage test lists the photo upload as the one admin route with its own audit proof.
+- **`box.svg` and `detail.svg` stay in the repository** (and in the placeholder generator) but nothing uses them any more; removing them was left out to keep the story to its scope.
+- **Local setup:** `IMAGE_STORAGE="fake"` must be in `.env.local` (a required variable, like `PAYMENT_GATEWAY` and `EMAIL_TRANSPORT`), and the Vercel project needs `IMAGE_STORAGE` (and, for `blob`, a connected store's `BLOB_READ_WRITE_TOKEN`) in each environment **before** this is deployed, or the build stops at env validation.
+- **The Photos section has its own read-only sentence**, "Photos can't be changed with this account.": the product form above already says "This account is read-only.", and a page may not repeat it (spec 045's Demo E2E would find two matches). B1's "the read-only note" means this sentence.
+- **The seed-image E2E assumption went away:** `e2e/product-page.spec.ts` relied on a seeded part with three images; it now makes a throwaway product with three photos (`e2e/gallery-fixtures.ts`, SKU prefix `E2E-GAL-`).
+- **The route has `maxDuration = 30`**, since decoding and re-encoding a large photo can take a few seconds.

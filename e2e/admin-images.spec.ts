@@ -266,7 +266,7 @@ test.describe("demo", () => {
     await page.goto(editUrl(ALPHA.id))
     await expect(page.getByRole("heading", { name: "Photos" })).toBeVisible()
     await expect(
-      page.getByText("This account is read-only.").first()
+      page.getByText("Photos can't be changed with this account.")
     ).toBeVisible()
     await expect(page.getByLabel("Add photos")).toBeDisabled()
     await expect(
