@@ -51,9 +51,9 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Audit keys and fixtures; `.db` tests (E19–E29), demo enumeration
 
 ## 10. Admin UI and list
-- [ ] Images section on `/admin/products/[id]`; upload control; Demo disabled
-- [ ] `photos` filter, thumbnails, next-product link (B23, B24, E33–E36)
-- [ ] Markup tests
+- [x] Images section on `/admin/products/[id]`; upload control; Demo disabled
+- [x] `photos` filter, thumbnails, next-product link (B23, B24, E33–E36)
+- [x] Markup tests
 
 ## 11. E2E
 - [ ] `e2e/admin-images.spec.ts`; footer assertion

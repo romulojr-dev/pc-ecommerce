@@ -5,6 +5,7 @@ import { connection } from "next/server"
 
 import { NoAccess } from "@/components/admin/no-access"
 import { ProductForm } from "@/components/admin/product-form"
+import { ProductImages } from "@/components/admin/product-images"
 import { ADMIN_COPY } from "@/lib/admin/copy"
 import { can } from "@/lib/admin/permissions"
 import { formFromProduct } from "@/lib/admin/product-form"
@@ -13,8 +14,10 @@ import { productStatusLabel } from "@/lib/admin/products-view"
 import {
   getProductForEdit,
   listBrandOptions,
+  nextProductWithoutPhotos,
 } from "@/lib/admin/queries/products"
 import { requireAdminAccess } from "@/lib/admin/session"
+import { placeholderImage } from "@/lib/images/display"
 import { first } from "@/lib/listing-filters/raw"
 import { dateTimeText } from "@/lib/orders/time"
 import { cn, focusRing } from "@/lib/utils"
@@ -41,6 +44,7 @@ export default async function AdminProductPage({
   if (!product) notFound()
 
   const brands = await listBrandOptions(role)
+  const next = await nextProductWithoutPhotos(role, product.id)
   const saved = first((await searchParams).saved)
   return (
     <div className="flex flex-col gap-4">
@@ -82,6 +86,15 @@ export default async function AdminProductPage({
               ? PRODUCT_COPY.form.changesSaved
               : null
         }
+      />
+      <ProductImages
+        productId={product.id}
+        productName={product.name}
+        categoryName={product.categoryName}
+        placeholder={placeholderImage(product.categorySlug, product.name)}
+        images={product.images}
+        next={next}
+        readOnly={!can(role, "images.write")}
       />
     </div>
   )

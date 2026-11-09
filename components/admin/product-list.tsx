@@ -1,5 +1,6 @@
 import Link from "next/link"
 
+import { ProductImage } from "@/components/product/product-image"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Table,
@@ -10,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { IMAGE_UI } from "@/lib/admin/images-copy"
 import { PRODUCT_COPY } from "@/lib/admin/products-copy"
 import {
   hasActiveProductFilters,
@@ -80,6 +82,9 @@ export function ProductListView({
             <TableCaption className="sr-only">{copy.caption}</TableCaption>
             <TableHeader>
               <TableRow>
+                <TableHead scope="col" className="w-14">
+                  <span className="sr-only">{IMAGE_UI.thumbnailHeader}</span>
+                </TableHead>
                 <TableHead scope="col">{copy.columns.name}</TableHead>
                 <TableHead scope="col">{copy.columns.sku}</TableHead>
                 <TableHead scope="col">{copy.columns.category}</TableHead>
@@ -98,6 +103,14 @@ export function ProductListView({
                 const price = priceCells(row.price, row.salePrice)
                 return (
                   <TableRow key={row.id}>
+                    <TableCell>
+                      <ProductImage
+                        image={row.image}
+                        productName={row.name}
+                        sizes="40px"
+                        className="size-10"
+                      />
+                    </TableCell>
                     <TableCell>
                       <Link
                         href={productEditHref(row.id)}
@@ -118,6 +131,11 @@ export function ProductListView({
                       <span className="rounded border px-1.5 py-0.5 text-xs">
                         {productStatusLabel(row.status)}
                       </span>
+                      {row.hasPhotos ? null : (
+                        <span className="ml-1 rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
+                          {IMAGE_UI.noPhotoBadge}
+                        </span>
+                      )}
                       {row.isFeatured ? (
                         <span className="ml-1 rounded border px-1.5 py-0.5 text-xs">
                           {copy.badges.featured}

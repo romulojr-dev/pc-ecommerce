@@ -10,6 +10,8 @@ const product: ProductForEdit = {
   sku: "RM1000E-TEST",
   slug: "corsair-rm1000e",
   categorySlug: "psu",
+  categoryName: "Power Supply",
+  images: [],
   brandId: "b1",
   isFeatured: true,
   price: 949950,

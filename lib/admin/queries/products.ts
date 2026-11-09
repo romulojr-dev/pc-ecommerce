@@ -2,6 +2,7 @@ import "server-only"
 
 import type { Prisma } from "@/generated/prisma/client"
 import { db } from "@/lib/db"
+import { mainImageOf } from "@/lib/images/display"
 
 import {
   type ProductParams,
@@ -30,6 +31,10 @@ export type ProductRow = {
   salePrice: number | null
   stock: number
   isFeatured: boolean
+  // The main photo, or the category placeholder (docs/specs/049-product-
+  // images-upload, B23); `hasPhotos` is false while it is the placeholder
+  image: { url: string; alt: string } | null
+  hasPhotos: boolean
 }
 
 export type ProductList = {
@@ -46,6 +51,8 @@ function whereOf(params: ProductParams): Prisma.ProductWhereInput {
   if (params.status)
     where.status = params.status === "draft" ? "DRAFT" : "ACTIVE"
   if (params.category) where.category = { slug: params.category }
+  // No photo of its own: still on the category placeholder
+  if (params.photos === "missing") where.images = { none: {} }
   if (params.q) {
     // Prisma does not escape LIKE wildcards in `contains`; `\` is Postgres's
     // default escape character
@@ -86,6 +93,11 @@ export async function listProducts(
       isFeatured: true,
       category: { select: { slug: true, name: true } },
       brand: { select: { name: true } },
+      images: {
+        select: { url: true, alt: true },
+        orderBy: { sortOrder: "asc" },
+        take: 1,
+      },
     },
   })
   return {
@@ -102,6 +114,8 @@ export async function listProducts(
       salePrice: product.salePrice,
       stock: product.stock,
       isFeatured: product.isFeatured,
+      image: mainImageOf(product.images, product.category.slug, product.name),
+      hasPhotos: product.images.length > 0,
     })),
     total,
     page,
@@ -116,11 +130,15 @@ export type ProductForEdit = {
   sku: string
   slug: string
   categorySlug: string
+  categoryName: string
   brandId: string
   isFeatured: boolean
   price: number
   salePrice: number | null
   description: string | null
+  // The product's own photos in display order (docs/specs/049-product-images-
+  // upload); empty while the category placeholder shows
+  images: { id: string; url: string; alt: string }[]
   stock: number
   weightGrams: number
   warrantyMonths: number
@@ -164,7 +182,11 @@ export async function getProductForEdit(
       specs: true,
       editVersion: true,
       updatedAt: true,
-      category: { select: { slug: true } },
+      category: { select: { slug: true, name: true } },
+      images: {
+        select: { id: true, url: true, alt: true },
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+      },
     },
   })
   if (!product) return null
@@ -175,6 +197,8 @@ export async function getProductForEdit(
     sku: product.sku,
     slug: product.slug,
     categorySlug: product.category.slug,
+    categoryName: product.category.name,
+    images: product.images,
     brandId: product.brandId,
     isFeatured: product.isFeatured,
     price: product.price,
@@ -201,6 +225,22 @@ export async function listBrandOptions(
   assertCan(role, "products.view")
   return db.brand.findMany({
     orderBy: [{ name: "asc" }, { id: "asc" }],
+    select: { id: true, name: true },
+  })
+}
+
+// The first product with no photo of its own that is not `currentId`, in the
+// list's own order (most recently changed first), for "Next product without
+// photos" (docs/specs/049-product-images-upload, B8, B24, D10). A photo change
+// never moves a product in that order (D13), so the queue stays put.
+export async function nextProductWithoutPhotos(
+  role: AdminRole,
+  currentId: string
+): Promise<{ id: string; name: string } | null> {
+  assertCan(role, "products.view")
+  return db.product.findFirst({
+    where: { images: { none: {} }, id: { not: currentId } },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     select: { id: true, name: true },
   })
 }

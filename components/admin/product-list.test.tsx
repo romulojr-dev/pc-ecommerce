@@ -18,6 +18,10 @@ const row = {
   salePrice: 900_000,
   stock: 4,
   isFeatured: true,
+  // No photo of its own: the category placeholder (docs/specs/049-product-
+  // images-upload)
+  image: { url: "/images/placeholders/cpu.svg", alt: "AMD Ryzen 5 7600" },
+  hasPhotos: false,
 }
 const data = (rows: ProductList["rows"], total = rows.length): ProductList => ({
   ok: true,
@@ -57,5 +61,30 @@ describe("ProductListView", () => {
     const filtered = html(data([]), { ...DEFAULT_PRODUCT_PARAMS, q: "zzz" })
     expect(filtered).toContain("No products match your search.")
     expect(filtered).toContain("Clear filters")
+  })
+
+  it("B23: a row shows its main photo or placeholder, and 'No photo' while it has none", () => {
+    const photo = {
+      url: "https://abc123.public.blob.vercel-storage.com/products/x.webp",
+      alt: "AMD Ryzen 7 9800X3D",
+    }
+    const out = html(
+      data([
+        row,
+        {
+          ...row,
+          id: "p2",
+          name: "Has a photo",
+          image: photo,
+          hasPhotos: true,
+        },
+      ])
+    )
+    expect(out).toContain("cpu.svg")
+    expect(out).toContain("x.webp")
+    // Once, for the row without photos
+    expect(out.match(/No photo/g)).toHaveLength(1)
+    // The column header is visually hidden but present
+    expect(out).toContain("Photo")
   })
 })
