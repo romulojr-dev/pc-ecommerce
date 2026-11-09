@@ -168,8 +168,36 @@ describe("getBuilderParts", () => {
     expect((await load([id]))[0].effectivePrice).toBe(999_900)
   })
 
-  it("returns no image when the product has none", async () => {
+  it("E30: a product without photos shows its category placeholder, named after it", async () => {
     const id = await insert({ name: "Ryzen 5 7600" })
-    expect((await load([id]))[0].image).toBeNull()
+    expect((await load([id]))[0].image).toEqual({
+      url: "/images/placeholders/cpu.svg",
+      alt: "Ryzen 5 7600",
+    })
+  })
+
+  it("E31: a product with photos shows the first in order, not the placeholder", async () => {
+    const id = await insert({ name: "Ryzen 5 7600" })
+    const base = "https://abc123.public.blob.vercel-storage.com/products"
+    await db.productImage.createMany({
+      data: [
+        {
+          productId: id,
+          url: `${base}/second.webp`,
+          alt: "Second",
+          sortOrder: 1,
+        },
+        {
+          productId: id,
+          url: `${base}/first.webp`,
+          alt: "First",
+          sortOrder: 0,
+        },
+      ],
+    })
+    expect((await load([id]))[0].image).toEqual({
+      url: `${base}/first.webp`,
+      alt: "First",
+    })
   })
 })

@@ -63,10 +63,15 @@ function SiteFooter() {
         <Separator className="mt-10" />
 
         <div className="flex items-center justify-between gap-6 py-5">
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {siteConfig.name} · A concept project
-            by {siteConfig.author}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} {siteConfig.name} · A concept project
+              by {siteConfig.author}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              PC Silicon is a demo store. Product images are for illustration.
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <a
               href={`mailto:${siteConfig.email}`}

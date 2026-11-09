@@ -13,6 +13,11 @@ import {
   emailTransportSchema,
   orderLinkSecretSchema,
 } from "./email/env-schema"
+import {
+  blobProductionHostSchema,
+  imageEnvIssues,
+  imageStorageSchema,
+} from "./images/env-schema"
 import { cronSecretSchema } from "./orders/cron-secret-schema"
 import { ordersEnabledSchema } from "./orders/orders-enabled-schema"
 import {
@@ -78,6 +83,20 @@ export const env = createEnv({
     // /admin/login and used by `pnpm db:seed --accounts-only`. Optional;
     // unset, there is no demo box and no demo user.
     DEMO_ACCOUNT_PASSWORD: demoAccountPasswordSchema,
+    // Product photo storage (docs/specs/049-product-images-upload, ADR 0013):
+    // "blob" or "fake", required; Production refuses the fake. The fake keeps
+    // photos in the FakeStoredImage table and serves them from /test-images.
+    IMAGE_STORAGE: imageStorageSchema,
+    // This environment's Vercel Blob store (ADR 0013). With IMAGE_STORAGE=blob
+    // one of the two is required: BLOB_STORE_ID (Vercel adds it when a store
+    // is connected; @vercel/blob pairs it with VERCEL_OIDC_TOKEN, which the
+    // app never reads) or the static BLOB_READ_WRITE_TOKEN fallback. Rules in
+    // lib/images/env-schema.ts. The token is never logged.
+    BLOB_STORE_ID: z.string().optional(),
+    BLOB_READ_WRITE_TOKEN: z.string().optional(),
+    // Preview only: production's Blob host, so a preview whose database was
+    // branched from production can show production's photos (spec 049, D7).
+    BLOB_PRODUCTION_HOST: blobProductionHostSchema,
     // Set by Vercel (bare hosts, no scheme) when "Enable access to System
     // Environment Variables" is on: a Preview trusts these two hosts for its
     // sign-in origin check. VERCEL_URL is required on a Preview (rules in
@@ -109,6 +128,9 @@ export const env = createEnv({
         ctx.addIssue({ code: "custom", path: [variable], message })
       }
       for (const { variable, message } of emailEnvIssues(values)) {
+        ctx.addIssue({ code: "custom", path: [variable], message })
+      }
+      for (const { variable, message } of imageEnvIssues(values)) {
         ctx.addIssue({ code: "custom", path: [variable], message })
       }
       for (const { variable, message } of authEnvIssues(values)) {

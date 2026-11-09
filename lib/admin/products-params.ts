@@ -15,11 +15,17 @@ export const SEARCH_MAX = 100
 export const PRODUCT_STATUS_FILTERS = ["draft", "active"] as const
 export type ProductStatusFilter = (typeof PRODUCT_STATUS_FILTERS)[number]
 
+// "missing": products with no photo of their own, i.e. still on the category
+// placeholder (docs/specs/049-product-images-upload, B23)
+export const PRODUCT_PHOTO_FILTERS = ["missing"] as const
+export type ProductPhotoFilter = (typeof PRODUCT_PHOTO_FILTERS)[number]
+
 export type ProductParams = {
   // Searched only from SEARCH_MIN characters; shorter text is dropped
   q: string
   category: BuilderCategorySlug | null
   status: ProductStatusFilter | null
+  photos: ProductPhotoFilter | null
   page: number
 }
 
@@ -27,6 +33,7 @@ export const DEFAULT_PRODUCT_PARAMS: ProductParams = {
   q: "",
   category: null,
   status: null,
+  photos: null,
   page: 1,
 }
 
@@ -42,10 +49,12 @@ export function parseProductParams(raw: RawSearchParams): ProductParams {
   const q = (first(raw.q) ?? "").trim().slice(0, SEARCH_MAX)
   const category = first(raw.category)
   const status = first(raw.status)
+  const photos = first(raw.photos)
   return {
     q: q.length >= SEARCH_MIN ? q : "",
     category: CATEGORY_SLUGS.find((slug) => slug === category) ?? null,
     status: PRODUCT_STATUS_FILTERS.find((s) => s === status) ?? null,
+    photos: PRODUCT_PHOTO_FILTERS.find((f) => f === photos) ?? null,
     page: parsePage(first(raw.page)),
   }
 }
@@ -57,6 +66,7 @@ export function serializeProductParams(
   if (params.q) entries.push(["q", params.q])
   if (params.category) entries.push(["category", params.category])
   if (params.status) entries.push(["status", params.status])
+  if (params.photos) entries.push(["photos", params.photos])
   if (params.page > 1) entries.push(["page", String(params.page)])
   return entries
 }
@@ -77,7 +87,10 @@ export function isCanonicalProductQuery(
 }
 
 export const hasActiveProductFilters = (params: ProductParams): boolean =>
-  params.q !== "" || params.category !== null || params.status !== null
+  params.q !== "" ||
+  params.category !== null ||
+  params.status !== null ||
+  params.photos !== null
 
 export function productPageCount(total: number): number {
   return Math.max(1, Math.ceil(total / PRODUCTS_PAGE_SIZE))

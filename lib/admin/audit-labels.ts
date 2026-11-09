@@ -30,6 +30,10 @@ export const ACTION_LABELS: Record<AuditAction, string> = {
   "stock-adjusted": "Stock adjusted",
   "refund-recorded": "Refund recorded",
   "payment-reviewed": "Payment reviewed",
+  "image-added": "Photo added",
+  "image-removed": "Photo removed",
+  "images-reordered": "Photos reordered",
+  "image-alt-changed": "Alt text changed",
 }
 
 // "salePrice" -> "Sale price", "cancel-reason" -> "Cancel reason",

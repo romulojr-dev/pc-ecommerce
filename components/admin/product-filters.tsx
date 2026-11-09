@@ -3,6 +3,7 @@ import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { IMAGE_UI } from "@/lib/admin/images-copy"
 import { PRODUCT_COPY } from "@/lib/admin/products-copy"
 import {
   CATEGORY_SLUGS,
@@ -71,6 +72,18 @@ export function ProductFilters({
           <option value="">{copy.allStatuses}</option>
           <option value="draft">{copy.draft}</option>
           <option value="active">{copy.active}</option>
+        </select>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="product-photos">{IMAGE_UI.filterLabel}</Label>
+        <select
+          id="product-photos"
+          name="photos"
+          defaultValue={params.photos ?? ""}
+          className={selectClass}
+        >
+          <option value="">{IMAGE_UI.filterAny}</option>
+          <option value="missing">{IMAGE_UI.filterMissing}</option>
         </select>
       </div>
       <button

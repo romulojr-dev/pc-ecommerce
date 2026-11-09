@@ -1,9 +1,21 @@
 import type { NextConfig } from "next"
 
 // Validate env vars when `next dev` / `next build` start, not on first request
-import "./lib/env"
+import { env } from "./lib/env"
+import { imageRemotePatterns } from "./lib/images/env-schema"
 
 const nextConfig: NextConfig = {
+  // Uploaded product photos (docs/specs/049-product-images-upload, R11, R17,
+  // ADR 0013). remotePatterns lists only our own Blob store(s), never a
+  // wildcard host; the fake store serves from this site and needs none. Every
+  // upload is already WebP, named at random and never overwritten, so the
+  // optimizer serves WebP only (one transformation per image and width,
+  // against Hobby's 5,000 a month) and caches for 31 days.
+  images: {
+    remotePatterns: imageRemotePatterns(env),
+    formats: ["image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 31,
+  },
   // The address files are read with fs at request time. Turbopack happens to
   // trace the plain path.join(process.cwd(), …) call, but that is an accident
   // of the analysis, so every route that reads the files lists them

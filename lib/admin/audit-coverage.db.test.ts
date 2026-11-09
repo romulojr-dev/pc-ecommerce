@@ -1,4 +1,4 @@
-import { join } from "node:path"
+import { join, relative, sep } from "node:path"
 
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest"
 
@@ -122,12 +122,18 @@ describe("the registry matches the registered admin mutations", () => {
     expect(writes.length).toBeGreaterThan(0)
   })
 
-  test("no admin route handler writes yet (the registry covers actions only)", () => {
+  test("the only admin route handler is the photo upload, which has its own audit proof", () => {
+    // The fixtures above run server actions. A route handler needs its own
+    // proof of the audit row, the rollback and the refusal: add it to this
+    // list only with a test like lib/admin/images/upload-route.db.test.ts
+    // (docs/specs/049-product-images-upload, R9)
     const routes = sourceFiles(join(root, "app", "api", "admin"))
+      .filter((p) => p.endsWith("route.ts"))
+      .map((p) => relative(root, p).split(sep).join("/"))
     expect(
-      routes.filter((p) => p.endsWith("route.ts")),
-      "an admin route handler exists: extend the audit fixtures to cover it"
-    ).toEqual([])
+      routes,
+      "an admin route handler exists: give it its own audit proof and list it here"
+    ).toEqual(["app/api/admin/images/route.ts"])
   })
 })
 

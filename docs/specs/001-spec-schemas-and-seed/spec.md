@@ -272,6 +272,8 @@ When a part has no usable `name` or `sku`, the error identifies it by position o
 
 All writes run in one transaction. A failure partway through leaves the database unchanged. Categories and brands are upserted by `slug`. Products are upserted by `sku`. An existing row is **updated in place**, so its `id` never changes and carts, builds and orders that reference it stay valid.
 
+> **Changed by [spec 049](../049-product-images-upload/spec.md) (#114):** the seed writes no images at all (the table's "images" mention is history): a product without photos shows its category placeholder, derived from the category.
+>
 > **Changed by [spec 045](../045-admin-products-create-edit/spec.md) (#112):** the seed is now create-only. Every column below is written on create and **kept** on update; categories and brands are created, never updated. The "refreshed" cells in the table are history.
 
 Which product fields the seed writes:

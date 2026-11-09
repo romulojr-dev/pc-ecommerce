@@ -28,6 +28,10 @@ export const AUDIT_ACTIONS = [
   "stock-adjusted",
   "refund-recorded",
   "payment-reviewed",
+  "image-added",
+  "image-removed",
+  "images-reordered",
+  "image-alt-changed",
 ] as const
 export type AuditAction = (typeof AUDIT_ACTIONS)[number]
 
