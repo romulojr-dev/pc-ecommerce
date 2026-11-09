@@ -47,6 +47,13 @@ const RULES: Record<string, KeyRule> = {
   warrantymonths: SHOWN_PLAIN,
   boxcontents: SHOWN_PLAIN,
   isfeatured: SHOWN_PLAIN,
+  // Photos (docs/specs/049-product-images-upload): ids, the stored URL, the
+  // alt text, the position and the photos' order as ids joined by commas
+  imageid: SHOWN_PLAIN,
+  url: SHOWN_PLAIN,
+  alt: SHOWN_PLAIN,
+  position: SHOWN_PLAIN,
+  photoorder: SHOWN_PLAIN,
   preordershipson: DATE,
   price: PESOS,
   saleprice: PESOS,
