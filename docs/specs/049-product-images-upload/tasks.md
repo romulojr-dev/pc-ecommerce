@@ -18,8 +18,8 @@ Approach: [plan.md](plan.md). Behavior and example IDs: [spec.md](spec.md). One 
 - [x] Unit tests
 
 ## 3. Re-encoding
-- [ ] `reencodeImage` with `sharp` (E46–E51, R19): 2000 px, no enlarge, orientation applied, no metadata, 40 MP limit, first frame only
-- [ ] Unit tests with generated fixtures
+- [x] `reencodeImage` with `sharp` (E46–E51, R19): 2000 px, no enlarge, orientation applied, no metadata, 40 MP limit, first frame only
+- [x] Unit tests with generated fixtures
 
 ## 4. Schema and migration
 - [ ] `ProductImage.createdAt`, CHECKs, non-unique index; `FakeStoredImage`; migration deletes only placeholder rows and reports the count
