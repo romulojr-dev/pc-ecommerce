@@ -24,7 +24,7 @@ export function HomeSection({
   children,
 }: HomeSectionProps) {
   return (
-    <section aria-labelledby={id} className={cn("mt-16", className)}>
+    <section aria-labelledby={id} className={className}>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h2

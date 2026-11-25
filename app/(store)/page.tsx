@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 
 import { BrandList } from "@/components/home/brand-list"
-import { CategoryTiles } from "@/components/home/category-tiles"
-import { Hero } from "@/components/home/hero"
+import { CategoryGrid } from "@/components/home/category-grid"
+import { HeroBanner } from "@/components/home/hero-banner"
 import { ProductSection } from "@/components/home/product-section"
 import { TrustStrip } from "@/components/home/trust-strip"
 import { Container } from "@/components/layout/container"
@@ -40,9 +40,10 @@ export default async function HomePage() {
   const today = manilaToday()
 
   return (
-    <Container className="pb-16">
-      <Hero hasDeals={deals.length > 0} />
-      <CategoryTiles categories={categories} />
+    // The sections stack 80px apart; the trust strip's own margin ends the page
+    <Container className="flex flex-col gap-20">
+      <HeroBanner />
+      <CategoryGrid categories={categories} />
       <ProductSection
         id="featured-products"
         title="Featured products"
