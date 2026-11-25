@@ -1,10 +1,10 @@
 import Link from "next/link"
-import { WrenchIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { CartLink } from "@/components/layout/cart-link"
 import { CategoryMenu } from "@/components/layout/category-menu"
 import { Logo } from "@/components/layout/logo"
+import { ShimmerLink } from "@/components/ui/shimmer-button"
 import { siteConfig } from "@/lib/site"
 import { cn, focusRing } from "@/lib/utils"
 
@@ -39,17 +39,12 @@ function SiteHeader({ search }: SiteHeaderProps) {
         aria-label="Shop tools"
         className="flex items-center gap-2 justify-self-end"
       >
-        <Link
+        <ShimmerLink
           href="/builder"
-          className={cn(
-            buttonVariants({ size: "lg" }),
-            focusRing,
-            "mr-2 rounded-lg px-3 text-sm font-semibold"
-          )}
+          className={cn("mr-2 h-9 px-4 py-0 text-sm font-semibold", focusRing)}
         >
-          <WrenchIcon aria-hidden="true" data-icon="inline-start" />
           PC Builder
-        </Link>
+        </ShimmerLink>
         <CartLink className={iconLink} />
       </nav>
     </header>
