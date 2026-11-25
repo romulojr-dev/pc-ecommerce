@@ -15,8 +15,8 @@ describe("the Better Auth pin", () => {
   }
   const all = { ...pkg.dependencies, ...pkg.devDependencies }
 
-  test("better-auth is exactly 1.7.17, with no range", () => {
-    expect(all["better-auth"]).toBe("1.7.17")
+  test("better-auth is exactly 1.7.18, with no range", () => {
+    expect(all["better-auth"]).toBe("1.7.18")
   })
 
   test("any @better-auth/* package that is listed is pinned exactly too", () => {
