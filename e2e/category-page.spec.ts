@@ -12,11 +12,11 @@ test("the category drawer leads to a category's product cards", async ({
   await page.goto("/")
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
   // Exact: "CPU" would also match "CPU Cooler"
   await page
-    .getByRole("dialog", { name: "Categories" })
+    .getByRole("dialog", { name: "Browse categories" })
     .getByRole("link", { name: "CPU", exact: true })
     .click()
 
@@ -55,7 +55,7 @@ test("the category drawer marks the current category", async ({ page }) => {
   await page.goto("/cpu")
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
 
   const menu = page.getByRole("navigation", { name: "Categories" })

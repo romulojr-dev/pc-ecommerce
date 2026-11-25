@@ -11,10 +11,10 @@ test("menu, category, spec filter, product", async ({ page }) => {
   // Menu → category
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
   await page
-    .getByRole("dialog", { name: "Categories" })
+    .getByRole("dialog", { name: "Browse categories" })
     .getByRole("link", { name: "Memory", exact: true })
     .click()
   await expect(page).toHaveURL("/memory")

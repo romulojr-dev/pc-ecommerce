@@ -14,9 +14,9 @@ test("category drawer opens and lists the seeded categories", async ({
 }) => {
   await page.goto("/")
   const header = page.getByRole("banner")
-  await header.getByRole("button", { name: "Categories" }).click()
+  await header.getByRole("button", { name: "Browse categories" }).click()
 
-  const drawer = page.getByRole("dialog", { name: "Categories" })
+  const drawer = page.getByRole("dialog", { name: "Browse categories" })
   await expect(drawer).toBeVisible()
   const nav = drawer.getByRole("navigation", { name: "Categories" })
   // The number and the animated letters are aria-hidden, so each link's name
@@ -36,9 +36,9 @@ test("a category link closes the drawer", async ({ page }) => {
   await page.goto("/")
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
-  const drawer = page.getByRole("dialog", { name: "Categories" })
+  const drawer = page.getByRole("dialog", { name: "Browse categories" })
   await drawer.getByRole("link", { name: "Storage", exact: true }).click()
 
   await expect(page).toHaveURL("/storage")
@@ -49,11 +49,11 @@ test("category drawer works from the keyboard", async ({ page }) => {
   await page.goto("/")
   const trigger = page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
   await trigger.focus()
 
   await page.keyboard.press("Enter")
-  const drawer = page.getByRole("dialog", { name: "Categories" })
+  const drawer = page.getByRole("dialog", { name: "Browse categories" })
   await expect(drawer).toBeVisible()
   // Focus moves into the drawer and stays there
   await expect(drawer.locator(":focus")).toHaveCount(1)

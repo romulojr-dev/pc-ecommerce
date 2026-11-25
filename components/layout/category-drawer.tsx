@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Dialog } from "@base-ui/react/dialog"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
-import { ArrowRightIcon, CheckIcon, LayoutGridIcon, XIcon } from "lucide-react"
+import { ArrowRightIcon, CheckIcon, MenuIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import type { MenuCategory } from "@/lib/categories"
@@ -26,34 +26,36 @@ const panel = {
   exit: { x: "calc(-100% - 100px)", transition: { duration: 0.6, ease: EASE } },
 }
 
-// The edge, in a 100 × 100 box stretched to the panel's height: it starts as
-// a bulge ahead of the panel and flattens as the panel arrives
-const BULGED = "M0 0 L0 100 Q200 50 0 0"
-const FLAT = "M0 0 L0 100 Q0 50 0 0"
+// The edge, in a 100 × 100 box stretched to the panel's height: a bulge ahead
+// of the panel that flattens as the panel arrives. The bulge of a quadratic
+// curve with both ends on the edge grows linearly with its control point, so
+// squashing it with scaleX draws the same shapes as animating the path, as a
+// composited transform with no repaint per frame.
+const BULGE = "M0 0 L0 100 Q200 50 0 0"
 
 const curve = {
-  initial: { d: BULGED },
-  enter: { d: FLAT, transition: { duration: 0.9, ease: EASE } },
-  exit: { d: BULGED, transition: { duration: 0.6, ease: EASE } },
+  initial: { scaleX: 1 },
+  enter: { scaleX: 0, transition: { duration: 0.9, ease: EASE } },
+  exit: { scaleX: 1, transition: { duration: 0.6, ease: EASE } },
 }
 
 const MotionLink = motion.create(Link)
 
 function CurvedEdge() {
   return (
-    <svg
+    <motion.svg
       aria-hidden="true"
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
+      variants={curve}
+      initial="initial"
+      animate="enter"
+      exit="exit"
+      style={{ originX: 0 }}
       className="pointer-events-none absolute top-0 -right-[99px] h-full w-[100px] fill-background"
     >
-      <motion.path
-        variants={curve}
-        initial="initial"
-        animate="enter"
-        exit="exit"
-      />
-    </svg>
+      <path d={BULGE} />
+    </motion.svg>
   )
 }
 
@@ -142,13 +144,13 @@ function CategoryDrawer({ categories }: { categories: MenuCategory[] }) {
         render={
           <Button
             variant="ghost"
-            size="lg"
+            size="icon-lg"
+            aria-label="Browse categories"
             className={cn("shrink-0", focusRing)}
           />
         }
       >
-        <LayoutGridIcon aria-hidden="true" data-icon="inline-start" />
-        Categories
+        <MenuIcon aria-hidden="true" className="size-5" />
       </Dialog.Trigger>
       <MotionConfig reducedMotion="user">
         <AnimatePresence>
@@ -177,8 +179,8 @@ function CategoryDrawer({ categories }: { categories: MenuCategory[] }) {
               >
                 <div className="flex h-full flex-col overflow-y-auto px-10 pt-8 pb-8">
                   <div className="flex items-center justify-between border-b pb-3">
-                    <Dialog.Title className="text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">
-                      Categories
+                    <Dialog.Title className="text-sm font-medium text-muted-foreground">
+                      Browse categories
                     </Dialog.Title>
                     <Dialog.Close
                       render={
