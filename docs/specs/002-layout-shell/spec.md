@@ -46,7 +46,7 @@ Contained in the page container (below), separated from the bottom bar by a `bor
 
 Links point to their planned routes and 404 until those stories ship. Shop slugs match the category registry. Links are defined once as data, not hard-coded in markup.
 
-**Bottom bar**, one row: "© {year} PC Silicon · A concept project by Romulo Ramos Jr." on the left; on the right a `primary` pill button with a mail icon and `romu.dev@outlook.com` (a `mailto:` link), then GitHub (`https://github.com/romulojr-dev`) and LinkedIn (`https://www.linkedin.com/in/romulo-dev/`) icon links. Brand icons are inline SVGs, since lucide no longer ships brand logos.
+**Bottom bar**, one row: "© {year} PC Silicon · A concept project by Romulo Ramos Jr." on the left; on the right a `primary` pill button with a mail icon and `romulojr.dev@gmail.com` (a `mailto:` link), then GitHub (`https://github.com/romulojr-dev`) and LinkedIn (`https://www.linkedin.com/in/romulojr-dev/`) icon links. Brand icons are inline SVGs, since lucide no longer ships brand logos.
 
 ## Page container and spacing
 
@@ -98,7 +98,7 @@ Links point to their planned routes and 404 until those stories ship. Shop slugs
 
 | # | Question | Decision |
 | --- | --- | --- |
-| R1 | GitHub and LinkedIn profile URLs | `https://github.com/romulojr-dev` and `https://www.linkedin.com/in/romulo-dev/` |
+| R1 | GitHub and LinkedIn profile URLs | `https://github.com/romulojr-dev` and `https://www.linkedin.com/in/romulojr-dev/` |
 | R2 | Should "Subscribe" be disabled until the feature exists? | No. Enabled, `type="button"`, does nothing |
 
 ## Open questions
