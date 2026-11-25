@@ -2,6 +2,8 @@
 
 Status: **Approved** · Issue: #39 · PRD refs: FR-2 (home page; "best sellers" becomes a featured flag until there is order data), FR-5 (a new common filter), NFR Performance (Lighthouse ≥ 90 desktop, LCP < 2.5 s), NFR Accessibility (WCAG 2.1 AA)
 
+*Changed by [spec 050](../050-home-redesign/spec.md): the hero, the category tiles and the trust strip are redesigned; the header's category menu is a drawer.*
+
 ## Summary
 
 `/` replaces the template page with six sections in the approved design's order: hero, shop by category, featured products, deals, shop by brand and a trust strip. The page uses the project's existing shadcn theme as it is: no token or font changes. Product cards drop nothing they have today, gain a spec summary line, and never get "Add to cart" yet. A new **On sale** common filter backs "View all deals", and `/builder` becomes a "coming soon" page. The header and footer don't change.

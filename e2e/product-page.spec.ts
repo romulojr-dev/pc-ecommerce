@@ -15,10 +15,13 @@ test("the menu leads through a category to a product page", async ({
   await page.goto("/")
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
   // Exact: "CPU" would also match "CPU Cooler"
-  await page.getByRole("menuitem", { name: "CPU", exact: true }).click()
+  await page
+    .getByRole("dialog", { name: "Browse categories" })
+    .getByRole("link", { name: "CPU", exact: true })
+    .click()
   await expect(page).toHaveURL("/cpu")
 
   // The first product in the list: the catalog grows, this test shouldn't care

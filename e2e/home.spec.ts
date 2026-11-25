@@ -33,7 +33,11 @@ test("home page loads with the store header", async ({ page }) => {
 
 test("shows the sections in order", async ({ page }) => {
   await page.goto("/")
-  await expect(h1(page)).toHaveText("Build a PC that just works.")
+  // The space before "solid value." is a no-break space; toHaveText
+  // normalizes it
+  await expect(h1(page)).toHaveText(
+    "Build a PC that just works, with solid tech and solid value."
+  )
 
   const names = [
     "Shop by category",
@@ -88,18 +92,53 @@ test("a brand opens its search results", async ({ page }) => {
   await expect(h1(page)).toHaveText("AMD")
 })
 
-test("the hero's calls to action", async ({ page }) => {
+test("the hero has no buttons or links", async ({ page }) => {
   await page.goto("/")
+  const hero = page.getByRole("region", { name: /^Build a PC/ })
+  await expect(hero).toBeVisible()
+  await expect(hero.getByRole("link")).toHaveCount(0)
+  await expect(hero.getByRole("button")).toHaveCount(0)
+})
 
-  await page.getByRole("link", { name: "Shop deals" }).click()
-  await expect(page).toHaveURL(/#deals$/)
+test("the tiles use short labels and keep the category slugs", async ({
+  page,
+}) => {
+  await page.goto("/")
+  const tiles = region(page, "Shop by category").getByRole("link")
+  await expect(tiles).toHaveText([
+    "CPU",
+    "Graphics Card",
+    "Mobo",
+    "Memory",
+    "Storage",
+    "Power Supply",
+    "Case",
+    "Cooling",
+  ])
   await expect(
-    region(page, "Deals").getByRole("heading", { name: "Deals" })
-  ).toBeInViewport()
+    region(page, "Shop by category").getByRole("link", { name: "Mobo" })
+  ).toHaveAttribute("href", "/motherboard")
+})
 
-  // The builder is live, so the link carries no "Coming soon" badge
-  await expect(page.getByText("Coming soon")).toHaveCount(0)
-  await page.getByRole("link", { name: "Build your PC", exact: true }).click()
+// The page content only: the header's narrow layout is later work (Phase 2)
+test("nothing in the content overflows at 375px", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 })
+  await page.goto("/")
+  await expect(h1(page)).toHaveCSS("font-size", "40px")
+  const overflowing = await page.evaluate(() =>
+    [...document.querySelectorAll("main *")]
+      .filter((el) => el.getBoundingClientRect().right > window.innerWidth)
+      .map((el) => el.outerHTML.slice(0, 80))
+  )
+  expect(overflowing).toEqual([])
+})
+
+test("the header's PC Builder link opens the builder", async ({ page }) => {
+  await page.goto("/")
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "PC Builder", exact: true })
+    .click()
   await expect(page).toHaveURL("/builder")
   await expect(h1(page)).toHaveText("PC Builder")
 })

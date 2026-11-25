@@ -24,9 +24,9 @@ export const siteConfig = {
   tagline:
     "PC parts, custom builds, and a PC Builder that checks compatibility for you.",
   author: "Romulo Ramos Jr.",
-  email: "romu.dev@outlook.com",
+  email: "romulojr.dev@gmail.com",
   githubUrl: "https://github.com/romulojr-dev",
-  linkedinUrl: "https://www.linkedin.com/in/romulo-dev/",
+  linkedinUrl: "https://www.linkedin.com/in/romulojr-dev/",
 }
 
 // Placeholder links: most of these routes 404 until their stories ship

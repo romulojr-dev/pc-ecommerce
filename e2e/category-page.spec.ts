@@ -6,16 +6,19 @@ import { expect, test } from "./test"
 // fixture edits don't break it. CPU and GPU have two pages; paging itself is
 // covered by the unit tests (lib/listing-params.test.ts).
 
-test("the category menu leads to a category's product cards", async ({
+test("the category drawer leads to a category's product cards", async ({
   page,
 }) => {
   await page.goto("/")
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
   // Exact: "CPU" would also match "CPU Cooler"
-  await page.getByRole("menuitem", { name: "CPU", exact: true }).click()
+  await page
+    .getByRole("dialog", { name: "Browse categories" })
+    .getByRole("link", { name: "CPU", exact: true })
+    .click()
 
   await expect(page).toHaveURL("/cpu")
   await expect(page).toHaveTitle("CPU | PC Silicon")
@@ -48,15 +51,15 @@ test("the category menu leads to a category's product cards", async ({
 })
 
 // Deferred from docs/specs/007-category-menu until /<slug> existed
-test("the category menu marks the current category", async ({ page }) => {
+test("the category drawer marks the current category", async ({ page }) => {
   await page.goto("/cpu")
   await page
     .getByRole("banner")
-    .getByRole("button", { name: "Categories" })
+    .getByRole("button", { name: "Browse categories" })
     .click()
 
-  const menu = page.getByRole("menu", { name: "Categories" })
-  const current = menu.getByRole("menuitem", { name: "CPU", exact: true })
+  const menu = page.getByRole("navigation", { name: "Categories" })
+  const current = menu.getByRole("link", { name: "CPU", exact: true })
   await expect(current).toHaveAttribute("aria-current", "page")
   // The check icon is aria-hidden, so it has no role to locate it by
   await expect(current.locator("svg.lucide-check")).toHaveCount(1)
