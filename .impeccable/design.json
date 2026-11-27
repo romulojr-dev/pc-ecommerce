@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-25T00:00:00Z",
+  "title": "Design System: PC Silicon",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.205 0 0)",
+          "oklch(0.269 0 0)",
+          "oklch(0.371 0 0)",
+          "oklch(0.439 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.708 0 0)",
+          "oklch(0.87 0 0)"
+        ]
+      },
+      "graphite": {
+        "role": "primary",
+        "displayName": "Graphite",
+        "canonical": "oklch(0.205 0 0)",
+        "tonalRamp": [
+          "oklch(0.145 0 0)",
+          "oklch(0.205 0 0)",
+          "oklch(0.269 0 0)",
+          "oklch(0.371 0 0)",
+          "oklch(0.439 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.708 0 0)",
+          "oklch(0.87 0 0)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(1 0 0)"
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "canonical": "oklch(0.985 0 0)"
+      },
+      "bench-grey": {
+        "role": "neutral",
+        "displayName": "Bench Grey",
+        "canonical": "oklch(0.97 0 0)"
+      },
+      "pencil-grey": {
+        "role": "neutral",
+        "displayName": "Pencil Grey",
+        "canonical": "oklch(0.556 0 0)"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.922 0 0)"
+      },
+      "ring-grey": {
+        "role": "neutral",
+        "displayName": "Ring Grey",
+        "canonical": "oklch(0.708 0 0)"
+      },
+      "hero-panel": {
+        "role": "neutral",
+        "displayName": "Hero Panel",
+        "canonical": "#0A0A0A"
+      },
+      "hero-dot": {
+        "role": "neutral",
+        "displayName": "Hero Dot",
+        "canonical": "#2A2A2A"
+      },
+      "hero-edge": {
+        "role": "neutral",
+        "displayName": "Hero Edge",
+        "canonical": "#404040"
+      },
+      "error-red": {
+        "role": "status",
+        "displayName": "Error Red",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": [
+          "oklch(0.3 0.12 27)",
+          "oklch(0.4 0.17 27)",
+          "oklch(0.5 0.21 27)",
+          "oklch(0.577 0.245 27.325)",
+          "oklch(0.65 0.2 25)",
+          "oklch(0.75 0.14 23)",
+          "oklch(0.85 0.08 22)",
+          "oklch(0.94 0.03 20)"
+        ]
+      },
+      "fit-green": {
+        "role": "status",
+        "displayName": "Fit Green",
+        "canonical": "#047857"
+      },
+      "warning-amber": {
+        "role": "status",
+        "displayName": "Warning Amber",
+        "canonical": "#B45309"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The home hero's h1 only; light 300 with bold 700 words."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Each page's h1."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section h2s and category tile labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, forms, footer."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, badges, brand and stock lines."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Codes and identifiers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shimmer-highlight",
+        "value": "inset 0 -8px 10px #ffffff1f",
+        "purpose": "Inner highlight of the PC Builder shimmer button only; -6px / 3f on hover."
+      }
+    ],
+    "motion": [
+      {
+        "name": "shimmer",
+        "value": "3s ease-in-out infinite alternate (slide) + 6s linear spin",
+        "purpose": "The PC Builder button's travelling light; off under prefers-reduced-motion."
+      },
+      {
+        "name": "tile-hover",
+        "value": "150ms background-color",
+        "purpose": "Category tile fill change."
+      },
+      {
+        "name": "press",
+        "value": "translateY(1px)",
+        "purpose": "Button press."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "design-min",
+        "value": "1024px"
+      },
+      {
+        "name": "design-target",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default action button: Graphite fill, compact 28px.",
+      "html": "<button class=\"ds-btn-primary\">Add to cart</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: 11.2px; background: var(--primary, oklch(0.205 0 0)); color: var(--primary-foreground, oklch(0.985 0 0)); font: 500 12px/1.625 Geist, system-ui, sans-serif; cursor: pointer; transition: all .15s; } .ds-btn-primary:hover { background: color-mix(in oklch, var(--primary, oklch(0.205 0 0)) 80%, transparent); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--background, #fff), 0 0 0 4px var(--ring, oklch(0.708 0 0)); } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action with a hairline border.",
+      "html": "<button class=\"ds-btn-outline\">Share build</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; height: 28px; padding: 0 8px; border: 1px solid var(--border, oklch(0.922 0 0)); border-radius: 11.2px; background: var(--background, #fff); color: var(--foreground, oklch(0.145 0 0)); font: 500 12px/1.625 Geist, system-ui, sans-serif; cursor: pointer; transition: all .15s; } .ds-btn-outline:hover { background: color-mix(in oklch, var(--input, oklch(0.922 0 0)) 50%, transparent); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--background, #fff), 0 0 0 4px var(--ring, oklch(0.708 0 0)); } .ds-btn-outline:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "PC Builder Shimmer Link",
+      "kind": "custom",
+      "refersTo": "button-builder",
+      "description": "The one animated element: a light travelling around the border of the header's PC Builder link.",
+      "html": "<a class=\"ds-shimmer\" href=\"#\"><span class=\"ds-shimmer-spark\"></span><span class=\"ds-shimmer-bg\"></span>PC Builder</a>",
+      "css": ".ds-shimmer { position: relative; z-index: 0; display: inline-flex; align-items: center; height: 36px; padding: 0 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: oklch(0.205 0 0); color: oklch(0.985 0 0); font: 600 14px Geist, system-ui, sans-serif; text-decoration: none; box-shadow: inset 0 -8px 10px #ffffff1f; transition: box-shadow .3s; } .ds-shimmer:hover { box-shadow: inset 0 -6px 10px #ffffff3f; } .ds-shimmer-spark { position: absolute; inset: -100%; z-index: -2; background: conic-gradient(from 225deg, transparent 0, oklch(0.985 0 0) 90deg, transparent 90deg); animation: ds-spin 6s linear infinite; filter: blur(2px); } .ds-shimmer-bg { position: absolute; inset: 0.05em; z-index: -1; border-radius: 14px; background: oklch(0.205 0 0); } .ds-shimmer:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px oklch(0.708 0 0); } @keyframes ds-spin { to { transform: rotate(360deg); } } @media (prefers-reduced-motion: reduce) { .ds-shimmer-spark { animation: none; } }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Compact field with a hairline stroke and soft focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search parts\" />",
+      "css": ".ds-input { height: 28px; width: 240px; padding: 2px 8px; border: 1px solid var(--input, oklch(0.922 0 0)); border-radius: 11.2px; background: color-mix(in oklch, var(--input, oklch(0.922 0 0)) 20%, transparent); color: var(--foreground, oklch(0.145 0 0)); font: 400 12px/1.625 Geist, system-ui, sans-serif; outline: none; transition: border-color .15s, box-shadow .15s; } .ds-input::placeholder { color: var(--muted-foreground, oklch(0.556 0 0)); } .ds-input:focus-visible { border-color: var(--ring, oklch(0.708 0 0)); box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring, oklch(0.708 0 0)) 30%, transparent); }"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": "product-card",
+      "description": "Listing card: image well, brand, name, spec summary, tabular price, stock and fit lines.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-img\"></div><p class=\"ds-card-brand\">AMD</p><h3 class=\"ds-card-name\"><a href=\"#\">Ryzen 7 9700X</a></h3><p class=\"ds-card-sum\">8 cores · AM5 · 65 W</p><p class=\"ds-card-price\">₱18,950.00</p><p class=\"ds-card-stock\">In stock</p><p class=\"ds-card-fit\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></svg>Fits your build</p></article>",
+      "css": ".ds-card { position: relative; width: 220px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--border, oklch(0.922 0 0)); border-radius: 14px; background: var(--card, #fff); color: var(--card-foreground, oklch(0.145 0 0)); font-family: Geist, system-ui, sans-serif; transition: border-color .15s; } .ds-card:hover { border-color: color-mix(in oklch, var(--foreground, oklch(0.145 0 0)) 30%, transparent); } .ds-card:has(a:focus-visible) { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ring, oklch(0.708 0 0)); } .ds-card-img { aspect-ratio: 1; border-radius: 14px; background: var(--muted, oklch(0.97 0 0)); margin-bottom: 8px; } .ds-card-brand, .ds-card-sum, .ds-card-stock { margin: 0; font-size: 12px; color: var(--muted-foreground, oklch(0.556 0 0)); } .ds-card-name { margin: 0; font-size: 14px; font-weight: 500; line-height: 1.375; } .ds-card-name a { color: inherit; text-decoration: none; outline: none; } .ds-card-name a::after { content: \"\"; position: absolute; inset: 0; } .ds-card-name a:hover { text-decoration: underline; } .ds-card-price { margin: 4px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-card-fit { margin: 4px 0 0; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: #047857; }"
+    },
+    {
+      "name": "Category Tile",
+      "kind": "card",
+      "refersTo": "category-tile",
+      "description": "Solid, text-only link tile on the home page.",
+      "html": "<a class=\"ds-tile\" href=\"#\">Graphics Card</a>",
+      "css": ".ds-tile { display: flex; align-items: flex-start; width: 140px; min-height: 88px; padding: 16px; border-radius: 14px; background: var(--muted, oklch(0.97 0 0)); color: var(--foreground, oklch(0.145 0 0)); font: 600 20px/1.15 Geist, system-ui, sans-serif; letter-spacing: -0.02em; text-decoration: none; overflow-wrap: anywhere; transition: background-color .15s; } .ds-tile:hover { background: #EBEBEB; } .ds-tile:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ring, oklch(0.708 0 0)); }"
+    },
+    {
+      "name": "Fit Badge",
+      "kind": "chip",
+      "refersTo": "fit-badge",
+      "description": "Compatibility verdict as icon plus text; color only carries meaning.",
+      "html": "<div class=\"ds-fit\"><span class=\"ds-fit-ok\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></svg>Fits your build</span><span class=\"ds-fit-warn\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4M12 17h.01\"/></svg>Fits, with warnings</span><span class=\"ds-fit-err\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6M9 9l6 6\"/></svg>Doesn't fit your build</span></div>",
+      "css": ".ds-fit { display: flex; flex-direction: column; gap: 8px; font: 500 12px/16px Geist, system-ui, sans-serif; } .ds-fit span { display: flex; align-items: center; gap: 4px; } .ds-fit-ok { color: #047857; } .ds-fit-warn { color: #B45309; } .ds-fit-err { color: oklch(0.577 0.245 27.325); }"
+    },
+    {
+      "name": "Hero Banner",
+      "kind": "custom",
+      "refersTo": "hero-banner",
+      "description": "The one dark panel: dot grid, light display type with bold words.",
+      "html": "<section class=\"ds-hero\"><h1><strong>Build a PC</strong> that just <strong>works,</strong> with solid tech and&nbsp;<strong>solid value.</strong></h1></section>",
+      "css": ".ds-hero { padding: 44px 48px; border: 1px solid #404040; border-radius: 14px; background-color: #0A0A0A; background-image: radial-gradient(#2A2A2A 1px, transparent 1px); background-size: 14px 14px; color: #FAFAFA; } .ds-hero h1 { margin: 0; max-width: 820px; font: 300 56px/1.05 Geist, system-ui, sans-serif; letter-spacing: -0.035em; } .ds-hero strong { font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Workbench",
+    "overview": "PC Silicon is a tidy builder's bench. The surfaces are white and calm, the tools (filters, quantity steppers, Add to build) sit in reach without shouting, and what stands out is the work itself: the parts, their prices, and whether they fit. Everything is black ink on white paper, set in Geist with tight negative tracking, on softly rounded 14px corners. The one dark object on the bench is the home page's dot-gridded hero panel, which works like the dark mat a builder lays a motherboard on.\n\nThe density is compact, from the shadcn `base-mira` style: 28px controls, 12–14px text in working areas, generous 80px gaps only between home-page sections. Brand lives in precise details (the light-and-bold weight mix in the hero, the `pc`**silicon** wordmark with its globe-and-chip mark, tabular numerals on prices), not in color. Color appears only when it means something: whether a part fits, is out of stock, or has failed.\n\nDark mode is fully supported (`next-themes`, system default, the `d` key toggles it), and every neutral has a dark counterpart in `app/globals.css`.",
+    "keyCharacteristics": [
+      "Strictly monochrome neutrals; semantic color only for fit, stock and error states.",
+      "Flat surfaces: hairline borders, 1px rings and muted fills, no drop shadows.",
+      "Geist throughout, with negative tracking on headings and tabular numbers on prices.",
+      "Compact controls (28px) with a solid, clearly visible focus ring.",
+      "One dark panel (the hero) and one animated element (the PC Builder shimmer button)."
+    ],
+    "rules": [
+      {
+        "name": "The Ink-Only Rule",
+        "body": "The brand is black and white. No accent color exists, so none is introduced, whether for links, highlights, charts or decoration. Charts use the grey `chart-1…5` ramp.",
+        "section": "colors"
+      },
+      {
+        "name": "The Color Means Something Rule",
+        "body": "Red, green and amber appear only on a state the user must understand (fit, stock, error), and always together with text and an icon, never as color alone.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Price Rule",
+        "body": "Every price uses `tabular-nums`, formatted with `formatPeso()`. A struck list price beside a sale price is announced as \"Was …\".",
+        "section": "typography"
+      },
+      {
+        "name": "The Two-Weight Hero Rule",
+        "body": "Display type is light (300) with bold (700) words. Use the real variable weights; never synthesize light from 400.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Bench Rule",
+        "body": "No `box-shadow` on cards, tiles, panels or overlays. Separation is a border, a ring or a fill. (Known drift: the stock shadcn primitives still ship `shadow-md` on dropdown and select popups and `shadow-lg` on the sheet; remove them when those files are next touched rather than copying them. 1px `shadow-[0_0_0_1px…]` rings in the sidebar are borders, not elevation.)",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Shimmer Rule",
+        "body": "The PC Builder shimmer button (a light travelling around its border, with an inset highlight) is the only animated, glowing element, and it marks the product's differentiator. It stops under `prefers-reduced-motion`. Don't reuse it for other actions.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the theme tokens (`bg-background`, `text-foreground`, `bg-muted`, `text-muted-foreground`, `border`) so both themes work; fixed neutrals belong only on the hero.",
+      "Do pair every status color with text and an icon (`FitLabel`, `StockLine`).",
+      "Do use `focusRing` from `@/lib/utils` (a solid 2px ring with a 2px offset) on links and custom controls; the shadcn default at 30% is too faint on its own.",
+      "Do set prices in `tabular-nums` with `formatPeso()`, and render product images through `ProductImage` in its Bench Grey square.",
+      "Do keep headings tight (−0.02em or tighter) and body text at normal tracking.",
+      "Do separate surfaces with a 1px border, a 10% ring or a Bench Grey fill."
+    ],
+    "donts": [
+      "Don't introduce an accent color, gradient or tinted brand hue anywhere, including links, charts or Admin. (The dark-mode `--sidebar-primary` in `globals.css` is still shadcn's blue, `oklch(0.488 0.243 264.376)`; it is a leftover, not part of the palette.)",
+      "Don't add drop shadows to cards, tiles, dialogs or panels.",
+      "Don't reuse the shimmer effect beyond the PC Builder entry point, or animate anything that ignores `prefers-reduced-motion`.",
+      "Don't use green, amber or red for decoration or emphasis; they are reserved for fit, stock and errors.",
+      "Don't add icons, borders or images to category tiles, or buttons and labels to the hero.",
+      "Don't show fake trust marks (ratings, review stars, registration badges); the store has none."
+    ]
+  }
+}
